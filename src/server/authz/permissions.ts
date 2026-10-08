@@ -49,6 +49,8 @@ export const PERMISSIONS = [
   "inventory.validate",
   "supplier.read",
   "supplier.write",
+  "purchase.read",
+  "purchase.create",
   "kpi.read",
 ] as const;
 
@@ -86,6 +88,9 @@ const GRANTS: Record<Permission, readonly Role[]> = {
   "inventory.validate": ["MAINTENANCE_MANAGER"],
   "supplier.read": ["ADMIN", "MAINTENANCE_MANAGER", "WORKSHOP_MANAGER", "STOREKEEPER", "PURCHASING_MANAGER", "EXECUTIVE"],
   "supplier.write": ["ADMIN", "PURCHASING_MANAGER"],
+  // ACH-01 : demandes d'achat ; leur validation suit le circuit paramétré (HAB-04), pas un droit.
+  "purchase.read": ["ADMIN", "MAINTENANCE_MANAGER", "WORKSHOP_MANAGER", "TECHNICIAN", "STOREKEEPER", "PURCHASING_MANAGER", "EXECUTIVE"],
+  "purchase.create": ["MAINTENANCE_MANAGER", "WORKSHOP_MANAGER", "TECHNICIAN", "STOREKEEPER", "PURCHASING_MANAGER"],
   "kpi.read": ["ADMIN", "MAINTENANCE_MANAGER", "FLEET_MANAGER", "WORKSHOP_MANAGER", "STOREKEEPER", "PURCHASING_MANAGER", "EXECUTIVE"],
 };
 

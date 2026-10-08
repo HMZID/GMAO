@@ -41,6 +41,8 @@ import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equi
 import { notifyByPermission } from "./notifications";
 import { completeDueItem } from "./preventive";
 import { issueToWorkOrder, releaseReservations, reserveForWorkOrder, returnFromWorkOrder } from "./stock";
+import { approvalTimeline, startApproval } from "./approvals";
+import { listPurchaseRequestsForWorkOrder } from "./purchase-requests";
 import { insertWorkOrder } from "./work-order-factory";
 
 type WorkOrderRow = typeof workOrders.$inferSelect;
@@ -138,7 +140,8 @@ export async function costSummary(tx: DbOrTx, wo: Pick<WorkOrderRow, "id" | "ext
   const [other] = await tx
     .select({ amount: sql<number>`coalesce(sum(${workOrderCosts.amount}), 0)`.mapWith(Number) })
     .from(workOrderCosts)
-    .where(eq(workOrderCosts.workOrderId, wo.id));
+    // HAB-04 : une dépense en attente ou refusée n'est pas comptée.
+    .where(and(eq(workOrderCosts.workOrderId, wo.id), eq(workOrderCosts.approvalStatus, "APPROVED")));
   const external = wo.externalCost ?? 0;
   const round = (n: number) => Math.round(n * 100) / 100;
   return {
@@ -193,6 +196,10 @@ async function buildSnapshot(tx: DbOrTx, wo: WorkOrderRow): Promise<WorkOrderSna
     .select({ n: count() })
     .from(stockMovements)
     .where(and(eq(stockMovements.workOrderId, wo.id), eq(stockMovements.type, "ISSUE")));
+  const pendingExpenseRows = await tx
+    .select({ n: count() })
+    .from(workOrderCosts)
+    .where(and(eq(workOrderCosts.workOrderId, wo.id), eq(workOrderCosts.approvalStatus, "PENDING")));
   const readingRows = primaryMeter
     ? await tx
         .select({ n: count() })
@@ -224,6 +231,7 @@ async function buildSnapshot(tx: DbOrTx, wo: WorkOrderRow): Promise<WorkOrderSna
     consumedPartLines: issueRows[0]?.n ?? 0,
     timeEntryCount: entries.length,
     externalCostKnown: wo.externalCost !== null,
+    pendingExpenses: pendingExpenseRows[0]?.n ?? 0,
   };
 }
 
@@ -300,6 +308,15 @@ export async function getWorkOrder(ctx: AuthContext, id: string) {
       .where(eq(workRequests.workOrderId, id)),
   ]);
 
+  const [expenseApprovals, purchaseRequestRows] = await Promise.all([
+    approvalTimeline(
+      ctx,
+      "MAINTENANCE_EXPENSE",
+      wo.costs.map((c) => c.id),
+    ),
+    listPurchaseRequestsForWorkOrder(ctx, wo.id),
+  ]);
+
   const actor = actorFor(ctx, wo);
   const transitions = ALLOWED_TRANSITIONS[wo.status].map((to) => {
     const check = checkTransition(snapshot, { to, actor, testsPassed: true, reason: "-", holdReason: "OTHER" });
@@ -313,6 +330,9 @@ export async function getWorkOrder(ctx: AuthContext, id: string) {
     requests,
     /** Lignes « autres coûts » (le champ `costs` porte la synthèse des coûts). */
     costRows: wo.costs,
+    /** Validations des dépenses (HAB-04) et demandes d'achat rattachées (ACH-01). */
+    expenseApprovals,
+    purchaseRequests: purchaseRequestRows,
     meters: meterRows,
     costs,
     snapshot,
@@ -907,6 +927,10 @@ export async function setExternalCost(ctx: AuthContext, id: string, raw: unknown
   });
 }
 
+/**
+ * Dépense de maintenance sur un OT (frais, location, prestation ponctuelle). Au-delà des seuils du circuit
+ * « dépense de maintenance » (HAB-04), elle reste « à valider » et n'est comptée qu'une fois approuvée.
+ */
 export async function addOtherCost(ctx: AuthContext, id: string, raw: unknown) {
   const input = parseInput(z.object({ label: text(200, "Libellé obligatoire"), amount: z.coerce.number().min(0) }), raw);
   return db.transaction(async (tx) => {
@@ -916,9 +940,23 @@ export async function addOtherCost(ctx: AuthContext, id: string, raw: unknown) {
       throw new BusinessRuleError(["Les coûts d'un OT clôturé ne sont plus modifiables (COR-13)."]);
     const [row] = await tx
       .insert(workOrderCosts)
-      .values({ workOrderId: id, ...input })
+      .values({ workOrderId: id, ...input, createdById: ctx.userId })
       .returning();
     await audit(tx, ctx, { entityType: "work_order", entityId: id, action: "add_cost", after: row });
+    const approval = await startApproval(tx, ctx, {
+      objectType: "MAINTENANCE_EXPENSE",
+      objectId: row.id,
+      companyId: wo.companyId,
+      siteId: wo.siteId,
+      label: `${wo.number} · ${input.label}`.slice(0, 200),
+      amount: input.amount,
+      requestedById: ctx.userId,
+      entityType: "work_order",
+    });
+    if (approval) {
+      const [pending] = await tx.update(workOrderCosts).set({ approvalStatus: "PENDING" }).where(eq(workOrderCosts.id, row.id)).returning();
+      return pending;
+    }
     return row;
   });
 }

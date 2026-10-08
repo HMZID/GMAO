@@ -4,6 +4,7 @@ import {
   calendarUnitEnum,
   downtimeReasonEnum,
   dueStatusEnum,
+  expenseApprovalEnum,
   holdReasonEnum,
   meterTypeEnum,
   operationModeEnum,
@@ -444,6 +445,9 @@ export const workOrderCosts = pgTable(
       .references(() => workOrders.id, { onDelete: "cascade" }),
     label: text("label").notNull(),
     amount: money("amount").notNull(),
+    /** Dépense soumise au circuit « dépense de maintenance » : comptée dans les coûts une fois approuvée (HAB-04). */
+    approvalStatus: expenseApprovalEnum("approval_status").notNull().default("APPROVED"),
+    createdById: text("created_by_id").references(() => user.id),
     createdAt: createdAt(),
   },
   (t) => [index("work_order_costs_wo_idx").on(t.workOrderId)],

@@ -50,6 +50,8 @@ export type WorkOrderSnapshot = {
   consumedPartLines: number;
   timeEntryCount: number;
   externalCostKnown: boolean;
+  /** Dépenses en attente de validation (HAB-04). */
+  pendingExpenses?: number;
 };
 
 export type TransitionInput = {
@@ -149,6 +151,9 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
       if (wo.hasOpenTimeEntry) errors.push("Un pointage est encore ouvert.");
       if (wo.isExternal && !wo.externalCostKnown) {
         errors.push("Le coût du prestataire (facture ou provision) doit être renseigné.");
+      }
+      if ((wo.pendingExpenses ?? 0) > 0) {
+        errors.push(`${wo.pendingExpenses} dépense(s) en attente de validation : attendre la décision du valideur.`);
       }
       break;
     }

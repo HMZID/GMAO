@@ -20,7 +20,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **HAB-01** Rôles paramétrables | Must | oui | Partiel | Rôles attribuables par l'administrateur, cumulables, par périmètre ; la matrice rôle → droits est figée dans le code. | `src/server/authz/permissions.ts`, `src/app/(app)/administration/utilisateurs` |
 | **HAB-02** Cloisonnement par périmètre | Must | oui | Fait | Périmètre appliqué à toutes les listes, recherches et API ; hors périmètre = introuvable. | `src/server/services/_shared.ts (scopeWhere)`, `src/server/pages.ts` |
 | **HAB-03** Cumul et délégation | Should |  | Fait | Rôles cumulés, délégation bornée dans le temps (validFrom, validTo). | `src/server/authz/context.ts` |
-| **HAB-04** Circuits de validation | Must | oui | Partiel | Validations en place : remise en service, écart d'inventaire au-delà du seuil (refusé sans le droit). Circuits paramétrables (valideurs, seuils, suppléants) à construire. | `src/server/domain/work-order-status.ts`, `src/server/services/stock.ts` |
+| **HAB-04** Circuits de validation | Must | oui | Fait | Circuits paramétrables par type d'objet (DI, demande d'achat, dépense de maintenance) et par société : étapes ordonnées, rôle valideur dans le périmètre de l'objet ou personne nommée, seuils financiers, priorités, suppléants datés. Étapes figées à la soumission, décision tracée (auteur, date, commentaire obligatoire en cas de refus), demandeur exclu, un valideur par étape. Restent : relances et escalades automatiques (NOT-02). Validations existantes conservées : remise en service, écart d'inventaire. | `src/server/services/approvals.ts`, `src/server/domain/approvals.ts`, `e2e/approvals.spec.ts` |
 | **HAB-05** Séparation des tâches | Must | oui | Partiel | Le technicien exécutant ne peut pas valider la remise en service d'un équipement A. Demandes d'achat : avec le flux achats. | `src/server/domain/work-order-status.ts` |
 | **HAB-06** Journal d'audit | Must | oui | Fait | Journal en ajout seul écrit dans la transaction de chaque modification, avec le canal ; consultation filtrable. | `src/server/services/_shared.ts (audit)`, `src/app/(app)/administration/journal` |
 | **HAB-07** Accès prestataire | Should |  | Partiel | Rôle Prestataire externe et ses droits ; portail restreint aux OT confiés à construire. | `src/server/authz/permissions.ts` |
@@ -128,8 +128,8 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **ACH-01** Demandes d'achat | Should |  | Phase 2 | Flux d'achat (scénario de §8.1 à choisir). |  |
-| **ACH-02** Validation | Should |  | Phase 2 |  |  |
+| **ACH-01** Demandes d'achat | Should | oui | Partiel | Demande manuelle ou depuis l'OT, rattachement obligatoire à un OT, un équipement ou un centre de coût, visible dans l'OT avec son statut. Restent : création depuis une alerte de seuil, commande, réception, facture (ACH-03 à ACH-06). | `src/server/services/purchase-requests.ts` |
+| **ACH-02** Validation | Should | oui | Fait | Circuit « demande d'achat » : responsable achats, puis direction au-delà du seuil ; le demandeur ne valide pas sa demande. | `src/server/services/approvals.ts` |
 | **ACH-03** Devis | Should |  | Phase 2 |  |  |
 | **ACH-04** Commandes | Should |  | Phase 2 |  |  |
 | **ACH-05** Réceptions | Should |  | Phase 2 |  |  |

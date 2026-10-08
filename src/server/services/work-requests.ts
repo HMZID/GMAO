@@ -8,6 +8,7 @@ import { OPEN_STATUSES } from "@/server/domain/work-order-status";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { bool, optionalDate, optionalNumber, optionalText, text } from "@/server/validation";
 import { assertCan, assertCanOn, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
+import { approvalTimeline, cancelPendingApproval, latestApproval, startApproval } from "./approvals";
 import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equipment-status";
 import { notifyByPermission } from "./notifications";
 import { nextNumber } from "./numbering";
@@ -92,6 +93,8 @@ export async function createWorkRequest(ctx: AuthContext, raw: unknown) {
       })
       .returning();
     await audit(tx, ctx, { entityType: "work_request", entityId: row.id, action: "create", after: row });
+    // HAB-04 : DI soumise au circuit « demande d'intervention » selon sa priorité (P1 par défaut, §2.4).
+    await startApproval(tx, ctx, approvalSubject(row, eqRow.code));
     await notifyByPermission(
       tx,
       ctx.tenantId,
@@ -197,7 +200,8 @@ export async function getWorkRequest(ctx: AuthContext, id: string) {
     .select({ id: workRequests.id, number: workRequests.number, symptom: workRequests.symptom, reportedAt: workRequests.reportedAt })
     .from(workRequests)
     .where(and(eq(workRequests.equipmentId, row.equipmentId), inArray(workRequests.status, ["NEW", "QUALIFIED"]), ne(workRequests.id, row.id)));
-  return { ...row, workOrder, openOrders, otherOpenRequests };
+  const approvals = await approvalTimeline(ctx, "WORK_REQUEST", [row.id]);
+  return { ...row, workOrder, openOrders, otherOpenRequests, approvals };
 }
 
 export const qualifyInput = z.object({
@@ -237,6 +241,10 @@ export async function qualifyWorkRequest(ctx: AuthContext, id: string, raw: unkn
       });
     }
     await audit(tx, ctx, { entityType: "work_request", entityId: id, action: "qualify", before: current, after: row });
+    if (!(await latestApproval(tx, "WORK_REQUEST", id))) {
+      const [eqRow] = await tx.select({ code: equipment.code }).from(equipment).where(eq(equipment.id, current.equipmentId));
+      await startApproval(tx, ctx, approvalSubject(row, eqRow?.code ?? ""));
+    }
     return row;
   });
 }
@@ -255,6 +263,7 @@ export async function rejectWorkRequest(ctx: AuthContext, id: string, raw: unkno
       .set({ status: "REJECTED", rejectionReason: input.reason, qualifiedById: ctx.userId, qualifiedAt: new Date() })
       .where(eq(workRequests.id, id))
       .returning();
+    await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "DI rejetée");
     // Une DI qualifiée « immobilisante » puis rejetée ne doit pas laisser l'équipement immobilisé.
     if (current.immobilize) {
       await releaseEquipmentIfFree(tx, ctx, current.equipmentId, { reason: `DI ${current.number} rejetée`, excludeRequestId: id });
@@ -275,6 +284,20 @@ export async function rejectWorkRequest(ctx: AuthContext, id: string, raw: unkno
   });
 }
 
+/** Objet soumis au circuit des DI : la priorité décide des étapes (ex. P1 → chef d'atelier du site). */
+function approvalSubject(row: typeof workRequests.$inferSelect, equipmentCode: string) {
+  return {
+    objectType: "WORK_REQUEST" as const,
+    objectId: row.id,
+    companyId: row.companyId,
+    siteId: row.siteId,
+    label: `${row.number} · ${equipmentCode} · ${row.symptom}`.slice(0, 200),
+    priority: row.priority,
+    requestedById: row.reportedById ?? row.qualifiedById ?? "",
+    entityType: "work_request",
+  };
+}
+
 const TYPE_TO_WO: Record<RequestType, "CORRECTIVE" | "ACCIDENT" | "IMPROVEMENT"> = {
   BREAKDOWN: "CORRECTIVE",
   SAFETY: "CORRECTIVE",
@@ -287,7 +310,14 @@ const TYPE_TO_WO: Record<RequestType, "CORRECTIVE" | "ACCIDENT" | "IMPROVEMENT">
 export async function convertToWorkOrder(ctx: AuthContext, id: string) {
   const current = await loadForUpdate(ctx, id);
   assertCanOn(ctx, "workorder.manage", current);
-  if (current.status !== "QUALIFIED") throw new BusinessRuleError(["La DI doit être qualifiée avant d'être transformée en OT."]);
+  const errors: string[] = [];
+  if (current.status !== "QUALIFIED") errors.push("La DI doit être qualifiée avant d'être transformée en OT.");
+  const approval = await latestApproval(db, "WORK_REQUEST", id);
+  if (approval?.status === "PENDING")
+    errors.push(
+      "La DI est en attente de validation (" + (approval.steps.find((s) => s.position === approval.currentPosition)?.name ?? "circuit") + ").",
+    );
+  if (errors.length > 0) throw new BusinessRuleError(errors);
   const type = current.type ?? "BREAKDOWN";
   return db.transaction(async (tx) => {
     const wo = await insertWorkOrder(tx, ctx, {
@@ -323,6 +353,7 @@ export async function mergeIntoWorkOrder(ctx: AuthContext, id: string, workOrder
   if (!(OPEN_STATUSES as readonly string[]).includes(wo.status)) throw new BusinessRuleError(["L'OT de rattachement doit être ouvert."]);
   await db.transaction(async (tx) => {
     await tx.update(workRequests).set({ status: "MERGED", workOrderId }).where(eq(workRequests.id, id));
+    await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "DI rattachée à un OT");
     if (current.immobilize) {
       // L'immobilisation décidée sur la DI est portée par l'OT : elle sera levée à sa remise en service.
       await tx.update(workOrders).set({ isImmobilizing: true }).where(eq(workOrders.id, workOrderId));

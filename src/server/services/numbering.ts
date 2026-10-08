@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import type { DbOrTx } from "@/server/db";
 import { companies, sequences } from "@/server/db/schema";
 
-export type SequenceKind = "OT" | "DI";
+export type SequenceKind = "OT" | "DI" | "DA";
 
 /**
  * Numéro unique par société et par année, jamais réutilisé (COR-05) : OT-SBTP-2026-00012.

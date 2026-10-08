@@ -60,6 +60,7 @@ Mot de passe commun : `Demo-Gmao-2026`. Les données sont datées par rapport au
 - **PRV-12** : la VGP échue du chariot CE-020 bloque l'équipement ; l'organisme de contrôle est planifié.
 - **DON-02** : un relevé télématique invraisemblable de CA-102 attend une validation ou un rejet.
 - TP-004 attend sa remise en service, PE-010 est immobilisé avec un OT planifié demain, PE-007 a un préventif en retard.
+- **Validations** (HAB-04, menu « Validations ») : la demande d'achat de la pompe de CE-031 attend le responsable achats (`achats@demo.gmao`), celle des pneus de CH-012 (7 400 €) passera ensuite par la direction ; la location d'un chariot sur l'OT de CE-031 (1 450 €) attend le responsable maintenance ; la DI P1 « Frein de service inefficace » sur CH-012 attend le chef d'atelier de Lyon.
 
 ## Commandes
 

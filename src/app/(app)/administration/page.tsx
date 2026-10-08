@@ -1,4 +1,4 @@
-import { Building2, ClipboardList, HardHat, ScrollText, Shapes, Users } from "lucide-react";
+import { Building2, ClipboardCheck, ClipboardList, HardHat, ScrollText, Shapes, Users } from "lucide-react";
 import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -35,6 +35,13 @@ export default async function AdministrationPage() {
       title: "Référentiel équipements",
       text: "Catégories (criticité par défaut) et modèles.",
       icon: Shapes,
+      show: ctx.can("settings.manage"),
+    },
+    {
+      href: "/administration/validations",
+      title: "Circuits de validation",
+      text: "Étapes, valideurs et seuils des DI, demandes d'achat et dépenses de maintenance (HAB-04).",
+      icon: ClipboardCheck,
       show: ctx.can("settings.manage"),
     },
     {

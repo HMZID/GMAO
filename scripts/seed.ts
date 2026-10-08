@@ -15,11 +15,14 @@ import { ROLES, type Role } from "@/server/authz/permissions";
 import { db } from "@/server/db";
 import * as s from "@/server/db/schema";
 import { computeDue, type OperationRule } from "@/server/domain/preventive";
+import { addStep, createWorkflow } from "@/server/services/approvals";
 import { assignEquipment, createEquipment } from "@/server/services/equipment";
+import { createPurchaseRequest } from "@/server/services/purchase-requests";
 import { createMeter, recordReading, replaceMeter } from "@/server/services/meters";
 import { nextNumber } from "@/server/services/numbering";
 import { applyPlanToEquipment, createPlan, generatePreventiveWorkOrders, recomputeDueItems } from "@/server/services/preventive";
 import {
+  addOtherCost,
   createWorkOrder,
   recordTime,
   setExternalCost,
@@ -1472,6 +1475,54 @@ async function main() {
   const woPe010 = await convertToWorkOrder(chefGreCtx, diPe010.id);
   await updatePlanning(chefGreCtx, woPe010.id, { plannedStart: workday(1), estimatedMinutes: 360, assigneeIds: [lucas.id], workshopId: atGre.id });
   await transitionWorkOrder(chefGreCtx, woPe010.id, { to: "PLANNED" });
+
+  /* ---------------------------------------------------------------- */
+  /* Circuits de validation par défaut (CDC §2.4, HAB-04)               */
+  /* ---------------------------------------------------------------- */
+  // Créés après les scénarios ci-dessus, qui restent ainsi inchangés.
+  const wfRequests = await createWorkflow(ctx, { objectType: "WORK_REQUEST", name: "DI urgentes" });
+  await addStep(ctx, wfRequests.id, { name: "Chef d'atelier du site", approverRole: "WORKSHOP_MANAGER", priorities: ["P1"] });
+  const wfPurchases = await createWorkflow(ctx, { objectType: "PURCHASE_REQUEST", name: "Demandes d'achat" });
+  await addStep(ctx, wfPurchases.id, { name: "Responsable achats", approverRole: "PURCHASING_MANAGER" });
+  await addStep(ctx, wfPurchases.id, { name: "Direction", approverRole: "EXECUTIVE", minAmount: 5000 });
+  const wfExpenses = await createWorkflow(ctx, { objectType: "MAINTENANCE_EXPENSE", name: "Dépenses de maintenance" });
+  await addStep(ctx, wfExpenses.id, { name: "Responsable maintenance", approverRole: "MAINTENANCE_MANAGER", minAmount: 1000 });
+  await addStep(ctx, wfExpenses.id, { name: "Direction", approverRole: "EXECUTIVE", minAmount: 10000 });
+
+  const chefLyonCtx = buildAuthContext({ id: users["chef.lyon@demo.gmao"], tenantId: T, name: "Marc Lefèvre", email: "chef.lyon@demo.gmao" }, [
+    { role: "WORKSHOP_MANAGER", scopeType: "SITE", scopeId: lyo.id },
+  ]);
+  const storeCtx = buildAuthContext({ id: users["magasin@demo.gmao"], tenantId: T, name: "Claire Petit", email: "magasin@demo.gmao" }, [
+    { role: "STOREKEEPER", scopeType: "COMPANY", scopeId: sbtp.id },
+  ]);
+  // R-03 : la pompe de CE-031 est demandée à l'achat, à valider par le responsable achats
+  await createPurchaseRequest(chefLyonCtx, {
+    description: "Pompe hydraulique 67110-26600-71 pour CE-031",
+    partId: part("POMPE-HYD-TOY").id,
+    quantity: 1,
+    estimatedUnitPrice: 1450,
+    supplierId: supHydro.id,
+    workOrderId: woCe031.id,
+    neededBy: daysFromNow(5),
+  });
+  // Au-delà de 5 000 € : responsable achats puis direction
+  await createPurchaseRequest(storeCtx, {
+    description: "Jeu de 4 pneus 23.5R25 pour la chargeuse CH-012",
+    quantity: 4,
+    estimatedUnitPrice: 1850,
+    equipmentId: eqIds["CH-012"],
+    neededBy: daysFromNow(15),
+  });
+  // Dépense au-delà de 1 000 € : à valider par le responsable maintenance, non comptée en attendant
+  await addOtherCost(chefLyonCtx, woCe031.id, { label: "Location d'un chariot de remplacement (2 semaines)", amount: 1450 });
+  // DI P1 (risque sécurité) : à valider par le chef d'atelier de Lyon avant transformation en OT
+  await createWorkRequest(operatorCtx, {
+    equipmentId: eqIds["CH-012"],
+    symptom: "Frein de service inefficace",
+    description: "La chargeuse ne s'arrête plus en descente chargée.",
+    isStopped: true,
+    isSafetyRisk: true,
+  });
 
   // Stock : niveaux recalculés à partir des mouvements (règle : le stock est la somme des mouvements)
   await db.execute(sql`
