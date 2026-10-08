@@ -43,7 +43,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **EQP-10** Historique des affectations | Must | oui | Fait | Affectations historisées, une seule active, sans chevauchement. | `src/server/services/equipment.ts` |
 | **EQP-11** Historique des compteurs | Must | oui | Fait | Historique des relevés et des remplacements de compteur. | `src/server/services/meters.ts` |
 | **EQP-12** Garanties et contrats | Should |  | Partiel | Fin de garantie (date ou compteur) sur la fiche ; contrats à faire. |  |
-| **EQP-13** Import en masse | Must | oui | À faire | Import en masse avec rapport d'anomalies. |  |
+| **EQP-13** Import en masse | Must | oui | Fait | Import Excel des équipements, articles et stocks initiaux : modèle téléchargeable, simulation avec les contrôles de la saisie, rapport ligne par ligne (écran et Excel), « tout ou rien » ou « lignes valides », réimportation sans doublon. Import CSV non proposé. | `src/server/services/imports.ts`, `src/server/domain/imports.ts`, `e2e/imports.spec.ts` |
 | **EQP-14** Réforme | Should |  | Partiel | Réforme refusée avec OT ouvert, plans désactivés, fiche en lecture seule ; circuit de validation à faire. | `src/server/services/equipment.ts` |
 | **EQP-15** Dernière position | Could |  | Phase 3 | Dernière position (télématique). |  |
 
@@ -189,7 +189,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **INT-01** Imports et exports | Must | oui | Partiel | Données accessibles par l'API ; imports et exports de fichiers à faire. |  |
+| **INT-01** Imports et exports | Must | oui | Partiel | Imports Excel des équipements, articles et stocks initiaux (voir EQP-13), aussi par l'API (`/api/v1/imports`). Reste : autres modèles du §11.2 (compteurs, plans, fournisseurs, utilisateurs…), import CSV, exports filtrés des listes. | `src/app/api/v1/imports` |
 | **INT-02** API ouverte | Must | oui | Fait | API REST v1 : mêmes règles et droits que les écrans, idempotence, catalogue public (GET /api/v1). | `src/app/api/v1`, `src/server/api/catalog.ts` |
 | **INT-03** Authentification unique | Must | oui | Partiel | SSO Microsoft Entra ID activable par configuration, sans création implicite de compte ; à recetter sur le tenant de l'entreprise. | `src/server/auth/auth.ts` |
 | **INT-04** ERP et comptabilité | Should |  | Phase 2 |  |  |
