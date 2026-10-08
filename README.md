@@ -110,13 +110,16 @@ Next.js 16 (App Router, Cache Components, Server Actions) et React 19, TypeScrip
 | `BETTER_AUTH_URL` | URL publique de l'application |
 | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | SSO Microsoft Entra ID, activé dès que l'identifiant et le secret sont renseignés |
 | `NEXT_PUBLIC_DEFAULT_TIMEZONE` | Fuseau d'affichage et de saisie, `Europe/Paris` par défaut |
+| `DOCUMENT_MAX_SIZE_MB` | Taille maximale d'un document joint, 20 Mo par défaut (relu au démarrage : `next.config.ts`) |
+| `STORAGE_DRIVER` | Stockage des documents : `local` (défaut, répertoire `STORAGE_LOCAL_DIR`, `./storage`) ou `s3` |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE` | Stockage compatible S3 (AWS, Scaleway, OVH, SeaweedFS…) ; `S3_AUTO_CREATE_BUCKET=true` crée le compartiment en développement, `S3_SERVER_SIDE_ENCRYPTION=none` désactive le chiffrement côté serveur si le service ne le gère pas |
 
 ## Ce qui reste à faire pour le MVP
 
 Le détail est dans `docs/tracabilite.md`. Les manques principaux :
 
 - **Application mobile hors connexion** (MOB-01 à 09, 13) : l'API est prête (jetons Bearer, idempotence par `clientId`, canal mobile tracé), l'application reste à construire.
-- **Imports et exports** (EQP-13, INT-01) et **documents et photos** (EQP-07).
+- **Imports et exports** (EQP-13, INT-01) ; alerte d'échéance des documents joints (EQP-07, §11.1).
 - **Circuits de validation paramétrables** (HAB-04), matrice des droits paramétrable (HAB-01), double facteur obligatoire pour les administrateurs (TEC-04).
 - **Règles de notification paramétrables, courriel et escalade** (NOT-01 à 03) : seules les notifications dans l'application sont en place.
 - **Urgences** avec proposition des OT à décaler (PLA-06), campagnes d'inventaire (STK-07), surcharge locale des plans (PRV-01), correction d'un relevé validé (DON-05), historique des reports d'OT (DON-09).

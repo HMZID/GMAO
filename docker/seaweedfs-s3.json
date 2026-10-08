@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "gmao",
+      "credentials": [{ "accessKey": "gmao", "secretKey": "gmao-dev-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

@@ -38,6 +38,11 @@ export const readingStatusEnum = pgEnum("reading_status", ["VALID", "TO_CHECK", 
 
 export const meterEventTypeEnum = pgEnum("meter_event_type", ["REPLACEMENT", "CORRECTION"]);
 
+// Documents (EQP-07)
+export const documentEntityEnum = pgEnum("document_entity", ["EQUIPMENT", "WORK_ORDER"]);
+
+export const documentKindEnum = pgEnum("document_kind", ["MANUAL", "CERTIFICATE", "INVOICE", "PHOTO", "REPORT", "OTHER"]);
+
 export const downtimeReasonEnum = pgEnum("downtime_reason", ["BREAKDOWN", "SAFETY", "REGULATORY", "PLANNED_MAINTENANCE"]);
 
 // Préventif (CDC §4)

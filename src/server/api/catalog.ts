@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import type { Permission } from "@/server/authz/permissions";
+import { documentDeleteInput, documentInput, documentListInput } from "@/server/services/documents";
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
 import { indicatorFilters } from "@/server/services/kpi";
 import { readingInput, replacementInput, reviewInput } from "@/server/services/meters";
@@ -25,7 +26,9 @@ import { qualifyInput, rejectInput, workRequestFilters, workRequestInput } from 
  * filtres sont générés depuis les schémas Zod de validation : la documentation ne peut pas diverger du code.
  */
 type Endpoint = {
-  method: "GET" | "POST" | "PATCH" | "PUT";
+  method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+  /** Corps multipart/form-data (envoi de fichier) au lieu de JSON. */
+  multipart?: boolean;
   path: string;
   summary: string;
   permission?: Permission;
@@ -215,6 +218,35 @@ export const ENDPOINTS: Endpoint[] = [
     permission: "planning.read",
     query: weekInput,
   },
+  {
+    method: "GET",
+    path: "/api/v1/documents",
+    summary: "Documents actifs d'un équipement ou d'un OT (factures réservées aux profils achats)",
+    permission: "equipment.read",
+    query: documentListInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/documents",
+    summary:
+      "Ajout d'un document (multipart/form-data, champ « file ») : equipment.write sur un équipement, workorder.execute ou workorder.manage sur un OT (EQP-07, MOB-05)",
+    permission: "equipment.write",
+    body: documentInput,
+    multipart: true,
+  },
+  { method: "GET", path: "/api/v1/documents/{id}", summary: "Métadonnées d'un document", permission: "equipment.read" },
+  {
+    method: "GET",
+    path: "/api/v1/documents/{id}/content",
+    summary: "Contenu du fichier (?download=1 pour forcer le téléchargement)",
+    permission: "equipment.read",
+  },
+  {
+    method: "DELETE",
+    path: "/api/v1/documents/{id}",
+    summary: "Retrait logique (gestionnaire, ou auteur tant que l'OT n'est pas clôturé)",
+    body: documentDeleteInput,
+  },
   { method: "GET", path: "/api/v1/kpis", summary: "Indicateurs de la période", permission: "kpi.read", query: indicatorFilters },
 ];
 
@@ -248,6 +280,7 @@ export function apiCatalog() {
       permission: e.permission ?? null,
       query: schemaOf(e.query),
       body: schemaOf(e.body),
+      contentType: e.body ? (e.multipart ? "multipart/form-data" : "application/json") : undefined,
     })),
   };
 }

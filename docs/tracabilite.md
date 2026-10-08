@@ -37,7 +37,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **EQP-04** Compteurs multiples | Must | oui | Partiel | Modèle de données multi-compteurs (unité, principal) ; l'écran ne crée que le compteur principal. | `src/server/services/meters.ts` |
 | **EQP-05** États opérationnels | Must | oui | Fait | Cinq états historisés, distincts du statut des OT. | `src/server/services/equipment-status.ts` |
 | **EQP-06** Criticité | Must | oui | Fait | Criticité héritée de la catégorie ; A relève la priorité et impose la validation de remise en service. | `src/server/services/work-requests.ts` |
-| **EQP-07** Documents et photos | Must | oui | À faire | Table des documents prévue ; stockage des fichiers, photos et échéances de documents à faire. | `src/server/db/schema/equipment.ts (documents)` |
+| **EQP-07** Documents et photos | Must | oui | Partiel | Documents et photos sur les fiches équipement et OT : types, expiration facultative, format et contenu contrôlés, taille paramétrable, stockage local ou S3, droits, audit. Reste : alerte d'échéance des documents (§11.1). | `src/server/services/documents.ts`, `src/server/storage`, `e2e/documents.spec.ts` |
 | **EQP-08** Sous-ensembles | Should |  | Phase 2 | Sous-ensembles (table prévue). |  |
 | **EQP-09** QR code et code-barres | Must | oui | Partiel | Jeton QR par équipement et résolution par l'API ; impression des étiquettes et scan mobile à faire. | `src/app/api/v1/equipment/by-qr` |
 | **EQP-10** Historique des affectations | Must | oui | Fait | Affectations historisées, une seule active, sans chevauchement. | `src/server/services/equipment.ts` |
@@ -165,7 +165,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **MOB-02** Scan | Must | oui | Partiel | Résolution des étiquettes QR par l'API ; scan à faire dans l'application. | `src/app/api/v1/equipment/by-qr` |
 | **MOB-03** Demandes d'intervention | Must | oui | Partiel | API de DI avec idempotence et position ; écran mobile à faire. | `src/app/api/v1/work-requests` |
 | **MOB-04** Relevé de compteurs | Must | oui | Partiel | API de relevés avec idempotence ; écran mobile à faire. | `src/app/api/v1/meters/[id]/readings` |
-| **MOB-05** Checklists, photos, comptes rendus | Must | oui | Partiel | API de checklist et de compte rendu ; photos et écran mobile à faire. |  |
+| **MOB-05** Checklists, photos, comptes rendus | Must | oui | Partiel | API de checklist, de compte rendu et de photos (`POST /api/v1/documents`, idempotent par `clientId`) ; écran mobile à faire. | `src/app/api/v1/documents` |
 | **MOB-06** Temps et pièces | Must | oui | Partiel | API de pointage et de pièces idempotente ; écran mobile à faire. |  |
 | **MOB-07** Hors connexion | Must | oui | À faire | Fonctionnement hors connexion. |  |
 | **MOB-08** Synchronisation sans doublon | Must | oui | Partiel | Idempotence par clientId sur les créations (DI, relevés, pointages, mouvements) ; file de synchronisation à faire. |  |
