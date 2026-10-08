@@ -1,0 +1,14 @@
+{
+  // Cœur sans React Native (api, sync, qr) : configuration autonome, pour que ses tests tournent avec ceux du
+  // serveur (Vitest à la racine) sans installer les dépendances Expo. L'application garde mobile/tsconfig.json.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["**/*.ts"]
+}
