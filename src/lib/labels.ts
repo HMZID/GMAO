@@ -26,6 +26,32 @@ export const ACQUISITION_MODE: Record<string, string> = {
   SHORT_TERM_RENTAL: "Location courte durée",
 };
 
+/** Imports Excel (EQP-13, INT-01). */
+export const IMPORT_KIND: Record<string, string> = {
+  EQUIPMENT: "Équipements",
+  PARTS: "Pièces détachées",
+  INITIAL_STOCK: "Stocks initiaux",
+};
+
+export const IMPORT_STATUS: Record<string, { label: string; tone: Tone }> = {
+  SIMULATED: { label: "Simulé", tone: "blue" },
+  RUNNING: { label: "En cours", tone: "amber" },
+  DONE: { label: "Exécuté", tone: "green" },
+  FAILED: { label: "Échec", tone: "red" },
+};
+
+export const IMPORT_ROW_STATUS: Record<string, { label: string; tone: Tone }> = {
+  READY: { label: "À importer", tone: "blue" },
+  EXISTS: { label: "Déjà présent", tone: "gray" },
+  ERROR: { label: "Erreur", tone: "red" },
+  IMPORTED: { label: "Importé", tone: "green" },
+};
+
+export const IMPORT_MODE: Record<string, string> = {
+  ALL_OR_NOTHING: "Tout ou rien",
+  VALID_ONLY: "Lignes valides seulement",
+};
+
 /** Types de documents joints (EQP-07). */
 export const DOCUMENT_KIND: Record<string, { label: string; tone: Tone }> = {
   MANUAL: { label: "Notice", tone: "blue" },
@@ -236,6 +262,7 @@ export const ENTITY_TYPE: Record<string, string> = {
   equipment_category: "Catégorie",
   equipment_model: "Modèle",
   document: "Document",
+  import: "Import",
   meter: "Compteur",
   meter_reading: "Relevé",
   maintenance_plan: "Plan d'entretien",

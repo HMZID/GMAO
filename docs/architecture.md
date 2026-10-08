@@ -137,6 +137,14 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 - **Téléchargement** : uniquement par `GET /api/v1/documents/{id}/content` (cookie ou jeton), après contrôle des droits ; en-têtes `nosniff` et `CSP: sandbox`, affichage dans le navigateur limité aux PDF, images et MP4.
 - **Traçabilité** : ajout, retrait (logique, motif facultatif) et téléchargement sont écrits au journal d'audit. Le retrait conserve la ligne et le fichier (DON-06).
 
+### Imports Excel (EQP-13, INT-01, §11.2)
+
+- Trois modèles (`src/server/domain/imports.ts`) : **équipements** (droit `equipment.write`), **articles** (`part.write`), **stocks initiaux** (`stock.move`, plus `part.write` pour les seuils). Le modèle téléchargé contient l'onglet de saisie (listes déroulantes, formats), l'onglet « Aide » et l'onglet « Listes » (codes de société, site, catégorie et magasin du périmètre de l'utilisateur). Les colonnes sont reconnues par leur libellé, dans n'importe quel ordre.
+- **Simulation** : lecture du fichier (`.xlsx`, 10 Mo et 5 000 lignes au plus), contrôle de format de chaque cellule, doublons dans le fichier (clé et doublons secondaires DON-12), résolution des codes, puis **les contrôles du service de saisie** sans écriture (`checkEquipmentCreation`, `checkPartCreation`). Le diagnostic ligne par ligne est enregistré dans `import_jobs` : à importer, déjà présent, erreur.
+- **Exécution** : « tout ou rien » (refusé s'il reste une erreur) ou « lignes valides seulement ». Les lignes prêtes sont recontrôlées puis créées une à une par les services de saisie (`createEquipment`, `createPart`, `createMovement`), avec l'audit sur le canal `IMPORT`. Un verrou sur le statut empêche une double exécution. Chaque création a sa propre transaction : en « tout ou rien », une erreur apparue entre le contrôle et la création (modification concurrente) laisse les lignes déjà créées, signalées dans le rapport.
+- **Réimportation sans doublon** : une ligne dont la clé existe déjà (code parc, référence interne, article déjà mouvementé dans le magasin) est « déjà présente » et ignorée. Le stock initial est en plus idempotent par `clientId`. Un fichier déjà exécuté (même empreinte) est signalé.
+- **Rapport** : à l'écran (filtre sur les erreurs) et en Excel (`/api/v1/imports/{id}/report`), avec le statut et les anomalies de chaque ligne.
+
 ## Interface
 
 - **Server Components** pour la lecture, **Server Actions** pour l'écriture, avec amélioration progressive (le formulaire fonctionne avant le chargement du JavaScript).

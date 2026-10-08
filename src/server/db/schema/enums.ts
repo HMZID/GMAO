@@ -43,6 +43,13 @@ export const documentEntityEnum = pgEnum("document_entity", ["EQUIPMENT", "WORK_
 
 export const documentKindEnum = pgEnum("document_kind", ["MANUAL", "CERTIFICATE", "INVOICE", "PHOTO", "REPORT", "OTHER"]);
 
+// Imports (EQP-13, INT-01)
+export const importKindEnum = pgEnum("import_kind", ["EQUIPMENT", "PARTS", "INITIAL_STOCK"]);
+
+export const importStatusEnum = pgEnum("import_status", ["SIMULATED", "RUNNING", "DONE", "FAILED"]);
+
+export const importModeEnum = pgEnum("import_mode", ["ALL_OR_NOTHING", "VALID_ONLY"]);
+
 export const downtimeReasonEnum = pgEnum("downtime_reason", ["BREAKDOWN", "SAFETY", "REGULATORY", "PLANNED_MAINTENANCE"]);
 
 // Préventif (CDC §4)

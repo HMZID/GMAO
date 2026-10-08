@@ -119,7 +119,7 @@ Next.js 16 (App Router, Cache Components, Server Actions) et React 19, TypeScrip
 Le détail est dans `docs/tracabilite.md`. Les manques principaux :
 
 - **Application mobile hors connexion** (MOB-01 à 09, 13) : l'API est prête (jetons Bearer, idempotence par `clientId`, canal mobile tracé), l'application reste à construire.
-- **Imports et exports** (EQP-13, INT-01) ; alerte d'échéance des documents joints (EQP-07, §11.1).
+- **Exports filtrés et autres modèles d'import** (INT-01 : compteurs, plans, fournisseurs, utilisateurs) ; alerte d'échéance des documents joints (EQP-07, §11.1).
 - **Circuits de validation paramétrables** (HAB-04), matrice des droits paramétrable (HAB-01), double facteur obligatoire pour les administrateurs (TEC-04).
 - **Règles de notification paramétrables, courriel et escalade** (NOT-01 à 03) : seules les notifications dans l'application sont en place.
 - **Urgences** avec proposition des OT à décaler (PLA-06), campagnes d'inventaire (STK-07), surcharge locale des plans (PRV-01), correction d'un relevé validé (DON-05), historique des reports d'OT (DON-09).
