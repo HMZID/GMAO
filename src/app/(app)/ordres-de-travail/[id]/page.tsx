@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
+import { DocumentsCard } from "@/components/documents/documents-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { CriticalityBadge, EquipmentStatusBadge, PriorityBadge, RequestStatusBadge, WorkOrderStatusBadge } from "@/components/status-badges";
 import { Alert, Badge, Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/primitives";
@@ -118,6 +119,13 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
             wo={wo}
             canReport={wo.canExecute && ["IN_PROGRESS", "WORK_DONE", "ON_HOLD"].includes(status)}
             canRead={executing && ctx.can("meter.write")}
+          />
+          <DocumentsCard
+            ctx={ctx}
+            entityType="WORK_ORDER"
+            entityId={wo.id}
+            description="Photos, rapports, devis et factures de l'intervention"
+            now={new Date()}
           />
         </div>
 

@@ -3,6 +3,8 @@ import { createdAt, id, meterValue, money, ts, updatedAt } from "./columns";
 import {
   acquisitionModeEnum,
   criticalityEnum,
+  documentEntityEnum,
+  documentKindEnum,
   equipmentStatusEnum,
   meterEventTypeEnum,
   meterTypeEnum,
@@ -172,7 +174,11 @@ export const assignments = pgTable(
   (t) => [index("assignments_equipment_idx").on(t.equipmentId, t.startAt)],
 );
 
-/** Documents et photos (EQP-07). Le stockage des fichiers est à brancher (S3, Azure Blob…). */
+/**
+ * Documents et photos (EQP-07) rattachés à un équipement ou à un OT. Le fichier est dans le stockage
+ * (`src/server/storage`), la base garde les métadonnées. Société et site sont recopiés de l'objet
+ * parent pour filtrer par périmètre. Suppression logique : la ligne et le fichier sont conservés (DON-06).
+ */
 export const documents = pgTable(
   "documents",
   {
@@ -180,17 +186,35 @@ export const documents = pgTable(
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id),
-    entityType: text("entity_type").notNull(),
+    companyId: uuid("company_id")
+      .notNull()
+      .references(() => companies.id),
+    siteId: uuid("site_id").references(() => sites.id),
+    entityType: documentEntityEnum("entity_type").notNull(),
     entityId: uuid("entity_id").notNull(),
-    kind: text("kind").notNull(),
+    kind: documentKindEnum("kind").notNull(),
     title: text("title").notNull(),
-    storageKey: text("storage_key"),
-    url: text("url"),
+    description: text("description"),
+    fileName: text("file_name").notNull(),
+    contentType: text("content_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    /** Empreinte SHA-256 du contenu : intégrité et repérage d'un fichier déjà joint. */
+    sha256: text("sha256").notNull(),
+    storageKey: text("storage_key").notNull(),
     expiresAt: ts("expires_at"),
+    /** Identifiant généré par le client (mobile) : un envoi répété ne crée pas de doublon (MOB-08). */
+    clientId: text("client_id"),
     uploadedById: text("uploaded_by_id").references(() => user.id),
     createdAt: createdAt(),
+    deletedAt: ts("deleted_at"),
+    deletedById: text("deleted_by_id").references(() => user.id),
+    deletionReason: text("deletion_reason"),
   },
-  (t) => [index("documents_entity_idx").on(t.entityType, t.entityId)],
+  (t) => [
+    index("documents_entity_idx").on(t.entityType, t.entityId),
+    index("documents_scope_idx").on(t.tenantId, t.companyId, t.siteId),
+    uniqueIndex("documents_client_uq").on(t.tenantId, t.clientId),
+  ],
 );
 
 /**

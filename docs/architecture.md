@@ -128,6 +128,15 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 - Coût d'un OT = main-d'œuvre (minutes × taux horaire en vigueur à la date du pointage) + pièces (sorties − retours, au coût moyen) + prestataire (provision puis facture) + autres coûts.
 - Disponibilité = 1 − immobilisations ÷ temps requis (24 h × jours de la période par équipement) ; MTBF = heures de fonctionnement ÷ pannes ; MTTR = durée de réparation active, attentes déduites ; MDT = durée moyenne d'immobilisation par panne. Moins de 3 événements : « non significatif ».
 
+### Documents (EQP-07)
+
+- Un document est rattaché à un **équipement** ou à un **OT** (`documents.entity_type`), avec un type (notice, certificat, facture, photo, rapport, autre), une date d'expiration facultative, l'empreinte SHA-256 et l'auteur. Société et site sont recopiés de l'objet parent.
+- **Stockage** (`src/server/storage`) : pilote `local` (répertoire hors de `public/`) ou `s3` (tout service compatible, compartiment privé, chiffrement côté serveur), choisi par `STORAGE_DRIVER`. La clé ne contient que des identifiants (`groupe/objet/id/document`), jamais un nom saisi.
+- **Contrôles** (`src/server/domain/documents.ts`) : extension autorisée (PDF, JPEG, PNG, WebP, HEIC, MP4, MOV, Word, Excel), **contenu vérifié par sa signature binaire** (un exécutable renommé en .pdf est refusé), taille maximale `DOCUMENT_MAX_SIZE_MB` (20 Mo par défaut), même fichier déjà joint au même objet refusé, idempotence par `clientId` pour le mobile.
+- **Droits** : consulter = lire l'objet parent ; une facture exige en plus `supplier.read`. Ajouter = `equipment.write` (équipement non réformé), ou `workorder.execute` / `workorder.manage` (OT ni clôturé ni annulé, sauf gestionnaire). Retirer = gestionnaire de l'objet, ou auteur d'une pièce jointe d'OT tant que l'OT n'est pas clôturé techniquement.
+- **Téléchargement** : uniquement par `GET /api/v1/documents/{id}/content` (cookie ou jeton), après contrôle des droits ; en-têtes `nosniff` et `CSP: sandbox`, affichage dans le navigateur limité aux PDF, images et MP4.
+- **Traçabilité** : ajout, retrait (logique, motif facultatif) et téléchargement sont écrits au journal d'audit. Le retrait conserve la ligne et le fichier (DON-06).
+
 ## Interface
 
 - **Server Components** pour la lecture, **Server Actions** pour l'écriture, avec amélioration progressive (le formulaire fonctionne avant le chargement du JavaScript).
@@ -160,3 +169,4 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 | Absence, habilitation, compétence | `absences`, `certifications`, `skills` |
 | Périmètre (groupe, société, site) | `scope_type` (`TENANT`, `COMPANY`, `SITE`) |
 | Journal d'audit | `audit_logs` |
+| Document, pièce jointe, photo | `documents` (`document_kind`), fichier dans le stockage (`src/server/storage`) |
