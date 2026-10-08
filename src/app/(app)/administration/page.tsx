@@ -1,4 +1,4 @@
-import { Building2, ClipboardCheck, ClipboardList, HardHat, ScrollText, Shapes, Users } from "lucide-react";
+import { Building2, ClipboardCheck, ClipboardList, HardHat, Mail, ScrollText, Shapes, Users } from "lucide-react";
 import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -42,6 +42,13 @@ export default async function AdministrationPage() {
       title: "Circuits de validation",
       text: "Étapes, valideurs et seuils des DI, demandes d'achat et dépenses de maintenance (HAB-04).",
       icon: ClipboardCheck,
+      show: ctx.can("settings.manage"),
+    },
+    {
+      href: "/administration/courriels",
+      title: "Courriels",
+      text: "File d'envoi des notifications : envois, reprises, erreurs et relances (NOT-01).",
+      icon: Mail,
       show: ctx.can("settings.manage"),
     },
     {

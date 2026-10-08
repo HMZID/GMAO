@@ -31,6 +31,14 @@ services:
       - gmao-s3:/data
       - ./docker/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
 
+  # Serveur SMTP de développement (NOT-01) : capture les courriels, interface sur http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.31.2
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   gmao-data:
   gmao-s3:

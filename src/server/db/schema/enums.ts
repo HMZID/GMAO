@@ -62,6 +62,20 @@ export const purchaseRequestStatusEnum = pgEnum("purchase_request_status", ["PEN
 /** Statut de validation d'une dépense d'OT : comptée dans les coûts seulement une fois approuvée. */
 export const expenseApprovalEnum = pgEnum("expense_approval", ["APPROVED", "PENDING", "REJECTED"]);
 
+// Courriels (NOT-01, NOT-03, NOT-04)
+export const emailEventEnum = pgEnum("email_event", [
+  "ASSIGNMENT",
+  "APPROVAL_PENDING",
+  "APPROVAL_DECISION",
+  "URGENT_REQUEST",
+  "DUE_DIGEST",
+  "OVERDUE",
+  "STOCK_ALERT",
+  "DOCUMENT_EXPIRY",
+]);
+
+export const emailStatusEnum = pgEnum("email_status", ["PENDING", "SENT", "FAILED", "CANCELLED"]);
+
 export const downtimeReasonEnum = pgEnum("downtime_reason", ["BREAKDOWN", "SAFETY", "REGULATORY", "PLANNED_MAINTENANCE"]);
 
 // Préventif (CDC §4)

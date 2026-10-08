@@ -37,7 +37,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **EQP-04** Compteurs multiples | Must | oui | Partiel | Modèle de données multi-compteurs (unité, principal) ; l'écran ne crée que le compteur principal. | `src/server/services/meters.ts` |
 | **EQP-05** États opérationnels | Must | oui | Fait | Cinq états historisés, distincts du statut des OT. | `src/server/services/equipment-status.ts` |
 | **EQP-06** Criticité | Must | oui | Fait | Criticité héritée de la catégorie ; A relève la priorité et impose la validation de remise en service. | `src/server/services/work-requests.ts` |
-| **EQP-07** Documents et photos | Must | oui | Partiel | Documents et photos sur les fiches équipement et OT : types, expiration facultative, format et contenu contrôlés, taille paramétrable, stockage local ou S3, droits, audit. Reste : alerte d'échéance des documents (§11.1). | `src/server/services/documents.ts`, `src/server/storage`, `e2e/documents.spec.ts` |
+| **EQP-07** Documents et photos | Must | oui | Fait | Documents et photos sur les fiches équipement et OT : types, expiration facultative, format et contenu contrôlés, taille paramétrable, stockage local ou S3, droits, audit ; alerte par courriel à J-30, J-7 et à l'échéance (§11.1). | `src/server/services/documents.ts`, `src/server/storage`, `src/server/services/email.ts`, `e2e/documents.spec.ts` |
 | **EQP-08** Sous-ensembles | Should |  | Phase 2 | Sous-ensembles (table prévue). |  |
 | **EQP-09** QR code et code-barres | Must | oui | Partiel | Jeton QR par équipement et résolution par l'API ; impression des étiquettes et scan mobile à faire. | `src/app/api/v1/equipment/by-qr` |
 | **EQP-10** Historique des affectations | Must | oui | Fait | Affectations historisées, une seule active, sans chevauchement. | `src/server/services/equipment.ts` |
@@ -179,10 +179,10 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **NOT-01** Règles de notification | Must | oui | Partiel | Notifications dans l'application selon les droits et le périmètre ; règles paramétrables, courriel et push à faire. | `src/server/services/notifications.ts` |
+| **NOT-01** Règles de notification | Must | oui | Partiel | Notifications dans l'application et par courriel selon les droits et le périmètre ; préférences par utilisateur ; file d'envoi transactionnelle, envoi en arrière-plan avec reprises, clé anti-doublon par événement, suivi et relance par l'administrateur. Reste : règles paramétrables par l'administrateur (événement, condition, destinataires, canaux), notification mobile. | `src/server/services/notifications.ts`, `src/server/services/email.ts`, `scripts/worker.ts`, `e2e/notifications.spec.ts` |
 | **NOT-02** Escalade | Must | oui | À faire | Escalade. |  |
-| **NOT-03** Notifications par défaut | Must | oui | Partiel | Livré : nouvelle DI (urgente si P1), remise en service à valider, DI rejetée. Reste du tableau 11.1 à faire. | `src/server/services/notifications.ts` |
-| **NOT-04** Récapitulatif quotidien | Should |  | Phase 2 |  |  |
+| **NOT-03** Notifications par défaut | Must | oui | Partiel | Livré, dans l'application et par courriel : DI P1 (obligatoire), validation en attente et remise en service à valider (obligatoires), décision sur une demande, affectation à un OT, échéances en pré-alerte, préventifs en retard et OT en attente depuis plus de 5 jours, articles sous le point de commande, documents arrivant à échéance. Restent : pièce réservée reçue, compteur non relevé, échec d'interface, escalades (NOT-02). | `src/server/domain/email.ts` |
+| **NOT-04** Récapitulatif quotidien | Should | oui | Fait | Récapitulatifs quotidiens des échéances, retards et alertes de stock : un courriel par destinataire et par jour, à partir de l'heure paramétrée (`EMAIL_DIGEST_HOUR`). | `src/server/services/email.ts` |
 | **NOT-05** SMS et messagerie d'équipe | Could |  | Phase 3 |  |  |
 
 ## Intégrations (INT)
