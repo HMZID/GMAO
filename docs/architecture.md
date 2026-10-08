@@ -8,7 +8,7 @@ Ce document décrit l'organisation du code, le modèle de données et les règle
 flowchart LR
   subgraph Clients
     W["Navigateur<br/>écrans web"]
-    M["Application mobile<br/>à venir"]
+    M["Application mobile<br/>Expo (mobile/)"]
     I["Intégrations<br/>ERP, télématique"]
   end
   subgraph Next.js
@@ -161,6 +161,13 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 - **Envoi en arrière-plan** : `npm run worker` (processus à côté de l'application) ou `POST /api/cron/notifications` (tâche planifiée externe, `CRON_SECRET`). Prise en charge par `FOR UPDATE SKIP LOCKED` (plusieurs processus possibles), verrou de 5 minutes repris en cas d'arrêt brutal. Erreur passagère : nouvel essai après 1, 5, 15, 60 puis 240 minutes ; erreur définitive (réponse SMTP 5xx, authentification) ou 5 tentatives : « en échec ». Chaque erreur est conservée (`errors`) et l'administrateur relance ou annule (`/administration/courriels`).
 - **Alertes calculées** (`runScheduledAlerts`, toutes les 15 minutes) : récapitulatifs quotidiens à partir de `EMAIL_DIGEST_HOUR` (échéances en pré-alerte ou échues, retards, stock sous le point de commande), documents à J-30, J-7 et échus. Destinataires par rôle (§11.1), dans le périmètre de ce rôle.
 - **Transport** (`src/server/email/transport.ts`) : SMTP (`SMTP_*`, STARTTLS) ; sans `SMTP_HOST`, le courriel est écrit dans le journal du processus (développement, tests). Modèles en texte et HTML, valeurs échappées, liens internes seulement.
+
+### Application mobile (MOB, CDC §10)
+
+- Projet Expo distinct dans `mobile/` (Expo Router, TypeScript), qui n'utilise que l'**API REST v1** (jeton Bearer, en-tête `x-client: mobile` : canal `MOBILE` dans le journal d'audit).
+- **Cœur sans React Native**, testé avec le serveur : `api.ts` (erreur réseau ou refus du serveur), `sync.ts` (file des saisies hors connexion), `qr.ts`.
+- **Synchronisation** : chaque saisie porte un `clientId` ; l'envoi se fait dans l'ordre, photos en dernier. Réseau ou serveur indisponible : arrêt sans perte. Refus : saisie « à revoir ». Transition déjà appliquée : reconnue. Le serveur reste seul juge des règles (DON-11).
+- **Stockage local** : jeton dans `expo-secure-store`, file et cache dans le stockage de l'application (`AsyncStorage`).
 
 ## Interface
 

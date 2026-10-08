@@ -212,6 +212,7 @@ export const ENDPOINTS: Endpoint[] = [
     permission: "stock.move",
     body: movementInput,
   },
+  { method: "GET", path: "/api/v1/warehouses", summary: "Magasins du périmètre (sortie de pièces depuis le mobile)" },
   { method: "GET", path: "/api/v1/suppliers", summary: "Fournisseurs et prestataires", permission: "supplier.read" },
   { method: "POST", path: "/api/v1/suppliers", summary: "Création d'un fournisseur", permission: "supplier.write", body: supplierInput },
 

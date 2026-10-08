@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "GMAO",
+    "slug": "gmao-mobile",
+    "scheme": "gmao",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "fr.gmao.mobile"
+    },
+    "android": {
+      "package": "fr.gmao.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "La caméra sert à lire le QR code des équipements et à photographier les interventions.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "La caméra sert à photographier les interventions.",
+          "photosPermission": "Les photos de la galerie peuvent être jointes aux interventions."
+        }
+      ]
+    ]
+  }
+}

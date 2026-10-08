@@ -7,7 +7,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "mobile/src/**/*.test.ts"],
     // Fuseau horaire fixe : les calculs d'échéances sont en UTC, les tests ne dépendent pas du poste.
     env: { TZ: "UTC" },
   },
