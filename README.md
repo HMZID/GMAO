@@ -98,7 +98,7 @@ e2e/                     tests Playwright
 docs/                    cahier des charges, architecture, traçabilité
 ```
 
-Détails, conventions et glossaire : `docs/architecture.md`. Consignes pour les agents de code (Claude Code) : `CLAUDE.md`.
+Détails, conventions et glossaire : `docs/architecture.md`. Configuration et utilisation des évolutions (mobile, imports, documents, validations, courriels) : `docs/guide-evolutions.md`. Consignes pour les agents de code (Claude Code) : `CLAUDE.md`.
 
 ## Pile technique
 
@@ -124,7 +124,7 @@ Next.js 16 (App Router, Cache Components, Server Actions) et React 19, TypeScrip
 
 Le détail est dans `docs/tracabilite.md`. Les manques principaux :
 
-- **Application mobile hors connexion** (MOB-01 à 09, 13) : l'API est prête (jetons Bearer, idempotence par `clientId`, canal mobile tracé), l'application reste à construire.
+- **Application mobile** (`mobile/`, voir `mobile/README.md`) : restent le préchargement complet du périmètre hors connexion, les fonctions du magasinier, le chiffrement du cache et la réouverture par code ou biométrie (MOB-07, MOB-10, MOB-13).
 - **Exports filtrés et autres modèles d'import** (INT-01 : compteurs, plans, fournisseurs, utilisateurs) ; alerte d'échéance des documents joints (EQP-07, §11.1).
 - **Circuits de validation paramétrables** (HAB-04), matrice des droits paramétrable (HAB-01), double facteur obligatoire pour les administrateurs (TEC-04).
 - **Règles de notification paramétrables, courriel et escalade** (NOT-01 à 03) : seules les notifications dans l'application sont en place.

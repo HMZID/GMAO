@@ -7,3 +7,7 @@ next-env.d.ts
 AGENTS.md
 CLAUDE.md
 *.md
+
+# Application mobile : dépendances et sorties Expo
+mobile/.expo
+mobile/dist

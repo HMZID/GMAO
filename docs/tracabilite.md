@@ -161,19 +161,19 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **MOB-01** Application iOS et Android | Must | oui | À faire | Application iOS et Android à construire ; l'API, l'authentification par jeton et le canal « mobile » sont prêts. |  |
-| **MOB-02** Scan | Must | oui | Partiel | Résolution des étiquettes QR par l'API ; scan à faire dans l'application. | `src/app/api/v1/equipment/by-qr` |
-| **MOB-03** Demandes d'intervention | Must | oui | Partiel | API de DI avec idempotence et position ; écran mobile à faire. | `src/app/api/v1/work-requests` |
-| **MOB-04** Relevé de compteurs | Must | oui | Partiel | API de relevés avec idempotence ; écran mobile à faire. | `src/app/api/v1/meters/[id]/readings` |
-| **MOB-05** Checklists, photos, comptes rendus | Must | oui | Partiel | API de checklist, de compte rendu et de photos (`POST /api/v1/documents`, idempotent par `clientId`) ; écran mobile à faire. | `src/app/api/v1/documents` |
-| **MOB-06** Temps et pièces | Must | oui | Partiel | API de pointage et de pièces idempotente ; écran mobile à faire. |  |
-| **MOB-07** Hors connexion | Must | oui | À faire | Fonctionnement hors connexion. |  |
-| **MOB-08** Synchronisation sans doublon | Must | oui | Partiel | Idempotence par clientId sur les créations (DI, relevés, pointages, mouvements) ; file de synchronisation à faire. |  |
-| **MOB-09** Gestion des conflits | Must | oui | À faire | Gestion des conflits de synchronisation. |  |
+| **MOB-01** Application iOS et Android | Must | oui | Partiel | Application Expo (React Native) : onglets selon les droits de `GET /api/v1/me`, mêmes droits et périmètres que le web. Restent : contrôle de prise de poste, réception, transfert et inventaire du magasinier, qualification des DI par le chef d'atelier sur mobile. | `mobile/` |
+| **MOB-02** Scan | Must | oui | Fait | Lecture QR code et code-barres par la caméra (`expo-camera`) ; code inconnu signalé sans bloquer ; équipements déjà consultés retrouvés hors connexion. | `mobile/src/app/(tabs)/scan.tsx`, `mobile/src/lib/qr.ts` |
+| **MOB-03** Demandes d'intervention | Must | oui | Partiel | Signalement en un écran depuis la fiche équipement, hors connexion, idempotent. Reste : suivi du statut de ses DI sur mobile. | `mobile/src/app/request/new.tsx` |
+| **MOB-04** Relevé de compteurs | Must | oui | Fait | Relevé depuis la fiche équipement ou l'OT ; un relevé inférieur au précédent est signalé avant envoi ; contrôles DON-01 à DON-03 au serveur. | `mobile/src/app/equipment/[id].tsx` |
+| **MOB-05** Checklists, photos, comptes rendus | Must | oui | Fait | Checklist (OK / NOK / N/A, mesures), diagnostic (symptôme, cause, remède) et compte rendu, photos compressées (1 920 px) envoyées après les données ; points obligatoires contrôlés par le serveur à « Travaux terminés ». | `mobile/src/app/work-order/[id].tsx` |
+| **MOB-06** Temps et pièces | Must | oui | Partiel | Temps passé (raccourcis) et pièces consommées (article, magasin, quantité), idempotents ; stock jamais négatif, refus affiché « à revoir ». Reste : consommation par scan de l'article. | `mobile/src/app/work-order/[id].tsx` |
+| **MOB-07** Hors connexion | Must | oui | Partiel | Saisies hors connexion (DI, relevés, checklist, compte rendu, temps, pièces, photos, transitions) et consultation des données déjà vues ; bandeau permanent (connexion, dernière synchronisation, saisies en attente). Restent : préchargement complet du périmètre et essai d'autonomie de 7 jours. | `mobile/src/lib/sync.ts`, `mobile/src/context/sync.tsx` |
+| **MOB-08** Synchronisation sans doublon | Must | oui | Fait | `clientId` à la création, envoi dans l'ordre, photos en dernier, succès retirés aussitôt de la file, transition déjà appliquée reconnue ; vérifié contre le serveur avec coupure réseau et renvoi en double. | `mobile/src/lib/sync.ts`, `mobile/scripts/verify-sync.ts` |
+| **MOB-09** Gestion des conflits | Must | oui | Partiel | Refus du serveur (droit, règle, stock insuffisant, OT annulé) : saisie « à revoir » avec motif, relancée ou abandonnée par l'utilisateur, jamais perdue. Restent : règles du tableau §10.4 côté serveur (mouvement « à régulariser », pointage « à vérifier », alerte au chef d'atelier). | `mobile/src/app/(tabs)/sync.tsx` |
 | **MOB-10** Inventaire mobile | Should |  | Phase 2 |  |  |
 | **MOB-11** Signature | Should |  | Phase 2 |  |  |
 | **MOB-12** Dictée vocale | Could |  | Phase 3 |  |  |
-| **MOB-13** Sécurité du terminal | Must | oui | À faire | Sécurité du terminal (verrouillage, effacement à distance). |  |
+| **MOB-13** Sécurité du terminal | Must | oui | Partiel | Jeton dans le trousseau chiffré du système, cache effacé à la déconnexion, HTTPS en production. Restent : chiffrement du cache, code ou biométrie, durée hors connexion limitée, effacement à distance. | `mobile/src/lib/storage.ts` |
 
 ## Notifications (NOT)
 

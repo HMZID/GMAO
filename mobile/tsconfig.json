@@ -1,0 +1,8 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true
+  },
+  // Tests du cœur (src/lib/__tests__) : exécutés par Vitest à la racine, avec ses types.
+  "exclude": ["node_modules", "src/**/__tests__/**"]
+}
