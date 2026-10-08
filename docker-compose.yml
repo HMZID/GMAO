@@ -1,0 +1,22 @@
+# Base de développement : PostgreSQL 16 (identifiants alignés sur .env.example)
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gmao
+      POSTGRES_PASSWORD: gmao
+      POSTGRES_DB: gmao
+      TZ: UTC
+    ports:
+      - "5432:5432"
+    volumes:
+      - gmao-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gmao -d gmao"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  gmao-data:

@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/*
+ * Charte de l'application : bleu nuit pour la navigation, sarcelle pour l'action principale,
+ * neutres ardoise pour le contenu. Couleurs d'état : voir src/lib/labels.ts (Tone).
+ */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --color-ink-950: #0b1b33;
+  --color-ink-900: #0e2841;
+  --color-ink-800: #17375a;
+  --color-ink-700: #234b74;
+
+  --color-brand-50: #ecf8f5;
+  --color-brand-100: #d2efe8;
+  --color-brand-200: #a7dfd1;
+  --color-brand-500: #23a088;
+  --color-brand-600: #1e8e7a;
+  --color-brand-700: #177263;
+  --color-brand-800: #135b50;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-slate-50);
+  color: var(--color-slate-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grandes zones tactiles et contrastes élevés pour l'usage en atelier (CDC §10.1). */
+@layer base {
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+}

@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Vérifications et tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gmao
+          POSTGRES_PASSWORD: gmao
+          POSTGRES_DB: gmao
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gmao -d gmao"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://gmao:gmao@localhost:5432/gmao
+      BETTER_AUTH_SECRET: ci-secret-0123456789abcdef0123456789abcdef
+      BETTER_AUTH_URL: http://localhost:3100
+      TZ: UTC
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Formatage, lint et types
+        run: |
+          npm run format:check
+          npm run lint
+          npm run typecheck
+      - name: Tests unitaires (règles métier)
+        run: npm test
+      - name: Base de données (migrations et démonstration)
+        run: |
+          npm run db:migrate
+          npm run db:seed
+      - name: Construction
+        run: npm run build
+      - name: Navigateur Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Tests de bout en bout
+        run: npm run test:e2e
+      - name: Rapport Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
