@@ -53,6 +53,14 @@ export const EXPENSE_APPROVAL: Record<string, { label: string; tone: Tone }> = {
   REJECTED: { label: "Refusée", tone: "red" },
 };
 
+/** File d'envoi des courriels (NOT-01). */
+export const EMAIL_STATUS: Record<string, { label: string; tone: Tone }> = {
+  PENDING: { label: "En attente", tone: "blue" },
+  SENT: { label: "Envoyé", tone: "green" },
+  FAILED: { label: "En échec", tone: "red" },
+  CANCELLED: { label: "Annulé", tone: "gray" },
+};
+
 /** Imports Excel (EQP-13, INT-01). */
 export const IMPORT_KIND: Record<string, string> = {
   EQUIPMENT: "Équipements",
@@ -291,6 +299,7 @@ export const ENTITY_TYPE: Record<string, string> = {
   document: "Document",
   import: "Import",
   approval: "Validation",
+  email: "Courriel",
   approval_workflow: "Circuit de validation",
   approval_substitute: "Suppléance",
   purchase_request: "Demande d'achat",

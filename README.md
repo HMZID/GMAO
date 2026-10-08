@@ -29,6 +29,7 @@ npm install
 npm run db:migrate            # crée les tables
 npm run db:seed               # données de démonstration
 npm run dev                   # http://localhost:3000
+npm run worker                # envoi des courriels (Mailpit : http://localhost:8025)
 ```
 
 `npm run db:reset` vide la base, rejoue les migrations et recharge la démonstration (refusé sur une base dont l'URL contient « prod »).
@@ -74,6 +75,7 @@ Mot de passe commun : `Demo-Gmao-2026`. Les données sont datées par rapport au
 | `npm run test:e2e` | Tests de bout en bout (Playwright) sur l'application construite ; base chargée avec `db:reset` au préalable |
 | `npm run db:generate` | Nouvelle migration SQL après modification du schéma Drizzle |
 | `npm run db:studio` | Explorateur de base Drizzle Studio |
+| `npm run worker` | Processus d'envoi des courriels et des alertes calculées (à lancer à côté de l'application ; `-- --once` pour une seule passe) |
 
 ## Architecture en bref
 
@@ -112,6 +114,9 @@ Next.js 16 (App Router, Cache Components, Server Actions) et React 19, TypeScrip
 | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | SSO Microsoft Entra ID, activé dès que l'identifiant et le secret sont renseignés |
 | `NEXT_PUBLIC_DEFAULT_TIMEZONE` | Fuseau d'affichage et de saisie, `Europe/Paris` par défaut |
 | `DOCUMENT_MAX_SIZE_MB` | Taille maximale d'un document joint, 20 Mo par défaut (relu au démarrage : `next.config.ts`) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | Envoi des courriels en SMTP (Office 365, Brevo, Amazon SES ; Mailpit en développement). Sans `SMTP_HOST`, les courriels sont écrits dans le journal du processus |
+| `APP_URL`, `EMAIL_DIGEST_HOUR`, `EMAIL_WORKER_INTERVAL_SECONDS`, `EMAIL_ALERTS_INTERVAL_MINUTES` | Adresse des liens dans les courriels (défaut : `BETTER_AUTH_URL`), heure des récapitulatifs quotidiens (7 h), rythme du processus d'envoi |
+| `CRON_SECRET` | Secret de `POST /api/cron/notifications` (tâche planifiée externe à la place de `npm run worker`), 16 caractères au moins |
 | `STORAGE_DRIVER` | Stockage des documents : `local` (défaut, répertoire `STORAGE_LOCAL_DIR`, `./storage`) ou `s3` |
 | `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE` | Stockage compatible S3 (AWS, Scaleway, OVH, SeaweedFS…) ; `S3_AUTO_CREATE_BUCKET=true` crée le compartiment en développement, `S3_SERVER_SIDE_ENCRYPTION=none` désactive le chiffrement côté serveur si le service ne le gère pas |
 

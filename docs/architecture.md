@@ -153,6 +153,15 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 - **Effets** : DI P1 → transformation en OT bloquée tant que la validation est en attente, DI rejetée si refusée ; demande d'achat → statut validée ou refusée ; dépense d'OT (`work_order_costs.approval_status`) → comptée dans les coûts et les indicateurs seulement une fois validée, clôture administrative de l'OT refusée tant qu'une dépense attend.
 - Rejet, rattachement ou annulation de l'objet : la validation en attente est annulée.
 
+### Notifications par courriel (NOT-01, NOT-03, NOT-04, §11.1)
+
+- **File d'envoi transactionnelle** (`email_outbox`) : `notifyUsers` et `notifyByPermission` écrivent la notification de l'application et, pour les événements prévus (`src/server/domain/email.ts`), le courriel, **dans la transaction de l'événement**. Pas d'événement validé, pas de courriel.
+- **Anti-doublon** : clé d'événement unique par groupe (`dedup_key`) : par exemple étape d'une validation + destinataire, OT + intervenant, document + palier + destinataire, récapitulatif + jour + destinataire. Rejouer un traitement n'envoie rien de plus.
+- **Préférences** (`email_preferences`) : chaque utilisateur choisit ses événements ; DI P1 et validations en attente sont obligatoires (§11.1).
+- **Envoi en arrière-plan** : `npm run worker` (processus à côté de l'application) ou `POST /api/cron/notifications` (tâche planifiée externe, `CRON_SECRET`). Prise en charge par `FOR UPDATE SKIP LOCKED` (plusieurs processus possibles), verrou de 5 minutes repris en cas d'arrêt brutal. Erreur passagère : nouvel essai après 1, 5, 15, 60 puis 240 minutes ; erreur définitive (réponse SMTP 5xx, authentification) ou 5 tentatives : « en échec ». Chaque erreur est conservée (`errors`) et l'administrateur relance ou annule (`/administration/courriels`).
+- **Alertes calculées** (`runScheduledAlerts`, toutes les 15 minutes) : récapitulatifs quotidiens à partir de `EMAIL_DIGEST_HOUR` (échéances en pré-alerte ou échues, retards, stock sous le point de commande), documents à J-30, J-7 et échus. Destinataires par rôle (§11.1), dans le périmètre de ce rôle.
+- **Transport** (`src/server/email/transport.ts`) : SMTP (`SMTP_*`, STARTTLS) ; sans `SMTP_HOST`, le courriel est écrit dans le journal du processus (développement, tests). Modèles en texte et HTML, valeurs échappées, liens internes seulement.
+
 ## Interface
 
 - **Server Components** pour la lecture, **Server Actions** pour l'écriture, avec amélioration progressive (le formulaire fonctionne avant le chargement du JavaScript).
@@ -187,4 +196,5 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 | Journal d'audit | `audit_logs` |
 | Circuit, étape, suppléant, demande de validation, décision | `approval_workflows`, `approval_steps`, `approval_substitutes`, `approval_requests`, `approval_decisions` |
 | Demande d'achat | `purchase_requests` |
+| File d'envoi des courriels, préférences | `email_outbox`, `email_preferences` |
 | Document, pièce jointe, photo | `documents` (`document_kind`), fichier dans le stockage (`src/server/storage`) |

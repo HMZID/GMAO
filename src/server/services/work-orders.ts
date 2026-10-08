@@ -38,7 +38,7 @@ import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { bool, optionalDate, optionalId, optionalNumber, optionalText, text } from "@/server/validation";
 import { assertCan, assertCanOn, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
 import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equipment-status";
-import { notifyByPermission } from "./notifications";
+import { notifyAssignedTechnicians, notifyByPermission } from "./notifications";
 import { completeDueItem } from "./preventive";
 import { issueToWorkOrder, releaseReservations, reserveForWorkOrder, returnFromWorkOrder } from "./stock";
 import { approvalTimeline, startApproval } from "./approvals";
@@ -384,6 +384,7 @@ export async function createWorkOrder(ctx: AuthContext, raw: unknown) {
       siteId: eqRow.siteId,
       assigneeTechnicianIds: input.assigneeIds,
     });
+    await notifyAssignedTechnicians(tx, ctx.tenantId, wo, [...new Set(input.assigneeIds ?? [])], { excludeUserId: ctx.userId });
     if (input.isImmobilizing && input.type !== "PREVENTIVE" && input.type !== "REGULATORY") {
       await setEquipmentStatus(tx, ctx, eqRow.id, "IMMOBILIZED", { reason: `OT ${wo.number}`, workOrderId: wo.id });
       await openDowntime(tx, ctx, { equipmentId: eqRow.id, reason: input.isSafetyRelated ? "SAFETY" : "BREAKDOWN", workOrderId: wo.id });
@@ -461,10 +462,17 @@ export async function updatePlanning(ctx: AuthContext, id: string, raw: unknown)
       .where(eq(workOrders.id, id))
       .returning();
     if (assigneeIds) {
+      const previous = await tx
+        .select({ technicianId: workOrderAssignees.technicianId })
+        .from(workOrderAssignees)
+        .where(eq(workOrderAssignees.workOrderId, id));
       await tx.delete(workOrderAssignees).where(eq(workOrderAssignees.workOrderId, id));
       if (assigneeIds.length > 0) {
         await tx.insert(workOrderAssignees).values([...new Set(assigneeIds)].map((technicianId) => ({ workOrderId: id, technicianId })));
       }
+      // Seuls les nouveaux intervenants sont prévenus.
+      const added = [...new Set(assigneeIds)].filter((t) => !previous.some((p) => p.technicianId === t));
+      await notifyAssignedTechnicians(tx, ctx.tenantId, row, added, { excludeUserId: ctx.userId });
     }
     await audit(tx, ctx, { entityType: "work_order", entityId: id, action: "plan", before: wo, after: { ...row, assigneeIds } });
   });
@@ -562,6 +570,8 @@ export async function transitionWorkOrder(ctx: AuthContext, id: string, raw: unk
         wo,
         {
           type: "work_order.release_requested",
+          // Une nouvelle demande de remise en service après réouverture repart par courriel.
+          dedupKey: `release:${wo.id}:${now.toISOString()}`,
           title: `Remise en service à valider : ${wo.number}`,
           body: wo.title,
           entityType: "work_order",

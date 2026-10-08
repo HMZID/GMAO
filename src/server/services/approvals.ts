@@ -182,6 +182,7 @@ export async function startApproval(tx: DbOrTx, ctx: AuthContext, subject: Appro
     validators.recipients(applicable[0], target).filter((id) => id !== subject.requestedById),
     {
       type: "approval.pending",
+      dedupKey: `approval:${request.id}:${applicable[0].position}`,
       title: `À valider : ${subject.label}`,
       body: `${applicable[0].name}${subject.amount != null ? ` — ${subject.amount.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}` : ""}`,
       entityType: "approval",
@@ -295,7 +296,14 @@ export async function decideApproval(ctx: AuthContext, requestId: string, raw: u
         tx,
         ctx.tenantId,
         validators.recipients(nextStep, target).filter((id) => id !== request.requestedById && id !== ctx.userId),
-        { type: "approval.pending", title: `À valider : ${request.label}`, body: nextStep.name, entityType: "approval", entityId: request.id },
+        {
+          type: "approval.pending",
+          dedupKey: `approval:${request.id}:${nextStep.position}`,
+          title: `À valider : ${request.label}`,
+          body: nextStep.name,
+          entityType: "approval",
+          entityId: request.id,
+        },
       );
     } else {
       await applyOutcome(tx, ctx, request, next.status, input.comment ?? null);
@@ -305,6 +313,7 @@ export async function decideApproval(ctx: AuthContext, requestId: string, raw: u
         [request.requestedById].filter((id) => id !== ctx.userId),
         {
           type: next.status === "APPROVED" ? "approval.approved" : "approval.rejected",
+          dedupKey: `approval-decision:${request.id}`,
           title: `${next.status === "APPROVED" ? "Validée" : "Refusée"} : ${request.label}`,
           body: input.comment ?? `Votre ${OBJECT_LABEL[request.objectType]} a été ${next.status === "APPROVED" ? "validée" : "refusée"}.`,
           entityType: "approval",

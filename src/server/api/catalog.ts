@@ -4,6 +4,7 @@ import type { Permission } from "@/server/authz/permissions";
 import { documentDeleteInput, documentInput, documentListInput } from "@/server/services/documents";
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
 import { decisionInput } from "@/server/services/approvals";
+import { preferencesInput } from "@/server/services/email";
 import { executeInput } from "@/server/services/imports";
 import { indicatorFilters } from "@/server/services/kpi";
 import { readingInput, replacementInput, reviewInput } from "@/server/services/meters";
@@ -297,6 +298,17 @@ export const ENDPOINTS: Endpoint[] = [
   },
   { method: "GET", path: "/api/v1/purchase-requests/{id}", summary: "Demande d'achat et historique de validation", permission: "purchase.read" },
   { method: "POST", path: "/api/v1/purchase-requests/{id}/cancel", summary: "Annulation motivée", permission: "purchase.create", body: cancelInput },
+  {
+    method: "GET",
+    path: "/api/v1/notifications/preferences",
+    summary: "Préférences de notification par courriel (alertes obligatoires toujours actives)",
+  },
+  {
+    method: "PUT",
+    path: "/api/v1/notifications/preferences",
+    summary: "Événements reçus par courriel",
+    body: preferencesInput,
+  },
   { method: "GET", path: "/api/v1/kpis", summary: "Indicateurs de la période", permission: "kpi.read", query: indicatorFilters },
 ];
 

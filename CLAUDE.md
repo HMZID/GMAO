@@ -11,6 +11,7 @@ GMAO pour engins, véhicules et équipements. Référence fonctionnelle : `docs/
 - `npm test` : règles métier (Vitest, `src/**/*.test.ts`, TZ=UTC)
 - `npm run test:e2e` : Playwright sur l'application construite (`npm run build` et `npm run db:reset` avant)
 - `npm run db:reset` : base vidée, migrée et rechargée (démonstration datée par rapport au jour)
+- `npm run worker` : envoi des courriels en file et alertes calculées (`-- --once` : une passe)
 - Schéma modifié : `npm run db:generate` puis `npm run db:migrate` ; ne jamais modifier une migration déjà livrée
 
 Avant de rendre la main : `npm run format`, `npm run lint`, `npm run typecheck`, `npm test`, et les tests e2e si un écran ou un service a changé.
