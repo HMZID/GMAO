@@ -15,6 +15,13 @@ GMAO pour engins, véhicules et équipements. Référence fonctionnelle : `docs/
 
 Avant de rendre la main : `npm run format`, `npm run lint`, `npm run typecheck`, `npm test`, et les tests e2e si un écran ou un service a changé.
 
+## Flux Git
+
+- `main` : production. `develop` : intégration et recette.
+- Chaque tâche a sa branche `GMAO-NN` (numéro suivant : `GMAO-01`, `GMAO-02`…), créée depuis `develop` à jour.
+- Pull Request `GMAO-NN` → `develop` une fois les vérifications passées (CI verte). Jamais de PR d'une branche de tâche vers `main`.
+- Après les tests sur `develop`, Pull Request `develop` → `main` pour la mise en production, sur décision du responsable du projet.
+
 ## Architecture
 
 - `src/server/domain/` : règles pures (aucun import de base ni de Next), testées. Toute règle métier nouvelle commence ici, avec son test.
