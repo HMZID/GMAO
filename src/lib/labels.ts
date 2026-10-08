@@ -26,6 +26,33 @@ export const ACQUISITION_MODE: Record<string, string> = {
   SHORT_TERM_RENTAL: "Location courte durée",
 };
 
+/** Circuits de validation (HAB-04) et demandes d'achat (ACH-01). */
+export const APPROVAL_OBJECT: Record<string, string> = {
+  WORK_REQUEST: "Demande d'intervention",
+  PURCHASE_REQUEST: "Demande d'achat",
+  MAINTENANCE_EXPENSE: "Dépense de maintenance",
+};
+
+export const APPROVAL_STATUS: Record<string, { label: string; tone: Tone }> = {
+  PENDING: { label: "En attente", tone: "amber" },
+  APPROVED: { label: "Validée", tone: "green" },
+  REJECTED: { label: "Refusée", tone: "red" },
+  CANCELLED: { label: "Annulée", tone: "gray" },
+};
+
+export const PURCHASE_REQUEST_STATUS: Record<string, { label: string; tone: Tone }> = {
+  PENDING_APPROVAL: { label: "À valider", tone: "amber" },
+  APPROVED: { label: "Validée", tone: "green" },
+  REJECTED: { label: "Refusée", tone: "red" },
+  CANCELLED: { label: "Annulée", tone: "gray" },
+};
+
+export const EXPENSE_APPROVAL: Record<string, { label: string; tone: Tone }> = {
+  APPROVED: { label: "Validée", tone: "green" },
+  PENDING: { label: "À valider", tone: "amber" },
+  REJECTED: { label: "Refusée", tone: "red" },
+};
+
 /** Imports Excel (EQP-13, INT-01). */
 export const IMPORT_KIND: Record<string, string> = {
   EQUIPMENT: "Équipements",
@@ -263,6 +290,10 @@ export const ENTITY_TYPE: Record<string, string> = {
   equipment_model: "Modèle",
   document: "Document",
   import: "Import",
+  approval: "Validation",
+  approval_workflow: "Circuit de validation",
+  approval_substitute: "Suppléance",
+  purchase_request: "Demande d'achat",
   meter: "Compteur",
   meter_reading: "Relevé",
   maintenance_plan: "Plan d'entretien",

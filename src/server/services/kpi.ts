@@ -118,7 +118,8 @@ export async function maintenanceCosts(ctx: AuthContext, from: Date, to: Date, f
       .from(workOrderCosts)
       .innerJoin(workOrders, eq(workOrders.id, workOrderCosts.workOrderId))
       .innerJoin(equipment, eq(equipment.id, workOrders.equipmentId))
-      .where(woWhere),
+      // HAB-04 : seules les dépenses approuvées entrent dans les coûts.
+      .where(and(woWhere, eq(workOrderCosts.approvalStatus, "APPROVED"))),
   ]);
   const round = (n: number) => Math.round(n * 100) / 100;
   const total = labor.amount + partCost.amount + external.amount + other.amount;

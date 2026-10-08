@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
+import { ApprovalCard } from "@/components/approvals/approval-card";
 import { DocumentsCard } from "@/components/documents/documents-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { CriticalityBadge, EquipmentStatusBadge, PriorityBadge, RequestStatusBadge, WorkOrderStatusBadge } from "@/components/status-badges";
 import { Alert, Badge, Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/primitives";
-import { formatDate, formatDateTime, formatMinutes, formatNumber } from "@/lib/format";
-import { HOLD_REASON, WORK_ORDER_OUTCOME, WORK_ORDER_TYPE } from "@/lib/labels";
+import { formatCurrency, formatDate, formatDateTime, formatMinutes, formatNumber } from "@/lib/format";
+import { HOLD_REASON, PURCHASE_REQUEST_STATUS, WORK_ORDER_OUTCOME, WORK_ORDER_TYPE } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { OPEN_STATUSES } from "@/server/domain/work-order-status";
 import { loadOr404 } from "@/server/pages";
@@ -120,6 +121,38 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
             canReport={wo.canExecute && ["IN_PROGRESS", "WORK_DONE", "ON_HOLD"].includes(status)}
             canRead={executing && ctx.can("meter.write")}
           />
+          <ApprovalCard approvals={wo.expenseApprovals} title="Validation des dépenses" />
+          {wo.purchaseRequests.length > 0 || ctx.canOn("purchase.create", wo) ? (
+            <Card>
+              <CardHeader
+                title="Demandes d'achat"
+                description="Pièces et prestations demandées pour cet OT (ACH-01)"
+                actions={
+                  ctx.canOn("purchase.create", wo) && isOpen ? (
+                    <Link href={`/demandes-achat/nouvelle?workOrderId=${wo.id}`} className="text-sm text-brand-700 hover:underline">
+                      Nouvelle demande d&apos;achat
+                    </Link>
+                  ) : null
+                }
+              />
+              {wo.purchaseRequests.length > 0 ? (
+                <CardBody>
+                  <ul className="space-y-1 text-sm">
+                    {wo.purchaseRequests.map((p) => (
+                      <li key={p.id} className="flex flex-wrap items-center gap-2">
+                        <Link href={`/demandes-achat/${p.id}`} className="font-medium text-brand-700 hover:underline">
+                          {p.number}
+                        </Link>
+                        <span className="text-slate-700">{p.description}</span>
+                        <span className="tabular-nums text-slate-500">{formatCurrency(p.amount)}</span>
+                        <Badge tone={PURCHASE_REQUEST_STATUS[p.status]?.tone}>{PURCHASE_REQUEST_STATUS[p.status]?.label}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                </CardBody>
+              ) : null}
+            </Card>
+          ) : null}
           <DocumentsCard
             ctx={ctx}
             entityType="WORK_ORDER"

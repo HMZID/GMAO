@@ -3,6 +3,7 @@ import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form"
 import { PageHeader } from "@/components/layout/page-header";
 import { CriticalityBadge, EquipmentStatusBadge, PriorityBadge, RequestStatusBadge, WorkOrderStatusBadge } from "@/components/status-badges";
 import { Checkbox, Select, Textarea } from "@/components/ui/inputs";
+import { ApprovalCard } from "@/components/approvals/approval-card";
 import { Alert, Badge, Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/primitives";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { PRIORITY, REQUEST_TYPE, options } from "@/lib/labels";
@@ -131,6 +132,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
         </Card>
 
         <div className="space-y-6">
+          <ApprovalCard approvals={r.approvals} />
           {canQualify ? (
             <Card>
               <CardHeader title="Qualifier" description="Priorité, type et décision d'immobilisation (COR-03)" />

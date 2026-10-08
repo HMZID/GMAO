@@ -39,7 +39,7 @@ flowchart LR
   - `ctx.canOn(droit, { companyId, siteId })` : sur cette cible ?
   - `scopeWhere(ctx.scope(droit), colonneSociété, colonneSite)` : condition SQL appliquée à toutes les listes, recherches et API (HAB-02).
 - Un objet hors périmètre répond « introuvable » (404) : son existence n'est pas révélée.
-- La matrice rôle → droits est dans `src/server/authz/permissions.ts` (29 droits, 10 rôles).
+- La matrice rôle → droits est dans `src/server/authz/permissions.ts` (31 droits, 10 rôles).
 
 | Rôle | Principaux droits |
 | --- | --- |
@@ -145,6 +145,14 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 - **Réimportation sans doublon** : une ligne dont la clé existe déjà (code parc, référence interne, article déjà mouvementé dans le magasin) est « déjà présente » et ignorée. Le stock initial est en plus idempotent par `clientId`. Un fichier déjà exécuté (même empreinte) est signalé.
 - **Rapport** : à l'écran (filtre sur les erreurs) et en Excel (`/api/v1/imports/{id}/report`), avec le statut et les anomalies de chaque ligne.
 
+### Circuits de validation (HAB-04, CDC §2.4)
+
+- **Paramétrage** (`/administration/validations`, droit `settings.manage`) : un circuit par type d'objet (`WORK_REQUEST`, `PURCHASE_REQUEST`, `MAINTENANCE_EXPENSE`), pour une société ou pour le groupe (le circuit de la société l'emporte). Chaque étape a un valideur, rôle détenu sur la société ou le site de l'objet ou personne nommée, un seuil (« à partir de ») et, pour les DI, des priorités.
+- **Soumission** (`startApproval`) : les étapes applicables (`applicableSteps`, domaine pur) sont **figées** dans la demande ; sans étape applicable, pas de validation. Les valideurs de la première étape et leurs suppléants sont notifiés.
+- **Décision** (`decideApproval`, verrou de ligne) : demande en attente, valideur de l'étape en cours (ou suppléant actif, enregistré « pour le compte de »), demandeur exclu, une même personne n'approuve pas deux étapes, commentaire obligatoire en cas de refus (`checkDecision`, toutes les anomalies en une fois). Décisions en ajout seul dans `approval_decisions` ; une décision sur une demande close est refusée.
+- **Effets** : DI P1 → transformation en OT bloquée tant que la validation est en attente, DI rejetée si refusée ; demande d'achat → statut validée ou refusée ; dépense d'OT (`work_order_costs.approval_status`) → comptée dans les coûts et les indicateurs seulement une fois validée, clôture administrative de l'OT refusée tant qu'une dépense attend.
+- Rejet, rattachement ou annulation de l'objet : la validation en attente est annulée.
+
 ## Interface
 
 - **Server Components** pour la lecture, **Server Actions** pour l'écriture, avec amélioration progressive (le formulaire fonctionne avant le chargement du JavaScript).
@@ -177,4 +185,6 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 | Absence, habilitation, compétence | `absences`, `certifications`, `skills` |
 | Périmètre (groupe, société, site) | `scope_type` (`TENANT`, `COMPANY`, `SITE`) |
 | Journal d'audit | `audit_logs` |
+| Circuit, étape, suppléant, demande de validation, décision | `approval_workflows`, `approval_steps`, `approval_substitutes`, `approval_requests`, `approval_decisions` |
+| Demande d'achat | `purchase_requests` |
 | Document, pièce jointe, photo | `documents` (`document_kind`), fichier dans le stockage (`src/server/storage`) |

@@ -3,11 +3,13 @@ import { z } from "zod";
 import type { Permission } from "@/server/authz/permissions";
 import { documentDeleteInput, documentInput, documentListInput } from "@/server/services/documents";
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
+import { decisionInput } from "@/server/services/approvals";
 import { executeInput } from "@/server/services/imports";
 import { indicatorFilters } from "@/server/services/kpi";
 import { readingInput, replacementInput, reviewInput } from "@/server/services/meters";
 import { weekInput } from "@/server/services/planning";
 import { applyPlanInput, dueFilters, planInput } from "@/server/services/preventive";
+import { cancelInput, purchaseRequestFilters, purchaseRequestInput } from "@/server/services/purchase-requests";
 import { movementInput, partFilters, partInput, supplierInput } from "@/server/services/stock";
 import {
   partLineInput,
@@ -270,6 +272,31 @@ export const ENDPOINTS: Endpoint[] = [
     body: executeInput,
   },
   { method: "GET", path: "/api/v1/imports/{id}/report", summary: "Rapport Excel : statut et anomalies de chaque ligne" },
+  { method: "GET", path: "/api/v1/approvals", summary: "Validations en attente que l'utilisateur peut trancher (valideur ou suppléant)" },
+  { method: "GET", path: "/api/v1/approvals/{id}", summary: "Demande de validation : étapes figées, décisions, droit de trancher" },
+  {
+    method: "POST",
+    path: "/api/v1/approvals/{id}/decision",
+    summary: "Approbation ou refus de l'étape en cours (commentaire obligatoire en cas de refus, HAB-04)",
+    body: decisionInput,
+  },
+  { method: "GET", path: "/api/v1/approval-workflows", summary: "Circuits de validation et leurs étapes", permission: "settings.manage" },
+  {
+    method: "GET",
+    path: "/api/v1/purchase-requests",
+    summary: "Demandes d'achat du périmètre",
+    permission: "purchase.read",
+    query: purchaseRequestFilters,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/purchase-requests",
+    summary: "Création d'une demande d'achat, soumise au circuit (ACH-01, ACH-02)",
+    permission: "purchase.create",
+    body: purchaseRequestInput,
+  },
+  { method: "GET", path: "/api/v1/purchase-requests/{id}", summary: "Demande d'achat et historique de validation", permission: "purchase.read" },
+  { method: "POST", path: "/api/v1/purchase-requests/{id}/cancel", summary: "Annulation motivée", permission: "purchase.create", body: cancelInput },
   { method: "GET", path: "/api/v1/kpis", summary: "Indicateurs de la période", permission: "kpi.read", query: indicatorFilters },
 ];
 

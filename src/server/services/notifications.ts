@@ -68,6 +68,24 @@ export async function notifyByPermission(
   return recipients.size;
 }
 
+/** Notifie des utilisateurs nommés (valideurs d'une étape, demandeur d'une validation). */
+export async function notifyUsers(tx: DbOrTx, tenantId: string, userIds: string[], notification: NotificationInput) {
+  const recipients = [...new Set(userIds)];
+  if (recipients.length === 0) return 0;
+  await tx.insert(notifications).values(
+    recipients.map((userId) => ({
+      tenantId,
+      userId,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      entityType: notification.entityType,
+      entityId: notification.entityId,
+    })),
+  );
+  return recipients.length;
+}
+
 export async function listMyNotifications(ctx: AuthContext, limit = 20) {
   return db
     .select()

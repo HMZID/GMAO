@@ -626,7 +626,10 @@ export async function getEquipmentFormOptions(ctx: AuthContext) {
 }
 
 /** Liste courte pour les sélecteurs (DI, OT) dans le périmètre d'un droit. */
-export async function listEquipmentOptions(ctx: AuthContext, permission: "request.create" | "workorder.create" = "request.create") {
+export async function listEquipmentOptions(
+  ctx: AuthContext,
+  permission: "request.create" | "workorder.create" | "purchase.create" = "request.create",
+) {
   return db
     .select({ id: equipment.id, code: equipment.code, name: equipment.name, siteId: equipment.siteId })
     .from(equipment)

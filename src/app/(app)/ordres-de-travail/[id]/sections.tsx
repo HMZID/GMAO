@@ -6,6 +6,7 @@ import { Checkbox, Input, Select, Textarea } from "@/components/ui/inputs";
 import { Badge, Card, CardBody, CardHeader, EmptyState, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
 import { formatCurrency, formatDateTime, formatMinutes, formatNumber, toDateTimeInput } from "@/lib/format";
 import {
+  EXPENSE_APPROVAL,
   HOLD_REASON,
   MOVEMENT_TYPE,
   PRIORITY,
@@ -585,8 +586,11 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
         {wo.costRows.length > 0 ? (
           <ul className="text-xs text-slate-500">
             {wo.costRows.map((x) => (
-              <li key={x.id}>
+              <li key={x.id} className="flex flex-wrap items-center gap-1.5">
                 {x.label} : {formatCurrency(x.amount)}
+                {x.approvalStatus !== "APPROVED" ? (
+                  <Badge tone={EXPENSE_APPROVAL[x.approvalStatus]?.tone}>{EXPENSE_APPROVAL[x.approvalStatus]?.label}</Badge>
+                ) : null}
               </li>
             ))}
           </ul>
