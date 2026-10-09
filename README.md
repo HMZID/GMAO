@@ -98,7 +98,7 @@ e2e/                     tests Playwright
 docs/                    cahier des charges, architecture, traçabilité
 ```
 
-Détails, conventions et glossaire : `docs/architecture.md`. Configuration et utilisation des évolutions (mobile, imports, documents, validations, courriels) : `docs/guide-evolutions.md`. Consignes pour les agents de code (Claude Code) : `CLAUDE.md`.
+Détails, conventions et glossaire : `docs/architecture.md`. Configuration et utilisation des évolutions (mobile, imports, documents, validations, courriels) : `docs/guide-evolutions.md`. Déploiement Vercel et Neon : `docs/deploiement-vercel.md`. Consignes pour les agents de code (Claude Code) : `CLAUDE.md`.
 
 ## Pile technique
 

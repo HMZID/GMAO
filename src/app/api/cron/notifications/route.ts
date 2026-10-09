@@ -7,6 +7,15 @@ import { processEmailQueue, runScheduledAlerts } from "@/server/services/email";
  * n'est pas utilisé : alertes calculées puis envoi de la file. Protégé par `Authorization: Bearer <CRON_SECRET>`.
  */
 export async function POST(request: Request) {
+  return run(request);
+}
+
+/** Vercel Cron appelle la route en GET (voir vercel.json). */
+export async function GET(request: Request) {
+  return run(request);
+}
+
+async function run(request: Request) {
   await connection();
   const secret = process.env.CRON_SECRET;
   const given = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
