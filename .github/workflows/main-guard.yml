@@ -1,0 +1,26 @@
+# Garde de la branche de production : une Pull Request vers `main` ne peut venir que de `develop`
+# (flux Git du projet : GMAO-NN → develop → main). Contrôle rendu obligatoire par la protection de `main`.
+name: Garde main
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  source:
+    name: Source de la PR (develop uniquement)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier la branche source
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ] || [ "$HEAD_REPO" != "$BASE_REPO" ]; then
+            echo "::error::Seule la branche develop du dépôt peut être fusionnée dans main (reçu : $HEAD_REPO:$HEAD_REF)."
+            exit 1
+          fi
+          echo "PR depuis develop : autorisée."

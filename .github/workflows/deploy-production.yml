@@ -1,0 +1,85 @@
+# Déploiement en production sur Vercel, après approbation humaine.
+#
+# Déclenchement : fin de la CI sur `main` (merge de `develop` vers `main`), uniquement si la CI a réussi.
+# Le job utilise l'environnement GitHub « production-approval » : il attend qu'un approbateur désigné
+# l'autorise (Actions → le workflow → « Review deployments » → Approve), puis déploie avec la CLI Vercel.
+# La construction a lieu chez Vercel, avec les variables du projet (DATABASE_URL, BETTER_AUTH_SECRET…) :
+# migrations de la base comprises (script `vercel-build`).
+#
+# Configuration du dépôt (Settings) :
+# - secret VERCEL_TOKEN : jeton créé sur https://vercel.com/account/tokens ;
+# - variables VERCEL_ORG_ID et VERCEL_PROJECT_ID : identifiants de l'équipe et du projet Vercel ;
+# - environnement « production-approval » avec les approbateurs requis.
+# Le déploiement automatique de `main` par Vercel est désactivé (vercel.json) : seul ce workflow met en production.
+name: Déploiement production
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Redéploiement manuel de `main` (même approbation requise).
+  workflow_dispatch:
+
+# Un seul déploiement à la fois ; un déploiement en attente d'approbation n'est pas annulé par le suivant.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Déployer sur Vercel (production)
+    # CI réussie sur un push vers main (merge), ou lancement manuel depuis main.
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production-approval
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      PRODUCTION_URL: https://gmao-eight-alpha.vercel.app
+    steps:
+      - name: Configuration
+        run: |
+          missing=""
+          [ -n "$VERCEL_TOKEN" ] || missing="$missing secret:VERCEL_TOKEN"
+          [ -n "$VERCEL_ORG_ID" ] || missing="$missing variable:VERCEL_ORG_ID"
+          [ -n "$VERCEL_PROJECT_ID" ] || missing="$missing variable:VERCEL_PROJECT_ID"
+          if [ -n "$missing" ]; then echo "::error::Configuration manquante dans les réglages du dépôt :$missing"; exit 1; fi
+
+      - uses: actions/checkout@v4
+        with:
+          # Exactement la version validée par la CI.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: CLI Vercel
+        run: npm install --global vercel@59.26.0
+
+      - name: Déploiement
+        id: deploy
+        run: |
+          url=$(vercel deploy --prod --yes --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Déployé : $url (adresse de production : $PRODUCTION_URL)"
+
+      - name: Vérification (sonde de santé)
+        run: |
+          for i in $(seq 1 20); do
+            body=$(curl -fsS "$PRODUCTION_URL/api/health" || true)
+            case "$body" in *'"ok"'*) echo "$body"; exit 0;; esac
+            sleep 15
+          done
+          echo "::error::La sonde $PRODUCTION_URL/api/health ne répond pas « ok » : $body"
+          exit 1
