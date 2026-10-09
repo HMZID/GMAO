@@ -1,6 +1,33 @@
 # Déploiement sur Vercel avec Neon
 
-L'application Next.js est déployée par Vercel depuis la branche `main` ; la base est un PostgreSQL Neon.
+L'application Next.js est déployée sur Vercel depuis la branche `main`, **par GitHub Actions après approbation humaine** ; la base est un PostgreSQL Neon.
+
+## Pipeline de mise en production
+
+```
+GMAO-NN ──PR──▶ develop ──PR (garde : develop uniquement)──▶ main ──▶ CI ──▶ approbation ──▶ Vercel (production)
+```
+
+1. **PR `develop` → `main`** : la CI (vérifications, tests, application mobile) et la garde « Source de la PR (develop uniquement) » doivent réussir ; la protection de `main` refuse toute autre source et toute poussée directe.
+2. **Merge** : la CI repart sur `main` ; si elle réussit, le workflow **Déploiement production** (`.github/workflows/deploy-production.yml`) démarre et **attend une approbation** (environnement GitHub `production-approval`).
+3. **Approbation** : GitHub → **Actions** → l'exécution « Déploiement production » → **Review deployments** → cocher `production-approval` → **Approve and deploy** (ou **Reject**).
+4. **Déploiement** : `vercel deploy --prod` ; la construction a lieu chez Vercel (migrations comprises), puis le workflow vérifie `/api/health`.
+
+Redéployer sans nouveau merge : **Actions → Déploiement production → Run workflow** (branche `main`), avec la même approbation.
+
+**Prévisualisations** (une par branche et par PR) : elles ne modifient jamais la base (ni migration ni démonstration), pour qu'une branche non approuvée ne touche pas la production. Pour tester des migrations en prévisualisation : base distincte pour l'environnement Preview (branche Neon) et `PREVIEW_MIGRATIONS=true`.
+
+Le déploiement automatique de `main` par l'intégration GitHub de Vercel est désactivé (`vercel.json` : `git.deploymentEnabled.main = false`) ; les prévisualisations des autres branches restent actives.
+
+### Configuration du dépôt GitHub (Settings)
+
+| Réglage | Valeur |
+| --- | --- |
+| Secret `VERCEL_TOKEN` | Jeton Vercel (https://vercel.com/account/tokens, portée : l'équipe du projet) |
+| Variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` | Identifiants de l'équipe et du projet (Vercel → projet → Settings → General) |
+| Environnement `production-approval` | Approbateurs requis, déploiement limité à `main` |
+| Protection de `main` | PR obligatoire, contrôles requis (CI, application mobile, garde develop), pas de poussée forcée |
+
 
 ## Ce que fait chaque déploiement
 
