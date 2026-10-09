@@ -138,9 +138,15 @@ export const partInput = z.object({
   criticality: z.enum(["A", "B", "C"]).default("C"),
 });
 
-export async function createPart(ctx: AuthContext, raw: unknown) {
+/** Contrôles de création d'un article, sans écriture (aussi utilisés par la simulation d'import, EQP-13). */
+export async function checkPartCreation(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "part.write");
   const input = parseInput(partInput, raw);
+  const [sameSku] = await db
+    .select({ id: parts.id })
+    .from(parts)
+    .where(and(eq(parts.tenantId, ctx.tenantId), eq(parts.sku, input.sku)));
+  if (sameSku) throw new ConflictError(`La référence interne ${input.sku} existe déjà.`, { existingId: sameSku.id });
   if (input.manufacturer && input.manufacturerRef) {
     const [dup] = await db
       .select({ id: parts.id, sku: parts.sku })
@@ -148,6 +154,11 @@ export async function createPart(ctx: AuthContext, raw: unknown) {
       .where(and(eq(parts.tenantId, ctx.tenantId), eq(parts.manufacturer, input.manufacturer), eq(parts.manufacturerRef, input.manufacturerRef)));
     if (dup) throw new ConflictError(`Doublon : l'article ${dup.sku} a déjà cette référence fabricant.`, { existingId: dup.id });
   }
+  return input;
+}
+
+export async function createPart(ctx: AuthContext, raw: unknown) {
+  const input = await checkPartCreation(ctx, raw);
   return db.transaction(async (tx) => {
     try {
       const [row] = await tx

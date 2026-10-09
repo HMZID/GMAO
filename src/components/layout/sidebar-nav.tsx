@@ -5,8 +5,11 @@ import {
   Boxes,
   CalendarClock,
   CalendarDays,
+  ClipboardCheck,
+  FileSpreadsheet,
   ClipboardList,
   LayoutDashboard,
+  ReceiptText,
   Settings,
   ShoppingCart,
   Siren,
@@ -28,6 +31,9 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   stock: Boxes,
   purchasing: ShoppingCart,
   kpi: BarChart3,
+  imports: FileSpreadsheet,
+  approvals: ClipboardCheck,
+  purchaseRequests: ReceiptText,
   admin: Settings,
 };
 

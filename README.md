@@ -29,6 +29,7 @@ npm install
 npm run db:migrate            # crée les tables
 npm run db:seed               # données de démonstration
 npm run dev                   # http://localhost:3000
+npm run worker                # envoi des courriels (Mailpit : http://localhost:8025)
 ```
 
 `npm run db:reset` vide la base, rejoue les migrations et recharge la démonstration (refusé sur une base dont l'URL contient « prod »).
@@ -60,6 +61,7 @@ Mot de passe commun : `Demo-Gmao-2026`. Les données sont datées par rapport au
 - **PRV-12** : la VGP échue du chariot CE-020 bloque l'équipement ; l'organisme de contrôle est planifié.
 - **DON-02** : un relevé télématique invraisemblable de CA-102 attend une validation ou un rejet.
 - TP-004 attend sa remise en service, PE-010 est immobilisé avec un OT planifié demain, PE-007 a un préventif en retard.
+- **Validations** (HAB-04, menu « Validations ») : la demande d'achat de la pompe de CE-031 attend le responsable achats (`achats@demo.gmao`), celle des pneus de CH-012 (7 400 €) passera ensuite par la direction ; la location d'un chariot sur l'OT de CE-031 (1 450 €) attend le responsable maintenance ; la DI P1 « Frein de service inefficace » sur CH-012 attend le chef d'atelier de Lyon.
 
 ## Commandes
 
@@ -73,6 +75,7 @@ Mot de passe commun : `Demo-Gmao-2026`. Les données sont datées par rapport au
 | `npm run test:e2e` | Tests de bout en bout (Playwright) sur l'application construite ; base chargée avec `db:reset` au préalable |
 | `npm run db:generate` | Nouvelle migration SQL après modification du schéma Drizzle |
 | `npm run db:studio` | Explorateur de base Drizzle Studio |
+| `npm run worker` | Processus d'envoi des courriels et des alertes calculées (à lancer à côté de l'application ; `-- --once` pour une seule passe) |
 
 ## Architecture en bref
 
@@ -95,7 +98,7 @@ e2e/                     tests Playwright
 docs/                    cahier des charges, architecture, traçabilité
 ```
 
-Détails, conventions et glossaire : `docs/architecture.md`. Consignes pour les agents de code (Claude Code) : `CLAUDE.md`.
+Détails, conventions et glossaire : `docs/architecture.md`. Configuration et utilisation des évolutions (mobile, imports, documents, validations, courriels) : `docs/guide-evolutions.md`. Déploiement Vercel et Neon : `docs/deploiement-vercel.md`. Consignes pour les agents de code (Claude Code) : `CLAUDE.md`.
 
 ## Pile technique
 
@@ -110,13 +113,19 @@ Next.js 16 (App Router, Cache Components, Server Actions) et React 19, TypeScrip
 | `BETTER_AUTH_URL` | URL publique de l'application |
 | `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET`, `MICROSOFT_TENANT_ID` | SSO Microsoft Entra ID, activé dès que l'identifiant et le secret sont renseignés |
 | `NEXT_PUBLIC_DEFAULT_TIMEZONE` | Fuseau d'affichage et de saisie, `Europe/Paris` par défaut |
+| `DOCUMENT_MAX_SIZE_MB` | Taille maximale d'un document joint, 20 Mo par défaut (relu au démarrage : `next.config.ts`) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | Envoi des courriels en SMTP (Office 365, Brevo, Amazon SES ; Mailpit en développement). Sans `SMTP_HOST`, les courriels sont écrits dans le journal du processus |
+| `APP_URL`, `EMAIL_DIGEST_HOUR`, `EMAIL_WORKER_INTERVAL_SECONDS`, `EMAIL_ALERTS_INTERVAL_MINUTES` | Adresse des liens dans les courriels (défaut : `BETTER_AUTH_URL`), heure des récapitulatifs quotidiens (7 h), rythme du processus d'envoi |
+| `CRON_SECRET` | Secret de `POST /api/cron/notifications` (tâche planifiée externe à la place de `npm run worker`), 16 caractères au moins |
+| `STORAGE_DRIVER` | Stockage des documents : `local` (défaut, répertoire `STORAGE_LOCAL_DIR`, `./storage`) ou `s3` |
+| `S3_BUCKET`, `S3_REGION`, `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_FORCE_PATH_STYLE` | Stockage compatible S3 (AWS, Scaleway, OVH, SeaweedFS…) ; `S3_AUTO_CREATE_BUCKET=true` crée le compartiment en développement, `S3_SERVER_SIDE_ENCRYPTION=none` désactive le chiffrement côté serveur si le service ne le gère pas |
 
 ## Ce qui reste à faire pour le MVP
 
 Le détail est dans `docs/tracabilite.md`. Les manques principaux :
 
-- **Application mobile hors connexion** (MOB-01 à 09, 13) : l'API est prête (jetons Bearer, idempotence par `clientId`, canal mobile tracé), l'application reste à construire.
-- **Imports et exports** (EQP-13, INT-01) et **documents et photos** (EQP-07).
+- **Application mobile** (`mobile/`, voir `mobile/README.md`) : restent le préchargement complet du périmètre hors connexion, les fonctions du magasinier, le chiffrement du cache et la réouverture par code ou biométrie (MOB-07, MOB-10, MOB-13).
+- **Exports filtrés et autres modèles d'import** (INT-01 : compteurs, plans, fournisseurs, utilisateurs) ; alerte d'échéance des documents joints (EQP-07, §11.1).
 - **Circuits de validation paramétrables** (HAB-04), matrice des droits paramétrable (HAB-01), double facteur obligatoire pour les administrateurs (TEC-04).
 - **Règles de notification paramétrables, courriel et escalade** (NOT-01 à 03) : seules les notifications dans l'application sont en place.
 - **Urgences** avec proposition des OT à décaler (PLA-06), campagnes d'inventaire (STK-07), surcharge locale des plans (PRV-01), correction d'un relevé validé (DON-05), historique des reports d'OT (DON-09).

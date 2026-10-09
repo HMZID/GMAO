@@ -38,6 +38,44 @@ export const readingStatusEnum = pgEnum("reading_status", ["VALID", "TO_CHECK", 
 
 export const meterEventTypeEnum = pgEnum("meter_event_type", ["REPLACEMENT", "CORRECTION"]);
 
+// Documents (EQP-07)
+export const documentEntityEnum = pgEnum("document_entity", ["EQUIPMENT", "WORK_ORDER"]);
+
+export const documentKindEnum = pgEnum("document_kind", ["MANUAL", "CERTIFICATE", "INVOICE", "PHOTO", "REPORT", "OTHER"]);
+
+// Imports (EQP-13, INT-01)
+export const importKindEnum = pgEnum("import_kind", ["EQUIPMENT", "PARTS", "INITIAL_STOCK"]);
+
+export const importStatusEnum = pgEnum("import_status", ["SIMULATED", "RUNNING", "DONE", "FAILED"]);
+
+export const importModeEnum = pgEnum("import_mode", ["ALL_OR_NOTHING", "VALID_ONLY"]);
+
+// Circuits de validation et achats (HAB-04, ACH-01, ACH-02)
+export const approvalObjectEnum = pgEnum("approval_object", ["WORK_REQUEST", "PURCHASE_REQUEST", "MAINTENANCE_EXPENSE"]);
+
+export const approvalStatusEnum = pgEnum("approval_status", ["PENDING", "APPROVED", "REJECTED", "CANCELLED"]);
+
+export const approvalDecisionEnum = pgEnum("approval_decision", ["APPROVED", "REJECTED"]);
+
+export const purchaseRequestStatusEnum = pgEnum("purchase_request_status", ["PENDING_APPROVAL", "APPROVED", "REJECTED", "CANCELLED"]);
+
+/** Statut de validation d'une dépense d'OT : comptée dans les coûts seulement une fois approuvée. */
+export const expenseApprovalEnum = pgEnum("expense_approval", ["APPROVED", "PENDING", "REJECTED"]);
+
+// Courriels (NOT-01, NOT-03, NOT-04)
+export const emailEventEnum = pgEnum("email_event", [
+  "ASSIGNMENT",
+  "APPROVAL_PENDING",
+  "APPROVAL_DECISION",
+  "URGENT_REQUEST",
+  "DUE_DIGEST",
+  "OVERDUE",
+  "STOCK_ALERT",
+  "DOCUMENT_EXPIRY",
+]);
+
+export const emailStatusEnum = pgEnum("email_status", ["PENDING", "SENT", "FAILED", "CANCELLED"]);
+
 export const downtimeReasonEnum = pgEnum("downtime_reason", ["BREAKDOWN", "SAFETY", "REGULATORY", "PLANNED_MAINTENANCE"]);
 
 // Préventif (CDC §4)

@@ -13,7 +13,8 @@ const pool =
   globalForDb.pgPool ??
   new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: Number(process.env.DATABASE_POOL_MAX ?? 10),
+    // Sur Vercel, chaque instance garde peu de connexions ouvertes (base partagée entre instances).
+    max: Number(process.env.DATABASE_POOL_MAX ?? (process.env.VERCEL ? 3 : 10)),
   });
 
 if (process.env.NODE_ENV !== "production") globalForDb.pgPool = pool;

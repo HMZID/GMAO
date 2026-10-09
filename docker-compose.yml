@@ -18,5 +18,27 @@ services:
       timeout: 3s
       retries: 10
 
+  # Stockage S3 de développement (EQP-07), facultatif : docker compose --profile s3 up -d
+  # SeaweedFS (Apache 2.0) ; le serveur MinIO open source n'est plus maintenu.
+  s3:
+    image: chrislusf/seaweedfs:4.48
+    profiles: ["s3"]
+    restart: unless-stopped
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -ip.bind=0.0.0.0
+    ports:
+      - "8333:8333"
+    volumes:
+      - gmao-s3:/data
+      - ./docker/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+
+  # Serveur SMTP de développement (NOT-01) : capture les courriels, interface sur http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.31.2
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 volumes:
   gmao-data:
+  gmao-s3:

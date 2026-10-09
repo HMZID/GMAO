@@ -8,7 +8,7 @@ Ce document décrit l'organisation du code, le modèle de données et les règle
 flowchart LR
   subgraph Clients
     W["Navigateur<br/>écrans web"]
-    M["Application mobile<br/>à venir"]
+    M["Application mobile<br/>Expo (mobile/)"]
     I["Intégrations<br/>ERP, télématique"]
   end
   subgraph Next.js
@@ -39,7 +39,7 @@ flowchart LR
   - `ctx.canOn(droit, { companyId, siteId })` : sur cette cible ?
   - `scopeWhere(ctx.scope(droit), colonneSociété, colonneSite)` : condition SQL appliquée à toutes les listes, recherches et API (HAB-02).
 - Un objet hors périmètre répond « introuvable » (404) : son existence n'est pas révélée.
-- La matrice rôle → droits est dans `src/server/authz/permissions.ts` (29 droits, 10 rôles).
+- La matrice rôle → droits est dans `src/server/authz/permissions.ts` (31 droits, 10 rôles).
 
 | Rôle | Principaux droits |
 | --- | --- |
@@ -128,6 +128,47 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 - Coût d'un OT = main-d'œuvre (minutes × taux horaire en vigueur à la date du pointage) + pièces (sorties − retours, au coût moyen) + prestataire (provision puis facture) + autres coûts.
 - Disponibilité = 1 − immobilisations ÷ temps requis (24 h × jours de la période par équipement) ; MTBF = heures de fonctionnement ÷ pannes ; MTTR = durée de réparation active, attentes déduites ; MDT = durée moyenne d'immobilisation par panne. Moins de 3 événements : « non significatif ».
 
+### Documents (EQP-07)
+
+- Un document est rattaché à un **équipement** ou à un **OT** (`documents.entity_type`), avec un type (notice, certificat, facture, photo, rapport, autre), une date d'expiration facultative, l'empreinte SHA-256 et l'auteur. Société et site sont recopiés de l'objet parent.
+- **Stockage** (`src/server/storage`) : pilote `local` (répertoire hors de `public/`) ou `s3` (tout service compatible, compartiment privé, chiffrement côté serveur), choisi par `STORAGE_DRIVER`. La clé ne contient que des identifiants (`groupe/objet/id/document`), jamais un nom saisi.
+- **Contrôles** (`src/server/domain/documents.ts`) : extension autorisée (PDF, JPEG, PNG, WebP, HEIC, MP4, MOV, Word, Excel), **contenu vérifié par sa signature binaire** (un exécutable renommé en .pdf est refusé), taille maximale `DOCUMENT_MAX_SIZE_MB` (20 Mo par défaut), même fichier déjà joint au même objet refusé, idempotence par `clientId` pour le mobile.
+- **Droits** : consulter = lire l'objet parent ; une facture exige en plus `supplier.read`. Ajouter = `equipment.write` (équipement non réformé), ou `workorder.execute` / `workorder.manage` (OT ni clôturé ni annulé, sauf gestionnaire). Retirer = gestionnaire de l'objet, ou auteur d'une pièce jointe d'OT tant que l'OT n'est pas clôturé techniquement.
+- **Téléchargement** : uniquement par `GET /api/v1/documents/{id}/content` (cookie ou jeton), après contrôle des droits ; en-têtes `nosniff` et `CSP: sandbox`, affichage dans le navigateur limité aux PDF, images et MP4.
+- **Traçabilité** : ajout, retrait (logique, motif facultatif) et téléchargement sont écrits au journal d'audit. Le retrait conserve la ligne et le fichier (DON-06).
+
+### Imports Excel (EQP-13, INT-01, §11.2)
+
+- Trois modèles (`src/server/domain/imports.ts`) : **équipements** (droit `equipment.write`), **articles** (`part.write`), **stocks initiaux** (`stock.move`, plus `part.write` pour les seuils). Le modèle téléchargé contient l'onglet de saisie (listes déroulantes, formats), l'onglet « Aide » et l'onglet « Listes » (codes de société, site, catégorie et magasin du périmètre de l'utilisateur). Les colonnes sont reconnues par leur libellé, dans n'importe quel ordre.
+- **Simulation** : lecture du fichier (`.xlsx`, 10 Mo et 5 000 lignes au plus), contrôle de format de chaque cellule, doublons dans le fichier (clé et doublons secondaires DON-12), résolution des codes, puis **les contrôles du service de saisie** sans écriture (`checkEquipmentCreation`, `checkPartCreation`). Le diagnostic ligne par ligne est enregistré dans `import_jobs` : à importer, déjà présent, erreur.
+- **Exécution** : « tout ou rien » (refusé s'il reste une erreur) ou « lignes valides seulement ». Les lignes prêtes sont recontrôlées puis créées une à une par les services de saisie (`createEquipment`, `createPart`, `createMovement`), avec l'audit sur le canal `IMPORT`. Un verrou sur le statut empêche une double exécution. Chaque création a sa propre transaction : en « tout ou rien », une erreur apparue entre le contrôle et la création (modification concurrente) laisse les lignes déjà créées, signalées dans le rapport.
+- **Réimportation sans doublon** : une ligne dont la clé existe déjà (code parc, référence interne, article déjà mouvementé dans le magasin) est « déjà présente » et ignorée. Le stock initial est en plus idempotent par `clientId`. Un fichier déjà exécuté (même empreinte) est signalé.
+- **Rapport** : à l'écran (filtre sur les erreurs) et en Excel (`/api/v1/imports/{id}/report`), avec le statut et les anomalies de chaque ligne.
+
+### Circuits de validation (HAB-04, CDC §2.4)
+
+- **Paramétrage** (`/administration/validations`, droit `settings.manage`) : un circuit par type d'objet (`WORK_REQUEST`, `PURCHASE_REQUEST`, `MAINTENANCE_EXPENSE`), pour une société ou pour le groupe (le circuit de la société l'emporte). Chaque étape a un valideur, rôle détenu sur la société ou le site de l'objet ou personne nommée, un seuil (« à partir de ») et, pour les DI, des priorités.
+- **Soumission** (`startApproval`) : les étapes applicables (`applicableSteps`, domaine pur) sont **figées** dans la demande ; sans étape applicable, pas de validation. Les valideurs de la première étape et leurs suppléants sont notifiés.
+- **Décision** (`decideApproval`, verrou de ligne) : demande en attente, valideur de l'étape en cours (ou suppléant actif, enregistré « pour le compte de »), demandeur exclu, une même personne n'approuve pas deux étapes, commentaire obligatoire en cas de refus (`checkDecision`, toutes les anomalies en une fois). Décisions en ajout seul dans `approval_decisions` ; une décision sur une demande close est refusée.
+- **Effets** : DI P1 → transformation en OT bloquée tant que la validation est en attente, DI rejetée si refusée ; demande d'achat → statut validée ou refusée ; dépense d'OT (`work_order_costs.approval_status`) → comptée dans les coûts et les indicateurs seulement une fois validée, clôture administrative de l'OT refusée tant qu'une dépense attend.
+- Rejet, rattachement ou annulation de l'objet : la validation en attente est annulée.
+
+### Notifications par courriel (NOT-01, NOT-03, NOT-04, §11.1)
+
+- **File d'envoi transactionnelle** (`email_outbox`) : `notifyUsers` et `notifyByPermission` écrivent la notification de l'application et, pour les événements prévus (`src/server/domain/email.ts`), le courriel, **dans la transaction de l'événement**. Pas d'événement validé, pas de courriel.
+- **Anti-doublon** : clé d'événement unique par groupe (`dedup_key`) : par exemple étape d'une validation + destinataire, OT + intervenant, document + palier + destinataire, récapitulatif + jour + destinataire. Rejouer un traitement n'envoie rien de plus.
+- **Préférences** (`email_preferences`) : chaque utilisateur choisit ses événements ; DI P1 et validations en attente sont obligatoires (§11.1).
+- **Envoi en arrière-plan** : `npm run worker` (processus à côté de l'application) ou `POST /api/cron/notifications` (tâche planifiée externe, `CRON_SECRET`). Prise en charge par `FOR UPDATE SKIP LOCKED` (plusieurs processus possibles), verrou de 5 minutes repris en cas d'arrêt brutal. Erreur passagère : nouvel essai après 1, 5, 15, 60 puis 240 minutes ; erreur définitive (réponse SMTP 5xx, authentification) ou 5 tentatives : « en échec ». Chaque erreur est conservée (`errors`) et l'administrateur relance ou annule (`/administration/courriels`).
+- **Alertes calculées** (`runScheduledAlerts`, toutes les 15 minutes) : récapitulatifs quotidiens à partir de `EMAIL_DIGEST_HOUR` (échéances en pré-alerte ou échues, retards, stock sous le point de commande), documents à J-30, J-7 et échus. Destinataires par rôle (§11.1), dans le périmètre de ce rôle.
+- **Transport** (`src/server/email/transport.ts`) : SMTP (`SMTP_*`, STARTTLS) ; sans `SMTP_HOST`, le courriel est écrit dans le journal du processus (développement, tests). Modèles en texte et HTML, valeurs échappées, liens internes seulement.
+
+### Application mobile (MOB, CDC §10)
+
+- Projet Expo distinct dans `mobile/` (Expo Router, TypeScript), qui n'utilise que l'**API REST v1** (jeton Bearer, en-tête `x-client: mobile` : canal `MOBILE` dans le journal d'audit).
+- **Cœur sans React Native**, testé avec le serveur : `api.ts` (erreur réseau ou refus du serveur), `sync.ts` (file des saisies hors connexion), `qr.ts`.
+- **Synchronisation** : chaque saisie porte un `clientId` ; l'envoi se fait dans l'ordre, photos en dernier. Réseau ou serveur indisponible : arrêt sans perte. Refus : saisie « à revoir ». Transition déjà appliquée : reconnue. Le serveur reste seul juge des règles (DON-11).
+- **Stockage local** : jeton dans `expo-secure-store`, file et cache dans le stockage de l'application (`AsyncStorage`).
+
 ## Interface
 
 - **Server Components** pour la lecture, **Server Actions** pour l'écriture, avec amélioration progressive (le formulaire fonctionne avant le chargement du JavaScript).
@@ -160,3 +201,7 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 | Absence, habilitation, compétence | `absences`, `certifications`, `skills` |
 | Périmètre (groupe, société, site) | `scope_type` (`TENANT`, `COMPANY`, `SITE`) |
 | Journal d'audit | `audit_logs` |
+| Circuit, étape, suppléant, demande de validation, décision | `approval_workflows`, `approval_steps`, `approval_substitutes`, `approval_requests`, `approval_decisions` |
+| Demande d'achat | `purchase_requests` |
+| File d'envoi des courriels, préférences | `email_outbox`, `email_preferences` |
+| Document, pièce jointe, photo | `documents` (`document_kind`), fichier dans le stockage (`src/server/storage`) |

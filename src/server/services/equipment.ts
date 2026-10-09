@@ -262,11 +262,19 @@ async function assertSiteBelongsToCompany(ctx: AuthContext, siteId: string, comp
   if (site.companyId !== companyId) throw new BusinessRuleError(["Le site de rattachement doit appartenir à la société propriétaire."]);
 }
 
-/** Crée un équipement (EQP-01, EQP-02), son compteur principal et applique les plans types (PRV-01). */
-export async function createEquipment(ctx: AuthContext, raw: unknown) {
+/**
+ * Contrôles de création d'un équipement, sans écriture : saisie, droits, site de la société, doublons
+ * (code parc, marque + numéro de série, immatriculation), catégorie. Utilisé aussi par la simulation d'import (EQP-13).
+ */
+export async function checkEquipmentCreation(ctx: AuthContext, raw: unknown) {
   const input = parseInput(equipmentInput, raw);
   assertCanOn(ctx, "equipment.write", input);
   await assertSiteBelongsToCompany(ctx, input.siteId, input.companyId);
+  const [sameCode] = await db
+    .select({ id: equipment.id })
+    .from(equipment)
+    .where(and(eq(equipment.tenantId, ctx.tenantId), eq(equipment.code, input.code)));
+  if (sameCode) throw new ConflictError(`Le code parc ${input.code} existe déjà.`, { existingId: sameCode.id });
   await assertNoDuplicate(ctx, input);
 
   const [category] = await db
@@ -274,6 +282,19 @@ export async function createEquipment(ctx: AuthContext, raw: unknown) {
     .from(equipmentCategories)
     .where(and(eq(equipmentCategories.id, input.categoryId), eq(equipmentCategories.tenantId, ctx.tenantId)));
   if (!category) throw new NotFoundError("Catégorie");
+  if (input.modelId) {
+    const [model] = await db
+      .select({ categoryId: equipmentModels.categoryId })
+      .from(equipmentModels)
+      .where(and(eq(equipmentModels.id, input.modelId), eq(equipmentModels.tenantId, ctx.tenantId)));
+    if (!model) throw new NotFoundError("Modèle");
+  }
+  return { input, category };
+}
+
+/** Crée un équipement (EQP-01, EQP-02), son compteur principal et applique les plans types (PRV-01). */
+export async function createEquipment(ctx: AuthContext, raw: unknown) {
+  const { input, category } = await checkEquipmentCreation(ctx, raw);
 
   try {
     return await db.transaction(async (tx) => {
@@ -605,7 +626,10 @@ export async function getEquipmentFormOptions(ctx: AuthContext) {
 }
 
 /** Liste courte pour les sélecteurs (DI, OT) dans le périmètre d'un droit. */
-export async function listEquipmentOptions(ctx: AuthContext, permission: "request.create" | "workorder.create" = "request.create") {
+export async function listEquipmentOptions(
+  ctx: AuthContext,
+  permission: "request.create" | "workorder.create" | "purchase.create" = "request.create",
+) {
   return db
     .select({ id: equipment.id, code: equipment.code, name: equipment.name, siteId: equipment.siteId })
     .from(equipment)

@@ -18,6 +18,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Application mobile : projet Expo distinct, avec sa propre configuration (mobile/).
+    "mobile/**",
   ]),
 ]);
 

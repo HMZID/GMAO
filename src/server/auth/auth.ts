@@ -6,6 +6,7 @@ import { bearer } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { account, session, user, verification } from "@/server/db/schema";
+import { publicUrl, trustedOrigins } from "@/server/public-url";
 
 const microsoftConfigured = !!process.env.MICROSOFT_CLIENT_ID && !!process.env.MICROSOFT_CLIENT_SECRET;
 
@@ -20,7 +21,8 @@ const microsoftConfigured = !!process.env.MICROSOFT_CLIENT_ID && !!process.env.M
  */
 export const auth = betterAuth({
   appName: "GMAO",
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: publicUrl(),
+  trustedOrigins: trustedOrigins(),
   secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: "pg",

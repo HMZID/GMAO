@@ -10,6 +10,8 @@ export const USERS = {
   technicianLyon: "tech.lyon@demo.gmao",
   operator: "conducteur@demo.gmao",
   storekeeper: "magasin@demo.gmao",
+  purchasing: "achats@demo.gmao",
+  executive: "direction@demo.gmao",
 } as const;
 
 /** Connexion par l'écran de login ; attend l'arrivée sur la page demandée (ou le tableau de bord). */

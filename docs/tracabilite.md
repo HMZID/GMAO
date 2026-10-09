@@ -20,7 +20,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **HAB-01** Rôles paramétrables | Must | oui | Partiel | Rôles attribuables par l'administrateur, cumulables, par périmètre ; la matrice rôle → droits est figée dans le code. | `src/server/authz/permissions.ts`, `src/app/(app)/administration/utilisateurs` |
 | **HAB-02** Cloisonnement par périmètre | Must | oui | Fait | Périmètre appliqué à toutes les listes, recherches et API ; hors périmètre = introuvable. | `src/server/services/_shared.ts (scopeWhere)`, `src/server/pages.ts` |
 | **HAB-03** Cumul et délégation | Should |  | Fait | Rôles cumulés, délégation bornée dans le temps (validFrom, validTo). | `src/server/authz/context.ts` |
-| **HAB-04** Circuits de validation | Must | oui | Partiel | Validations en place : remise en service, écart d'inventaire au-delà du seuil (refusé sans le droit). Circuits paramétrables (valideurs, seuils, suppléants) à construire. | `src/server/domain/work-order-status.ts`, `src/server/services/stock.ts` |
+| **HAB-04** Circuits de validation | Must | oui | Fait | Circuits paramétrables par type d'objet (DI, demande d'achat, dépense de maintenance) et par société : étapes ordonnées, rôle valideur dans le périmètre de l'objet ou personne nommée, seuils financiers, priorités, suppléants datés. Étapes figées à la soumission, décision tracée (auteur, date, commentaire obligatoire en cas de refus), demandeur exclu, un valideur par étape. Restent : relances et escalades automatiques (NOT-02). Validations existantes conservées : remise en service, écart d'inventaire. | `src/server/services/approvals.ts`, `src/server/domain/approvals.ts`, `e2e/approvals.spec.ts` |
 | **HAB-05** Séparation des tâches | Must | oui | Partiel | Le technicien exécutant ne peut pas valider la remise en service d'un équipement A. Demandes d'achat : avec le flux achats. | `src/server/domain/work-order-status.ts` |
 | **HAB-06** Journal d'audit | Must | oui | Fait | Journal en ajout seul écrit dans la transaction de chaque modification, avec le canal ; consultation filtrable. | `src/server/services/_shared.ts (audit)`, `src/app/(app)/administration/journal` |
 | **HAB-07** Accès prestataire | Should |  | Partiel | Rôle Prestataire externe et ses droits ; portail restreint aux OT confiés à construire. | `src/server/authz/permissions.ts` |
@@ -37,13 +37,13 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **EQP-04** Compteurs multiples | Must | oui | Partiel | Modèle de données multi-compteurs (unité, principal) ; l'écran ne crée que le compteur principal. | `src/server/services/meters.ts` |
 | **EQP-05** États opérationnels | Must | oui | Fait | Cinq états historisés, distincts du statut des OT. | `src/server/services/equipment-status.ts` |
 | **EQP-06** Criticité | Must | oui | Fait | Criticité héritée de la catégorie ; A relève la priorité et impose la validation de remise en service. | `src/server/services/work-requests.ts` |
-| **EQP-07** Documents et photos | Must | oui | À faire | Table des documents prévue ; stockage des fichiers, photos et échéances de documents à faire. | `src/server/db/schema/equipment.ts (documents)` |
+| **EQP-07** Documents et photos | Must | oui | Fait | Documents et photos sur les fiches équipement et OT : types, expiration facultative, format et contenu contrôlés, taille paramétrable, stockage local ou S3, droits, audit ; alerte par courriel à J-30, J-7 et à l'échéance (§11.1). | `src/server/services/documents.ts`, `src/server/storage`, `src/server/services/email.ts`, `e2e/documents.spec.ts` |
 | **EQP-08** Sous-ensembles | Should |  | Phase 2 | Sous-ensembles (table prévue). |  |
 | **EQP-09** QR code et code-barres | Must | oui | Partiel | Jeton QR par équipement et résolution par l'API ; impression des étiquettes et scan mobile à faire. | `src/app/api/v1/equipment/by-qr` |
 | **EQP-10** Historique des affectations | Must | oui | Fait | Affectations historisées, une seule active, sans chevauchement. | `src/server/services/equipment.ts` |
 | **EQP-11** Historique des compteurs | Must | oui | Fait | Historique des relevés et des remplacements de compteur. | `src/server/services/meters.ts` |
 | **EQP-12** Garanties et contrats | Should |  | Partiel | Fin de garantie (date ou compteur) sur la fiche ; contrats à faire. |  |
-| **EQP-13** Import en masse | Must | oui | À faire | Import en masse avec rapport d'anomalies. |  |
+| **EQP-13** Import en masse | Must | oui | Fait | Import Excel des équipements, articles et stocks initiaux : modèle téléchargeable, simulation avec les contrôles de la saisie, rapport ligne par ligne (écran et Excel), « tout ou rien » ou « lignes valides », réimportation sans doublon. Import CSV non proposé. | `src/server/services/imports.ts`, `src/server/domain/imports.ts`, `e2e/imports.spec.ts` |
 | **EQP-14** Réforme | Should |  | Partiel | Réforme refusée avec OT ouvert, plans désactivés, fiche en lecture seule ; circuit de validation à faire. | `src/server/services/equipment.ts` |
 | **EQP-15** Dernière position | Could |  | Phase 3 | Dernière position (télématique). |  |
 
@@ -128,8 +128,8 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **ACH-01** Demandes d'achat | Should |  | Phase 2 | Flux d'achat (scénario de §8.1 à choisir). |  |
-| **ACH-02** Validation | Should |  | Phase 2 |  |  |
+| **ACH-01** Demandes d'achat | Should | oui | Partiel | Demande manuelle ou depuis l'OT, rattachement obligatoire à un OT, un équipement ou un centre de coût, visible dans l'OT avec son statut. Restent : création depuis une alerte de seuil, commande, réception, facture (ACH-03 à ACH-06). | `src/server/services/purchase-requests.ts` |
+| **ACH-02** Validation | Should | oui | Fait | Circuit « demande d'achat » : responsable achats, puis direction au-delà du seuil ; le demandeur ne valide pas sa demande. | `src/server/services/approvals.ts` |
 | **ACH-03** Devis | Should |  | Phase 2 |  |  |
 | **ACH-04** Commandes | Should |  | Phase 2 |  |  |
 | **ACH-05** Réceptions | Should |  | Phase 2 |  |  |
@@ -161,35 +161,35 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **MOB-01** Application iOS et Android | Must | oui | À faire | Application iOS et Android à construire ; l'API, l'authentification par jeton et le canal « mobile » sont prêts. |  |
-| **MOB-02** Scan | Must | oui | Partiel | Résolution des étiquettes QR par l'API ; scan à faire dans l'application. | `src/app/api/v1/equipment/by-qr` |
-| **MOB-03** Demandes d'intervention | Must | oui | Partiel | API de DI avec idempotence et position ; écran mobile à faire. | `src/app/api/v1/work-requests` |
-| **MOB-04** Relevé de compteurs | Must | oui | Partiel | API de relevés avec idempotence ; écran mobile à faire. | `src/app/api/v1/meters/[id]/readings` |
-| **MOB-05** Checklists, photos, comptes rendus | Must | oui | Partiel | API de checklist et de compte rendu ; photos et écran mobile à faire. |  |
-| **MOB-06** Temps et pièces | Must | oui | Partiel | API de pointage et de pièces idempotente ; écran mobile à faire. |  |
-| **MOB-07** Hors connexion | Must | oui | À faire | Fonctionnement hors connexion. |  |
-| **MOB-08** Synchronisation sans doublon | Must | oui | Partiel | Idempotence par clientId sur les créations (DI, relevés, pointages, mouvements) ; file de synchronisation à faire. |  |
-| **MOB-09** Gestion des conflits | Must | oui | À faire | Gestion des conflits de synchronisation. |  |
+| **MOB-01** Application iOS et Android | Must | oui | Partiel | Application Expo (React Native) : onglets selon les droits de `GET /api/v1/me`, mêmes droits et périmètres que le web. Restent : contrôle de prise de poste, réception, transfert et inventaire du magasinier, qualification des DI par le chef d'atelier sur mobile. | `mobile/` |
+| **MOB-02** Scan | Must | oui | Fait | Lecture QR code et code-barres par la caméra (`expo-camera`) ; code inconnu signalé sans bloquer ; équipements déjà consultés retrouvés hors connexion. | `mobile/src/app/(tabs)/scan.tsx`, `mobile/src/lib/qr.ts` |
+| **MOB-03** Demandes d'intervention | Must | oui | Partiel | Signalement en un écran depuis la fiche équipement, hors connexion, idempotent. Reste : suivi du statut de ses DI sur mobile. | `mobile/src/app/request/new.tsx` |
+| **MOB-04** Relevé de compteurs | Must | oui | Fait | Relevé depuis la fiche équipement ou l'OT ; un relevé inférieur au précédent est signalé avant envoi ; contrôles DON-01 à DON-03 au serveur. | `mobile/src/app/equipment/[id].tsx` |
+| **MOB-05** Checklists, photos, comptes rendus | Must | oui | Fait | Checklist (OK / NOK / N/A, mesures), diagnostic (symptôme, cause, remède) et compte rendu, photos compressées (1 920 px) envoyées après les données ; points obligatoires contrôlés par le serveur à « Travaux terminés ». | `mobile/src/app/work-order/[id].tsx` |
+| **MOB-06** Temps et pièces | Must | oui | Partiel | Temps passé (raccourcis) et pièces consommées (article, magasin, quantité), idempotents ; stock jamais négatif, refus affiché « à revoir ». Reste : consommation par scan de l'article. | `mobile/src/app/work-order/[id].tsx` |
+| **MOB-07** Hors connexion | Must | oui | Partiel | Saisies hors connexion (DI, relevés, checklist, compte rendu, temps, pièces, photos, transitions) et consultation des données déjà vues ; bandeau permanent (connexion, dernière synchronisation, saisies en attente). Restent : préchargement complet du périmètre et essai d'autonomie de 7 jours. | `mobile/src/lib/sync.ts`, `mobile/src/context/sync.tsx` |
+| **MOB-08** Synchronisation sans doublon | Must | oui | Fait | `clientId` à la création, envoi dans l'ordre, photos en dernier, succès retirés aussitôt de la file, transition déjà appliquée reconnue ; vérifié contre le serveur avec coupure réseau et renvoi en double. | `mobile/src/lib/sync.ts`, `mobile/scripts/verify-sync.ts` |
+| **MOB-09** Gestion des conflits | Must | oui | Partiel | Refus du serveur (droit, règle, stock insuffisant, OT annulé) : saisie « à revoir » avec motif, relancée ou abandonnée par l'utilisateur, jamais perdue. Restent : règles du tableau §10.4 côté serveur (mouvement « à régulariser », pointage « à vérifier », alerte au chef d'atelier). | `mobile/src/app/(tabs)/sync.tsx` |
 | **MOB-10** Inventaire mobile | Should |  | Phase 2 |  |  |
 | **MOB-11** Signature | Should |  | Phase 2 |  |  |
 | **MOB-12** Dictée vocale | Could |  | Phase 3 |  |  |
-| **MOB-13** Sécurité du terminal | Must | oui | À faire | Sécurité du terminal (verrouillage, effacement à distance). |  |
+| **MOB-13** Sécurité du terminal | Must | oui | Partiel | Jeton dans le trousseau chiffré du système, cache effacé à la déconnexion, HTTPS en production. Restent : chiffrement du cache, code ou biométrie, durée hors connexion limitée, effacement à distance. | `mobile/src/lib/storage.ts` |
 
 ## Notifications (NOT)
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **NOT-01** Règles de notification | Must | oui | Partiel | Notifications dans l'application selon les droits et le périmètre ; règles paramétrables, courriel et push à faire. | `src/server/services/notifications.ts` |
+| **NOT-01** Règles de notification | Must | oui | Partiel | Notifications dans l'application et par courriel selon les droits et le périmètre ; préférences par utilisateur ; file d'envoi transactionnelle, envoi en arrière-plan avec reprises, clé anti-doublon par événement, suivi et relance par l'administrateur. Reste : règles paramétrables par l'administrateur (événement, condition, destinataires, canaux), notification mobile. | `src/server/services/notifications.ts`, `src/server/services/email.ts`, `scripts/worker.ts`, `e2e/notifications.spec.ts` |
 | **NOT-02** Escalade | Must | oui | À faire | Escalade. |  |
-| **NOT-03** Notifications par défaut | Must | oui | Partiel | Livré : nouvelle DI (urgente si P1), remise en service à valider, DI rejetée. Reste du tableau 11.1 à faire. | `src/server/services/notifications.ts` |
-| **NOT-04** Récapitulatif quotidien | Should |  | Phase 2 |  |  |
+| **NOT-03** Notifications par défaut | Must | oui | Partiel | Livré, dans l'application et par courriel : DI P1 (obligatoire), validation en attente et remise en service à valider (obligatoires), décision sur une demande, affectation à un OT, échéances en pré-alerte, préventifs en retard et OT en attente depuis plus de 5 jours, articles sous le point de commande, documents arrivant à échéance. Restent : pièce réservée reçue, compteur non relevé, échec d'interface, escalades (NOT-02). | `src/server/domain/email.ts` |
+| **NOT-04** Récapitulatif quotidien | Should | oui | Fait | Récapitulatifs quotidiens des échéances, retards et alertes de stock : un courriel par destinataire et par jour, à partir de l'heure paramétrée (`EMAIL_DIGEST_HOUR`). | `src/server/services/email.ts` |
 | **NOT-05** SMS et messagerie d'équipe | Could |  | Phase 3 |  |  |
 
 ## Intégrations (INT)
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **INT-01** Imports et exports | Must | oui | Partiel | Données accessibles par l'API ; imports et exports de fichiers à faire. |  |
+| **INT-01** Imports et exports | Must | oui | Partiel | Imports Excel des équipements, articles et stocks initiaux (voir EQP-13), aussi par l'API (`/api/v1/imports`). Reste : autres modèles du §11.2 (compteurs, plans, fournisseurs, utilisateurs…), import CSV, exports filtrés des listes. | `src/app/api/v1/imports` |
 | **INT-02** API ouverte | Must | oui | Fait | API REST v1 : mêmes règles et droits que les écrans, idempotence, catalogue public (GET /api/v1). | `src/app/api/v1`, `src/server/api/catalog.ts` |
 | **INT-03** Authentification unique | Must | oui | Partiel | SSO Microsoft Entra ID activable par configuration, sans création implicite de compte ; à recetter sur le tenant de l'entreprise. | `src/server/auth/auth.ts` |
 | **INT-04** ERP et comptabilité | Should |  | Phase 2 |  |  |
