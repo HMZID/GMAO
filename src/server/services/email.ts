@@ -37,9 +37,10 @@ import {
 import { NotFoundError } from "@/server/errors";
 import { getEmailTransport, type EmailTransport } from "@/server/email/transport";
 import { formatDate, formatNumber } from "@/lib/format";
+import { publicUrl } from "@/server/public-url";
 import { assertCan, audit, parseInput, scopeWhere } from "./_shared";
 
-const baseUrl = () => process.env.APP_URL || process.env.BETTER_AUTH_URL || "http://localhost:3000";
+const baseUrl = publicUrl;
 
 /* ------------------------------------------------------------------ */
 /* Mise en file (dans la transaction de l'événement)                   */

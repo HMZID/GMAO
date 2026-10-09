@@ -23,8 +23,11 @@ export function getStorage(): FileStorage {
   if (!globalForStorage.gmaoStorage) {
     const driver = (process.env.STORAGE_DRIVER ?? "local").toLowerCase();
     if (driver === "s3") globalForStorage.gmaoStorage = createS3Storage();
-    else if (driver === "local") globalForStorage.gmaoStorage = createLocalStorage(process.env.STORAGE_LOCAL_DIR ?? "./storage");
-    else throw new Error(`STORAGE_DRIVER inconnu : ${driver} (attendu : local ou s3).`);
+    else if (driver === "local") {
+      if (process.env.VERCEL)
+        throw new Error("Stockage des documents : le disque de Vercel est en lecture seule, configurer STORAGE_DRIVER=s3 et les variables S3_*.");
+      globalForStorage.gmaoStorage = createLocalStorage(process.env.STORAGE_LOCAL_DIR ?? "./storage");
+    } else throw new Error(`STORAGE_DRIVER inconnu : ${driver} (attendu : local ou s3).`);
   }
   return globalForStorage.gmaoStorage;
 }
