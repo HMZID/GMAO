@@ -15,6 +15,8 @@ GMAO-NN ──PR──▶ develop ──PR (garde : develop uniquement)──▶
 
 Redéployer sans nouveau merge : **Actions → Déploiement production → Run workflow** (branche `main`), avec la même approbation.
 
+**Prévisualisations** (une par branche et par PR) : elles ne modifient jamais la base (ni migration ni démonstration), pour qu'une branche non approuvée ne touche pas la production. Pour tester des migrations en prévisualisation : base distincte pour l'environnement Preview (branche Neon) et `PREVIEW_MIGRATIONS=true`.
+
 Le déploiement automatique de `main` par l'intégration GitHub de Vercel est désactivé (`vercel.json` : `git.deploymentEnabled.main = false`) ; les prévisualisations des autres branches restent actives.
 
 ### Configuration du dépôt GitHub (Settings)
