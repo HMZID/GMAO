@@ -1,0 +1,47 @@
+# Intégration automatique des branches de tâche dans develop.
+#
+# Une Pull Request GMAO-NN → develop passe en « fusion automatique » dès son ouverture : GitHub la fusionne
+# seul quand toutes les vérifications obligatoires de develop sont vertes (CI : formatage, lint, types, tests
+# unitaires, tests de bout en bout, application mobile). Si une vérification échoue, rien n'est fusionné :
+# la branche doit être corrigée (nouveau commit poussé, la CI repart).
+#
+# Prérequis côté dépôt (docs/deploiement-vercel.md, « Règles du dépôt ») : fusion automatique autorisée et
+# develop protégée avec les vérifications obligatoires. Sans protection, GitHub fusionnerait sans attendre :
+# le job s'arrête alors en erreur au lieu d'activer la fusion.
+
+name: Fusion automatique vers develop
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    name: Activer la fusion automatique
+    # Branches de tâche du dépôt lui-même (pas de fork), hors brouillon.
+    if: >-
+      startsWith(github.head_ref, 'GMAO-') &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Vérifier la protection de develop
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          checks=$(gh api "repos/${{ github.repository }}/branches/develop" --jq '.protection.required_status_checks.contexts | length')
+          if [ "${checks:-0}" -eq 0 ]; then
+            echo "::error::develop n'exige aucune vérification : la fusion automatique fusionnerait sans attendre la CI. Voir docs/deploiement-vercel.md."
+            exit 1
+          fi
+      - name: Fusionner dès que la CI est verte
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --merge "$PR_URL"

@@ -1,13 +1,14 @@
 # Déploiement sur Vercel avec Neon
 
-L'application Next.js est déployée sur Vercel depuis la branche `main`, **par GitHub Actions après approbation humaine** ; la base est un PostgreSQL Neon.
+L'application Next.js est déployée sur Vercel **uniquement depuis la branche `main`, par GitHub Actions après approbation humaine** ; la base est un PostgreSQL Neon. Aucune autre branche n'est déployée.
 
 ## Pipeline de mise en production
 
 ```
-GMAO-NN ──PR──▶ develop ──PR (garde : develop uniquement)──▶ main ──▶ CI ──▶ approbation ──▶ Vercel (production)
+GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──PR (garde : develop uniquement), fusion manuelle──▶ main ──▶ CI ──▶ approbation ──▶ Vercel (production)
 ```
 
+0. **PR `GMAO-NN` → `develop`** : le workflow **Fusion automatique vers develop** (`.github/workflows/auto-merge-develop.yml`) active la fusion automatique dès l'ouverture. GitHub fusionne seul quand toutes les vérifications obligatoires sont vertes (formatage, lint, types, tests unitaires, tests de bout en bout, application mobile). Si une vérification échoue, rien n'est fusionné : corriger la branche et pousser, la CI repart. Une PR en brouillon n'est pas fusionnée.
 1. **PR `develop` → `main`** : la CI (vérifications, tests, application mobile) et la garde « Source de la PR (develop uniquement) » doivent réussir ; la protection de `main` refuse toute autre source et toute poussée directe.
 2. **Merge** : la CI repart sur `main` ; si elle réussit, le workflow **Déploiement production** (`.github/workflows/deploy-production.yml`) démarre et **attend une approbation** (environnement GitHub `production-approval`).
 3. **Approbation** : GitHub → **Actions** → l'exécution « Déploiement production » → **Review deployments** → cocher `production-approval` → **Approve and deploy** (ou **Reject**).
@@ -15,9 +16,7 @@ GMAO-NN ──PR──▶ develop ──PR (garde : develop uniquement)──▶
 
 Redéployer sans nouveau merge : **Actions → Déploiement production → Run workflow** (branche `main`), avec la même approbation.
 
-**Prévisualisations** (une par branche et par PR) : elles ne modifient jamais la base (ni migration ni démonstration), pour qu'une branche non approuvée ne touche pas la production. Pour tester des migrations en prévisualisation : base distincte pour l'environnement Preview (branche Neon) et `PREVIEW_MIGRATIONS=true`.
-
-Le déploiement automatique de `main` par l'intégration GitHub de Vercel est désactivé (`vercel.json` : `git.deploymentEnabled.main = false`) ; les prévisualisations des autres branches restent actives.
+Les déploiements automatiques de l'intégration GitHub de Vercel sont désactivés pour **toutes** les branches (`vercel.json` : `git.deploymentEnabled = false`) : ni prévisualisation des branches de tâche ou de `develop`, ni déploiement direct de `main`. Seul le workflow « Déploiement production » déploie. Si une prévisualisation est créée malgré tout (déploiement manuel), elle ne modifie jamais la base (ni migration ni démonstration, sauf `PREVIEW_MIGRATIONS=true` sur une base distincte).
 
 ### Configuration du dépôt GitHub (Settings)
 
@@ -27,6 +26,15 @@ Le déploiement automatique de `main` par l'intégration GitHub de Vercel est d�
 | Variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` | Identifiants de l'équipe et du projet (Vercel → projet → Settings → General) |
 | Environnement `production-approval` | Approbateurs requis, déploiement limité à `main` |
 | Protection de `main` | PR obligatoire, contrôles requis (CI, application mobile, garde develop), pas de poussée forcée |
+| Protection de `develop` | PR obligatoire, contrôles requis « Vérifications et tests » et « Application mobile (Expo) », appliquée aussi aux administrateurs, pas de poussée forcée ni de suppression |
+| General → Pull Requests | « Allow auto-merge » coché |
+
+Commandes équivalentes (compte administrateur du dépôt, `gh auth login`) :
+
+```bash
+gh api -X PATCH repos/HMZID/GMAO -F allow_auto_merge=true
+gh api -X PUT repos/HMZID/GMAO/branches/develop/protection --input .github/develop-protection.json
+```
 
 
 ## Ce que fait chaque déploiement

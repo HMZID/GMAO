@@ -20,8 +20,8 @@ Avant de rendre la main : `npm run format`, `npm run lint`, `npm run typecheck`,
 
 - `main` : production. `develop` : intégration et recette.
 - Chaque tâche a sa branche `GMAO-NN` (numéro suivant : `GMAO-01`, `GMAO-02`…), créée depuis `develop` à jour.
-- Pull Request `GMAO-NN` → `develop` une fois les vérifications passées (CI verte). Jamais de PR d'une branche de tâche vers `main`.
-- Après les tests sur `develop`, Pull Request `develop` → `main` pour la mise en production, sur décision du responsable du projet. Le merge déclenche la CI puis le workflow « Déploiement production », qui attend une approbation humaine avant de déployer sur Vercel (`docs/deploiement-vercel.md`).
+- Pull Request `GMAO-NN` → `develop` : fusionnée automatiquement par GitHub quand la CI est verte (`auto-merge-develop.yml`, `develop` protégée) ; en cas d'échec, rien n'est fusionné tant que la branche n'est pas corrigée. Jamais de PR d'une branche de tâche vers `main`.
+- Après les tests sur `develop`, Pull Request `develop` → `main` pour la mise en production, sur décision du responsable du projet. Le merge déclenche la CI puis le workflow « Déploiement production », qui attend une approbation humaine avant de déployer sur Vercel (`docs/deploiement-vercel.md`). Vercel ne déploie aucune branche de lui-même (`vercel.json`).
 
 ## Architecture
 
