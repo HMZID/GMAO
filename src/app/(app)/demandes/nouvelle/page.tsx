@@ -28,12 +28,7 @@ export default async function NewWorkRequestPage(props: PageProps<"/demandes/nou
       <Card className="max-w-3xl">
         <CardBody>
           <ActionForm action={createWorkRequestAction} className="space-y-5">
-            <Field
-              label="Équipement"
-              name="equipmentId"
-              required
-              hint="Sur le terrain, l'application mobile identifie l'équipement par son QR code (EQP-09)."
-            >
+            <Field label="Équipement" name="equipmentId" required hint="Sur le terrain, l'application mobile identifie l'équipement par son QR code.">
               <Select
                 id="equipmentId"
                 name="equipmentId"

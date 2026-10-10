@@ -98,7 +98,7 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
             <Disclosure summary="Ajouter une opération (nouvelle version du plan)">
               <ActionForm action={addOperationAction.bind(null, plan.id)} resetOnSuccess className="space-y-4">
                 <p className="text-sm text-slate-600">
-                  Les OT déjà générés ne changent pas ; une échéance est créée pour chaque équipement auquel le plan est appliqué (PRV-01).
+                  Les ordres de travail déjà générés ne changent pas ; une échéance est créée pour chaque équipement auquel le plan est appliqué.
                 </p>
                 <OperationFields />
                 <SubmitButton>Ajouter l&apos;opération</SubmitButton>

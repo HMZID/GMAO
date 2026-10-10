@@ -40,10 +40,26 @@ test("planning, indicateurs et tableau de bord s'affichent", async ({ page }) =>
   await expect(page.getByText("Immobilisés")).toBeVisible();
   await page.goto("/planning");
   await expect(page.getByRole("heading", { name: "Planning de la semaine" })).toBeVisible();
-  await expect(page.getByText("Julien Moreau").first()).toBeVisible();
+  // Grand écran : grille de la semaine (la vue « jour » des petits écrans est masquée).
+  await expect(page.getByRole("table").getByText("Julien Moreau").first()).toBeVisible();
   await page.goto("/indicateurs");
   await expect(page.getByText("Disponibilité", { exact: true })).toBeVisible();
   await expect(page.getByText("Équipements les plus coûteux")).toBeVisible();
+});
+
+test("téléphone : planning jour par jour, navigation du bas, listes en cartes", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await login(page, USERS.maintenanceManager);
+  await page.goto("/planning");
+  await expect(page.getByRole("tablist", { name: "Jour affiché" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  await page.getByRole("tab").first().click();
+  await expect(page.getByRole("tab").first()).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByText("Julien Moreau").locator("visible=true").first()).toBeVisible();
+  // Navigation du bas, puis liste affichée en cartes sans défilement horizontal.
+  await page.getByRole("navigation", { name: "Rubriques principales" }).getByRole("link", { name: "Travaux" }).click();
+  await expect(page.getByRole("heading", { name: "Ordres de travail" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
 
 test("API v1 : catalogue public, données protégées", async ({ page, request }) => {

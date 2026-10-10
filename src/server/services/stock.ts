@@ -597,7 +597,7 @@ export async function returnFromWorkOrder(
       ),
     );
   if (!(input.quantity > 0) || input.quantity > (net?.issued ?? 0)) {
-    throw new BusinessRuleError([`Retour impossible : ${net?.issued ?? 0} sortie(s) nette(s) sur cet OT.`]);
+    throw new BusinessRuleError([`Retour impossible : ${net?.issued ?? 0} sortie(s) nette(s) sur cet ordre de travail.`]);
   }
   const level = await lockLevel(tx, ctx, input.partId, input.warehouseId);
   await tx
@@ -664,7 +664,7 @@ export async function createSupplier(ctx: AuthContext, raw: unknown) {
       await audit(tx, ctx, { entityType: "supplier", entityId: row.id, action: "create", after: row });
       return row;
     } catch (error) {
-      if (isUniqueViolation(error)) throw new ConflictError("Un fournisseur porte déjà cet identifiant fiscal (DON-12).");
+      if (isUniqueViolation(error)) throw new ConflictError("Un fournisseur porte déjà cet identifiant fiscal.");
       throw error;
     }
   });

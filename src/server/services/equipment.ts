@@ -390,7 +390,7 @@ export async function updateEquipment(ctx: AuthContext, id: string, raw: unknown
     .where(and(eq(equipment.id, id), eq(equipment.tenantId, ctx.tenantId)));
   if (!current) throw new NotFoundError("Équipement");
   assertCanOn(ctx, "equipment.write", current);
-  if (current.status === "RETIRED") throw new BusinessRuleError(["Un équipement réformé est en lecture seule (EQP-14)."]);
+  if (current.status === "RETIRED") throw new BusinessRuleError(["Un équipement réformé est en lecture seule."]);
   if (input.siteId && input.siteId !== current.siteId) await assertSiteBelongsToCompany(ctx, input.siteId, current.companyId);
   await assertNoDuplicate(
     ctx,
@@ -431,7 +431,7 @@ export async function retireEquipment(ctx: AuthContext, id: string, raw: unknown
     .select({ open: count() })
     .from(workOrders)
     .where(and(eq(workOrders.equipmentId, id), inArray(workOrders.status, [...OPEN_STATUSES])));
-  if (open > 0) throw new BusinessRuleError([`Réforme impossible : ${open} OT ouvert(s) sur cet équipement.`]);
+  if (open > 0) throw new BusinessRuleError([`Réforme impossible : ${open} ordre(s) de travail ouvert(s) sur cet équipement.`]);
   return db.transaction(async (tx) => {
     await setEquipmentStatus(tx, ctx, id, "RETIRED", { reason: input.reason });
     await tx
@@ -477,7 +477,7 @@ export async function assignEquipment(ctx: AuthContext, id: string, raw: unknown
   if (!current) throw new NotFoundError("Équipement");
   assertCanOn(ctx, "assignment.write", current);
   if (current.status === "IMMOBILIZED" || current.status === "RETIRED") {
-    throw new BusinessRuleError(["Un équipement immobilisé ou réformé ne peut pas être affecté (EQP-05)."]);
+    throw new BusinessRuleError(["Un équipement immobilisé ou réformé ne peut pas être affecté."]);
   }
   return db.transaction(async (tx) => {
     const [overlap] = await tx
@@ -485,7 +485,7 @@ export async function assignEquipment(ctx: AuthContext, id: string, raw: unknown
       .from(assignments)
       .where(and(eq(assignments.equipmentId, id), gt(assignments.startAt, input.startAt)))
       .limit(1);
-    if (overlap) throw new BusinessRuleError(["Une affectation future existe déjà : pas de chevauchement (DON-13)."]);
+    if (overlap) throw new BusinessRuleError(["Une affectation future existe déjà : pas de chevauchement."]);
     await tx
       .update(assignments)
       .set({ endAt: input.startAt })

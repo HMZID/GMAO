@@ -38,6 +38,85 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/*
+ * Tableaux sur téléphone et tablette : chaque ligne devient une carte (deux colonnes de cartes sur tablette). La première cellule sert de titre ; les autres
+ * s'affichent « libellé : valeur », le libellé étant repris de l'en-tête de colonne (data-label, posé par
+ * TableCardLabels). Styles hors couche : ils l'emportent sur les utilitaires des cellules (alignement, retour à la ligne).
+ */
+@media (max-width: 1023.98px) {
+  .table-cards,
+  .table-cards tbody,
+  .table-cards tr,
+  .table-cards td {
+    display: block;
+    width: 100%;
+  }
+  .table-cards thead {
+    display: none;
+  }
+  .table-cards tbody {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--color-slate-50);
+  }
+  .table-cards tr {
+    border: 1px solid var(--color-slate-200);
+    border-radius: 0.75rem;
+    background: #fff;
+    padding: 0.75rem 0.875rem;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+  }
+  /* Libellé à gauche (flottant), valeurs empilées et alignées à droite, quel que soit leur nombre. */
+  .table-cards td {
+    display: flow-root;
+    padding: 0.3rem 0;
+    text-align: right;
+    white-space: normal;
+  }
+  .table-cards td::before {
+    content: attr(data-label);
+    float: left;
+    max-width: 45%;
+    margin-right: 1rem;
+    padding-top: 0.1rem;
+    text-align: left;
+    color: var(--color-slate-500);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  .table-cards td > * + * {
+    margin-top: 0.125rem;
+  }
+  .table-cards td:first-child {
+    display: block;
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-slate-100);
+    text-align: left;
+    font-size: 0.9375rem;
+  }
+  .table-cards td:first-child::before,
+  .table-cards td[data-label=""]::before {
+    display: none;
+  }
+  .table-cards td:empty {
+    display: none;
+  }
+  /* Les textes tronqués pour l'écran large retrouvent toute leur place dans la carte. */
+  .table-cards td .truncate,
+  .table-cards td [class*="max-w-"] {
+    max-width: none;
+    white-space: normal;
+  }
+}
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .table-cards tbody {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Grandes zones tactiles et contrastes élevés pour l'usage en atelier (CDC §10.1). */
 @layer base {
   button,

@@ -14,7 +14,9 @@ export function LoginForm({ next }: { next?: string }) {
       <Field label="Mot de passe" name="password" required>
         <Input id="password" name="password" type="password" autoComplete="current-password" required />
       </Field>
-      <SubmitButton className="w-full">Se connecter</SubmitButton>
+      <SubmitButton className="w-full" pendingLabel="Connexion…">
+        Se connecter
+      </SubmitButton>
     </ActionForm>
   );
 }

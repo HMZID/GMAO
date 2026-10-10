@@ -93,7 +93,7 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
 
   switch (to) {
     case "PLANNED": {
-      if (!actor.canManage) errors.push("Seul un gestionnaire d'OT peut planifier.");
+      if (!actor.canManage) errors.push("Seul un gestionnaire d'ordres de travail peut planifier.");
       if (!wo.plannedStart) errors.push("La date prévue est obligatoire.");
       if (wo.assigneeTechnicianIds.length === 0 && !(wo.isExternal && wo.hasSupplier)) {
         errors.push("Au moins un intervenant (technicien ou prestataire) est obligatoire.");
@@ -106,13 +106,13 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
     }
     case "IN_PROGRESS": {
       const isAssignee = !!actor.technicianId && wo.assigneeTechnicianIds.includes(actor.technicianId);
-      if (!isAssignee && !actor.canManage) errors.push("Seul un intervenant affecté peut démarrer l'OT.");
+      if (!isAssignee && !actor.canManage) errors.push("Seul un intervenant affecté peut démarrer l'ordre de travail.");
       if (wo.status === "WORK_DONE" && !reason) errors.push("Le motif (essai non concluant) est obligatoire.");
       if (wo.status === "TECH_CLOSED") {
         if (!reason) errors.push("Le motif de réouverture est obligatoire.");
-        if (!actor.canManage) errors.push("Seul un gestionnaire d'OT peut rouvrir.");
+        if (!actor.canManage) errors.push("Seul un gestionnaire d'ordres de travail peut rouvrir.");
         if (wo.techClosedAt && daysBetween(wo.techClosedAt, now) > REOPEN_DELAY_DAYS) {
-          errors.push(`Réouverture impossible au-delà de ${REOPEN_DELAY_DAYS} jours : créer un OT de récidive lié (COR-14).`);
+          errors.push(`Réouverture impossible au-delà de ${REOPEN_DELAY_DAYS} jours : créer un ordre de travail de récidive lié.`);
         }
       }
       break;
@@ -139,7 +139,7 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
           errors.push("Le valideur doit être différent de l'exécutant (séparation des tâches).");
         }
       } else if (!actor.canManage) {
-        errors.push("Seul un gestionnaire d'OT peut clôturer techniquement.");
+        errors.push("Seul un gestionnaire d'ordres de travail peut clôturer techniquement.");
       }
       if (wo.activeReservations > 0) {
         errors.push("Des réservations de pièces sont encore actives : les consommer ou les retourner.");
@@ -147,7 +147,7 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
       break;
     }
     case "CLOSED": {
-      if (!actor.canManage) errors.push("Seul un gestionnaire d'OT peut clôturer administrativement.");
+      if (!actor.canManage) errors.push("Seul un gestionnaire d'ordres de travail peut clôturer administrativement.");
       if (wo.hasOpenTimeEntry) errors.push("Un pointage est encore ouvert.");
       if (wo.isExternal && !wo.externalCostKnown) {
         errors.push("Le coût du prestataire (facture ou provision) doit être renseigné.");
@@ -158,10 +158,10 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
       break;
     }
     case "CANCELLED": {
-      if (!actor.canManage) errors.push("Seul un gestionnaire d'OT peut annuler.");
+      if (!actor.canManage) errors.push("Seul un gestionnaire d'ordres de travail peut annuler.");
       if (!reason) errors.push("Le motif d'annulation est obligatoire.");
       if (wo.timeEntryCount > 0 || wo.consumedPartLines > 0) {
-        errors.push("Annulation impossible : du temps ou des pièces sont imputés. Clôturer « sans suite » (DON-08).");
+        errors.push("Annulation impossible : du temps ou des pièces sont imputés. Clôturer « sans suite ».");
       }
       break;
     }

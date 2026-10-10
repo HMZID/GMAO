@@ -99,12 +99,12 @@ test("DI P1 : transformation en OT bloquée tant que le chef d'atelier n'a pas v
   await page.goto(`/demandes/${request.id}`);
 
   await page.getByRole("button", { name: "Qualifier" }).click();
-  await expect(page.getByText("DI qualifiée.")).toBeVisible();
-  await page.getByRole("button", { name: "Transformer en OT" }).click();
-  await expect(page.getByText(/La DI est en attente de validation \(Chef d'atelier du site\)/)).toBeVisible();
+  await expect(page.getByText("Demande qualifiée.")).toBeVisible();
+  await page.getByRole("button", { name: "Transformer en ordre de travail" }).click();
+  await expect(page.getByText(/La demande est en attente de validation \(Chef d'atelier du site\)/)).toBeVisible();
 
   await page.getByRole("button", { name: "Valider" }).click();
   await expect(page.getByText("Validation enregistrée.")).toBeVisible();
-  await page.getByRole("button", { name: "Transformer en OT" }).click();
+  await page.getByRole("button", { name: "Transformer en ordre de travail" }).click();
   await expect(page).toHaveURL(/\/ordres-de-travail\/[0-9a-f-]{36}$/);
 });

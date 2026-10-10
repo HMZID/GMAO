@@ -26,13 +26,13 @@ export default async function WorkRequestsPage(props: PageProps<"/demandes">) {
     <>
       <PageHeader
         title="Demandes d'intervention"
-        description="Pannes et anomalies signalées, à qualifier puis transformer en OT (COR-01 à COR-03)."
+        description="Pannes et anomalies signalées, à qualifier puis à transformer en ordre de travail."
         actions={ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Signaler une panne</ButtonLink> : null}
       />
       <Card>
         <FilterBar resetHref="/demandes">
           <FilterField label="Recherche" htmlFor="q" className="w-64">
-            <Input id="q" name="q" defaultValue={params.q} placeholder="N° de DI, symptôme, code équipement" />
+            <Input id="q" name="q" defaultValue={params.q} placeholder="N° de demande, symptôme, code équipement" />
           </FilterField>
           <FilterField label="Statut" htmlFor="status">
             <Select
@@ -56,12 +56,12 @@ export default async function WorkRequestsPage(props: PageProps<"/demandes">) {
           </FilterField>
         </FilterBar>
         {page.items.length === 0 ? (
-          <EmptyState title="Aucune demande" description="Aucune DI ne correspond à ces filtres." />
+          <EmptyState title="Aucune demande" description="Aucune demande ne correspond à ces filtres." />
         ) : (
           <Table>
             <THead>
               <tr>
-                <TH>DI</TH>
+                <TH>Demande</TH>
                 <TH>Équipement</TH>
                 <TH>Symptôme</TH>
                 <TH>Priorité</TH>

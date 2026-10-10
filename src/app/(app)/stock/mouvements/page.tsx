@@ -87,7 +87,7 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
                 <TH>Magasin</TH>
                 <TH className="text-right">Quantité</TH>
                 <TH className="text-right">Coût unitaire</TH>
-                <TH>Référence / OT</TH>
+                <TH>Référence / ordre de travail</TH>
               </tr>
             </THead>
             <TBody>

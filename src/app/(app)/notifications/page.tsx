@@ -21,7 +21,7 @@ export default async function NotificationsPage() {
     <>
       <PageHeader
         title="Notifications"
-        description="Alertes dans l'application selon vos rôles et votre périmètre (NOT-01, NOT-03), et par courriel selon vos préférences ci-dessous."
+        description="Alertes dans l'application selon vos rôles et votre périmètre, et par courriel selon vos préférences ci-dessous."
         actions={
           unread > 0 ? (
             <ActionForm action={markAllReadAction}>
@@ -66,10 +66,7 @@ export default async function NotificationsPage() {
       </Card>
 
       <Card className="mt-6">
-        <CardHeader
-          title="Courriels"
-          description="Événements reçus par courriel. Les alertes obligatoires ne peuvent pas être désactivées (§11.1)."
-        />
+        <CardHeader title="Courriels" description="Événements reçus par courriel. Les alertes obligatoires ne peuvent pas être désactivées." />
         <CardBody>
           <ActionForm action={updateEmailPreferencesAction} className="space-y-4">
             <ul className="grid gap-3 sm:grid-cols-2">

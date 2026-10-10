@@ -46,8 +46,8 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
           </Alert>
         ) : null}
         {open && duplicates > 0 ? (
-          <Alert tone="amber" title="Doublon possible (COR-02)">
-            <p>D&apos;autres demandes ou OT sont ouverts sur cet équipement :</p>
+          <Alert tone="amber" title="Doublon possible">
+            <p>D&apos;autres demandes ou ordres de travail sont ouverts sur cet équipement :</p>
             <ul className="mt-1 list-disc pl-5">
               {r.otherOpenRequests.map((o) => (
                 <li key={o.id}>
@@ -74,7 +74,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
           </Alert>
         ) : null}
         {r.workOrder ? (
-          <Alert tone="blue" title={r.status === "MERGED" ? "Rattachée à un OT existant" : "Transformée en OT"}>
+          <Alert tone="blue" title={r.status === "MERGED" ? "Rattachée à un ordre de travail existant" : "Transformée en ordre de travail"}>
             <Link href={`/ordres-de-travail/${r.workOrder.id}`} className="font-medium underline">
               {r.workOrder.number}
             </Link>{" "}
@@ -135,7 +135,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
           <ApprovalCard approvals={r.approvals} />
           {canQualify ? (
             <Card>
-              <CardHeader title="Qualifier" description="Priorité, type et décision d'immobilisation (COR-03)" />
+              <CardHeader title="Qualifier" description="Priorité, type et décision d'immobilisation" />
               <CardBody>
                 <ActionForm action={qualifyWorkRequestAction.bind(null, r.id)} className="space-y-4">
                   <Field label="Priorité" name="priority" required>
@@ -158,10 +158,13 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
 
           {canConvert ? (
             <Card>
-              <CardHeader title="Créer l'OT" description="Un OT correctif reprend la priorité, le type et l'immobilisation" />
+              <CardHeader
+                title="Créer l'ordre de travail"
+                description="L'ordre de travail correctif reprend la priorité, le type et l'immobilisation"
+              />
               <CardBody>
                 <ActionForm action={convertWorkRequestAction.bind(null, r.id)}>
-                  <SubmitButton>Transformer en OT</SubmitButton>
+                  <SubmitButton>Transformer en ordre de travail</SubmitButton>
                 </ActionForm>
               </CardBody>
             </Card>
@@ -169,10 +172,10 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
 
           {canQualify && r.openOrders.length > 0 ? (
             <Card>
-              <CardHeader title="Rattacher à un OT ouvert" description="Doublon d'une panne déjà prise en charge" />
+              <CardHeader title="Rattacher à un ordre de travail ouvert" description="Doublon d'une panne déjà prise en charge" />
               <CardBody>
                 <ActionForm action={mergeWorkRequestAction.bind(null, r.id)} className="space-y-3">
-                  <Field label="OT" name="workOrderId" required>
+                  <Field label="Ordre de travail" name="workOrderId" required>
                     <Select
                       id="workOrderId"
                       name="workOrderId"
