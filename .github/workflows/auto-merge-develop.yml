@@ -6,8 +6,8 @@
 # la branche doit être corrigée (nouveau commit poussé, la CI repart).
 #
 # Prérequis côté dépôt (docs/deploiement-vercel.md, « Règles du dépôt ») : fusion automatique autorisée et
-# develop protégée avec les vérifications obligatoires. Sans protection, GitHub fusionnerait sans attendre :
-# le job s'arrête alors en erreur au lieu d'activer la fusion.
+# develop protégée avec les vérifications obligatoires. Sans ces réglages, le job n'active pas la fusion
+# automatique (avertissement, sans échec) : la PR se fusionne alors à la main une fois la CI verte.
 
 name: Fusion automatique vers develop
 
@@ -31,17 +31,25 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Vérifier la protection de develop
+      # Sans protection de develop (vérifications obligatoires), la fusion automatique se ferait sans attendre
+      # la CI : on ne l'active pas et on le signale, sans faire échouer la PR.
+      - name: Vérifier les réglages du dépôt
+        id: settings
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          checks=$(gh api "repos/${{ github.repository }}/branches/develop" --jq '.protection.required_status_checks.contexts | length')
+          checks=$(gh api "repos/${{ github.repository }}/branches/develop" --jq ".protection.required_status_checks.contexts // [] | length")
           if [ "${checks:-0}" -eq 0 ]; then
-            echo "::error::develop n'exige aucune vérification : la fusion automatique fusionnerait sans attendre la CI. Voir docs/deploiement-vercel.md."
-            exit 1
+            echo "::warning::Fusion automatique non activée : develop n'exige pas encore les vérifications de la CI (docs/deploiement-vercel.md). Fusionner à la main une fois la CI verte."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Fusionner dès que la CI est verte
+        if: steps.settings.outputs.ready == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --merge "$PR_URL"
+        run: |
+          gh pr merge --auto --merge "$PR_URL" ||
+            echo "::warning::Fusion automatique non activée : autoriser « Allow auto-merge » dans les réglages du dépôt (docs/deploiement-vercel.md)."
