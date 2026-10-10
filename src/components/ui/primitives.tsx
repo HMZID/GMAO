@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { Tone } from "@/lib/labels";
 import { cn } from "@/lib/utils";
+import { TableCardLabels } from "./table-card-labels";
 
 /* ------------------------------------------------------------------ */
 /* Badge                                                                */
@@ -68,10 +69,15 @@ export function CardBody({ className, ...props }: ComponentProps<"div">) {
 /* Table                                                                */
 /* ------------------------------------------------------------------ */
 
-export function Table({ className, children }: { className?: string; children: ReactNode }) {
+/**
+ * Tableau. Sur téléphone, les lignes deviennent des cartes (`cards`, par défaut) : première cellule en titre,
+ * autres cellules « libellé de la colonne : valeur ». `cards={false}` garde le tableau défilant (grilles).
+ */
+export function Table({ className, children, cards = true }: { className?: string; children: ReactNode; cards?: boolean }) {
   return (
-    <div className={cn("overflow-x-auto", className)}>
-      <table className="min-w-full divide-y divide-slate-200 text-sm">{children}</table>
+    <div className={cn("overflow-x-auto", cards && "max-lg:overflow-visible", className)}>
+      <table className={cn("min-w-full divide-y divide-slate-200 text-sm", cards && "table-cards")}>{children}</table>
+      {cards ? <TableCardLabels /> : null}
     </div>
   );
 }
@@ -155,12 +161,16 @@ export function StatTile({
   };
   const content = (
     <>
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{value}</p>
+      <p className="text-xs font-medium uppercase tracking-wide text-pretty text-slate-500">{label}</p>
+      <p className="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">{value}</p>
       {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
     </>
   );
-  const className = cn("block rounded-lg border border-slate-200 border-l-4 bg-white px-4 py-3 shadow-xs", accent[tone], href && "hover:bg-slate-50");
+  const className = cn(
+    "block min-w-0 rounded-lg border border-slate-200 border-l-4 bg-white px-3 py-3 shadow-xs sm:px-4",
+    accent[tone],
+    href && "hover:bg-slate-50",
+  );
   return href ? (
     <a href={href} className={className}>
       {content}

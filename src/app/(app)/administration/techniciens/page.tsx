@@ -28,7 +28,7 @@ export default async function TechniciansPage() {
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Techniciens"
-        description="Ressources planifiables : site, qualification, horaire journalier, taux horaire (coût de la main-d'œuvre), habilitations et absences (PLA-02)."
+        description="Ressources planifiables : site, qualification, horaire journalier, taux horaire (coût de la main-d'œuvre), habilitations et absences."
       />
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         {canCreate ? (
@@ -52,7 +52,7 @@ export default async function TechniciansPage() {
               <Field label="Taux horaire (€)" name="hourlyRate">
                 <Input id="t-rate" name="hourlyRate" type="number" min={0} step="0.01" />
               </Field>
-              <Field label="Compte utilisateur" name="userId" hint="Pour pointer et exécuter les OT" className="sm:col-span-2">
+              <Field label="Compte utilisateur" name="userId" hint="Pour pointer et réaliser les ordres de travail" className="sm:col-span-2">
                 <Select
                   id="t-user"
                   name="userId"

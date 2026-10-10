@@ -180,6 +180,7 @@ export function SubmitButton({
   className,
   name,
   value,
+  pendingLabel = "Enregistrement…",
 }: {
   children: ReactNode;
   variant?: "primary" | "secondary" | "ghost" | "danger";
@@ -187,11 +188,13 @@ export function SubmitButton({
   className?: string;
   name?: string;
   value?: string;
+  /** Texte affiché pendant l'envoi. */
+  pendingLabel?: string;
 }) {
   const { pending } = useActionFormState();
   return (
     <Button type="submit" variant={variant} size={size} disabled={pending} className={className} name={name} value={value}>
-      {pending ? "Enregistrement…" : children}
+      {pending ? pendingLabel : children}
     </Button>
   );
 }

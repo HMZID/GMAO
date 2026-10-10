@@ -1,6 +1,7 @@
-import { Bell, LogOut, Menu, Wrench } from "lucide-react";
+import { Bell, LogOut, Wrench } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Skeleton } from "@/components/ui/primitives";
@@ -21,27 +22,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Suspense fallback={<NavFallback />}>
           <Navigation />
         </Suspense>
-        <p className="px-6 pb-4 text-xs text-slate-400">MVP — socle GMAO</p>
+        <p className="px-6 pb-4 text-xs text-slate-400">Maintenance des engins et équipements</p>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-4 border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:px-8">
-          <details className="relative lg:hidden">
-            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md p-2 text-slate-700 hover:bg-slate-100">
-              <Menu className="h-5 w-5" aria-hidden />
-              <span className="sr-only">Menu</span>
-            </summary>
-            <div className="absolute left-0 top-11 w-64 rounded-md border border-slate-200 bg-white shadow-lg">
-              <Suspense fallback={<div className="p-4 text-sm text-slate-500">Chargement…</div>}>
-                <Navigation variant="mobile" />
-              </Suspense>
-            </div>
-          </details>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-2 backdrop-blur sm:px-4 lg:px-8">
+          <div className="flex items-center gap-1 lg:hidden">
+            <Suspense fallback={<div className="h-11 w-11" />}>
+              <MobileNavigation />
+            </Suspense>
+            <Link href="/" className="flex items-center gap-2 rounded-md px-1 py-1 font-semibold text-slate-900">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600 text-white">
+                <Wrench className="h-4 w-4" aria-hidden />
+              </span>
+              GMAO
+            </Link>
+          </div>
           <div className="hidden lg:block" />
           <Suspense fallback={<Skeleton className="h-8 w-48" />}>
             <UserMenu />
           </Suspense>
         </header>
-        <main className="flex-1 px-4 py-6 lg:px-8">
+        {/* Marge du bas sur téléphone : la barre d'onglets ne masque pas la fin de la page. */}
+        <main className="flex-1 px-3 pb-28 pt-4 sm:px-4 sm:pt-6 md:pb-8 lg:px-8">
           <div className="mx-auto max-w-7xl">{children}</div>
         </main>
       </div>
@@ -70,12 +72,24 @@ function NavFallback() {
   );
 }
 
-async function Navigation({ variant = "sidebar" }: { variant?: "sidebar" | "mobile" }) {
+async function allowedItems() {
   const ctx = await getAuthContext();
   const items = NAV_ITEMS.filter((item) => (item.anyOf ? item.anyOf.some((p) => ctx.can(p)) : !item.permission || ctx.can(item.permission))).map(
     ({ href, label, icon }) => ({ href, label, icon }),
   );
-  return <SidebarNav items={items} variant={variant} />;
+  return { ctx, items };
+}
+
+async function Navigation() {
+  const { items } = await allowedItems();
+  return <SidebarNav items={items} />;
+}
+
+/** Téléphones et tablettes : panneau de menu et barre d'onglets du bas. */
+async function MobileNavigation() {
+  const { ctx, items } = await allowedItems();
+  const roles = ctx.roles.map((r) => ROLE[r] ?? r).join(", ");
+  return <MobileNav items={items} user={{ name: ctx.name, roles: roles || "Aucun rôle" }} />;
 }
 
 async function UserMenu() {
@@ -86,7 +100,7 @@ async function UserMenu() {
     <div className="flex items-center gap-3">
       <Link
         href="/notifications"
-        className="relative rounded-md p-2 text-slate-600 hover:bg-slate-100"
+        className="relative flex h-11 w-11 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
         aria-label={`Notifications (${unread} non lues)`}
       >
         <Bell className="h-5 w-5" aria-hidden />
@@ -101,7 +115,12 @@ async function UserMenu() {
         <p className="max-w-64 truncate text-xs text-slate-500">{roles || "Aucun rôle"}</p>
       </div>
       <form action={signOutAction}>
-        <button type="submit" className="rounded-md p-2 text-slate-600 hover:bg-slate-100" aria-label="Se déconnecter" title="Se déconnecter">
+        <button
+          type="submit"
+          className="flex h-11 w-11 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
+          aria-label="Se déconnecter"
+          title="Se déconnecter"
+        >
           <LogOut className="h-5 w-5" aria-hidden />
         </button>
       </form>

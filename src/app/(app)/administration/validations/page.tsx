@@ -24,7 +24,7 @@ export default async function ApprovalWorkflowsPage() {
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Circuits de validation"
-        description="Par type d'objet et par société (le circuit du groupe s'applique à défaut). Une étape s'applique à partir de son seuil et, pour les DI, aux priorités choisies. Les demandes déjà soumises gardent leurs étapes (HAB-04)."
+        description="Par type d'objet et par société (le circuit du groupe s'applique à défaut). Une étape s'applique à partir de son seuil et, pour les demandes d'intervention, aux priorités choisies. Les demandes déjà soumises gardent leurs étapes."
       />
 
       <Disclosure summary="Nouveau circuit" className="mb-6">

@@ -21,7 +21,7 @@ export default async function EditEquipmentPage(props: PageProps<"/equipements/[
       <PageHeader title={`Modifier ${equipment.code}`} back={{ href: `/equipements/${id}`, label: equipment.code }} />
       {equipment.status === "RETIRED" ? (
         <Alert tone="amber" title="Équipement réformé">
-          La fiche est en lecture seule (EQP-14).
+          La fiche est en lecture seule.
         </Alert>
       ) : (
         <Card>

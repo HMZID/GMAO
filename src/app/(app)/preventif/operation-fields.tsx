@@ -57,9 +57,9 @@ export function OperationFields() {
       </div>
       <div className="flex flex-wrap gap-6">
         <Checkbox name="isRegulatory" label="Contrôle réglementaire (report au-delà de l'échéance légale interdit)" />
-        <Checkbox name="blockWhenOverdue" label="Bloquer l'équipement si échu (PRV-12)" />
+        <Checkbox name="blockWhenOverdue" label="Bloquer l'équipement si échu" />
       </div>
-      <Field label="Checklist" name="checklist" hint="Un point par ligne ; chaque point devient obligatoire sur l'OT.">
+      <Field label="Checklist" name="checklist" hint="Un point par ligne ; chaque point devient obligatoire sur l'ordre de travail.">
         <Textarea
           id="checklist"
           name="checklist"

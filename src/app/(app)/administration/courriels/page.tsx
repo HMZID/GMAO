@@ -25,7 +25,7 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Courriels"
-        description="File d'envoi des notifications par courriel : chaque envoi est tenté par le processus d'envoi (npm run worker), repris en cas d'erreur passagère, puis mis en échec après 5 tentatives (NOT-01)."
+        description="File d'envoi des notifications par courriel : chaque envoi est tenté par le processus d'envoi (npm run worker), repris en cas d'erreur passagère, puis mis en échec après 5 tentatives."
         actions={
           <ActionForm action={runEmailJobsAction} className="max-w-md text-right">
             <SubmitButton variant="secondary">Traiter la file maintenant</SubmitButton>

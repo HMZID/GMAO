@@ -29,7 +29,7 @@ export default async function OrganisationPage() {
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Organisation"
-        description="Groupe → sociétés → sites → ateliers et magasins ; les chantiers appartiennent à une société (CDC §1.3). Les codes sont uniques."
+        description="Groupe → sociétés → sites → ateliers et magasins ; les chantiers appartiennent à une société. Les codes sont uniques."
       />
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>

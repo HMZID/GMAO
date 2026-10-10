@@ -66,7 +66,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
         actions={
           wo.canManage && (status === "TECH_CLOSED" || status === "CLOSED") ? (
             <ActionForm action={recurrenceAction.bind(null, wo.id)} showMessage>
-              <SubmitButton variant="secondary">Créer un OT de récidive</SubmitButton>
+              <SubmitButton variant="secondary">Créer un ordre de travail de récidive</SubmitButton>
             </ActionForm>
           ) : null
         }
@@ -75,11 +75,11 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
       <div className="mb-6 space-y-3">
         {status === "ON_HOLD" ? (
           <Alert tone="amber" title={`En attente${reasonOfHold ? ` : ${reasonOfHold}` : ""}`}>
-            {wo.holdComment ?? "Reprendre l'OT dès que la cause de l'attente est levée."}
+            {wo.holdComment ?? "Reprendre l'ordre de travail dès que la cause de l'attente est levée."}
           </Alert>
         ) : null}
         {wo.requiresRelease && isOpen ? (
-          <Alert tone="blue" title="Remise en service à valider (COR-12)">
+          <Alert tone="blue" title="Remise en service à valider">
             Équipement de criticité A ou intervention liée à la sécurité : la clôture technique est validée par une personne habilitée, différente de
             l&apos;exécutant.
           </Alert>
@@ -126,7 +126,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
             <Card>
               <CardHeader
                 title="Demandes d'achat"
-                description="Pièces et prestations demandées pour cet OT (ACH-01)"
+                description="Pièces et prestations demandées pour cet ordre de travail"
                 actions={
                   ctx.canOn("purchase.create", wo) && isOpen ? (
                     <Link href={`/demandes-achat/nouvelle?workOrderId=${wo.id}`} className="text-sm text-brand-700 hover:underline">
@@ -225,7 +225,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
                       </span>
                     ) : wo.parentWorkOrderId ? (
                       <Link href={`/ordres-de-travail/${wo.parentWorkOrderId}`} className="text-brand-700 hover:underline">
-                        Récidive d&apos;un OT précédent
+                        Récidive d&apos;un ordre de travail précédent
                       </Link>
                     ) : null,
                   },

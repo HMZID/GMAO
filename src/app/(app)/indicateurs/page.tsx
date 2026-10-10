@@ -40,7 +40,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
     <>
       <PageHeader
         title="Indicateurs de maintenance"
-        description={`Période du ${formatDate(k.from)} au ${formatDate(k.to)} — ${k.fleetSize} équipement(s). Les indicateurs calculés sur moins de 3 événements sont « non significatifs » (CDC §9.2).`}
+        description={`Période du ${formatDate(k.from)} au ${formatDate(k.to)} — ${k.fleetSize} équipement(s). Les indicateurs calculés sur moins de 3 événements sont « non significatifs ».`}
       />
       <Card className="mb-6">
         <FilterBar resetHref="/indicateurs">
@@ -85,13 +85,18 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               hint={`${formatNumber(k.downtimeHours)} h d'immobilisation sur la période`}
             />
             <StatTile
-              label="MTBF"
+              label="Temps moyen entre pannes (MTBF)"
               value={formatHours(k.mtbf)}
               tone="teal"
               hint={`${k.failures} panne(s), ${formatNumber(k.operatingHours)} h de fonctionnement`}
             />
-            <StatTile label="MTTR" value={formatHours(k.mttr)} tone="teal" hint="Réparation active, attentes déduites" />
-            <StatTile label="MDT" value={formatHours(k.mdt)} tone="teal" hint="Durée moyenne d'immobilisation par panne" />
+            <StatTile
+              label="Durée moyenne de réparation (MTTR)"
+              value={formatHours(k.mttr)}
+              tone="teal"
+              hint="Réparation active, attentes déduites"
+            />
+            <StatTile label="Durée moyenne d'arrêt (MDT)" value={formatHours(k.mdt)} tone="teal" hint="Durée moyenne d'immobilisation par panne" />
             <StatTile
               label="Respect du préventif"
               value={formatPercent(k.preventive?.compliance)}
@@ -102,7 +107,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               label="Coût total de maintenance"
               value={formatCurrency(costs?.total)}
               tone="teal"
-              hint="OT clôturés techniquement sur la période"
+              hint="Ordres de travail clôturés techniquement sur la période"
             />
             <StatTile label="Main-d'œuvre" value={formatCurrency(costs?.labor)} tone="gray" />
             <StatTile
@@ -146,7 +151,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
             </Card>
 
             <Card>
-              <CardHeader title="Équipements les plus coûteux" description="Coût et immobilisation de la période (KPI-05)" />
+              <CardHeader title="Équipements les plus coûteux" description="Coût et immobilisation de la période" />
               {k.topCost.length === 0 ? (
                 <EmptyState title="Aucun coût sur la période" />
               ) : (
@@ -183,7 +188,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
           </div>
 
           <Card className="mt-6">
-            <CardHeader title="Pièces les plus consommées" description="Valeur des sorties sur OT, retours déduits (KPI-07)" />
+            <CardHeader title="Pièces les plus consommées" description="Valeur des pièces sorties sur les ordres de travail, retours déduits" />
             {k.topParts.length === 0 ? (
               <EmptyState title="Aucune consommation sur la période" />
             ) : (
@@ -217,8 +222,8 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               </Table>
             )}
             <CardBody className="border-t border-slate-100 text-xs text-slate-500">
-              Conventions (§9.2) : disponibilité sur 24 h × jours de la période ; MTBF = heures de fonctionnement ÷ nombre de pannes ; MTTR hors
-              attentes de pièces ou de prestataire. Exports et coût par heure ou par kilomètre : itération suivante (KPI-08).
+              Méthode de calcul : disponibilité sur 24 h × jours de la période ; temps moyen entre pannes (MTBF) = heures de fonctionnement ÷ nombre
+              de pannes ; durée moyenne de réparation (MTTR) hors attentes de pièces ou de prestataire.
             </CardBody>
           </Card>
         </>

@@ -31,7 +31,7 @@ export default async function ImportsPage() {
     <>
       <PageHeader
         title="Imports Excel"
-        description={`Télécharger le modèle, le remplir, puis lancer la simulation : chaque ligne est contrôlée comme une saisie à l'écran avant tout import (EQP-13, INT-01). ${MAX_IMPORT_ROWS} lignes et 10 Mo au plus par fichier.`}
+        description={`Télécharger le modèle, le remplir, puis lancer la simulation : chaque ligne est contrôlée comme une saisie à l'écran avant tout import. ${MAX_IMPORT_ROWS} lignes et 10 Mo au plus par fichier.`}
       />
 
       <div className="mb-8 grid gap-6 lg:grid-cols-3">

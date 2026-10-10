@@ -1,0 +1,55 @@
+# Intégration automatique des branches de tâche dans develop.
+#
+# Une Pull Request GMAO-NN → develop passe en « fusion automatique » dès son ouverture : GitHub la fusionne
+# seul quand toutes les vérifications obligatoires de develop sont vertes (CI : formatage, lint, types, tests
+# unitaires, tests de bout en bout, application mobile). Si une vérification échoue, rien n'est fusionné :
+# la branche doit être corrigée (nouveau commit poussé, la CI repart).
+#
+# Prérequis côté dépôt (docs/deploiement-vercel.md, « Règles du dépôt ») : fusion automatique autorisée et
+# develop protégée avec les vérifications obligatoires. Sans ces réglages, le job n'active pas la fusion
+# automatique (avertissement, sans échec) : la PR se fusionne alors à la main une fois la CI verte.
+
+name: Fusion automatique vers develop
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    name: Activer la fusion automatique
+    # Branches de tâche du dépôt lui-même (pas de fork), hors brouillon.
+    if: >-
+      startsWith(github.head_ref, 'GMAO-') &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Sans protection de develop (vérifications obligatoires), la fusion automatique se ferait sans attendre
+      # la CI : on ne l'active pas et on le signale, sans faire échouer la PR.
+      - name: Vérifier les réglages du dépôt
+        id: settings
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          checks=$(gh api "repos/${{ github.repository }}/branches/develop" --jq ".protection.required_status_checks.contexts // [] | length")
+          if [ "${checks:-0}" -eq 0 ]; then
+            echo "::warning::Fusion automatique non activée : develop n'exige pas encore les vérifications de la CI (docs/deploiement-vercel.md). Fusionner à la main une fois la CI verte."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Fusionner dès que la CI est verte
+        if: steps.settings.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          gh pr merge --auto --merge "$PR_URL" ||
+            echo "::warning::Fusion automatique non activée : autoriser « Allow auto-merge » dans les réglages du dépôt (docs/deploiement-vercel.md)."

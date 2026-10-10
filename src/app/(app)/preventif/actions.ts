@@ -65,7 +65,10 @@ export async function generateAction(_: ActionState): Promise<ActionState> {
     const { created } = await generatePreventiveWorkOrders(ctx);
     return {
       status: "success",
-      message: created === 0 ? "Aucun OT à générer : toutes les échéances proches ont déjà leur OT." : `${created} OT préventif(s) généré(s).`,
+      message:
+        created === 0
+          ? "Aucun ordre de travail à générer : toutes les échéances proches ont déjà le leur."
+          : `${created} ordre(s) de travail préventif(s) généré(s).`,
     } satisfies ActionState;
   });
 }

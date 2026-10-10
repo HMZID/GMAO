@@ -8,7 +8,7 @@ import { USERS, login } from "./helpers";
 
 test("préférences de courriel : une alerte facultative se désactive, une alerte obligatoire non", async ({ page }) => {
   await login(page, USERS.technicianLyon, "/notifications");
-  const assignment = page.getByLabel("Affectation à un OT");
+  const assignment = page.getByLabel("Affectation à un ordre de travail");
   const mandatory = page.getByLabel("Validation en attente (obligatoire)");
   await expect(mandatory).toBeChecked();
   await expect(mandatory).toBeDisabled();

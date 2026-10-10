@@ -112,7 +112,7 @@ export const READING_STATUS: Record<string, { label: string; tone: Tone }> = {
 
 export const READING_SOURCE: Record<string, string> = {
   MANUAL: "Saisie",
-  WORK_ORDER: "OT",
+  WORK_ORDER: "Ordre de travail",
   TELEMATICS: "Télématique",
   IMPORT: "Import",
 };
@@ -120,7 +120,7 @@ export const READING_SOURCE: Record<string, string> = {
 export const REQUEST_STATUS: Record<string, { label: string; tone: Tone }> = {
   NEW: { label: "Nouvelle", tone: "blue" },
   QUALIFIED: { label: "Qualifiée", tone: "violet" },
-  CONVERTED: { label: "Transformée en OT", tone: "green" },
+  CONVERTED: { label: "Transformée en ordre de travail", tone: "green" },
   REJECTED: { label: "Rejetée", tone: "gray" },
   MERGED: { label: "Rattachée", tone: "gray" },
 };
@@ -134,10 +134,10 @@ export const REQUEST_TYPE: Record<string, string> = {
 };
 
 export const PRIORITY: Record<string, { label: string; tone: Tone; short: string }> = {
-  P1: { label: "P1 Urgence", short: "P1", tone: "red" },
-  P2: { label: "P2 Haute", short: "P2", tone: "amber" },
-  P3: { label: "P3 Normale", short: "P3", tone: "blue" },
-  P4: { label: "P4 Planifiable", short: "P4", tone: "gray" },
+  P1: { label: "P1 · Urgente", short: "P1 · Urgente", tone: "red" },
+  P2: { label: "P2 · Haute", short: "P2 · Haute", tone: "amber" },
+  P3: { label: "P3 · Normale", short: "P3 · Normale", tone: "blue" },
+  P4: { label: "P4 · Planifiable", short: "P4 · Planifiable", tone: "gray" },
 };
 
 export const WORK_ORDER_TYPE: Record<string, string> = {
@@ -167,7 +167,7 @@ export const TRANSITION_ACTION: Record<string, string> = {
   WORK_DONE: "Terminer les travaux",
   TECH_CLOSED: "Valider la remise en service",
   CLOSED: "Clôturer (administratif)",
-  CANCELLED: "Annuler l'OT",
+  CANCELLED: "Annuler l'ordre de travail",
 };
 
 export const HOLD_REASON: Record<string, string> = {
@@ -210,7 +210,7 @@ export const METER_UNIT_SHORT: Record<string, string> = { HOURS: "h", KM: "km", 
 
 export const MOVEMENT_TYPE: Record<string, { label: string; sign: 1 | -1 | 0 }> = {
   RECEIPT: { label: "Réception", sign: 1 },
-  ISSUE: { label: "Sortie sur OT", sign: -1 },
+  ISSUE: { label: "Sortie sur ordre de travail", sign: -1 },
   RETURN: { label: "Retour en stock", sign: 1 },
   TRANSFER_OUT: { label: "Transfert sortant", sign: -1 },
   TRANSFER_IN: { label: "Transfert entrant", sign: 1 },
@@ -307,8 +307,8 @@ export const ENTITY_TYPE: Record<string, string> = {
   meter_reading: "Relevé",
   maintenance_plan: "Plan d'entretien",
   due_item: "Échéance",
-  work_request: "DI",
-  work_order: "OT",
+  work_request: "Demande d'intervention",
+  work_order: "Ordre de travail",
   time_entry: "Pointage",
   part: "Article",
   stock_level: "Niveau de stock",

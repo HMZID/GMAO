@@ -29,7 +29,7 @@ export default async function UsersPage() {
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Utilisateurs et habilitations"
-        description="Un utilisateur cumule des couples rôle × périmètre ; une délégation temporaire est un rôle borné dans le temps (HAB-01 à HAB-03, HAB-08)."
+        description="Un utilisateur cumule des couples rôle × périmètre ; une délégation temporaire est un rôle borné dans le temps."
       />
       <Disclosure summary="Nouveau compte" className="mb-6">
         <ActionForm action={createUserAction} resetOnSuccess className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
