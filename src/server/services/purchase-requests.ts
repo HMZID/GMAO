@@ -31,7 +31,7 @@ export const purchaseRequestInput = z
     neededBy: optionalDate,
   })
   .refine((v) => !!(v.workOrderId || v.equipmentId || v.costCenterId), {
-    message: "Rattacher la demande à un OT, un équipement ou un centre de coût (ACH-01)",
+    message: "Rattacher la demande à un ordre de travail, un équipement ou un centre de coût",
     path: ["workOrderId"],
   });
 

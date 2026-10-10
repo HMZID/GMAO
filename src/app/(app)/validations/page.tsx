@@ -26,7 +26,7 @@ export default async function ValidationsPage() {
     <>
       <PageHeader
         title="Validations"
-        description="Demandes d'intervention, demandes d'achat et dépenses soumises à un circuit de validation (HAB-04). Le demandeur ne valide jamais sa propre demande."
+        description="Demandes d'intervention, demandes d'achat et dépenses soumises à un circuit de validation. Le demandeur ne valide jamais sa propre demande."
       />
 
       <Card className="mb-6">

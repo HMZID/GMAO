@@ -70,13 +70,13 @@ function assertCanUpload(ctx: AuthContext, parent: Parent, kind: string) {
   if (kind === "INVOICE" && !ctx.canOn("supplier.read", parent)) throw new ForbiddenError("Ajout de facture non autorisé sur ce périmètre.");
   if (parent.entityType === "EQUIPMENT") {
     assertCanOn(ctx, "equipment.write", parent);
-    if (parent.status === "RETIRED") throw new BusinessRuleError(["Équipement réformé : fiche en lecture seule (EQP-14)."]);
+    if (parent.status === "RETIRED") throw new BusinessRuleError(["Équipement réformé : fiche en lecture seule."]);
     return;
   }
   if (isManager(ctx, parent)) return;
   assertCanOn(ctx, "workorder.execute", parent);
   if (["CLOSED", "CANCELLED"].includes(parent.status)) {
-    throw new BusinessRuleError(["OT clôturé ou annulé : seul un gestionnaire peut encore y joindre un document."]);
+    throw new BusinessRuleError(["Ordre de travail clôturé ou annulé : seul un gestionnaire peut encore y joindre un document."]);
   }
 }
 

@@ -34,7 +34,7 @@ export default async function AuditPage(props: PageProps<"/administration/journa
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Journal d'audit"
-        description="Ajout seul : aucune ligne ne peut être modifiée ni supprimée, y compris par l'API (HAB-06, TEC-05)."
+        description="Ajout seul : aucune ligne ne peut être modifiée ni supprimée, y compris par l'API."
       />
       <Card>
         <FilterBar resetHref="/administration/journal">

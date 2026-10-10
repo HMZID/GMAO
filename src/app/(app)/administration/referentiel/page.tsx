@@ -20,7 +20,7 @@ export default async function ReferentialPage() {
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Référentiel équipements"
-        description="Catégories (criticité par défaut, attributs propres) et modèles constructeur. Les plans d'entretien se rattachent à une catégorie ou à un modèle (EQP-03)."
+        description="Catégories (criticité par défaut, attributs propres) et modèles constructeur. Les plans d'entretien se rattachent à une catégorie ou à un modèle."
       />
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>

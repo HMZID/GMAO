@@ -24,7 +24,7 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
     <>
       <PageHeader
         title="Demandes d'achat"
-        description="Pièces et prestations à acheter, rattachées à un OT, un équipement ou un centre de coût, puis validées selon les seuils (ACH-01, ACH-02)."
+        description="Pièces et prestations à acheter, rattachées à un ordre de travail, un équipement ou un centre de coût, puis validées selon les seuils."
         actions={ctx.can("purchase.create") ? <ButtonLink href="/demandes-achat/nouvelle">Nouvelle demande</ButtonLink> : null}
       />
       <Card>

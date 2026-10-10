@@ -17,7 +17,7 @@ export const metadata = { title: "Nouvel ordre de travail" };
 
 export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-travail/nouveau">) {
   const ctx = await getAuthContext();
-  if (!ctx.can("workorder.create")) return <Forbidden what="la création d'OT" />;
+  if (!ctx.can("workorder.create")) return <Forbidden what="la création d'ordres de travail" />;
   const sp = await props.searchParams;
   const preselected = isUuid(sp.equipmentId) ? sp.equipmentId : "";
   const [equipment, workshops, technicians, suppliers] = await Promise.all([
@@ -31,7 +31,7 @@ export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-trav
     <>
       <PageHeader
         title="Nouvel ordre de travail"
-        description="Pour une panne signalée, préférer la transformation de la DI. Un OT correctif « immobilisant » rend l'équipement inapte jusqu'à la remise en service."
+        description="Pour une panne signalée, préférer la transformation de la demande d'intervention. Un ordre de travail correctif « immobilisant » rend l'équipement inapte jusqu'à la remise en service."
         back={{ href: "/ordres-de-travail", label: "Ordres de travail" }}
       />
       <Card className="max-w-4xl">
@@ -97,7 +97,7 @@ export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-trav
               </div>
             </fieldset>
             <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
-              <SubmitButton>Créer l&apos;OT</SubmitButton>
+              <SubmitButton>Créer l&apos;ordre de travail</SubmitButton>
               <ButtonLink href="/ordres-de-travail" variant="ghost">
                 Annuler
               </ButtonLink>

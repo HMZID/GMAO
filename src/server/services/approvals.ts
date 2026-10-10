@@ -362,7 +362,7 @@ async function applyOutcome(
       .where(eq(workRequests.id, current.id));
     if (current.immobilize) {
       await releaseEquipmentIfFree(tx, ctx, current.equipmentId, {
-        reason: `DI ${current.number} refusée en validation`,
+        reason: `Demande d'intervention ${current.number} refusée en validation`,
         excludeRequestId: current.id,
       });
     }

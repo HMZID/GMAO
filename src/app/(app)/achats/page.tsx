@@ -19,7 +19,7 @@ export default async function SuppliersPage() {
     <>
       <PageHeader
         title="Fournisseurs et prestataires"
-        description="Référentiel unique (DON-12 : identifiant fiscal sans doublon). Commandes et réceptions sur commande : itération suivante (ACH-01 à ACH-09)."
+        description="Référentiel des fournisseurs et prestataires : un identifiant fiscal ne peut être enregistré qu'une fois."
       />
       {ctx.can("supplier.write") ? (
         <Disclosure summary="Nouveau fournisseur ou prestataire" className="mb-6">
@@ -39,7 +39,7 @@ export default async function SuppliersPage() {
             <Field label="Adresse" name="address" className="lg:col-span-2">
               <Input id="address" name="address" maxLength={300} />
             </Field>
-            <Checkbox name="isContractor" label="Prestataire de maintenance (intervient sur les OT)" />
+            <Checkbox name="isContractor" label="Prestataire de maintenance (intervient sur les ordres de travail)" />
             <div className="sm:col-span-2 lg:col-span-3">
               <SubmitButton>Créer</SubmitButton>
             </div>
@@ -57,7 +57,7 @@ export default async function SuppliersPage() {
                 <TH>Identifiant fiscal</TH>
                 <TH>Contact</TH>
                 <TH>Rôle</TH>
-                <TH className="text-right">OT</TH>
+                <TH className="text-right">Ordres de travail</TH>
               </tr>
             </THead>
             <TBody>

@@ -33,14 +33,14 @@ export default async function DashboardPage() {
             {ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Signaler une panne</ButtonLink> : null}
             {ctx.can("workorder.create") ? (
               <ButtonLink href="/ordres-de-travail/nouveau" variant="secondary">
-                Nouvel OT
+                Nouvel ordre de travail
               </ButtonLink>
             ) : null}
           </>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatTile
           label="Immobilisés"
           value={eq.IMMOBILIZED ?? 0}
@@ -50,9 +50,9 @@ export default async function DashboardPage() {
         />
         <StatTile label="En maintenance" value={eq.IN_MAINTENANCE ?? 0} tone="amber" href="/equipements?status=IN_MAINTENANCE" />
         <StatTile label="Disponibles ou en service" value={(eq.AVAILABLE ?? 0) + (eq.IN_SERVICE ?? 0)} tone="green" href="/equipements" />
-        <StatTile label="DI à qualifier" value={dashboard.requestsToQualify} tone="blue" href="/demandes?status=NEW" />
+        <StatTile label="Demandes à qualifier" value={dashboard.requestsToQualify} tone="blue" href="/demandes?status=NEW" />
         <StatTile
-          label="OT ouverts"
+          label="Ordres de travail ouverts"
           value={Object.values(wo.byStatus).reduce((a, b) => a + b, 0)}
           tone="violet"
           href="/ordres-de-travail"
@@ -73,7 +73,7 @@ export default async function DashboardPage() {
           href={ctx.can("kpi.read") ? "/indicateurs" : undefined}
           hint={
             dashboard.monthCosts
-              ? `MO ${formatCurrency(dashboard.monthCosts.labor)} · pièces ${formatCurrency(dashboard.monthCosts.parts)}`
+              ? `Main-d'œuvre ${formatCurrency(dashboard.monthCosts.labor)} · pièces ${formatCurrency(dashboard.monthCosts.parts)}`
               : undefined
           }
         />
@@ -92,12 +92,12 @@ export default async function DashboardPage() {
               }
             />
             {urgent.items.length === 0 ? (
-              <EmptyState title="Aucun OT ouvert" />
+              <EmptyState title="Aucun ordre de travail ouvert" />
             ) : (
               <Table>
                 <THead>
                   <tr>
-                    <TH>OT</TH>
+                    <TH>Ordre de travail</TH>
                     <TH>Équipement</TH>
                     <TH>Priorité</TH>
                     <TH>Statut</TH>

@@ -16,11 +16,11 @@ export async function createWorkRequestAction(_: ActionState, formData: FormData
 }
 
 export async function qualifyWorkRequestAction(id: string, _: ActionState, formData: FormData): Promise<ActionState> {
-  return act((ctx) => qualifyWorkRequest(ctx, id, formToObject(formData)), "DI qualifiée.");
+  return act((ctx) => qualifyWorkRequest(ctx, id, formToObject(formData)), "Demande qualifiée.");
 }
 
 export async function rejectWorkRequestAction(id: string, _: ActionState, formData: FormData): Promise<ActionState> {
-  return act((ctx) => rejectWorkRequest(ctx, id, formToObject(formData)), "DI rejetée : le déclarant est notifié.");
+  return act((ctx) => rejectWorkRequest(ctx, id, formToObject(formData)), "Demande rejetée : le déclarant est prévenu.");
 }
 
 export async function convertWorkRequestAction(id: string, _: ActionState): Promise<ActionState> {
@@ -32,5 +32,5 @@ export async function convertWorkRequestAction(id: string, _: ActionState): Prom
 }
 
 export async function mergeWorkRequestAction(id: string, _: ActionState, formData: FormData): Promise<ActionState> {
-  return act((ctx) => mergeIntoWorkOrder(ctx, id, String(formData.get("workOrderId") ?? "")), "DI rattachée à l'OT.");
+  return act((ctx) => mergeIntoWorkOrder(ctx, id, String(formData.get("workOrderId") ?? "")), "Demande rattachée à l'ordre de travail.");
 }

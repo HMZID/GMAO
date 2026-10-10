@@ -21,7 +21,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { NavIcon, NavItem } from "./nav-items";
 
-const ICONS: Record<NavIcon, LucideIcon> = {
+export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   dashboard: LayoutDashboard,
   equipment: Truck,
   requests: Siren,
@@ -37,7 +37,7 @@ const ICONS: Record<NavIcon, LucideIcon> = {
   admin: Settings,
 };
 
-function isActive(pathname: string, href: string) {
+export function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -46,7 +46,7 @@ export function SidebarNav({ items, variant = "sidebar" }: { items: Pick<NavItem
   return (
     <nav aria-label="Navigation principale" className={cn(variant === "sidebar" ? "flex-1 space-y-0.5 px-3 py-4" : "grid gap-1 p-2")}>
       {items.map((item) => {
-        const Icon = ICONS[item.icon];
+        const Icon = NAV_ICONS[item.icon];
         const active = isActive(pathname, item.href);
         return (
           <Link

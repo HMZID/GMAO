@@ -56,7 +56,7 @@ export async function createWorkRequest(ctx: AuthContext, raw: unknown) {
     .where(and(eq(equipment.id, input.equipmentId), eq(equipment.tenantId, ctx.tenantId)));
   if (!eqRow) throw new NotFoundError("Équipement");
   assertCanOn(ctx, "request.create", eqRow);
-  if (eqRow.status === "RETIRED") throw new BusinessRuleError(["Aucune DI sur un équipement réformé (DON-14)."]);
+  if (eqRow.status === "RETIRED") throw new BusinessRuleError(["Aucune demande d'intervention sur un équipement réformé."]);
 
   const [openRequests, openOrders] = await Promise.all([
     db
@@ -102,7 +102,7 @@ export async function createWorkRequest(ctx: AuthContext, raw: unknown) {
       eqRow,
       {
         type: row.priority === "P1" ? "work_request.urgent" : "work_request.created",
-        title: `${row.priority === "P1" ? "URGENT — " : ""}Nouvelle DI ${row.number} sur ${eqRow.code}`,
+        title: `${row.priority === "P1" ? "URGENT — " : ""}Nouvelle demande d'intervention ${row.number} sur ${eqRow.code}`,
         body: input.symptom,
         entityType: "work_request",
         entityId: row.id,
@@ -224,7 +224,7 @@ export async function qualifyWorkRequest(ctx: AuthContext, id: string, raw: unkn
   const input = parseInput(qualifyInput, raw);
   const current = await loadForUpdate(ctx, id);
   assertCanOn(ctx, "request.qualify", current);
-  if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette DI n'est plus qualifiable."]);
+  if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette demande n'est plus qualifiable."]);
   return db.transaction(async (tx) => {
     const [row] = await tx
       .update(workRequests)
@@ -232,7 +232,7 @@ export async function qualifyWorkRequest(ctx: AuthContext, id: string, raw: unkn
       .where(eq(workRequests.id, id))
       .returning();
     if (input.immobilize) {
-      await setEquipmentStatus(tx, ctx, current.equipmentId, "IMMOBILIZED", { reason: `DI ${current.number} : ${current.symptom}` });
+      await setEquipmentStatus(tx, ctx, current.equipmentId, "IMMOBILIZED", { reason: `Demande ${current.number} : ${current.symptom}` });
       await openDowntime(tx, ctx, {
         equipmentId: current.equipmentId,
         reason: input.type === "SAFETY" ? "SAFETY" : "BREAKDOWN",
@@ -256,24 +256,24 @@ export async function rejectWorkRequest(ctx: AuthContext, id: string, raw: unkno
   const input = parseInput(rejectInput, raw);
   const current = await loadForUpdate(ctx, id);
   assertCanOn(ctx, "request.qualify", current);
-  if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette DI ne peut plus être rejetée."]);
+  if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette demande ne peut plus être rejetée."]);
   return db.transaction(async (tx) => {
     const [row] = await tx
       .update(workRequests)
       .set({ status: "REJECTED", rejectionReason: input.reason, qualifiedById: ctx.userId, qualifiedAt: new Date() })
       .where(eq(workRequests.id, id))
       .returning();
-    await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "DI rejetée");
+    await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "Demande rejetée");
     // Une DI qualifiée « immobilisante » puis rejetée ne doit pas laisser l'équipement immobilisé.
     if (current.immobilize) {
-      await releaseEquipmentIfFree(tx, ctx, current.equipmentId, { reason: `DI ${current.number} rejetée`, excludeRequestId: id });
+      await releaseEquipmentIfFree(tx, ctx, current.equipmentId, { reason: `Demande ${current.number} rejetée`, excludeRequestId: id });
     }
     if (current.reportedById && current.reportedById !== ctx.userId) {
       await tx.insert(notifications).values({
         tenantId: ctx.tenantId,
         userId: current.reportedById,
         type: "work_request.rejected",
-        title: `DI ${current.number} rejetée`,
+        title: `Demande d'intervention ${current.number} rejetée`,
         body: input.reason,
         entityType: "work_request",
         entityId: id,
@@ -311,11 +311,11 @@ export async function convertToWorkOrder(ctx: AuthContext, id: string) {
   const current = await loadForUpdate(ctx, id);
   assertCanOn(ctx, "workorder.manage", current);
   const errors: string[] = [];
-  if (current.status !== "QUALIFIED") errors.push("La DI doit être qualifiée avant d'être transformée en OT.");
+  if (current.status !== "QUALIFIED") errors.push("La demande doit être qualifiée avant d'être transformée en ordre de travail.");
   const approval = await latestApproval(db, "WORK_REQUEST", id);
   if (approval?.status === "PENDING")
     errors.push(
-      "La DI est en attente de validation (" + (approval.steps.find((s) => s.position === approval.currentPosition)?.name ?? "circuit") + ").",
+      "La demande est en attente de validation (" + (approval.steps.find((s) => s.position === approval.currentPosition)?.name ?? "circuit") + ").",
     );
   if (errors.length > 0) throw new BusinessRuleError(errors);
   const type = current.type ?? "BREAKDOWN";
@@ -349,11 +349,12 @@ export async function mergeIntoWorkOrder(ctx: AuthContext, id: string, workOrder
     .from(workOrders)
     .where(and(eq(workOrders.id, workOrderId), eq(workOrders.tenantId, ctx.tenantId)));
   if (!wo) throw new NotFoundError("Ordre de travail");
-  if (wo.equipmentId !== current.equipmentId) throw new BusinessRuleError(["L'OT doit porter sur le même équipement."]);
-  if (!(OPEN_STATUSES as readonly string[]).includes(wo.status)) throw new BusinessRuleError(["L'OT de rattachement doit être ouvert."]);
+  if (wo.equipmentId !== current.equipmentId) throw new BusinessRuleError(["L'ordre de travail doit porter sur le même équipement."]);
+  if (!(OPEN_STATUSES as readonly string[]).includes(wo.status))
+    throw new BusinessRuleError(["L'ordre de travail de rattachement doit être ouvert."]);
   await db.transaction(async (tx) => {
     await tx.update(workRequests).set({ status: "MERGED", workOrderId }).where(eq(workRequests.id, id));
-    await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "DI rattachée à un OT");
+    await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "Demande rattachée à un ordre de travail");
     if (current.immobilize) {
       // L'immobilisation décidée sur la DI est portée par l'OT : elle sera levée à sa remise en service.
       await tx.update(workOrders).set({ isImmobilizing: true }).where(eq(workOrders.id, workOrderId));

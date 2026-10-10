@@ -40,14 +40,14 @@ export default async function AdministrationPage() {
     {
       href: "/administration/validations",
       title: "Circuits de validation",
-      text: "Étapes, valideurs et seuils des DI, demandes d'achat et dépenses de maintenance (HAB-04).",
+      text: "Étapes, valideurs et seuils des demandes d'intervention, demandes d'achat et dépenses de maintenance.",
       icon: ClipboardCheck,
       show: ctx.can("settings.manage"),
     },
     {
       href: "/administration/courriels",
       title: "Courriels",
-      text: "File d'envoi des notifications : envois, reprises, erreurs et relances (NOT-01).",
+      text: "File d'envoi des notifications : envois, reprises, erreurs et relances.",
       icon: Mail,
       show: ctx.can("settings.manage"),
     },
@@ -61,7 +61,7 @@ export default async function AdministrationPage() {
     {
       href: "/api/v1",
       title: "API REST v1",
-      text: "Catalogue des points d'entrée et schémas JSON : mêmes règles et mêmes droits que l'application (TEC-09).",
+      text: "Catalogue des points d'entrée et schémas JSON : mêmes règles et mêmes droits que l'application.",
       icon: ClipboardList,
       show: ctx.can("settings.manage"),
     },

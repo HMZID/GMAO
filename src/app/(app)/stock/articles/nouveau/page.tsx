@@ -19,7 +19,7 @@ export default async function NewPartPage() {
     <>
       <PageHeader
         title="Nouvel article"
-        description="Doublon refusé sur la référence interne et sur le couple fabricant + référence fabricant (STK-01)."
+        description="Doublon refusé sur la référence interne et sur le couple fabricant + référence fabricant."
         back={{ href: "/stock", label: "Pièces et stocks" }}
       />
       <Card className="max-w-3xl">

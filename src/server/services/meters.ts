@@ -104,7 +104,7 @@ export async function recordReading(ctx: AuthContext, meterId: string, raw: unkn
 
     const { meter, companyId, siteId, equipmentStatus } = await loadMeter(tx, ctx, meterId);
     assertCanOn(ctx, "meter.write", { companyId, siteId });
-    if (equipmentStatus === "RETIRED") throw new BusinessRuleError(["Aucun relevé sur un équipement réformé (DON-14)."]);
+    if (equipmentStatus === "RETIRED") throw new BusinessRuleError(["Aucun relevé sur un équipement réformé."]);
 
     const readAt = input.readAt ?? now;
     const { previous, next } = await validNeighbours(tx, meterId, readAt);

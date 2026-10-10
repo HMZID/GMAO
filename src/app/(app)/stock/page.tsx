@@ -24,7 +24,7 @@ export default async function PartsPage(props: PageProps<"/stock">) {
     <>
       <PageHeader
         title="Pièces et stocks"
-        description="Catalogue, stock par magasin, réservations et seuils de réapprovisionnement (STK-01 à STK-08). Quantités dans votre périmètre."
+        description="Catalogue, stock par magasin, réservations et seuils de réapprovisionnement. Quantités dans votre périmètre."
         actions={
           <>
             {ctx.can("stock.read") ? (

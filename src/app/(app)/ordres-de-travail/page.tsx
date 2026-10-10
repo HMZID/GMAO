@@ -26,14 +26,14 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
     <>
       <PageHeader
         title="Ordres de travail"
-        description="Interventions préventives, correctives et réglementaires, de la création à la clôture (COR-05 à COR-15)."
-        actions={ctx.can("workorder.create") ? <ButtonLink href="/ordres-de-travail/nouveau">Nouvel OT</ButtonLink> : null}
+        description="Interventions préventives, correctives et réglementaires, de la création à la clôture."
+        actions={ctx.can("workorder.create") ? <ButtonLink href="/ordres-de-travail/nouveau">Nouvel ordre de travail</ButtonLink> : null}
       />
       <Card>
         <FilterBar resetHref="/ordres-de-travail">
           {params.equipmentId ? <input type="hidden" name="equipmentId" value={params.equipmentId} /> : null}
           <FilterField label="Recherche" htmlFor="q" className="w-56">
-            <Input id="q" name="q" defaultValue={params.q} placeholder="N° d'OT, intitulé, équipement" />
+            <Input id="q" name="q" defaultValue={params.q} placeholder="N° d'ordre de travail, intitulé, équipement" />
           </FilterField>
           <FilterField label="Statut" htmlFor="status">
             <Select
@@ -58,7 +58,9 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
               options={sites.map((s) => ({ value: s.id, label: s.name }))}
             />
           </FilterField>
-          {ctx.technicianId ? <Checkbox name="mine" value="1" label="Mes OT" defaultChecked={params.mine === "1"} className="h-10" /> : null}
+          {ctx.technicianId ? (
+            <Checkbox name="mine" value="1" label="Mes ordres de travail" defaultChecked={params.mine === "1"} className="h-10" />
+          ) : null}
         </FilterBar>
         {params.equipmentId ? (
           <p className="border-b border-slate-100 bg-slate-50 px-5 py-2 text-sm text-slate-600">
@@ -69,12 +71,12 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
           </p>
         ) : null}
         {page.items.length === 0 ? (
-          <EmptyState title="Aucun ordre de travail" description="Aucun OT ne correspond à ces filtres." />
+          <EmptyState title="Aucun ordre de travail" description="Aucun ordre de travail ne correspond à ces filtres." />
         ) : (
           <Table>
             <THead>
               <tr>
-                <TH>OT</TH>
+                <TH>Ordre de travail</TH>
                 <TH>Équipement</TH>
                 <TH>Type</TH>
                 <TH>Priorité</TH>

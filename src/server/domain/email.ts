@@ -26,14 +26,18 @@ type EventDefinition = {
 };
 
 export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
-  ASSIGNMENT: { label: "Affectation à un OT", description: "Vous êtes affecté comme intervenant à un ordre de travail.", mandatory: false },
+  ASSIGNMENT: {
+    label: "Affectation à un ordre de travail",
+    description: "Vous êtes affecté comme intervenant à un ordre de travail.",
+    mandatory: false,
+  },
   APPROVAL_PENDING: {
     label: "Validation en attente",
-    description: "Une demande attend votre décision (achat, dépense, DI, remise en service).",
+    description: "Une demande attend votre décision (achat, dépense, demande d'intervention, remise en service).",
     mandatory: true,
   },
   APPROVAL_DECISION: { label: "Décision sur vos demandes", description: "Votre demande a été validée ou refusée.", mandatory: false },
-  URGENT_REQUEST: { label: "DI urgente (P1)", description: "Panne de priorité P1 dans votre périmètre.", mandatory: true },
+  URGENT_REQUEST: { label: "Demande d'intervention urgente (P1)", description: "Panne de priorité P1 dans votre périmètre.", mandatory: true },
   DUE_DIGEST: {
     label: "Échéances de maintenance",
     description: "Récapitulatif quotidien des échéances préventives en pré-alerte ou échues.",
@@ -42,7 +46,7 @@ export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
   },
   OVERDUE: {
     label: "Retards",
-    description: "Récapitulatif quotidien des préventifs en retard et des OT en attente depuis plus de 5 jours.",
+    description: "Récapitulatif quotidien des préventifs en retard et des ordres de travail en attente depuis plus de 5 jours.",
     mandatory: false,
     roles: ["WORKSHOP_MANAGER", "MAINTENANCE_MANAGER"],
   },
