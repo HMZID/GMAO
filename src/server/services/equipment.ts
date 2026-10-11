@@ -81,6 +81,7 @@ export async function listEquipment(ctx: AuthContext, raw: unknown = {}) {
         criticality: equipment.criticality,
         categoryName: equipmentCategories.name,
         siteName: sites.name,
+        companyId: equipment.companyId,
         companyName: companies.name,
         primaryMeterValue: meters.lastValue,
         primaryMeterUnit: meters.unit,
