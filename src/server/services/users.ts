@@ -261,6 +261,13 @@ export async function listTechnicians(ctx: AuthContext) {
 }
 
 export const technicianInput = z.object({
+  /** Matricule : unique dans l'organisation, enregistré en majuscules. */
+  employeeNumber: z
+    .string()
+    .trim()
+    .max(40)
+    .transform((v) => v.toUpperCase() || undefined)
+    .optional(),
   firstName: text(80, "Prénom obligatoire"),
   lastName: text(80, "Nom obligatoire"),
   siteId: z.uuid("Site obligatoire"),
@@ -270,7 +277,8 @@ export const technicianInput = z.object({
   userId: z.string().trim().optional(),
 });
 
-export async function createTechnician(ctx: AuthContext, raw: unknown) {
+/** Contrôles de la création d'un technicien, sans écriture (saisie et simulation d'import). */
+export async function checkTechnicianCreation(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "users.manage");
   const input = parseInput(technicianInput, raw);
   const [site] = await db
@@ -278,11 +286,24 @@ export async function createTechnician(ctx: AuthContext, raw: unknown) {
     .from(sites)
     .where(and(eq(sites.id, input.siteId), eq(sites.tenantId, ctx.tenantId)));
   if (!site) throw new NotFoundError("Site");
+  if (input.employeeNumber) {
+    const [same] = await db
+      .select({ id: technicians.id })
+      .from(technicians)
+      .where(and(eq(technicians.tenantId, ctx.tenantId), eq(technicians.employeeNumber, input.employeeNumber)));
+    if (same) throw new ConflictError(`Le matricule ${input.employeeNumber} est déjà attribué.`, { existingId: same.id });
+  }
+  return input;
+}
+
+export async function createTechnician(ctx: AuthContext, raw: unknown) {
+  const input = await checkTechnicianCreation(ctx, raw);
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(technicians)
       .values({
         tenantId: ctx.tenantId,
+        employeeNumber: input.employeeNumber ?? null,
         firstName: input.firstName,
         lastName: input.lastName,
         siteId: input.siteId,

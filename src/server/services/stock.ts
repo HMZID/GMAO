@@ -652,9 +652,22 @@ export const supplierInput = z.object({
   isContractor: bool.default(false),
 });
 
-export async function createSupplier(ctx: AuthContext, raw: unknown) {
+/** Contrôles de la création d'un fournisseur, sans écriture (saisie et simulation d'import). */
+export async function checkSupplierCreation(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "supplier.write");
   const input = parseInput(supplierInput, raw);
+  if (input.taxId) {
+    const [same] = await db
+      .select({ id: suppliers.id, name: suppliers.name })
+      .from(suppliers)
+      .where(and(eq(suppliers.tenantId, ctx.tenantId), eq(suppliers.taxId, input.taxId)));
+    if (same) throw new ConflictError(`Le fournisseur « ${same.name} » porte déjà cet identifiant fiscal.`, { existingId: same.id });
+  }
+  return input;
+}
+
+export async function createSupplier(ctx: AuthContext, raw: unknown) {
+  const input = await checkSupplierCreation(ctx, raw);
   return db.transaction(async (tx) => {
     try {
       const [row] = await tx
