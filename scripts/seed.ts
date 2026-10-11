@@ -31,6 +31,7 @@ import {
   updateReport,
   updateTask,
 } from "@/server/services/work-orders";
+import { createIndicator } from "@/server/services/indicators";
 import { convertToWorkOrder, createWorkRequest, qualifyWorkRequest } from "@/server/services/work-requests";
 
 export const DEMO_PASSWORD = "Demo-Gmao-2026";
@@ -1532,6 +1533,34 @@ async function main() {
                       else -m.quantity end)
       from stock_movements m where m.part_id = sl.part_id and m.warehouse_id = sl.warehouse_id), 0)
   `);
+
+  // Indicateurs personnalisés d'exemple (KPI-11)
+  await createIndicator(ctx, {
+    name: "Ordres de travail par statut",
+    source: "work-orders",
+    aggregate: "count",
+    groupBy: "status",
+    chart: "bar",
+  });
+  await createIndicator(ctx, {
+    name: "Heures de main-d'œuvre par technicien (90 jours)",
+    source: "labor",
+    aggregate: "sum",
+    field: "hours",
+    groupBy: "technician",
+    periodDays: 90,
+    chart: "bar",
+  });
+  await createIndicator(ctx, {
+    name: "Coût des prestataires sur les correctifs (12 mois)",
+    source: "work-orders",
+    aggregate: "sum",
+    field: "externalCost",
+    filterKey: "type",
+    filterValue: "CORRECTIVE",
+    periodDays: 365,
+    chart: "number",
+  });
 
   // Recalcul final des échéances
   for (const id of Object.values(eqIds)) await db.transaction((tx) => recomputeDueItems(tx, ctx, id, now));

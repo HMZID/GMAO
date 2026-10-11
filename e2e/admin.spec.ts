@@ -18,6 +18,7 @@ const PAGES = [
   "/stock/mouvements",
   "/achats",
   "/indicateurs",
+  "/indicateurs/personnalises",
   "/administration",
   "/administration/organisation",
   "/administration/utilisateurs",
