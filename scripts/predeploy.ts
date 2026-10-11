@@ -15,6 +15,7 @@ import { spawnSync } from "node:child_process";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Pool } from "pg";
+import { withExplicitSslMode } from "../src/server/db/connection-string";
 
 function fail(message: string): never {
   console.error(`\n[predeploy] ${message}\n`);
@@ -38,7 +39,7 @@ async function main() {
   }
 
   // Migrations par une connexion directe quand elle existe (DATABASE_URL_UNPOOLED : intégration Neon de Vercel).
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL, max: 1 });
+  const pool = new Pool({ connectionString: withExplicitSslMode(process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL), max: 1 });
   try {
     await migrate(drizzle(pool), { migrationsFolder: "./drizzle" });
     console.log("[predeploy] Migrations appliquées.");

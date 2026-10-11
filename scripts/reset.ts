@@ -4,13 +4,14 @@
  */
 import "dotenv/config";
 import { Pool } from "pg";
+import { withExplicitSslMode } from "../src/server/db/connection-string";
 
 async function main() {
   const url = process.env.DATABASE_URL ?? "";
   if (process.env.NODE_ENV === "production" || /prod/i.test(url)) {
     throw new Error("Refus de vider une base qui semble être de production.");
   }
-  const pool = new Pool({ connectionString: url });
+  const pool = new Pool({ connectionString: withExplicitSslMode(url) });
   await pool.query("drop schema if exists public cascade; create schema public; drop schema if exists drizzle cascade;");
   await pool.end();
   console.log("Base vidée.");
