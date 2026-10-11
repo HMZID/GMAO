@@ -4,9 +4,9 @@ import { z } from "zod";
 import type { AuthContext } from "@/server/authz/context";
 import { db } from "@/server/db";
 import { companies, costCenters, jobsites, sites, storageLocations, warehouses, workshops } from "@/server/db/schema";
-import { ConflictError, NotFoundError } from "@/server/errors";
+import { ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { bool, optionalDate } from "@/server/validation";
-import { assertCan, audit, parseInput, scopeWhere } from "./_shared";
+import { assertCan, assertCanOn, audit, parseInput, scopeWhere } from "./_shared";
 
 /**
  * Organisation (CDC §1.3) : sociétés, sites, ateliers, magasins, chantiers.
@@ -63,7 +63,8 @@ export async function listWorkshops(ctx: AuthContext) {
 }
 
 export async function listWarehouses(ctx: AuthContext) {
-  const scope = ctx.scope("stock.read").all ? ctx.scope("stock.read") : ctx.scope("equipment.read");
+  // Périmètre du stock dès que l'utilisateur a ce droit (jamais élargi par le périmètre « équipements »).
+  const scope = ctx.can("stock.read") ? ctx.scope("stock.read") : ctx.scope("equipment.read");
   return db
     .select({
       id: warehouses.id,
@@ -101,7 +102,11 @@ export async function listJobsites(ctx: AuthContext) {
 }
 
 export async function listCostCenters(ctx: AuthContext) {
-  return db.select().from(costCenters).where(eq(costCenters.tenantId, ctx.tenantId)).orderBy(asc(costCenters.code));
+  return db
+    .select()
+    .from(costCenters)
+    .where(and(eq(costCenters.tenantId, ctx.tenantId), scopeWhere(ctx.scope("equipment.read"), costCenters.companyId)))
+    .orderBy(asc(costCenters.code));
 }
 
 /** Options des listes déroulantes de formulaires, dans le périmètre de l'utilisateur. */
@@ -181,8 +186,10 @@ export function isUniqueViolation(error: unknown) {
   return e?.code === "23505" || e?.cause?.code === "23505";
 }
 
+/** Une nouvelle société engage tout le groupe : réservée à l'administrateur de toute l'organisation. */
 export async function createCompany(ctx: AuthContext, raw: unknown) {
-  assertCan(ctx, "settings.manage");
+  if (!ctx.scope("settings.manage").all)
+    throw new ForbiddenError("La création d'une société est réservée à l'administrateur de toute l'organisation.");
   const input = parseInput(companyInput, raw);
   return db.transaction(async (tx) => {
     const [row] = await guardUnique(
@@ -206,6 +213,8 @@ export async function createSite(ctx: AuthContext, raw: unknown) {
       .from(companies)
       .where(and(eq(companies.id, input.companyId), eq(companies.tenantId, ctx.tenantId)));
     if (!company) throw new NotFoundError("Société");
+    // Un administrateur limité à une société ne crée des sites que dans sa société.
+    assertCanOn(ctx, "settings.manage", { companyId: company.id });
     const [row] = await guardUnique(
       tx
         .insert(sites)
@@ -218,12 +227,14 @@ export async function createSite(ctx: AuthContext, raw: unknown) {
   });
 }
 
+/** Site de l'organisation et du périmètre d'administration de l'utilisateur (ateliers et magasins de ce site). */
 async function assertSiteInTenant(ctx: AuthContext, siteId: string) {
   const [site] = await db
-    .select({ id: sites.id })
+    .select({ id: sites.id, companyId: sites.companyId })
     .from(sites)
     .where(and(eq(sites.id, siteId), eq(sites.tenantId, ctx.tenantId)));
   if (!site) throw new NotFoundError("Site");
+  assertCanOn(ctx, "settings.manage", { companyId: site.companyId, siteId: site.id });
 }
 
 export async function createWorkshop(ctx: AuthContext, raw: unknown) {
@@ -270,6 +281,7 @@ export async function createJobsite(ctx: AuthContext, raw: unknown) {
       .from(companies)
       .where(and(eq(companies.id, input.companyId), eq(companies.tenantId, ctx.tenantId)));
     if (!company) throw new NotFoundError("Société");
+    assertCanOn(ctx, "settings.manage", { companyId: company.id });
     const [row] = await guardUnique(
       tx
         .insert(jobsites)

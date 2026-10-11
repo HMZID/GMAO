@@ -91,7 +91,7 @@ export async function notifyAssignedTechnicians(
   const rows = await tx
     .select({ userId: technicians.userId })
     .from(technicians)
-    .where(and(inArray(technicians.id, technicianIds), isNotNull(technicians.userId)));
+    .where(and(eq(technicians.tenantId, tenantId), inArray(technicians.id, technicianIds), isNotNull(technicians.userId)));
   const userIds = rows.map((r) => r.userId!).filter((id) => id !== options.excludeUserId);
   return notifyUsers(tx, tenantId, userIds, {
     type: "work_order.assigned",
@@ -118,7 +118,7 @@ export async function countUnread(ctx: AuthContext) {
   const rows = await db
     .select({ id: notifications.id })
     .from(notifications)
-    .where(and(eq(notifications.userId, ctx.userId), isNull(notifications.readAt)));
+    .where(and(eq(notifications.tenantId, ctx.tenantId), eq(notifications.userId, ctx.userId), isNull(notifications.readAt)));
   return rows.length;
 }
 
