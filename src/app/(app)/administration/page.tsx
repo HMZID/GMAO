@@ -1,4 +1,4 @@
-import { Building2, ClipboardCheck, ClipboardList, HardHat, Mail, ScrollText, Shapes, Users } from "lucide-react";
+import { Building2, ClipboardCheck, ClipboardList, Download, HardHat, Mail, ScrollText, Shapes, Users } from "lucide-react";
 import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -57,6 +57,13 @@ export default async function AdministrationPage() {
       text: "Qui a modifié quoi, quand et par quel canal (lecture seule).",
       icon: ScrollText,
       show: ctx.can("audit.read"),
+    },
+    {
+      href: "/administration/export",
+      title: "Export des données",
+      text: "Toutes les données de l'organisation en un classeur Excel, ou par jeu de données en Excel ou CSV.",
+      icon: Download,
+      show: ctx.can("data.export"),
     },
     {
       href: "/api/v1",
