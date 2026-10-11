@@ -43,6 +43,13 @@
       "when": 1791470037729,
       "tag": "0005_email",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791729766765,
+      "tag": "0006_branding",
+      "breakpoints": true
     }
   ]
 }
