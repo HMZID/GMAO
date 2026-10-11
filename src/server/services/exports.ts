@@ -36,7 +36,7 @@ import {
   type ExportDataset,
   type ExportFormat,
 } from "@/server/domain/exports";
-import { ForbiddenError } from "@/server/errors";
+import { ForbiddenError, NotFoundError } from "@/server/errors";
 import { optionalDate } from "@/server/validation";
 import { assertCan, parseInput, scopeWhere } from "./_shared";
 
@@ -74,30 +74,36 @@ export const exportQuery = z.object({
   format: z.enum(EXPORT_FORMATS, "Format attendu : xlsx, csv ou json").default("json"),
   /** Extraction incrémentale : lignes créées ou modifiées depuis cette date (ISO 8601). */
   updatedSince: optionalDate,
+  /** Une seule société de l'organisation (sinon toutes celles du périmètre). */
+  companyId: z.uuid("Société inconnue").optional(),
   limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(1000),
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-type Page = { updatedSince?: Date; limit?: number; offset?: number };
+/** Filtres d'un export : date de modification (incrémental) et société. */
+export type ExportFilters = { updatedSince?: Date; companyId?: string };
+type Page = ExportFilters & { limit?: number; offset?: number };
 type Row = Record<string, unknown>;
 
 /** Lignes d'un jeu de données, dans le périmètre de l'utilisateur, triées par date de modification puis identifiant. */
 export async function fetchDataset(ctx: AuthContext, dataset: ExportDataset, page: Page = {}): Promise<Row[]> {
-  const query = datasetQuery(ctx, dataset, page.updatedSince);
+  const query = datasetQuery(ctx, dataset, page);
   return (page.limit === undefined ? query : query.limit(page.limit).offset(page.offset ?? 0)) as unknown as Promise<Row[]>;
 }
 
 /** Nombre de lignes d'un jeu de données dans le périmètre, compté par la base. */
-export async function countDataset(ctx: AuthContext, dataset: ExportDataset, updatedSince?: Date) {
-  const [row] = await db.select({ n: count() }).from(datasetQuery(ctx, dataset, updatedSince).as("dataset"));
+export async function countDataset(ctx: AuthContext, dataset: ExportDataset, filters: ExportFilters = {}) {
+  const [row] = await db.select({ n: count() }).from(datasetQuery(ctx, dataset, filters).as("dataset"));
   return row?.n ?? 0;
 }
 
 /** Requête d'un jeu de données (droits contrôlés, périmètre appliqué), sans pagination. */
-function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: Date): PgSelect {
+function datasetQuery(ctx: AuthContext, dataset: ExportDataset, filters: ExportFilters = {}): PgSelect {
   assertDataset(ctx, dataset);
   const scope = ctx.scope(READ_PERMISSION[dataset]);
+  const { updatedSince, companyId } = filters;
   const since = (column: Parameters<typeof gte>[0]) => (updatedSince ? gte(column, updatedSince) : undefined);
+  const ofCompany = (column: Parameters<typeof eq>[0]) => (companyId ? eq(column, companyId) : undefined);
   const where = (...conditions: (SQL | undefined)[]) => and(...conditions.filter((c): c is SQL => !!c));
 
   switch (dataset) {
@@ -131,7 +137,14 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
         .innerJoin(sites, eq(sites.id, equipment.siteId))
         .innerJoin(equipmentCategories, eq(equipmentCategories.id, equipment.categoryId))
         .leftJoin(equipmentModels, eq(equipmentModels.id, equipment.modelId))
-        .where(where(eq(equipment.tenantId, ctx.tenantId), scopeWhere(scope, equipment.companyId, equipment.siteId), since(equipment.updatedAt)))
+        .where(
+          where(
+            eq(equipment.tenantId, ctx.tenantId),
+            scopeWhere(scope, equipment.companyId, equipment.siteId),
+            ofCompany(equipment.companyId),
+            since(equipment.updatedAt),
+          ),
+        )
         .orderBy(asc(equipment.updatedAt), asc(equipment.id))
         .$dynamic();
     case "work-orders":
@@ -169,7 +182,14 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
         .innerJoin(sites, eq(sites.id, workOrders.siteId))
         .innerJoin(equipment, eq(equipment.id, workOrders.equipmentId))
         .leftJoin(suppliers, eq(suppliers.id, workOrders.supplierId))
-        .where(where(eq(workOrders.tenantId, ctx.tenantId), scopeWhere(scope, workOrders.companyId, workOrders.siteId), since(workOrders.updatedAt)))
+        .where(
+          where(
+            eq(workOrders.tenantId, ctx.tenantId),
+            scopeWhere(scope, workOrders.companyId, workOrders.siteId),
+            ofCompany(workOrders.companyId),
+            since(workOrders.updatedAt),
+          ),
+        )
         .orderBy(asc(workOrders.updatedAt), asc(workOrders.id))
         .$dynamic();
     case "work-requests":
@@ -202,6 +222,7 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
           where(
             eq(workRequests.tenantId, ctx.tenantId),
             scopeWhere(scope, workRequests.companyId, workRequests.siteId),
+            ofCompany(workRequests.companyId),
             since(workRequests.updatedAt),
           ),
         )
@@ -226,7 +247,12 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
         .innerJoin(meters, eq(meters.id, meterReadings.meterId))
         .innerJoin(equipment, eq(equipment.id, meters.equipmentId))
         .where(
-          where(eq(meterReadings.tenantId, ctx.tenantId), scopeWhere(scope, equipment.companyId, equipment.siteId), since(meterReadings.createdAt)),
+          where(
+            eq(meterReadings.tenantId, ctx.tenantId),
+            scopeWhere(scope, equipment.companyId, equipment.siteId),
+            ofCompany(equipment.companyId),
+            since(meterReadings.createdAt),
+          ),
         )
         .orderBy(asc(meterReadings.createdAt), asc(meterReadings.id))
         .$dynamic();
@@ -245,7 +271,15 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
           updatedAt: suppliers.updatedAt,
         })
         .from(suppliers)
-        .where(where(eq(suppliers.tenantId, ctx.tenantId), since(suppliers.updatedAt)))
+        .where(
+          where(
+            eq(suppliers.tenantId, ctx.tenantId),
+            companyId
+              ? sql`exists (select 1 from "work_orders" wo where wo.supplier_id = "suppliers"."id" and wo.company_id = ${companyId})`
+              : undefined,
+            since(suppliers.updatedAt),
+          ),
+        )
         .orderBy(asc(suppliers.updatedAt), asc(suppliers.id))
         .$dynamic();
     case "technicians":
@@ -270,7 +304,14 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
         })
         .from(technicians)
         .innerJoin(sites, eq(sites.id, technicians.siteId))
-        .where(where(eq(technicians.tenantId, ctx.tenantId), scopeWhere(scope, sites.companyId, technicians.siteId), since(technicians.updatedAt)))
+        .where(
+          where(
+            eq(technicians.tenantId, ctx.tenantId),
+            scopeWhere(scope, sites.companyId, technicians.siteId),
+            ofCompany(sites.companyId),
+            since(technicians.updatedAt),
+          ),
+        )
         .orderBy(asc(technicians.updatedAt), asc(technicians.id))
         .$dynamic();
     case "parts":
@@ -292,7 +333,15 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
           updatedAt: parts.updatedAt,
         })
         .from(parts)
-        .where(where(eq(parts.tenantId, ctx.tenantId), since(parts.updatedAt)))
+        .where(
+          where(
+            eq(parts.tenantId, ctx.tenantId),
+            companyId
+              ? sql`exists (select 1 from "stock_levels" sl join "warehouses" w on w.id = sl.warehouse_id join "sites" s on s.id = w.site_id where sl.part_id = "parts"."id" and s.company_id = ${companyId})`
+              : undefined,
+            since(parts.updatedAt),
+          ),
+        )
         .orderBy(asc(parts.updatedAt), asc(parts.id))
         .$dynamic();
     case "stock-levels":
@@ -313,7 +362,14 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
         .innerJoin(parts, eq(parts.id, stockLevels.partId))
         .innerJoin(warehouses, eq(warehouses.id, stockLevels.warehouseId))
         .innerJoin(sites, eq(sites.id, warehouses.siteId))
-        .where(where(eq(stockLevels.tenantId, ctx.tenantId), scopeWhere(scope, sites.companyId, sites.id), since(stockLevels.updatedAt)))
+        .where(
+          where(
+            eq(stockLevels.tenantId, ctx.tenantId),
+            scopeWhere(scope, sites.companyId, sites.id),
+            ofCompany(sites.companyId),
+            since(stockLevels.updatedAt),
+          ),
+        )
         .orderBy(asc(stockLevels.updatedAt), asc(stockLevels.id))
         .$dynamic();
     case "stock-movements": {
@@ -336,17 +392,41 @@ function datasetQuery(ctx: AuthContext, dataset: ExportDataset, updatedSince?: D
         .innerJoin(warehouses, eq(warehouses.id, stockMovements.warehouseId))
         .innerJoin(sites, eq(sites.id, warehouses.siteId))
         .leftJoin(movementWorkOrder, eq(movementWorkOrder.id, stockMovements.workOrderId))
-        .where(where(eq(stockMovements.tenantId, ctx.tenantId), scopeWhere(scope, sites.companyId, sites.id), since(stockMovements.createdAt)))
+        .where(
+          where(
+            eq(stockMovements.tenantId, ctx.tenantId),
+            scopeWhere(scope, sites.companyId, sites.id),
+            ofCompany(sites.companyId),
+            since(stockMovements.createdAt),
+          ),
+        )
         .orderBy(asc(stockMovements.createdAt), asc(stockMovements.id))
         .$dynamic();
     }
   }
 }
 
+/** Société filtrée : elle doit appartenir à l'organisation (sinon introuvable, sans révéler l'existence d'une autre). */
+export async function exportCompany(ctx: AuthContext, companyId: string | undefined) {
+  if (!companyId) return null;
+  const [company] = await db
+    .select({ id: companies.id, code: companies.code, name: companies.name })
+    .from(companies)
+    .where(and(eq(companies.id, companyId), eq(companies.tenantId, ctx.tenantId)));
+  if (!company) throw new NotFoundError("Société");
+  return company;
+}
+
 /** Page JSON d'un jeu de données (API et connecteur ETL) : `next` donne le décalage de la page suivante. */
 export async function exportPage(ctx: AuthContext, dataset: ExportDataset, raw: unknown) {
   const query = parseInput(exportQuery, raw);
-  const items = await fetchDataset(ctx, dataset, { updatedSince: query.updatedSince, limit: query.limit, offset: query.offset });
+  const company = await exportCompany(ctx, query.companyId);
+  const items = await fetchDataset(ctx, dataset, {
+    updatedSince: query.updatedSince,
+    companyId: company?.id,
+    limit: query.limit,
+    offset: query.offset,
+  });
   return {
     dataset,
     columns: EXPORT_DEFINITIONS[dataset].columns.map(({ key, label, type }) => ({ key, label, type })),
@@ -357,37 +437,49 @@ export async function exportPage(ctx: AuthContext, dataset: ExportDataset, raw: 
       returned: items.length,
       next: items.length === query.limit ? query.offset + query.limit : null,
       updatedSince: query.updatedSince ?? null,
+      companyId: company?.id ?? null,
     },
   };
 }
 
 /** Fichier complet d'un jeu de données : CSV (codes, ISO 8601), JSON ou Excel (libellés). */
-export async function exportFile(ctx: AuthContext, dataset: ExportDataset, format: ExportFormat, updatedSince?: Date, now = new Date()) {
-  const rows = await fetchDataset(ctx, dataset, { updatedSince });
+export async function exportFile(ctx: AuthContext, dataset: ExportDataset, format: ExportFormat, filters: ExportFilters = {}, now = new Date()) {
+  const company = await exportCompany(ctx, filters.companyId);
+  const rows = await fetchDataset(ctx, dataset, { updatedSince: filters.updatedSince, companyId: company?.id });
   const definition = EXPORT_DEFINITIONS[dataset];
-  const fileName = exportFileName(dataset, format, now);
+  const fileName = exportFileName(company ? `${dataset}-${company.code.toLowerCase()}` : dataset, format, now);
   if (format === "csv") return { fileName, contentType: "text/csv; charset=utf-8", body: toCsv(definition.columns, rows) };
   if (format === "json") return { fileName, contentType: "application/json; charset=utf-8", body: JSON.stringify({ dataset, items: rows }) };
-  const workbook = await buildWorkbook(ctx, [{ dataset, rows }], now);
+  const workbook = await buildWorkbook(ctx, [{ dataset, rows }], now, company);
   return { fileName, contentType: XLSX, body: workbook as BodyInit };
 }
 
 /** Classeur Excel de toutes les données exportables : un onglet par jeu de données, et un onglet d'informations. */
-export async function exportWorkbook(ctx: AuthContext, now = new Date()) {
+export async function exportWorkbook(ctx: AuthContext, companyId?: string, now = new Date()) {
   assertCan(ctx, "data.export");
+  const company = await exportCompany(ctx, companyId);
   const datasets = exportableDatasets(ctx);
   const sheets: { dataset: ExportDataset; rows: Row[] }[] = [];
-  for (const dataset of datasets) sheets.push({ dataset, rows: await fetchDataset(ctx, dataset) });
-  return { fileName: exportFileName("donnees", "xlsx", now), buffer: await buildWorkbook(ctx, sheets, now) };
+  for (const dataset of datasets) sheets.push({ dataset, rows: await fetchDataset(ctx, dataset, { companyId: company?.id }) });
+  return {
+    fileName: exportFileName(company ? `donnees-${company.code.toLowerCase()}` : "donnees", "xlsx", now),
+    buffer: await buildWorkbook(ctx, sheets, now, company),
+  };
 }
 
 /** Nombre de lignes de chaque jeu de données exportable (écran d'export). */
-export async function exportSummary(ctx: AuthContext) {
+export async function exportSummary(ctx: AuthContext, companyId?: string) {
   assertCan(ctx, "data.export");
+  const company = await exportCompany(ctx, companyId);
   const result: { dataset: ExportDataset; label: string; description: string; rows: number }[] = [];
   for (const dataset of exportableDatasets(ctx)) {
     const definition = EXPORT_DEFINITIONS[dataset];
-    result.push({ dataset, label: definition.label, description: definition.description, rows: await countDataset(ctx, dataset) });
+    result.push({
+      dataset,
+      label: definition.label,
+      description: definition.description,
+      rows: await countDataset(ctx, dataset, { companyId: company?.id }),
+    });
   }
   return result;
 }
@@ -395,7 +487,12 @@ export async function exportSummary(ctx: AuthContext) {
 const XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const HEADER_FILL: ExcelJS.Fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0F766E" } };
 
-async function buildWorkbook(ctx: AuthContext, sheets: { dataset: ExportDataset; rows: Row[] }[], now: Date) {
+async function buildWorkbook(
+  ctx: AuthContext,
+  sheets: { dataset: ExportDataset; rows: Row[] }[],
+  now: Date,
+  company: { code: string; name: string } | null = null,
+) {
   const [tenant] = await db.select({ name: tenants.name, displayName: tenants.displayName }).from(tenants).where(eq(tenants.id, ctx.tenantId));
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "GMAO";
@@ -404,14 +501,17 @@ async function buildWorkbook(ctx: AuthContext, sheets: { dataset: ExportDataset;
   const info = workbook.addWorksheet("Informations");
   info.columns = [{ width: 34 }, { width: 70 }];
   info.addRow(["Organisation", tenant ? brandLabel(tenant) : ""]);
+  info.addRow(["Société", company ? `${company.name} (${company.code})` : "Toutes les sociétés du périmètre"]);
   info.addRow(["Exporté le", now]);
-  info.getCell("B2").numFmt = "dd/mm/yyyy hh:mm";
+  info.getCell("B3").numFmt = "dd/mm/yyyy hh:mm";
   info.addRow(["Par", `${ctx.name} (${ctx.email})`]);
   info.addRow([]);
   info.addRow(["Onglet", "Lignes"]).font = { bold: true };
   for (const { dataset, rows } of sheets) info.addRow([EXPORT_DEFINITIONS[dataset].sheet, rows.length]);
   info.addRow([]);
   info.addRow(["Remarque", "Codes et identifiants stables : préférer CSV ou JSON (API ou connecteur) pour une intégration automatique."]);
+  if (company)
+    info.addRow(["Périmètre", "Fournisseurs : ceux intervenus sur les ordres de travail de la société. Articles : ceux stockés dans ses magasins."]);
   info.getColumn(1).font = { bold: true };
 
   for (const { dataset, rows } of sheets) {

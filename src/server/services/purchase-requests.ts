@@ -6,7 +6,7 @@ import { db } from "@/server/db";
 import { companies, costCenters, equipment, parts, purchaseRequests, sites, suppliers, user, workOrders } from "@/server/db/schema";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { optionalDate, text } from "@/server/validation";
-import { assertCanOn, audit, offsetOf, paginationSchema, parseInput, scopeWhere, type Page } from "./_shared";
+import { assertCanOn, audit, offsetOf, paginationSchema, parseInput, scopeWhere, type Page, assertSameTenant } from "./_shared";
 import { approvalTimeline, cancelPendingApproval, startApproval } from "./approvals";
 import { nextNumber } from "./numbering";
 
@@ -43,7 +43,9 @@ async function resolveTarget(ctx: AuthContext, input: z.output<typeof purchaseRe
       .from(workOrders)
       .where(and(eq(workOrders.id, input.workOrderId), eq(workOrders.tenantId, ctx.tenantId)));
     if (!wo) throw new NotFoundError("Ordre de travail");
-    return { companyId: wo.companyId, siteId: wo.siteId, equipmentId: input.equipmentId ?? wo.equipmentId };
+    // L'équipement d'une demande liée à un OT est celui de l'OT (jamais un autre, encore moins d'une autre organisation).
+    await assertSameTenant(db, ctx, costCenters, input.costCenterId, "Centre de coût");
+    return { companyId: wo.companyId, siteId: wo.siteId, equipmentId: wo.equipmentId };
   }
   if (input.equipmentId) {
     const [eq_] = await db
@@ -51,6 +53,7 @@ async function resolveTarget(ctx: AuthContext, input: z.output<typeof purchaseRe
       .from(equipment)
       .where(and(eq(equipment.id, input.equipmentId), eq(equipment.tenantId, ctx.tenantId)));
     if (!eq_) throw new NotFoundError("Équipement");
+    await assertSameTenant(db, ctx, costCenters, input.costCenterId, "Centre de coût");
     return { companyId: eq_.companyId, siteId: eq_.siteId, equipmentId: input.equipmentId };
   }
   const [cc] = await db
@@ -260,8 +263,9 @@ export async function cancelPurchaseRequest(ctx: AuthContext, id: string, raw: u
 }
 
 /** Demandes d'achat d'un OT (ACH-01 : visibles depuis l'OT avec leur statut). */
-export async function listPurchaseRequestsForWorkOrder(ctx: AuthContext, workOrderId: string) {
-  if (!ctx.can("purchase.read")) return [];
+export async function listPurchaseRequestsForWorkOrder(ctx: AuthContext, workOrderId: string, target: { companyId: string; siteId: string }) {
+  // Demandes d'achat de l'OT : visibles seulement avec le droit de lecture des achats sur son site.
+  if (!ctx.canOn("purchase.read", target)) return [];
   return db
     .select({
       id: purchaseRequests.id,

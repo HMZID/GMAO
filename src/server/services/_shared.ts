@@ -1,11 +1,12 @@
 import "server-only";
-import { inArray, or, sql, type AnyColumn, type SQL } from "drizzle-orm";
+import { and, eq, inArray, or, sql, type AnyColumn, type SQL } from "drizzle-orm";
+import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import type { AuthContext, Scope } from "@/server/authz/context";
 import type { Permission } from "@/server/authz/permissions";
 import type { DbOrTx } from "@/server/db";
 import { auditLogs } from "@/server/db/schema";
-import { ForbiddenError, ValidationError } from "@/server/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 
 /** Refuse l'action si le droit n'est détenu sur aucun périmètre. */
 export function assertCan(ctx: AuthContext, permission: Permission) {
@@ -15,6 +16,31 @@ export function assertCan(ctx: AuthContext, permission: Permission) {
 /** Refuse l'action si le droit n'est pas détenu sur la cible (société, site). */
 export function assertCanOn(ctx: AuthContext, permission: Permission, target: { companyId: string; siteId?: string | null }) {
   if (!ctx.canOn(permission, target)) throw new ForbiddenError();
+}
+
+/** Table d'une organisation : identifiant et organisation propriétaire. */
+type TenantTable = PgTable & { id: AnyPgColumn; tenantId: AnyPgColumn };
+
+/**
+ * Identifiants reçus en entrée (atelier, prestataire, technicien, article, catégorie…) : chacun doit
+ * appartenir à l'organisation de l'utilisateur. Les clés étrangères de la base n'y suffisent pas (elles
+ * accepteraient la ligne d'une autre organisation) : sans ce contrôle, l'objet d'un autre client serait lié,
+ * puis affiché. Un identifiant étranger est « introuvable », sans révéler son existence.
+ */
+export async function assertSameTenant(
+  tx: DbOrTx,
+  ctx: AuthContext,
+  table: TenantTable,
+  ids: string | null | undefined | readonly (string | null | undefined)[],
+  label: string,
+) {
+  const list = [...new Set((Array.isArray(ids) ? ids : [ids]).filter((v): v is string => !!v))];
+  if (list.length === 0) return;
+  const rows = await tx
+    .select({ id: table.id })
+    .from(table as PgTable)
+    .where(and(inArray(table.id, list), eq(table.tenantId, ctx.tenantId)));
+  if (rows.length !== list.length) throw new NotFoundError(label);
 }
 
 /**

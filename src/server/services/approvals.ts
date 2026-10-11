@@ -27,9 +27,9 @@ import {
   type ApprovalObject,
   type RequestStep,
 } from "@/server/domain/approvals";
-import { BusinessRuleError, ConflictError, NotFoundError } from "@/server/errors";
+import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { date, optionalText, text } from "@/server/validation";
-import { assertCan, audit, parseInput } from "./_shared";
+import { assertCan, assertCanOn, audit, parseInput } from "./_shared";
 import { releaseEquipmentIfFree } from "./equipment-status";
 import { notifyUsers } from "./notifications";
 import { isUniqueViolation } from "./organization";
@@ -512,7 +512,8 @@ export async function getApprovalRequest(ctx: AuthContext, id: string) {
     request.requestedById === ctx.userId ||
     timeline.decisions.some((d) => d.decidedById === ctx.userId) ||
     request.steps.some((s) => validators.eligibility(ctx.userId, s, request).eligible) ||
-    ctx.can("settings.manage");
+    // Administrateur : seulement dans son périmètre (société ou site de l'objet).
+    ctx.canOn("settings.manage", { companyId: request.companyId, siteId: request.siteId });
   if (!involved) throw new NotFoundError("Demande de validation");
   return { ...timeline, link: objectLink(request.objectType, request.objectId) };
 }
@@ -565,6 +566,10 @@ export async function createWorkflow(ctx: AuthContext, raw: unknown) {
       .from(companies)
       .where(and(eq(companies.id, input.companyId), eq(companies.tenantId, ctx.tenantId)));
     if (!company) throw new NotFoundError("Société");
+    assertCanOn(ctx, "settings.manage", { companyId: company.id });
+  } else if (!ctx.scope("settings.manage").all) {
+    // Un circuit commun à toutes les sociétés engage tout le groupe.
+    throw new ForbiddenError("Un circuit pour toutes les sociétés est réservé à l'administrateur de toute l'organisation.");
   }
   try {
     return await db.transaction(async (tx) => {
