@@ -5,7 +5,16 @@ import { act } from "@/server/actions";
 import { removeLogo, setLogo, updateBranding } from "@/server/services/branding";
 import { createCategory, createModel } from "@/server/services/equipment";
 import { createCompany, createJobsite, createSite, createWarehouse, createWorkshop } from "@/server/services/organization";
-import { addAbsence, addRoleAssignment, createTechnician, createUser, removeRoleAssignment, setUserActive } from "@/server/services/users";
+import {
+  addAbsence,
+  addRoleAssignment,
+  createTechnician,
+  createUser,
+  removeRoleAssignment,
+  setUserActive,
+  setUserPassword,
+  updateUser,
+} from "@/server/services/users";
 import { formToObject } from "@/server/validation";
 
 /* Identité de l'organisation : nom affiché sous « GMAO » et logo */
@@ -66,6 +75,17 @@ export async function addRoleAction(userId: string, _: ActionState, formData: Fo
 
 export async function removeRoleAction(assignmentId: string, _: ActionState): Promise<ActionState> {
   return act((ctx) => removeRoleAssignment(ctx, assignmentId), "Rôle retiré.");
+}
+
+export async function updateUserAction(userId: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  return act((ctx) => updateUser(ctx, userId, formToObject(formData, { keepEmpty: true })), "Compte modifié.");
+}
+
+export async function setUserPasswordAction(userId: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  return act(
+    (ctx) => setUserPassword(ctx, userId, formToObject(formData)),
+    "Mot de passe remplacé : le communiquer à l'utilisateur ; ses sessions ouvertes sont fermées.",
+  );
 }
 
 export async function setUserActiveAction(userId: string, active: boolean, _: ActionState): Promise<ActionState> {

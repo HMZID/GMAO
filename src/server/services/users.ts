@@ -190,6 +190,57 @@ export async function setUserActive(ctx: AuthContext, userId: string, active: bo
   });
 }
 
+export const userUpdateInput = z.object({
+  name: text(120, "Nom obligatoire"),
+  email: z.email("Courriel invalide").transform((s) => s.toLowerCase()),
+});
+
+/** Modification du nom et du courriel (identifiant de connexion) ; un courriel ne sert qu'à un compte. */
+export async function updateUser(ctx: AuthContext, userId: string, raw: unknown) {
+  assertCan(ctx, "users.manage");
+  const input = parseInput(userUpdateInput, raw);
+  const [target] = await db
+    .select({ id: user.id, name: user.name, email: user.email })
+    .from(user)
+    .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
+  if (!target) throw new NotFoundError("Utilisateur");
+  if (input.email !== target.email) {
+    const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
+    if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  }
+  await db.transaction(async (tx) => {
+    await tx.update(user).set({ name: input.name, email: input.email }).where(eq(user.id, userId));
+    await audit(tx, ctx, { entityType: "user", entityId: userId, action: "update", before: target, after: { id: userId, ...input } });
+  });
+}
+
+export const passwordInput = z.object({ password: z.string().min(10, "10 caractères minimum").max(128) });
+
+/**
+ * Nouveau mot de passe fixé par l'administrateur (oubli, départ d'un mot de passe partagé) :
+ * les sessions ouvertes du compte sont fermées. Le mot de passe n'est jamais journalisé.
+ */
+export async function setUserPassword(ctx: AuthContext, userId: string, raw: unknown) {
+  assertCan(ctx, "users.manage");
+  const input = parseInput(passwordInput, raw);
+  const [target] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
+  if (!target) throw new NotFoundError("Utilisateur");
+  const passwordHash = await hashPassword(input.password);
+  await db.transaction(async (tx) => {
+    const [credential] = await tx
+      .select({ id: account.id })
+      .from(account)
+      .where(and(eq(account.userId, userId), eq(account.providerId, "credential")));
+    if (credential) await tx.update(account).set({ password: passwordHash }).where(eq(account.id, credential.id));
+    else await tx.insert(account).values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: passwordHash });
+    if (userId !== ctx.userId) await tx.delete(session).where(eq(session.userId, userId));
+    await audit(tx, ctx, { entityType: "user", entityId: userId, action: "set_password" });
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /* Techniciens (CDC §6)                                                 */
 /* ------------------------------------------------------------------ */
