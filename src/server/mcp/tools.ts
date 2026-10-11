@@ -178,10 +178,11 @@ export const MCP_TOOLS: McpTool<AuthContext>[] = [
     input: z.object({
       dataset: z.enum(EXPORT_DATASETS),
       updatedSince: z.string().optional().describe("Date ISO 8601 : lignes créées ou modifiées depuis"),
+      companyId: z.uuid().optional().describe("Une seule société de l'organisation"),
       limit: z.number().int().min(1).max(Math.min(MAX_PAGE_SIZE, 500)).default(100),
       offset: z.number().int().min(0).default(0),
     }),
-    run: (ctx, a) => exportPage(ctx, a.dataset, { updatedSince: a.updatedSince, limit: a.limit, offset: a.offset }),
+    run: (ctx, a) => exportPage(ctx, a.dataset, { updatedSince: a.updatedSince, companyId: a.companyId, limit: a.limit, offset: a.offset }),
   }),
 ];
 

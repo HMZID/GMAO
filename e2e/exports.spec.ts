@@ -61,3 +61,31 @@ test("l'export est réservé : technicien refusé, jeu de données inconnu refus
   const unknown = await page.request.get("/api/v1/exports/salaires");
   expect(unknown.status()).toBe(400);
 });
+
+test("export d'une seule société : chaque jeu de données limité à la société choisie", async ({ page }) => {
+  await login(page, USERS.admin);
+  const catalog = await (await page.request.get("/api/v1/exports")).json();
+  const companies = await (await page.request.get("/api/v1/equipment?pageSize=200")).json();
+  const companyIds = [...new Set(companies.data.items.map((e: { companyId: string }) => e.companyId))] as string[];
+  test.skip(companyIds.length < 2, "une seule société dans la démonstration");
+  const [first] = companyIds;
+
+  const all = catalog.data.find((d: { dataset: string }) => d.dataset === "equipment").rows;
+  const only = await (await page.request.get(`/api/v1/exports?companyId=${first}`)).json();
+  const equipmentRows = only.data.find((d: { dataset: string }) => d.dataset === "equipment").rows;
+  expect(equipmentRows).toBeGreaterThan(0);
+  expect(equipmentRows).toBeLessThan(all);
+  expect(only.data[0].links.csv).toContain(`companyId=${first}`);
+
+  const items = (await (await page.request.get(`/api/v1/exports/work-orders?companyId=${first}&limit=500`)).json()).data.items;
+  const codes = new Set(companies.data.items.filter((e: { companyId: string }) => e.companyId === first).map((e: { code: string }) => e.code));
+  expect(items.length).toBeGreaterThan(0);
+  for (const wo of items) expect(codes.has(wo.equipmentCode), wo.number).toBe(true);
+
+  // Une société d'une autre organisation (ou inconnue) est introuvable.
+  expect((await page.request.get("/api/v1/exports?companyId=00000000-0000-4000-8000-000000000000")).status()).toBe(404);
+
+  // Écran : choix de la société, liens filtrés.
+  await page.goto(`/administration/export?companyId=${first}`);
+  await expect(page.getByRole("link", { name: "Tout exporter (Excel)" })).toHaveAttribute("href", new RegExp(`companyId=${first}`));
+});

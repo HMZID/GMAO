@@ -1,9 +1,10 @@
+import { Building2, HardHat, MapPin, Warehouse, Wrench } from "lucide-react";
 import { Forbidden } from "@/components/forbidden";
 import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form";
 import { PageHeader } from "@/components/layout/page-header";
 import { Disclosure } from "@/components/ui/disclosure";
-import { Checkbox, Input, Select } from "@/components/ui/inputs";
-import { Badge, Card, CardBody, CardHeader, EmptyState, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
+import { Checkbox, Input } from "@/components/ui/inputs";
+import { Badge, Card, CardBody, CardHeader, EmptyState } from "@/components/ui/primitives";
 import { formatDate } from "@/lib/format";
 import { LOGO_ACCEPT, MAX_DISPLAY_NAME, MAX_LOGO_BYTES } from "@/server/domain/branding";
 import { formatSize } from "@/server/domain/documents";
@@ -34,251 +35,218 @@ export default async function OrganisationPage() {
     listWarehouses(ctx),
     listJobsites(ctx),
   ]);
-  const companyOptions = companies.map((c) => ({ value: c.id, label: c.name }));
-  const siteOptions = sites.map((s) => ({ value: s.id, label: `${s.name} (${s.companyName})` }));
 
   return (
     <>
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Organisation"
-        description="Groupe → sociétés → sites → ateliers et magasins ; les chantiers appartiennent à une société. Les codes sont uniques."
+        description="Chaque société a ses sites ; chaque site a ses ateliers et ses magasins ; les chantiers appartiennent à une société. Les codes sont uniques dans l'organisation."
       />
       <IdentityCard branding={branding} />
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card>
-          <CardHeader title="Sociétés" />
-          <Table>
-            <THead>
-              <tr>
-                <TH>Code</TH>
-                <TH>Raison sociale</TH>
-                <TH>Pays · devise</TH>
-              </tr>
-            </THead>
-            <TBody>
-              {companies.map((c) => (
-                <TR key={c.id}>
-                  <TD className="font-mono text-xs">{c.code}</TD>
-                  <TD>{c.name}</TD>
-                  <TD>
-                    {c.country} · {c.currency}
-                  </TD>
-                </TR>
-              ))}
-            </TBody>
-          </Table>
-          <CardBody className="border-t border-slate-100">
-            <Disclosure summary="Nouvelle société">
-              <ActionForm action={createCompanyAction} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
-                <Field label="Code" name="code" required>
-                  <Input id="co-code" name="code" required maxLength={30} />
-                </Field>
-                <Field label="Raison sociale" name="name" required>
-                  <Input id="co-name" name="name" required maxLength={120} />
-                </Field>
-                <Field label="Pays (ISO)" name="country">
-                  <Input id="co-country" name="country" defaultValue="FR" maxLength={2} />
-                </Field>
-                <Field label="Devise" name="currency">
-                  <Input id="co-currency" name="currency" defaultValue="EUR" maxLength={3} />
-                </Field>
-                <SubmitButton variant="secondary">Créer</SubmitButton>
-              </ActionForm>
-            </Disclosure>
-          </CardBody>
-        </Card>
 
-        <Card>
-          <CardHeader title="Sites" />
-          <Table>
-            <THead>
-              <tr>
-                <TH>Code</TH>
-                <TH>Site</TH>
-                <TH>Société</TH>
-                <TH>Fuseau</TH>
-              </tr>
-            </THead>
-            <TBody>
-              {sites.map((s) => (
-                <TR key={s.id}>
-                  <TD className="font-mono text-xs">{s.code}</TD>
-                  <TD>
-                    {s.name} {!s.active ? <Badge>Inactif</Badge> : null}
-                  </TD>
-                  <TD>{s.companyName}</TD>
-                  <TD className="text-xs">{s.timezone}</TD>
-                </TR>
-              ))}
-            </TBody>
-          </Table>
-          <CardBody className="border-t border-slate-100">
-            <Disclosure summary="Nouveau site">
-              <ActionForm action={createSiteAction} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
-                <Field label="Société" name="companyId" required className="sm:col-span-2">
-                  <Select id="si-company" name="companyId" required placeholder="Choisir…" options={companyOptions} />
-                </Field>
-                <Field label="Code" name="code" required>
-                  <Input id="si-code" name="code" required maxLength={30} />
-                </Field>
-                <Field label="Nom" name="name" required>
-                  <Input id="si-name" name="name" required maxLength={120} />
-                </Field>
-                <Field label="Adresse" name="address" className="sm:col-span-2">
-                  <Input id="si-address" name="address" maxLength={250} />
-                </Field>
-                <SubmitButton variant="secondary">Créer</SubmitButton>
-              </ActionForm>
-            </Disclosure>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader title="Ateliers" description="Le nombre de postes (baies) sert à la capacité" />
-          {workshops.length === 0 ? (
-            <EmptyState title="Aucun atelier" />
-          ) : (
-            <Table>
-              <THead>
-                <tr>
-                  <TH>Code</TH>
-                  <TH>Atelier</TH>
-                  <TH>Site</TH>
-                  <TH className="text-right">Postes</TH>
-                </tr>
-              </THead>
-              <TBody>
-                {workshops.map((w) => (
-                  <TR key={w.id}>
-                    <TD className="font-mono text-xs">{w.code}</TD>
-                    <TD>{w.name}</TD>
-                    <TD>{w.siteName}</TD>
-                    <TD className="text-right tabular-nums">{w.bays}</TD>
-                  </TR>
-                ))}
-              </TBody>
-            </Table>
-          )}
-          <CardBody className="border-t border-slate-100">
-            <Disclosure summary="Nouvel atelier">
-              <ActionForm action={createWorkshopAction} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
-                <Field label="Site" name="siteId" required className="sm:col-span-2">
-                  <Select id="ws-site" name="siteId" required placeholder="Choisir…" options={siteOptions} />
-                </Field>
-                <Field label="Code" name="code" required>
-                  <Input id="ws-code" name="code" required maxLength={30} />
-                </Field>
-                <Field label="Nom" name="name" required>
-                  <Input id="ws-name" name="name" required maxLength={120} />
-                </Field>
-                <Field label="Postes de travail" name="bays">
-                  <Input id="ws-bays" name="bays" type="number" min={1} defaultValue={1} />
-                </Field>
-                <div className="flex items-end">
-                  <SubmitButton variant="secondary">Créer</SubmitButton>
-                </div>
-              </ActionForm>
-            </Disclosure>
-          </CardBody>
-        </Card>
-
-        <Card>
-          <CardHeader title="Magasins" description="Un magasin peut être mobile (camion atelier)" />
-          <Table>
-            <THead>
-              <tr>
-                <TH>Code</TH>
-                <TH>Magasin</TH>
-                <TH>Site</TH>
-              </tr>
-            </THead>
-            <TBody>
-              {warehouses.map((w) => (
-                <TR key={w.id}>
-                  <TD className="font-mono text-xs">{w.code}</TD>
-                  <TD>
-                    {w.name} {w.isMobile ? <Badge tone="violet">Mobile</Badge> : null}
-                  </TD>
-                  <TD>{w.siteName}</TD>
-                </TR>
-              ))}
-            </TBody>
-          </Table>
-          <CardBody className="border-t border-slate-100">
-            <Disclosure summary="Nouveau magasin">
-              <ActionForm action={createWarehouseAction} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
-                <Field label="Site" name="siteId" required className="sm:col-span-2">
-                  <Select id="wh-site" name="siteId" required placeholder="Choisir…" options={siteOptions} />
-                </Field>
-                <Field label="Code" name="code" required>
-                  <Input id="wh-code" name="code" required maxLength={30} />
-                </Field>
-                <Field label="Nom" name="name" required>
-                  <Input id="wh-name" name="name" required maxLength={120} />
-                </Field>
-                <Checkbox name="isMobile" label="Magasin mobile (camion atelier)" />
-                <SubmitButton variant="secondary">Créer</SubmitButton>
-              </ActionForm>
-            </Disclosure>
-          </CardBody>
-        </Card>
-
-        <Card className="xl:col-span-2">
-          <CardHeader title="Chantiers" />
-          <Table>
-            <THead>
-              <tr>
-                <TH>Code</TH>
-                <TH>Chantier</TH>
-                <TH>Société</TH>
-                <TH>Adresse</TH>
-                <TH>Période</TH>
-              </tr>
-            </THead>
-            <TBody>
-              {jobsites.map((j) => (
-                <TR key={j.id}>
-                  <TD className="font-mono text-xs">{j.code}</TD>
-                  <TD>
-                    {j.name} {!j.active ? <Badge>Clos</Badge> : null}
-                  </TD>
-                  <TD>{j.companyName}</TD>
-                  <TD className="text-xs">{j.address ?? "—"}</TD>
-                  <TD className="whitespace-nowrap text-xs">
-                    {formatDate(j.startDate)} → {j.endDate ? formatDate(j.endDate) : "en cours"}
-                  </TD>
-                </TR>
-              ))}
-            </TBody>
-          </Table>
-          <CardBody className="border-t border-slate-100">
-            <Disclosure summary="Nouveau chantier">
-              <ActionForm action={createJobsiteAction} resetOnSuccess className="grid gap-3 sm:grid-cols-3">
-                <Field label="Société" name="companyId" required>
-                  <Select id="js-company" name="companyId" required placeholder="Choisir…" options={companyOptions} />
-                </Field>
-                <Field label="Code" name="code" required>
-                  <Input id="js-code" name="code" required maxLength={30} />
-                </Field>
-                <Field label="Nom" name="name" required>
-                  <Input id="js-name" name="name" required maxLength={120} />
-                </Field>
-                <Field label="Adresse" name="address">
-                  <Input id="js-address" name="address" maxLength={250} />
-                </Field>
-                <Field label="Début" name="startDate">
-                  <Input id="js-start" name="startDate" type="date" />
-                </Field>
-                <Field label="Fin prévue" name="endDate">
-                  <Input id="js-end" name="endDate" type="date" />
-                </Field>
-                <SubmitButton variant="secondary">Créer</SubmitButton>
-              </ActionForm>
-            </Disclosure>
-          </CardBody>
-        </Card>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Sociétés <span className="text-sm font-normal text-slate-500">({companies.length})</span>
+        </h2>
+        <Disclosure summary="Nouvelle société">
+          <ActionForm action={createCompanyAction} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
+            <Field label="Code" name="code" required>
+              <Input name="code" required maxLength={30} />
+            </Field>
+            <Field label="Raison sociale" name="name" required>
+              <Input name="name" required maxLength={120} />
+            </Field>
+            <Field label="Pays (ISO)" name="country">
+              <Input name="country" defaultValue="FR" maxLength={2} />
+            </Field>
+            <Field label="Devise" name="currency">
+              <Input name="currency" defaultValue="EUR" maxLength={3} />
+            </Field>
+            <SubmitButton variant="secondary">Créer la société</SubmitButton>
+          </ActionForm>
+        </Disclosure>
       </div>
+
+      {companies.length === 0 ? (
+        <Card>
+          <EmptyState title="Aucune société" description="Créer la première société, puis ses sites, ateliers et magasins." />
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {companies.map((company) => {
+            const companySites = sites.filter((s) => s.companyId === company.id);
+            const companyJobsites = jobsites.filter((j) => j.companyId === company.id);
+            return (
+              <Card key={company.id} aria-label={`Société ${company.name}`}>
+                <CardHeader
+                  title={
+                    <span className="flex flex-wrap items-center gap-2">
+                      <Building2 className="h-5 w-5 text-brand-700" aria-hidden />
+                      {company.name}
+                      <span className="font-mono text-xs font-normal text-slate-500">{company.code}</span>
+                    </span>
+                  }
+                  description={`${companySites.length} site(s) · ${companyJobsites.length} chantier(s) · ${company.country} · ${company.currency}`}
+                />
+                <CardBody className="space-y-4">
+                  {companySites.length === 0 ? <p className="text-sm text-slate-500">Aucun site pour cette société.</p> : null}
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {companySites.map((site) => {
+                      const siteWorkshops = workshops.filter((w) => w.siteId === site.id);
+                      const siteWarehouses = warehouses.filter((w) => w.siteId === site.id);
+                      return (
+                        <section key={site.id} aria-label={`Site ${site.name}`} className="rounded-lg border border-slate-200 p-4">
+                          <h3 className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
+                            <MapPin className="h-4 w-4 text-slate-500" aria-hidden />
+                            {site.name}
+                            <span className="font-mono text-xs font-normal text-slate-500">{site.code}</span>
+                            {!site.active ? <Badge>Inactif</Badge> : null}
+                          </h3>
+                          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            <div>
+                              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Ateliers</p>
+                              {siteWorkshops.length === 0 ? (
+                                <p className="text-sm text-slate-400">Aucun</p>
+                              ) : (
+                                <ul className="space-y-1 text-sm">
+                                  {siteWorkshops.map((w) => (
+                                    <li key={w.id} className="flex flex-wrap items-center gap-2">
+                                      <Wrench className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                                      {w.name}
+                                      <span className="text-xs text-slate-500">
+                                        {w.code} · {w.bays} poste(s)
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                            <div>
+                              <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Magasins</p>
+                              {siteWarehouses.length === 0 ? (
+                                <p className="text-sm text-slate-400">Aucun</p>
+                              ) : (
+                                <ul className="space-y-1 text-sm">
+                                  {siteWarehouses.map((w) => (
+                                    <li key={w.id} className="flex flex-wrap items-center gap-2">
+                                      <Warehouse className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                                      {w.name}
+                                      <span className="text-xs text-slate-500">{w.code}</span>
+                                      {w.isMobile ? <Badge tone="violet">Mobile</Badge> : null}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                            <Disclosure summary="Ajouter un atelier">
+                              <ActionForm action={createWorkshopAction} resetOnSuccess className="space-y-2">
+                                <input type="hidden" name="siteId" value={site.id} />
+                                <Field label="Code" name="code" required>
+                                  <Input name="code" required maxLength={30} />
+                                </Field>
+                                <Field label="Nom" name="name" required>
+                                  <Input name="name" required maxLength={120} />
+                                </Field>
+                                <Field label="Postes de travail" name="bays">
+                                  <Input name="bays" type="number" min={1} defaultValue={1} />
+                                </Field>
+                                <SubmitButton size="sm" variant="secondary">
+                                  Créer l&apos;atelier
+                                </SubmitButton>
+                              </ActionForm>
+                            </Disclosure>
+                            <Disclosure summary="Ajouter un magasin">
+                              <ActionForm action={createWarehouseAction} resetOnSuccess className="space-y-2">
+                                <input type="hidden" name="siteId" value={site.id} />
+                                <Field label="Code" name="code" required>
+                                  <Input name="code" required maxLength={30} />
+                                </Field>
+                                <Field label="Nom" name="name" required>
+                                  <Input name="name" required maxLength={120} />
+                                </Field>
+                                <Checkbox name="isMobile" label="Magasin mobile (camion atelier)" />
+                                <SubmitButton size="sm" variant="secondary">
+                                  Créer le magasin
+                                </SubmitButton>
+                              </ActionForm>
+                            </Disclosure>
+                          </div>
+                        </section>
+                      );
+                    })}
+                  </div>
+
+                  {companyJobsites.length > 0 ? (
+                    <div>
+                      <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-500">Chantiers</p>
+                      <ul className="grid gap-1 text-sm sm:grid-cols-2">
+                        {companyJobsites.map((j) => (
+                          <li key={j.id} className="flex flex-wrap items-center gap-2">
+                            <HardHat className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+                            {j.name}
+                            <span className="text-xs text-slate-500">
+                              {j.code} · {formatDate(j.startDate)} → {j.endDate ? formatDate(j.endDate) : "en cours"}
+                            </span>
+                            {!j.active ? <Badge>Clos</Badge> : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
+                  <div className="grid gap-2 border-t border-slate-100 pt-3 sm:grid-cols-2">
+                    <Disclosure summary="Ajouter un site">
+                      <ActionForm action={createSiteAction} resetOnSuccess className="space-y-2">
+                        <input type="hidden" name="companyId" value={company.id} />
+                        <Field label="Code" name="code" required>
+                          <Input name="code" required maxLength={30} />
+                        </Field>
+                        <Field label="Nom" name="name" required>
+                          <Input name="name" required maxLength={120} />
+                        </Field>
+                        <Field label="Adresse" name="address">
+                          <Input name="address" maxLength={250} />
+                        </Field>
+                        <SubmitButton size="sm" variant="secondary">
+                          Créer le site
+                        </SubmitButton>
+                      </ActionForm>
+                    </Disclosure>
+                    <Disclosure summary="Ajouter un chantier">
+                      <ActionForm action={createJobsiteAction} resetOnSuccess className="space-y-2">
+                        <input type="hidden" name="companyId" value={company.id} />
+                        <Field label="Code" name="code" required>
+                          <Input name="code" required maxLength={30} />
+                        </Field>
+                        <Field label="Nom" name="name" required>
+                          <Input name="name" required maxLength={120} />
+                        </Field>
+                        <Field label="Adresse" name="address">
+                          <Input name="address" maxLength={250} />
+                        </Field>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Field label="Début" name="startDate">
+                            <Input name="startDate" type="date" />
+                          </Field>
+                          <Field label="Fin prévue" name="endDate">
+                            <Input name="endDate" type="date" />
+                          </Field>
+                        </div>
+                        <SubmitButton size="sm" variant="secondary">
+                          Créer le chantier
+                        </SubmitButton>
+                      </ActionForm>
+                    </Disclosure>
+                  </div>
+                </CardBody>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }

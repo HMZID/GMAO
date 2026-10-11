@@ -293,6 +293,6 @@ export function toCsv(columns: ExportColumn[], rows: Record<string, unknown>[]):
 }
 
 /** Nom de fichier d'export : jeu de données et date (AAAA-MM-JJ). */
-export function exportFileName(dataset: ExportDataset | "donnees", format: ExportFormat, now: Date) {
+export function exportFileName(dataset: string, format: ExportFormat, now: Date) {
   return `gmao-${dataset}-${now.toISOString().slice(0, 10)}.${format}`;
 }

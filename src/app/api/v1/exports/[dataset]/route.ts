@@ -9,12 +9,13 @@ type Ctx = RouteContext<"/api/v1/exports/[dataset]">;
  * Un jeu de données :
  * - JSON (par défaut) paginé : ?limit=1000&offset=0, `page.next` donne le décalage suivant ;
  * - ?format=csv ou ?format=xlsx : fichier complet.
- * ?updatedSince=<ISO 8601> limite aux lignes créées ou modifiées depuis cette date (extraction incrémentale).
+ * ?updatedSince=<ISO 8601> limite aux lignes créées ou modifiées depuis cette date (extraction incrémentale) ;
+ * ?companyId=<uuid> limite à une société de l'organisation.
  */
 export const GET = apiRoute<Ctx>(async (ctx, request, { params }) => {
   const dataset = parseInput(datasetSchema, (await params).dataset);
   const query = queryOf(request);
-  const { format, updatedSince } = parseInput(exportQuery, query);
+  const { format, updatedSince, companyId } = parseInput(exportQuery, query);
   if (format === "json") return exportPage(ctx, dataset, query);
-  return fileResponse(await exportFile(ctx, dataset, format, updatedSince));
+  return fileResponse(await exportFile(ctx, dataset, format, { updatedSince, companyId }));
 });
