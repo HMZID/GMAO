@@ -2,6 +2,11 @@
  * Matrice des droits par défaut (CDC §2.2). Les droits s'appliquent dans le périmètre
  * de chaque affectation de rôle (voir `context.ts`).
  *
+ * - Administrateur (ADMIN) : administrateur de la plateforme. Il gère les organisations clientes
+ *   (démonstrations, abonnements) et n'a aucun droit sur la maintenance des organisations.
+ * - Direction et responsable maintenance : tous les droits dans leur organisation, dont la gestion
+ *   des accès de chaque membre ; les autres rôles ne voient que leur partie.
+ *
  * TODO(HAB-01) : rendre la matrice paramétrable par l'administrateur (table dédiée).
  */
 
@@ -54,11 +59,16 @@ export const PERMISSIONS = [
   "kpi.read",
   "data.export",
   "indicator.manage",
+  "platform.manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
 
-const ALL_ROLES: readonly Role[] = ROLES;
+/** Rôles d'une organisation (l'administrateur de la plateforme n'en fait pas partie). */
+const ALL_ROLES: readonly Role[] = ROLES.filter((r) => r !== "ADMIN");
+
+/** Direction et responsable maintenance : tous les droits de l'organisation. */
+const ORGANIZATION_MANAGERS: readonly Role[] = ["MAINTENANCE_MANAGER", "EXECUTIVE"];
 
 /** Rôles détenant chaque droit. */
 const GRANTS: Record<Permission, readonly Role[]> = {
@@ -98,10 +108,23 @@ const GRANTS: Record<Permission, readonly Role[]> = {
   "data.export": ["ADMIN", "EXECUTIVE"],
   // KPI-11 : indicateurs personnalisés de l'organisation (lecture : kpi.read).
   "indicator.manage": ["ADMIN", "MAINTENANCE_MANAGER", "EXECUTIVE"],
+  // Organisations clientes, démonstrations : administrateur de la plateforme uniquement.
+  "platform.manage": ["ADMIN"],
 };
 
+/**
+ * Droits effectifs : l'administrateur de la plateforme ne garde que `platform.manage` ; la direction et le
+ * responsable maintenance reçoivent tous les droits de l'organisation.
+ */
+const EFFECTIVE_GRANTS = Object.fromEntries(
+  PERMISSIONS.map((p) => [
+    p,
+    p === "platform.manage" ? (["ADMIN"] as Role[]) : [...new Set([...GRANTS[p].filter((r) => r !== "ADMIN"), ...ORGANIZATION_MANAGERS])],
+  ]),
+) as unknown as Record<Permission, readonly Role[]>;
+
 export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = Object.fromEntries(
-  ROLES.map((role) => [role, new Set(PERMISSIONS.filter((p) => GRANTS[p].includes(role)))]),
+  ROLES.map((role) => [role, new Set(PERMISSIONS.filter((p) => EFFECTIVE_GRANTS[p].includes(role)))]),
 ) as unknown as Record<Role, ReadonlySet<Permission>>;
 
 export function roleHas(role: Role, permission: Permission) {

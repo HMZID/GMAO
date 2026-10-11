@@ -35,7 +35,12 @@ export default async function PlatformPage() {
           <Field label="Durée" name="durationDays" required>
             <Select name="durationDays" required defaultValue="30" options={DURATION_OPTIONS} />
           </Field>
-          <Field label="Administrateur du client" name="adminName" required>
+          <Field
+            label="Direction du client (premier compte)"
+            name="adminName"
+            required
+            hint="Tous les droits de son organisation ; il donne les accès à ses équipes"
+          >
             <Input name="adminName" required maxLength={120} />
           </Field>
           <Field label="Courriel (identifiant)" name="adminEmail" required>

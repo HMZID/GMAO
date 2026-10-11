@@ -22,7 +22,7 @@ test("démonstration client : ouverture, bandeau, suspension, rétablissement, a
   const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Ouvrir la démonstration" }) });
   await form.getByLabel("Organisation (client)").fill(organization);
   await form.getByRole("combobox", { name: "Durée" }).selectOption("7");
-  await form.getByLabel("Administrateur du client").fill("Camille Client");
+  await form.getByLabel("Direction du client (premier compte)").fill("Camille Client");
   await form.getByLabel("Courriel (identifiant)").fill(email);
   await form.getByLabel("Mot de passe initial").fill(password);
   await form.getByRole("button", { name: "Ouvrir la démonstration" }).click();
@@ -68,4 +68,27 @@ test("l'administration de la plateforme est réservée", async ({ page }) => {
   await login(page, USERS.maintenanceManager);
   await page.goto("/administration/plateforme");
   await expect(page.getByRole("heading", { name: "Accès refusé" })).toBeVisible();
+});
+
+test("l'administrateur gère la plateforme, pas la maintenance ; la direction gère son organisation", async ({ page }) => {
+  await login(page, USERS.admin);
+  // Arrivée directe sur les organisations clientes ; aucun menu de maintenance.
+  await expect(page).toHaveURL(/\/administration\/plateforme$/);
+  const menu = page.getByRole("navigation", { name: "Navigation principale" }).first();
+  await expect(menu.getByRole("link", { name: "Administration" })).toBeVisible();
+  for (const entry of ["Tableau de bord", "Équipements", "Demandes d'intervention", "Ordres de travail"]) {
+    await expect(menu.getByRole("link", { name: entry })).toHaveCount(0);
+  }
+  await page.goto("/demandes/nouvelle");
+  await expect(page.getByRole("heading", { name: "Accès refusé" })).toBeVisible();
+  expect((await page.request.get("/api/v1/equipment")).status()).toBe(403);
+
+  // La direction a tous les accès de son organisation et ne peut pas donner le rôle d'administrateur de la plateforme.
+  await login(page, USERS.executive, "/administration/utilisateurs");
+  await page.getByText("Nouveau compte").click();
+  const roles = await page.getByRole("combobox", { name: "Rôle" }).first().locator("option").allTextContents();
+  expect(roles).toContain("Direction");
+  expect(roles).not.toContain("Administrateur de la plateforme");
+  await page.goto("/demandes/nouvelle");
+  await expect(page.getByRole("heading", { name: "Signaler une panne" })).toBeVisible();
 });

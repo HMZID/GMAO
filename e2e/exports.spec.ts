@@ -5,7 +5,7 @@ import { USERS, login } from "./helpers";
 /** Export des données de l'organisation (INT-01) : écran, classeur complet, CSV, JSON paginé et incrémental, droits. */
 
 test("l'administrateur exporte les données : classeur complet, CSV et JSON paginé", async ({ page }) => {
-  await login(page, USERS.admin, "/administration/export");
+  await login(page, USERS.executive, "/administration/export");
   await expect(page.getByRole("heading", { name: "Export des données" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Équipements : télécharger en Excel" })).toBeVisible();
 
@@ -57,13 +57,13 @@ test("l'export est réservé : technicien refusé, jeu de données inconnu refus
   await page.goto("/administration/export");
   await expect(page.getByText(/Accès refusé|n'avez pas accès|droit/i).first()).toBeVisible();
 
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   const unknown = await page.request.get("/api/v1/exports/salaires");
   expect(unknown.status()).toBe(400);
 });
 
 test("export d'une seule société : chaque jeu de données limité à la société choisie", async ({ page }) => {
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   const catalog = await (await page.request.get("/api/v1/exports")).json();
   const companies = await (await page.request.get("/api/v1/equipment?pageSize=200")).json();
   const companyIds = [...new Set(companies.data.items.map((e: { companyId: string }) => e.companyId))] as string[];

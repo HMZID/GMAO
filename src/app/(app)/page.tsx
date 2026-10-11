@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { DueStatusBadge, PriorityBadge, WorkOrderStatusBadge } from "@/components/status-badges";
 import { PageHeader } from "@/components/layout/page-header";
 import { ButtonLink } from "@/components/ui/button";
@@ -13,6 +14,8 @@ export const metadata = { title: "Tableau de bord" };
 
 export default async function DashboardPage() {
   const ctx = await getAuthContext();
+  // Administrateur de la plateforme : pas de maintenance, il arrive sur les organisations clientes.
+  if (!ctx.can("equipment.read")) redirect(ctx.can("platform.manage") ? "/administration/plateforme" : "/notifications");
   const [dashboard, urgent, dues] = await Promise.all([
     getDashboard(ctx),
     ctx.can("workorder.read") ? listWorkOrders(ctx, { status: "OPEN", pageSize: 8 }) : null,
