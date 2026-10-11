@@ -47,7 +47,7 @@ export async function loadAuthContext(userId: string, channel: Channel): Promise
     db
       .select({ id: technicians.id })
       .from(technicians)
-      .where(and(eq(technicians.userId, row.id), eq(technicians.active, true)))
+      .where(and(eq(technicians.userId, row.id), eq(technicians.tenantId, row.tenantId), eq(technicians.active, true)))
       .limit(1),
   ]);
 

@@ -75,6 +75,9 @@ export async function getWeekPlanning(ctx: AuthContext, raw: unknown = {}, now: 
           .innerJoin(equipment, eq(equipment.id, workOrders.equipmentId))
           .where(
             and(
+              eq(workOrders.tenantId, ctx.tenantId),
+              // Ordres de travail du périmètre seulement (un technicien peut aussi intervenir ailleurs).
+              scopeWhere(ctx.scope("planning.read"), workOrders.companyId, workOrders.siteId),
               inArray(workOrderAssignees.technicianId, techIds),
               inArray(workOrders.status, [...OPEN_STATUSES]),
               lt(workOrders.plannedStart, weekEnd),
@@ -87,7 +90,14 @@ export async function getWeekPlanning(ctx: AuthContext, raw: unknown = {}, now: 
       ? db
           .select()
           .from(absences)
-          .where(and(inArray(absences.technicianId, techIds), lte(absences.startAt, weekEnd), gte(absences.endAt, weekStart)))
+          .where(
+            and(
+              eq(absences.tenantId, ctx.tenantId),
+              inArray(absences.technicianId, techIds),
+              lte(absences.startAt, weekEnd),
+              gte(absences.endAt, weekStart),
+            ),
+          )
       : Promise.resolve([]),
     db
       .select({

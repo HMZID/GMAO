@@ -24,7 +24,7 @@ import {
 import { OPEN_STATUSES } from "@/server/domain/work-order-status";
 import { BusinessRuleError, ConflictError, NotFoundError } from "@/server/errors";
 import { bool, clearable, date, optionalDate, optionalId, optionalNumber, optionalText, text } from "@/server/validation";
-import { assertCan, assertCanOn, audit, offsetOf, paginationSchema, parseInput, scopeWhere, type Page } from "./_shared";
+import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere, type Page } from "./_shared";
 import { getActiveAssignment, setEquipmentStatus } from "./equipment-status";
 import { createMeter } from "./meters";
 import { isUniqueViolation } from "./organization";
@@ -392,7 +392,13 @@ export async function updateEquipment(ctx: AuthContext, id: string, raw: unknown
   if (!current) throw new NotFoundError("Équipement");
   assertCanOn(ctx, "equipment.write", current);
   if (current.status === "RETIRED") throw new BusinessRuleError(["Un équipement réformé est en lecture seule."]);
-  if (input.siteId && input.siteId !== current.siteId) await assertSiteBelongsToCompany(ctx, input.siteId, current.companyId);
+  if (input.siteId && input.siteId !== current.siteId) {
+    await assertSiteBelongsToCompany(ctx, input.siteId, current.companyId);
+    // Déplacement vers un autre site : le nouveau site doit aussi être dans le périmètre de l'utilisateur.
+    assertCanOn(ctx, "equipment.write", { companyId: current.companyId, siteId: input.siteId });
+  }
+  await assertSameTenant(db, ctx, equipmentCategories, input.categoryId, "Catégorie");
+  await assertSameTenant(db, ctx, equipmentModels, input.modelId, "Modèle");
   await assertNoDuplicate(
     ctx,
     { manufacturer: input.manufacturer ?? current.manufacturer, serialNumber: input.serialNumber, registration: input.registration ?? undefined },
@@ -469,6 +475,35 @@ export const assignmentInput = z
  * Affecte un équipement. L'affectation active est clôturée à la date de début de la nouvelle ;
  * aucun chevauchement n'est accepté avec une affectation future.
  */
+/** Destination d'une affectation (site, chantier, atelier) : de l'organisation et du périmètre de l'utilisateur. */
+async function assertAssignmentTargets(ctx: AuthContext, input: { siteId?: string | null; jobsiteId?: string | null; workshopId?: string | null }) {
+  if (input.siteId) {
+    const [site] = await db
+      .select({ companyId: sites.companyId, siteId: sites.id })
+      .from(sites)
+      .where(and(eq(sites.id, input.siteId), eq(sites.tenantId, ctx.tenantId)));
+    if (!site) throw new NotFoundError("Site");
+    assertCanOn(ctx, "assignment.write", site);
+  }
+  if (input.jobsiteId) {
+    const [jobsite] = await db
+      .select({ companyId: jobsites.companyId })
+      .from(jobsites)
+      .where(and(eq(jobsites.id, input.jobsiteId), eq(jobsites.tenantId, ctx.tenantId)));
+    if (!jobsite) throw new NotFoundError("Chantier");
+    assertCanOn(ctx, "assignment.write", jobsite);
+  }
+  if (input.workshopId) {
+    const [workshop] = await db
+      .select({ companyId: sites.companyId, siteId: sites.id })
+      .from(workshops)
+      .innerJoin(sites, eq(sites.id, workshops.siteId))
+      .where(and(eq(workshops.id, input.workshopId), eq(workshops.tenantId, ctx.tenantId)));
+    if (!workshop) throw new NotFoundError("Atelier");
+    assertCanOn(ctx, "assignment.write", workshop);
+  }
+}
+
 export async function assignEquipment(ctx: AuthContext, id: string, raw: unknown) {
   const input = parseInput(assignmentInput, raw);
   const [current] = await db
@@ -480,6 +515,7 @@ export async function assignEquipment(ctx: AuthContext, id: string, raw: unknown
   if (current.status === "IMMOBILIZED" || current.status === "RETIRED") {
     throw new BusinessRuleError(["Un équipement immobilisé ou réformé ne peut pas être affecté."]);
   }
+  await assertAssignmentTargets(ctx, input);
   return db.transaction(async (tx) => {
     const [overlap] = await tx
       .select({ id: assignments.id })
@@ -602,6 +638,7 @@ export const modelInput = z.object({
 export async function createModel(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "settings.manage");
   const input = parseInput(modelInput, raw);
+  await assertSameTenant(db, ctx, equipmentCategories, input.categoryId, "Catégorie");
   return db.transaction(async (tx) => {
     try {
       const [row] = await tx
@@ -646,13 +683,20 @@ export async function listEquipmentOptions(
 }
 
 export async function listJobsitesAndWorkshopsForAssignment(ctx: AuthContext) {
+  // Seules les destinations du périmètre d'affectation de l'utilisateur sont proposées.
+  const scope = ctx.scope("assignment.write");
   const [js, ws] = await Promise.all([
     db
       .select({ id: jobsites.id, name: jobsites.name })
       .from(jobsites)
-      .where(and(eq(jobsites.tenantId, ctx.tenantId), eq(jobsites.active, true)))
+      .where(and(eq(jobsites.tenantId, ctx.tenantId), eq(jobsites.active, true), scopeWhere(scope, jobsites.companyId)))
       .orderBy(asc(jobsites.name)),
-    db.select({ id: workshops.id, name: workshops.name }).from(workshops).where(eq(workshops.tenantId, ctx.tenantId)).orderBy(asc(workshops.name)),
+    db
+      .select({ id: workshops.id, name: workshops.name })
+      .from(workshops)
+      .innerJoin(sites, eq(sites.id, workshops.siteId))
+      .where(and(eq(workshops.tenantId, ctx.tenantId), scopeWhere(scope, sites.companyId, sites.id)))
+      .orderBy(asc(workshops.name)),
   ]);
   return { jobsites: js, workshops: ws };
 }

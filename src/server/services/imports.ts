@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import { z } from "zod";
 import type { AuthContext } from "@/server/authz/context";
@@ -448,8 +448,10 @@ async function loadJob(ctx: AuthContext, id: string) {
     .select()
     .from(importJobs)
     .where(and(eq(importJobs.id, id), eq(importJobs.tenantId, ctx.tenantId)));
-  // Un import d'un type non autorisé est « introuvable » pour l'utilisateur.
+  // Un import d'un type non autorisé est « introuvable » pour l'utilisateur ; avec un droit limité à une
+  // société ou un site, seuls ses propres imports sont visibles (leurs lignes peuvent concerner d'autres sites).
   if (!job || !ctx.can(IMPORT_PERMISSION[job.kind])) throw new NotFoundError("Import");
+  if (!ctx.scope(IMPORT_PERMISSION[job.kind]).all && job.createdById !== ctx.userId) throw new NotFoundError("Import");
   return job;
 }
 
@@ -468,6 +470,8 @@ export async function getImportJob(ctx: AuthContext, id: string) {
 export async function listImportJobs(ctx: AuthContext, limit = 30) {
   const kinds = importableKinds(ctx);
   if (kinds.length === 0) return [];
+  // Types d'import gérés sur tout le groupe : tous les imports ; sinon, seulement ceux de l'utilisateur.
+  const allScopeKinds = kinds.filter((k) => ctx.scope(IMPORT_PERMISSION[k]).all);
   return db
     .select({
       id: importJobs.id,
@@ -486,7 +490,15 @@ export async function listImportJobs(ctx: AuthContext, limit = 30) {
     })
     .from(importJobs)
     .innerJoin(user, eq(user.id, importJobs.createdById))
-    .where(and(eq(importJobs.tenantId, ctx.tenantId), inArray(importJobs.kind, kinds)))
+    .where(
+      and(
+        eq(importJobs.tenantId, ctx.tenantId),
+        inArray(importJobs.kind, kinds),
+        allScopeKinds.length > 0
+          ? or(inArray(importJobs.kind, allScopeKinds), eq(importJobs.createdById, ctx.userId))
+          : eq(importJobs.createdById, ctx.userId),
+      ),
+    )
     .orderBy(desc(importJobs.createdAt))
     .limit(limit);
 }

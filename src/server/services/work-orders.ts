@@ -7,6 +7,7 @@ import {
   absences,
   dueItems,
   equipment,
+  jobsites,
   laborRates,
   meterReadings,
   meters,
@@ -24,6 +25,7 @@ import {
   workOrderTasks,
   workOrders,
   workRequests,
+  workshops,
 } from "@/server/db/schema";
 import {
   ALLOWED_TRANSITIONS,
@@ -36,7 +38,8 @@ import {
 } from "@/server/domain/work-order-status";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { bool, optionalDate, optionalId, optionalNumber, optionalText, text } from "@/server/validation";
-import { assertCan, assertCanOn, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
+import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
+import type { Permission } from "@/server/authz/permissions";
 import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equipment-status";
 import { notifyAssignedTechnicians, notifyByPermission } from "./notifications";
 import { completeDueItem } from "./preventive";
@@ -314,7 +317,7 @@ export async function getWorkOrder(ctx: AuthContext, id: string) {
       "MAINTENANCE_EXPENSE",
       wo.costs.map((c) => c.id),
     ),
-    listPurchaseRequestsForWorkOrder(ctx, wo.id),
+    listPurchaseRequestsForWorkOrder(ctx, wo.id, wo),
   ]);
 
   const actor = actorFor(ctx, wo);
@@ -365,6 +368,45 @@ export const workOrderInput = z.object({
   assigneeIds: z.array(z.uuid()).default([]),
 });
 
+/**
+ * Atelier, chantier, prestataire et intervenants choisis pour un OT : ils doivent appartenir à
+ * l'organisation, et atelier, chantier et intervenants au périmètre de l'utilisateur pour ce droit.
+ */
+async function assertWorkOrderReferences(
+  ctx: AuthContext,
+  permission: Permission,
+  refs: { workshopId?: string | null; jobsiteId?: string | null; supplierId?: string | null; assigneeIds?: readonly string[] },
+) {
+  if (refs.workshopId) {
+    const [w] = await db
+      .select({ companyId: sites.companyId, siteId: sites.id })
+      .from(workshops)
+      .innerJoin(sites, eq(sites.id, workshops.siteId))
+      .where(and(eq(workshops.id, refs.workshopId), eq(workshops.tenantId, ctx.tenantId)));
+    if (!w) throw new NotFoundError("Atelier");
+    assertCanOn(ctx, permission, w);
+  }
+  if (refs.jobsiteId) {
+    const [j] = await db
+      .select({ companyId: jobsites.companyId })
+      .from(jobsites)
+      .where(and(eq(jobsites.id, refs.jobsiteId), eq(jobsites.tenantId, ctx.tenantId)));
+    if (!j) throw new NotFoundError("Chantier");
+    assertCanOn(ctx, permission, j);
+  }
+  await assertSameTenant(db, ctx, suppliers, refs.supplierId, "Prestataire");
+  const assigneeIds = [...new Set(refs.assigneeIds ?? [])];
+  if (assigneeIds.length > 0) {
+    const rows = await db
+      .select({ companyId: sites.companyId, siteId: sites.id })
+      .from(technicians)
+      .innerJoin(sites, eq(sites.id, technicians.siteId))
+      .where(and(inArray(technicians.id, assigneeIds), eq(technicians.tenantId, ctx.tenantId)));
+    if (rows.length !== assigneeIds.length) throw new NotFoundError("Technicien");
+    for (const row of rows) assertCanOn(ctx, permission, row);
+  }
+}
+
 /** Création manuelle d'un OT (COR-05). Un OT correctif immobilisant immobilise l'équipement (CDC §5.5). */
 export async function createWorkOrder(ctx: AuthContext, raw: unknown) {
   const input = parseInput(workOrderInput, raw);
@@ -376,6 +418,7 @@ export async function createWorkOrder(ctx: AuthContext, raw: unknown) {
   assertCanOn(ctx, "workorder.create", eqRow);
   if (eqRow.status === "RETIRED") throw new BusinessRuleError(["Aucun ordre de travail sur un équipement réformé."]);
   if (input.isExternal && !input.supplierId) throw new BusinessRuleError(["Un ordre de travail externe nécessite un prestataire."]);
+  await assertWorkOrderReferences(ctx, "workorder.create", input);
 
   return db.transaction(async (tx) => {
     const wo = await insertWorkOrder(tx, ctx, {
@@ -414,6 +457,7 @@ export async function updatePlanning(ctx: AuthContext, id: string, raw: unknown)
   const wo = await loadWorkOrder(db, ctx, id);
   assertCanOn(ctx, "workorder.manage", wo);
   if (!(OPEN_STATUSES as readonly string[]).includes(wo.status)) throw new BusinessRuleError(["Cet ordre de travail n'est plus planifiable."]);
+  await assertWorkOrderReferences(ctx, "workorder.manage", input);
 
   const plannedStart = input.plannedStart ?? wo.plannedStart;
   // Fin prévue : saisie, sinon recalculée dès que le début ou la durée change (début + durée estimée).
@@ -705,7 +749,17 @@ export async function recordTime(ctx: AuthContext, id: string, raw: unknown, now
     await assertExecutable(ctx, wo, input.action === "manual" ? ["IN_PROGRESS", "WORK_DONE", "ON_HOLD"] : ["IN_PROGRESS"]);
     const technicianId = input.technicianId ?? ctx.technicianId;
     if (!technicianId) throw new BusinessRuleError(["Aucun technicien associé à ce compte."]);
-    if (input.technicianId && input.technicianId !== ctx.technicianId) assertCanOn(ctx, "workorder.manage", wo);
+    if (input.technicianId && input.technicianId !== ctx.technicianId) {
+      assertCanOn(ctx, "workorder.manage", wo);
+      // Pointage pour un autre technicien : de l'organisation et du périmètre de l'utilisateur.
+      const [tech] = await tx
+        .select({ companyId: sites.companyId, siteId: sites.id })
+        .from(technicians)
+        .innerJoin(sites, eq(sites.id, technicians.siteId))
+        .where(and(eq(technicians.id, input.technicianId), eq(technicians.tenantId, ctx.tenantId)));
+      if (!tech) throw new NotFoundError("Technicien");
+      assertCanOn(ctx, "workorder.manage", tech);
+    }
 
     if (input.action === "start") {
       if (input.clientId) {
@@ -718,7 +772,7 @@ export async function recordTime(ctx: AuthContext, id: string, raw: unknown, now
       const open = await tx
         .select()
         .from(timeEntries)
-        .where(and(eq(timeEntries.technicianId, technicianId), isNull(timeEntries.endedAt)));
+        .where(and(eq(timeEntries.tenantId, ctx.tenantId), eq(timeEntries.technicianId, technicianId), isNull(timeEntries.endedAt)));
       for (const entry of open) {
         await tx
           .update(timeEntries)
@@ -870,6 +924,10 @@ export async function recordPart(ctx: AuthContext, id: string, raw: unknown) {
       .innerJoin(sites, eq(sites.id, warehouses.siteId))
       .where(and(eq(warehouses.id, input.warehouseId), eq(warehouses.tenantId, ctx.tenantId)));
     if (!wh) throw new NotFoundError("Magasin");
+    await assertSameTenant(tx, ctx, parts, input.partId, "Article");
+    // Magasin du périmètre : lecture du stock pour une réservation, mouvement de stock pour une sortie ou un retour.
+    if (!ctx.canOn(input.action === "reserve" ? "stock.read" : "stock.move", wh) && !ctx.canOn("stock.move", wh))
+      throw new BusinessRuleError(["Magasin hors de votre périmètre."]);
     if (input.action === "reserve") {
       assertCanOn(ctx, "workorder.manage", wo);
       if (!["CREATED", "PLANNED", "ON_HOLD", "IN_PROGRESS"].includes(wo.status))

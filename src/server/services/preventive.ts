@@ -33,7 +33,7 @@ import {
 } from "@/server/domain/preventive";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { bool, date, optionalDate, optionalId, optionalNumber, optionalText, text } from "@/server/validation";
-import { assertCan, assertCanOn, audit, parseInput, scopeWhere } from "./_shared";
+import { assertCan, assertCanOn, assertSameTenant, audit, parseInput, scopeWhere } from "./_shared";
 import { openDowntime, setEquipmentStatus } from "./equipment-status";
 import { insertWorkOrder } from "./work-order-factory";
 
@@ -84,7 +84,13 @@ export async function getPlan(ctx: AuthContext, planId: string) {
     .select({ id: equipment.id, code: equipment.code, name: equipment.name, status: equipment.status, active: equipmentPlans.active })
     .from(equipmentPlans)
     .innerJoin(equipment, eq(equipment.id, equipmentPlans.equipmentId))
-    .where(and(eq(equipmentPlans.planId, planId), scopeWhere(ctx.scope("plan.read"), equipment.companyId, equipment.siteId)))
+    .where(
+      and(
+        eq(equipmentPlans.planId, planId),
+        eq(equipment.tenantId, ctx.tenantId),
+        scopeWhere(ctx.scope("plan.read"), equipment.companyId, equipment.siteId),
+      ),
+    )
     .orderBy(asc(equipment.code));
   return { ...plan, equipment: applied };
 }
@@ -161,6 +167,8 @@ async function insertOperation(tx: DbOrTx, ctx: AuthContext, planId: string, op:
 export async function createPlan(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "plan.write");
   const input = parseInput(planInput, raw);
+  await assertSameTenant(db, ctx, equipmentCategories, input.categoryId, "Catégorie");
+  await assertSameTenant(db, ctx, equipmentModels, input.modelId, "Modèle");
   return db.transaction(async (tx) => {
     const [plan] = await tx
       .insert(maintenancePlans)
@@ -349,6 +357,7 @@ export async function applyPlan(ctx: AuthContext, equipmentId: string, raw: unkn
     .where(and(eq(equipment.id, equipmentId), eq(equipment.tenantId, ctx.tenantId)));
   if (!eqRow) throw new NotFoundError("Équipement");
   assertCanOn(ctx, "plan.write", eqRow);
+  await assertSameTenant(db, ctx, maintenancePlans, input.planId, "Plan d'entretien");
   return db.transaction(async (tx) => {
     const ep = await applyPlanToEquipment(tx, ctx, equipmentId, input.planId, {
       lastDoneAt: input.lastDoneAt,

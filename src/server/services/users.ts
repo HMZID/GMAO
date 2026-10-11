@@ -7,9 +7,9 @@ import type { AuthContext } from "@/server/authz/context";
 import { ROLES } from "@/server/authz/permissions";
 import { db } from "@/server/db";
 import { absences, account, auditLogs, companies, laborRates, roleAssignments, session, sites, technicians, user } from "@/server/db/schema";
-import { BusinessRuleError, ConflictError, NotFoundError } from "@/server/errors";
+import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { bool, date, optionalDate, optionalId, optionalText, text } from "@/server/validation";
-import { assertCan, audit, offsetOf, paginationSchema, parseInput } from "./_shared";
+import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
 
 /* ------------------------------------------------------------------ */
 /* Utilisateurs et habilitations (CDC §2)                               */
@@ -79,15 +79,54 @@ export const userInput = z
   })
   .refine((v) => v.scopeType === "TENANT" || !!v.scopeId, { message: "Choisir la société ou le site", path: ["scopeId"] });
 
+/**
+ * Périmètre d'un rôle à donner : de l'organisation, et compris dans le périmètre d'administration de
+ * l'utilisateur (un administrateur limité à une société ne donne jamais un rôle sur tout le groupe).
+ */
 async function assertScopeInTenant(ctx: AuthContext, scopeType: "TENANT" | "COMPANY" | "SITE", scopeId?: string) {
-  if (scopeType === "TENANT") return null;
-  const table = scopeType === "COMPANY" ? companies : sites;
+  if (scopeType === "TENANT") {
+    if (!ctx.scope("users.manage").all) throw new ForbiddenError("Seul un administrateur de toute l'organisation donne un rôle sur tout le groupe.");
+    return null;
+  }
+  if (scopeType === "COMPANY") {
+    const [row] = await db
+      .select({ id: companies.id })
+      .from(companies)
+      .where(and(eq(companies.id, scopeId!), eq(companies.tenantId, ctx.tenantId)));
+    if (!row) throw new NotFoundError("Société");
+    assertCanOn(ctx, "users.manage", { companyId: row.id });
+    return row.id;
+  }
   const [row] = await db
-    .select({ id: table.id })
-    .from(table)
-    .where(and(eq(table.id, scopeId!), eq(table.tenantId, ctx.tenantId)));
-  if (!row) throw new NotFoundError(scopeType === "COMPANY" ? "Société" : "Site");
+    .select({ id: sites.id, companyId: sites.companyId })
+    .from(sites)
+    .where(and(eq(sites.id, scopeId!), eq(sites.tenantId, ctx.tenantId)));
+  if (!row) throw new NotFoundError("Site");
+  assertCanOn(ctx, "users.manage", { companyId: row.companyId, siteId: row.id });
   return row.id;
+}
+
+/**
+ * Compte géré par l'utilisateur : un administrateur limité à une société ou un site ne modifie que les
+ * comptes dont tous les rôles sont dans son périmètre (jamais un compte qui a un rôle sur tout le groupe).
+ */
+async function assertCanManageUser(ctx: AuthContext, userId: string) {
+  if (ctx.scope("users.manage").all) return;
+  const rows = await db
+    .select({ scopeType: roleAssignments.scopeType, scopeId: roleAssignments.scopeId, siteCompanyId: sites.companyId })
+    .from(roleAssignments)
+    .leftJoin(sites, and(eq(roleAssignments.scopeType, "SITE"), eq(sites.id, roleAssignments.scopeId)))
+    .where(and(eq(roleAssignments.userId, userId), eq(roleAssignments.tenantId, ctx.tenantId)));
+  const inScope =
+    rows.length > 0 &&
+    rows.every((r) =>
+      r.scopeType === "COMPANY"
+        ? !!r.scopeId && ctx.canOn("users.manage", { companyId: r.scopeId })
+        : r.scopeType === "SITE"
+          ? !!r.scopeId && !!r.siteCompanyId && ctx.canOn("users.manage", { companyId: r.siteCompanyId, siteId: r.scopeId })
+          : false,
+    );
+  if (!inScope) throw new ForbiddenError("Ce compte a des rôles hors de votre périmètre d'administration.");
 }
 
 /** Création d'un compte (HAB-01) : mot de passe haché par Better Auth, premier couple rôle × périmètre. */
@@ -132,6 +171,7 @@ export async function addRoleAssignment(ctx: AuthContext, userId: string, raw: u
     .from(user)
     .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
   if (!target) throw new NotFoundError("Utilisateur");
+  await assertCanManageUser(ctx, userId);
   const scopeId = await assertScopeInTenant(ctx, input.scopeType, input.scopeId);
   if (input.validFrom && input.validTo && input.validTo <= input.validFrom)
     throw new BusinessRuleError(["La fin de délégation doit suivre son début."]);
@@ -160,6 +200,7 @@ export async function removeRoleAssignment(ctx: AuthContext, assignmentId: strin
     .from(roleAssignments)
     .where(and(eq(roleAssignments.id, assignmentId), eq(roleAssignments.tenantId, ctx.tenantId)));
   if (!row) throw new NotFoundError("Affectation de rôle");
+  await assertCanManageUser(ctx, row.userId);
   if (row.userId === ctx.userId && row.role === "ADMIN")
     throw new BusinessRuleError(["Vous ne pouvez pas retirer votre propre rôle d'administrateur."]);
   await db.transaction(async (tx) => {
@@ -177,6 +218,7 @@ export async function setUserActive(ctx: AuthContext, userId: string, active: bo
     .from(user)
     .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
   if (!target) throw new NotFoundError("Utilisateur");
+  await assertCanManageUser(ctx, userId);
   await db.transaction(async (tx) => {
     await tx.update(user).set({ isActive: active }).where(eq(user.id, userId));
     if (!active) await tx.delete(session).where(eq(session.userId, userId));
@@ -204,6 +246,7 @@ export async function updateUser(ctx: AuthContext, userId: string, raw: unknown)
     .from(user)
     .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
   if (!target) throw new NotFoundError("Utilisateur");
+  await assertCanManageUser(ctx, userId);
   if (input.email !== target.email) {
     const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
     if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
@@ -228,6 +271,7 @@ export async function setUserPassword(ctx: AuthContext, userId: string, raw: unk
     .from(user)
     .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
   if (!target) throw new NotFoundError("Utilisateur");
+  await assertCanManageUser(ctx, userId);
   const passwordHash = await hashPassword(input.password);
   await db.transaction(async (tx) => {
     const [credential] = await tx
@@ -247,8 +291,21 @@ export async function setUserPassword(ctx: AuthContext, userId: string, raw: unk
 
 export async function listTechnicians(ctx: AuthContext) {
   assertCan(ctx, "planning.read");
+  // Techniciens des sites du périmètre (taux horaires et habilitations ne sortent pas du périmètre).
+  const scope = ctx.scope("planning.read");
+  const siteIds = scope.all
+    ? null
+    : (
+        await db
+          .select({ id: sites.id })
+          .from(sites)
+          .where(and(eq(sites.tenantId, ctx.tenantId), scopeWhere(scope, sites.companyId, sites.id)))
+      ).map((r) => r.id);
   const rows = await db.query.technicians.findMany({
-    where: eq(technicians.tenantId, ctx.tenantId),
+    where: and(
+      eq(technicians.tenantId, ctx.tenantId),
+      siteIds ? inArray(technicians.siteId, siteIds.length ? siteIds : ["00000000-0000-0000-0000-000000000000"]) : undefined,
+    ),
     orderBy: asc(technicians.lastName),
     with: {
       site: { columns: { name: true } },
@@ -293,6 +350,8 @@ export async function checkTechnicianCreation(ctx: AuthContext, raw: unknown) {
       .where(and(eq(technicians.tenantId, ctx.tenantId), eq(technicians.employeeNumber, input.employeeNumber)));
     if (same) throw new ConflictError(`Le matricule ${input.employeeNumber} est déjà attribué.`, { existingId: same.id });
   }
+  // Compte lié : de l'organisation (sinon le technicien serait rattaché à l'utilisateur d'un autre client).
+  await assertSameTenant(db, ctx, user, input.userId, "Utilisateur");
   return input;
 }
 
@@ -337,10 +396,12 @@ export async function addAbsence(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "workorder.manage");
   const input = parseInput(absenceInput, raw);
   const [tech] = await db
-    .select({ id: technicians.id })
+    .select({ id: technicians.id, siteId: sites.id, companyId: sites.companyId })
     .from(technicians)
+    .innerJoin(sites, eq(sites.id, technicians.siteId))
     .where(and(eq(technicians.id, input.technicianId), eq(technicians.tenantId, ctx.tenantId)));
   if (!tech) throw new NotFoundError("Technicien");
+  assertCanOn(ctx, "workorder.manage", tech);
   const [row] = await db
     .insert(absences)
     .values({ tenantId: ctx.tenantId, ...input })
@@ -379,6 +440,9 @@ export async function listAuditLogs(ctx: AuthContext, raw: unknown = {}) {
     .where(
       and(
         eq(auditLogs.tenantId, ctx.tenantId),
+        // Le journal n'est pas rattaché à une société : complet seulement pour un droit sur tout le groupe,
+        // sinon limité aux actions de l'utilisateur lui-même.
+        ctx.scope("audit.read").all ? undefined : eq(auditLogs.userId, ctx.userId),
         f.entityType ? eq(auditLogs.entityType, f.entityType) : undefined,
         f.entityId ? eq(auditLogs.entityId, f.entityId) : undefined,
       ),

@@ -7,7 +7,7 @@ import { parts, sites, stockLevels, stockMovements, stockReservations, suppliers
 import { checkIssue, checkReservation, weightedAverageCost } from "@/server/domain/stock";
 import { BusinessRuleError, ConflictError, NotFoundError } from "@/server/errors";
 import { bool, clearable, optionalText, text } from "@/server/validation";
-import { assertCan, assertCanOn, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
+import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
 import { isUniqueViolation } from "./organization";
 
 /* ------------------------------------------------------------------ */
@@ -38,7 +38,7 @@ export async function listParts(ctx: AuthContext, raw: unknown = {}) {
     .from(stockLevels)
     .innerJoin(warehouses, eq(warehouses.id, stockLevels.warehouseId))
     .innerJoin(sites, eq(sites.id, warehouses.siteId))
-    .where(stockScope)
+    .where(and(eq(stockLevels.tenantId, ctx.tenantId), stockScope))
     .groupBy(stockLevels.partId)
     .as("totals");
 
@@ -100,7 +100,7 @@ export async function getPart(ctx: AuthContext, id: string) {
       .from(stockLevels)
       .innerJoin(warehouses, eq(warehouses.id, stockLevels.warehouseId))
       .innerJoin(sites, eq(sites.id, warehouses.siteId))
-      .where(and(eq(stockLevels.partId, id), scope))
+      .where(and(eq(stockLevels.tenantId, ctx.tenantId), eq(stockLevels.partId, id), scope))
       .orderBy(asc(sites.name)),
     db
       .select({
@@ -217,8 +217,13 @@ async function warehouseScope(tx: DbOrTx, ctx: AuthContext, warehouseId: string)
   return row;
 }
 
-/** Ligne de stock verrouillée pour la durée de la transaction (règle 9 de §7.5). */
+/**
+ * Ligne de stock verrouillée pour la durée de la transaction (règle 9 de §7.5). Toute modification de
+ * quantité passe ici : l'article et le magasin doivent appartenir à l'organisation.
+ */
 async function lockLevel(tx: DbOrTx, ctx: AuthContext, partId: string, warehouseId: string) {
+  await assertSameTenant(tx, ctx, parts, partId, "Article");
+  await assertSameTenant(tx, ctx, warehouses, warehouseId, "Magasin");
   await tx
     .insert(stockLevels)
     .values({ tenantId: ctx.tenantId, partId, warehouseId })
@@ -226,7 +231,7 @@ async function lockLevel(tx: DbOrTx, ctx: AuthContext, partId: string, warehouse
   const [level] = await tx
     .select()
     .from(stockLevels)
-    .where(and(eq(stockLevels.partId, partId), eq(stockLevels.warehouseId, warehouseId)))
+    .where(and(eq(stockLevels.tenantId, ctx.tenantId), eq(stockLevels.partId, partId), eq(stockLevels.warehouseId, warehouseId)))
     .for("update");
   return level;
 }
@@ -395,6 +400,7 @@ export async function createMovement(ctx: AuthContext, raw: unknown) {
 
     // TRANSFER — TODO(STK-06) : gérer le transit en deux temps (expédition puis réception).
     const target = await warehouseScope(tx, ctx, input.targetWarehouseId!);
+    assertCanOn(ctx, "stock.move", target);
     if (target.id === wh.id) throw new BusinessRuleError(["Le magasin de destination doit être différent."]);
     const targetLevel = await lockLevel(tx, ctx, part.id, target.id);
     await tx
