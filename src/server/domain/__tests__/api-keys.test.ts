@@ -49,6 +49,14 @@ describe("Clés d'API : droits", () => {
     expect(read.can("settings.manage")).toBe(false);
   });
 
+  it("assistant IA : lecture et signalement de pannes, sans autre écriture", () => {
+    const assistant = restrictAuthContext(ctx, API_KEY_PERMISSIONS.ASSISTANT);
+    expect(assistant.can("request.create")).toBe(true);
+    expect(assistant.can("workorder.read")).toBe(true);
+    expect(assistant.can("request.qualify")).toBe(false);
+    expect(assistant.can("equipment.write")).toBe(false);
+  });
+
   it("import : droits de création des imports, jamais le paramétrage ni l'exécution des OT", () => {
     const write = restrictAuthContext(ctx, API_KEY_PERMISSIONS.IMPORT);
     for (const permission of ["equipment.write", "part.write", "stock.move", "supplier.write", "users.manage"] as const) {
