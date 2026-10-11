@@ -1,6 +1,7 @@
 import "server-only";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { withExplicitSslMode } from "./connection-string";
 import * as schema from "./schema";
 
 /**
@@ -12,7 +13,7 @@ const globalForDb = globalThis as unknown as { pgPool?: Pool };
 const pool =
   globalForDb.pgPool ??
   new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: withExplicitSslMode(process.env.DATABASE_URL),
     // Sur Vercel, chaque instance garde peu de connexions ouvertes (base partagée entre instances).
     max: Number(process.env.DATABASE_POOL_MAX ?? (process.env.VERCEL ? 3 : 10)),
   });

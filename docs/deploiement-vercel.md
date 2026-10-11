@@ -12,9 +12,9 @@ GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──PR (garde 
 1. **PR `develop` → `main`** : la CI (vérifications, tests, application mobile) et la garde « Source de la PR (develop uniquement) » doivent réussir ; la protection de `main` refuse toute autre source et toute poussée directe.
 2. **Merge** : la CI repart sur `main` ; si elle réussit, le workflow **Déploiement production** (`.github/workflows/deploy-production.yml`) démarre et **attend une approbation** (environnement GitHub `production-approval`).
 3. **Approbation** : GitHub → **Actions** → l'exécution « Déploiement production » → **Review deployments** → cocher `production-approval` → **Approve and deploy** (ou **Reject**).
-4. **Déploiement** : `vercel deploy --prod` ; la construction a lieu chez Vercel (migrations comprises), puis le workflow vérifie `/api/health`.
+4. **Déploiement** : `vercel deploy --prod` ; la construction a lieu chez Vercel (migrations comprises), puis le workflow vérifie que `/api/health` répond `ok` **avec la version déployée** (`version` : commit court, variable `APP_VERSION`).
 
-Redéployer sans nouveau merge : **Actions → Déploiement production → Run workflow** (branche `main`), avec la même approbation.
+Redéployer sans nouveau merge : **Actions → Déploiement production → Run workflow** (branche `main`), avec la même approbation. **Ne pas relancer (« Re-run ») une ancienne exécution** : elle remettrait en ligne une version dépassée ; le workflow la refuse (« Version dépassée ») si son commit n'est plus le dernier de `main`.
 
 Les déploiements automatiques de l'intégration GitHub de Vercel sont désactivés pour **toutes** les branches (`vercel.json` : `git.deploymentEnabled = false`) : ni prévisualisation des branches de tâche ou de `develop`, ni déploiement direct de `main`. Seul le workflow « Déploiement production » déploie. Si une prévisualisation est créée malgré tout (déploiement manuel), elle ne modifie jamais la base (ni migration ni démonstration, sauf `PREVIEW_MIGRATIONS=true` sur une base distincte).
 
@@ -66,11 +66,15 @@ Générer un secret (PowerShell) :
 $b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)
 ```
 
-Une variable modifiée n'est prise en compte qu'au déploiement suivant : **Deployments → ⋯ → Redeploy**.
+Une variable modifiée n'est prise en compte qu'au déploiement suivant : **GitHub → Actions → Déploiement production → Run workflow** (pas de « Redeploy » depuis Vercel, pour que la production passe toujours par l'approbation).
+
+Connexion à Neon : l'application écrit `sslmode=verify-full` à la place de `sslmode=require` (`src/server/db/connection-string.ts`) pour garder la vérification complète du certificat quand la bibliothèque `pg` changera la signification de `require`. Rien à modifier dans les variables.
+
+Version de Node : `22.x` (`package.json`, `engines`), la même que la CI et le poste de développement.
 
 ## Vérification
 
-- `https://<adresse>/api/health` : `{"status":"ok"}` ; sinon `reason` indique `configuration` (avec les noms des variables manquantes) ou `database`.
+- `https://<adresse>/api/health` : `{"status":"ok","version":"<commit>"}` ; sinon `reason` indique `configuration` (avec les noms des variables manquantes) ou `database`.
 - Connexion avec un compte de démonstration (`admin@demo.gmao`, mot de passe du README) si `SEED_DEMO_DATA=true`.
 
 ## Sécurité
