@@ -1,4 +1,4 @@
-import { Building2, ClipboardCheck, ClipboardList, Download, HardHat, Mail, ScrollText, Shapes, Users } from "lucide-react";
+import { Building2, ClipboardCheck, Download, HardHat, Mail, Plug, ScrollText, Shapes, Users } from "lucide-react";
 import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -66,10 +66,10 @@ export default async function AdministrationPage() {
       show: ctx.can("data.export"),
     },
     {
-      href: "/api/v1",
-      title: "API REST v1",
-      text: "Catalogue des points d'entrée et schémas JSON : mêmes règles et mêmes droits que l'application.",
-      icon: ClipboardList,
+      href: "/administration/connecteur",
+      title: "Connecteur (API et ETL)",
+      text: "Clés d'API pour brancher un ETL ou un autre logiciel : export, extraction incrémentale, imports.",
+      icon: Plug,
       show: ctx.can("settings.manage"),
     },
   ].filter((s) => s.show);

@@ -96,6 +96,20 @@ export function buildAuthContext(user: ContextUser, allAssignments: RoleAssignme
   };
 }
 
+/**
+ * Contexte limité à une liste de droits (clés d'API du connecteur, couche MCP) : un droit absent de la
+ * liste est retiré, même si les rôles le donnent ; les périmètres des droits conservés sont inchangés.
+ */
+export function restrictAuthContext(ctx: AuthContext, allowed: readonly Permission[]): AuthContext {
+  const kept = new Set<Permission>(allowed);
+  return {
+    ...ctx,
+    scope: (permission) => (kept.has(permission) ? ctx.scope(permission) : NO_SCOPE),
+    can: (permission) => kept.has(permission) && ctx.can(permission),
+    canOn: (permission, target) => kept.has(permission) && ctx.canOn(permission, target),
+  };
+}
+
 export function isInScope(scope: Scope, target: { companyId: string; siteId?: string | null }) {
   if (scope.all) return true;
   if (scope.companyIds.includes(target.companyId)) return true;
