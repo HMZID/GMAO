@@ -9,7 +9,7 @@ import { ROLE, options } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { listCompanies, listSites } from "@/server/services/organization";
 import { listUsers } from "@/server/services/users";
-import { addRoleAction, createUserAction, removeRoleAction, setUserActiveAction } from "../actions";
+import { addRoleAction, createUserAction, removeRoleAction, setUserActiveAction, setUserPasswordAction, updateUserAction } from "../actions";
 
 export const metadata = { title: "Utilisateurs et habilitations" };
 
@@ -23,13 +23,14 @@ export default async function UsersPage() {
     ...sites.map((s) => ({ value: `SITE:${s.id}`, label: `Site — ${s.name}` })),
   ];
   const now = new Date();
+  const active = users.filter((u) => u.isActive).length;
 
   return (
     <>
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Utilisateurs et habilitations"
-        description="Un utilisateur cumule des couples rôle × périmètre ; une délégation temporaire est un rôle borné dans le temps."
+        description={`${active} compte(s) actif(s), ${users.length - active} désactivé(s). Un utilisateur cumule des couples rôle × périmètre ; une délégation temporaire est un rôle borné dans le temps.`}
       />
       <Disclosure summary="Nouveau compte" className="mb-6">
         <ActionForm action={createUserAction} resetOnSuccess className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -128,6 +129,29 @@ export default async function UsersPage() {
                       </SubmitButton>
                     </ActionForm>
                   ) : null}
+                  <Disclosure summary="Modifier le compte" className="mt-2 min-w-64">
+                    <div className="space-y-4">
+                      <ActionForm action={updateUserAction.bind(null, u.id)} className="space-y-2">
+                        <Field label="Nom et prénom" name="name" required>
+                          <Input name="name" required maxLength={120} defaultValue={u.name} />
+                        </Field>
+                        <Field label="Courriel (identifiant)" name="email" required>
+                          <Input name="email" type="email" required defaultValue={u.email} />
+                        </Field>
+                        <SubmitButton size="sm" variant="secondary">
+                          Enregistrer
+                        </SubmitButton>
+                      </ActionForm>
+                      <ActionForm action={setUserPasswordAction.bind(null, u.id)} resetOnSuccess className="space-y-2 border-t border-slate-100 pt-3">
+                        <Field label="Nouveau mot de passe" name="password" required hint="10 caractères minimum">
+                          <Input name="password" type="password" required minLength={10} autoComplete="new-password" />
+                        </Field>
+                        <SubmitButton size="sm" variant="secondary">
+                          Remplacer le mot de passe
+                        </SubmitButton>
+                      </ActionForm>
+                    </div>
+                  </Disclosure>
                 </TD>
               </TR>
             ))}

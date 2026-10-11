@@ -19,6 +19,8 @@ const DESCRIPTIONS: Record<string, string> = {
   EQUIPMENT: "Parc d'engins et de véhicules : société, site, catégorie, compteur principal. Les plans d'entretien de la catégorie s'appliquent.",
   PARTS: "Catalogue des pièces détachées : référence interne, marque et référence fabricant, suivi, criticité.",
   INITIAL_STOCK: "Quantités comptées par magasin et seuils de réapprovisionnement. Importer les articles d'abord.",
+  SUPPLIERS: "Fournisseurs et prestataires : raison sociale, identifiant fiscal, contacts ; « Prestataire » pour la sous-traitance.",
+  TECHNICIANS: "Ouvriers et techniciens : matricule, site, qualification, heures par jour et taux horaire (planning et coûts).",
 };
 
 export default async function ImportsPage() {

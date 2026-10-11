@@ -190,6 +190,57 @@ export async function setUserActive(ctx: AuthContext, userId: string, active: bo
   });
 }
 
+export const userUpdateInput = z.object({
+  name: text(120, "Nom obligatoire"),
+  email: z.email("Courriel invalide").transform((s) => s.toLowerCase()),
+});
+
+/** Modification du nom et du courriel (identifiant de connexion) ; un courriel ne sert qu'à un compte. */
+export async function updateUser(ctx: AuthContext, userId: string, raw: unknown) {
+  assertCan(ctx, "users.manage");
+  const input = parseInput(userUpdateInput, raw);
+  const [target] = await db
+    .select({ id: user.id, name: user.name, email: user.email })
+    .from(user)
+    .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
+  if (!target) throw new NotFoundError("Utilisateur");
+  if (input.email !== target.email) {
+    const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
+    if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  }
+  await db.transaction(async (tx) => {
+    await tx.update(user).set({ name: input.name, email: input.email }).where(eq(user.id, userId));
+    await audit(tx, ctx, { entityType: "user", entityId: userId, action: "update", before: target, after: { id: userId, ...input } });
+  });
+}
+
+export const passwordInput = z.object({ password: z.string().min(10, "10 caractères minimum").max(128) });
+
+/**
+ * Nouveau mot de passe fixé par l'administrateur (oubli, départ d'un mot de passe partagé) :
+ * les sessions ouvertes du compte sont fermées. Le mot de passe n'est jamais journalisé.
+ */
+export async function setUserPassword(ctx: AuthContext, userId: string, raw: unknown) {
+  assertCan(ctx, "users.manage");
+  const input = parseInput(passwordInput, raw);
+  const [target] = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
+  if (!target) throw new NotFoundError("Utilisateur");
+  const passwordHash = await hashPassword(input.password);
+  await db.transaction(async (tx) => {
+    const [credential] = await tx
+      .select({ id: account.id })
+      .from(account)
+      .where(and(eq(account.userId, userId), eq(account.providerId, "credential")));
+    if (credential) await tx.update(account).set({ password: passwordHash }).where(eq(account.id, credential.id));
+    else await tx.insert(account).values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: passwordHash });
+    if (userId !== ctx.userId) await tx.delete(session).where(eq(session.userId, userId));
+    await audit(tx, ctx, { entityType: "user", entityId: userId, action: "set_password" });
+  });
+}
+
 /* ------------------------------------------------------------------ */
 /* Techniciens (CDC §6)                                                 */
 /* ------------------------------------------------------------------ */
@@ -210,6 +261,13 @@ export async function listTechnicians(ctx: AuthContext) {
 }
 
 export const technicianInput = z.object({
+  /** Matricule : unique dans l'organisation, enregistré en majuscules. */
+  employeeNumber: z
+    .string()
+    .trim()
+    .max(40)
+    .transform((v) => v.toUpperCase() || undefined)
+    .optional(),
   firstName: text(80, "Prénom obligatoire"),
   lastName: text(80, "Nom obligatoire"),
   siteId: z.uuid("Site obligatoire"),
@@ -219,7 +277,8 @@ export const technicianInput = z.object({
   userId: z.string().trim().optional(),
 });
 
-export async function createTechnician(ctx: AuthContext, raw: unknown) {
+/** Contrôles de la création d'un technicien, sans écriture (saisie et simulation d'import). */
+export async function checkTechnicianCreation(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "users.manage");
   const input = parseInput(technicianInput, raw);
   const [site] = await db
@@ -227,11 +286,24 @@ export async function createTechnician(ctx: AuthContext, raw: unknown) {
     .from(sites)
     .where(and(eq(sites.id, input.siteId), eq(sites.tenantId, ctx.tenantId)));
   if (!site) throw new NotFoundError("Site");
+  if (input.employeeNumber) {
+    const [same] = await db
+      .select({ id: technicians.id })
+      .from(technicians)
+      .where(and(eq(technicians.tenantId, ctx.tenantId), eq(technicians.employeeNumber, input.employeeNumber)));
+    if (same) throw new ConflictError(`Le matricule ${input.employeeNumber} est déjà attribué.`, { existingId: same.id });
+  }
+  return input;
+}
+
+export async function createTechnician(ctx: AuthContext, raw: unknown) {
+  const input = await checkTechnicianCreation(ctx, raw);
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(technicians)
       .values({
         tenantId: ctx.tenantId,
+        employeeNumber: input.employeeNumber ?? null,
         firstName: input.firstName,
         lastName: input.lastName,
         siteId: input.siteId,

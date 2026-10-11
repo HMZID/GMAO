@@ -1,8 +1,10 @@
+import { Printer } from "lucide-react";
 import Link from "next/link";
 import { ActionForm, SubmitButton } from "@/components/forms/action-form";
 import { ApprovalCard } from "@/components/approvals/approval-card";
 import { DocumentsCard } from "@/components/documents/documents-card";
 import { PageHeader } from "@/components/layout/page-header";
+import { buttonClass } from "@/components/ui/button";
 import { CriticalityBadge, EquipmentStatusBadge, PriorityBadge, RequestStatusBadge, WorkOrderStatusBadge } from "@/components/status-badges";
 import { Alert, Badge, Card, CardBody, CardHeader, DescriptionList } from "@/components/ui/primitives";
 import { formatCurrency, formatDate, formatDateTime, formatMinutes, formatNumber } from "@/lib/format";
@@ -64,11 +66,17 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
           </>
         }
         actions={
-          wo.canManage && (status === "TECH_CLOSED" || status === "CLOSED") ? (
-            <ActionForm action={recurrenceAction.bind(null, wo.id)} showMessage>
-              <SubmitButton variant="secondary">Créer un ordre de travail de récidive</SubmitButton>
-            </ActionForm>
-          ) : null
+          <>
+            <Link href={`/impression/ordre-de-travail/${wo.id}`} className={buttonClass("secondary")}>
+              <Printer className="h-4 w-4" aria-hidden />
+              Fiche à signer
+            </Link>
+            {wo.canManage && (status === "TECH_CLOSED" || status === "CLOSED") ? (
+              <ActionForm action={recurrenceAction.bind(null, wo.id)} showMessage>
+                <SubmitButton variant="secondary">Créer un ordre de travail de récidive</SubmitButton>
+              </ActionForm>
+            ) : null}
+          </>
         }
       />
 

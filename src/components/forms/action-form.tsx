@@ -96,6 +96,23 @@ export function FormMessage({ className }: { className?: string }) {
       )}
     >
       {state.message ? <p className="font-medium">{state.message}</p> : null}
+      {state.secret ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <code
+            data-secret
+            className="min-w-0 flex-1 break-all rounded bg-white px-2 py-1.5 font-mono text-xs text-slate-900 ring-1 ring-emerald-200"
+          >
+            {state.secret}
+          </code>
+          <button
+            type="button"
+            className="rounded px-2 py-1 text-xs font-medium ring-1 ring-emerald-300 hover:bg-emerald-100"
+            onClick={() => void navigator.clipboard?.writeText(state.secret ?? "")}
+          >
+            Copier
+          </button>
+        </div>
+      ) : null}
       {state.errors?.length ? (
         <ul className="mt-1 list-disc space-y-0.5 pl-5">
           {state.errors.map((e) => (

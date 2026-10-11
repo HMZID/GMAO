@@ -18,6 +18,8 @@ export const technicians = pgTable(
     siteId: uuid("site_id")
       .notNull()
       .references(() => sites.id),
+    /** Matricule de l'ouvrier : unique dans l'organisation, clé de réimportation (facultatif). */
+    employeeNumber: text("employee_number"),
     firstName: text("first_name").notNull(),
     lastName: text("last_name").notNull(),
     qualification: text("qualification"),
@@ -27,7 +29,11 @@ export const technicians = pgTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [uniqueIndex("technicians_user_uq").on(t.userId), index("technicians_site_idx").on(t.siteId)],
+  (t) => [
+    uniqueIndex("technicians_user_uq").on(t.userId),
+    uniqueIndex("technicians_tenant_employee_uq").on(t.tenantId, t.employeeNumber),
+    index("technicians_site_idx").on(t.siteId),
+  ],
 );
 
 /** Taux horaires datés (KPI-02) : le taux applicable est celui en vigueur à la date du pointage. */

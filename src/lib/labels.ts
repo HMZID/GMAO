@@ -66,6 +66,8 @@ export const IMPORT_KIND: Record<string, string> = {
   EQUIPMENT: "Équipements",
   PARTS: "Pièces détachées",
   INITIAL_STOCK: "Stocks initiaux",
+  SUPPLIERS: "Fournisseurs",
+  TECHNICIANS: "Ouvriers et techniciens",
 };
 
 export const IMPORT_STATUS: Record<string, { label: string; tone: Tone }> = {

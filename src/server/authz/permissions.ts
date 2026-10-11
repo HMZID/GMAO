@@ -52,6 +52,8 @@ export const PERMISSIONS = [
   "purchase.read",
   "purchase.create",
   "kpi.read",
+  "data.export",
+  "indicator.manage",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -92,6 +94,10 @@ const GRANTS: Record<Permission, readonly Role[]> = {
   "purchase.read": ["ADMIN", "MAINTENANCE_MANAGER", "WORKSHOP_MANAGER", "TECHNICIAN", "STOREKEEPER", "PURCHASING_MANAGER", "EXECUTIVE"],
   "purchase.create": ["MAINTENANCE_MANAGER", "WORKSHOP_MANAGER", "TECHNICIAN", "STOREKEEPER", "PURCHASING_MANAGER"],
   "kpi.read": ["ADMIN", "MAINTENANCE_MANAGER", "FLEET_MANAGER", "WORKSHOP_MANAGER", "STOREKEEPER", "PURCHASING_MANAGER", "EXECUTIVE"],
+  // INT-01 : export de toutes les données de l'organisation (écran, API, connecteur ETL).
+  "data.export": ["ADMIN", "EXECUTIVE"],
+  // KPI-11 : indicateurs personnalisés de l'organisation (lecture : kpi.read).
+  "indicator.manage": ["ADMIN", "MAINTENANCE_MANAGER", "EXECUTIVE"],
 };
 
 export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = Object.fromEntries(

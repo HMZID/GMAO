@@ -5,16 +5,29 @@ import { Disclosure } from "@/components/ui/disclosure";
 import { Checkbox, Input, Select } from "@/components/ui/inputs";
 import { Badge, Card, CardBody, CardHeader, EmptyState, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
 import { formatDate } from "@/lib/format";
+import { LOGO_ACCEPT, MAX_DISPLAY_NAME, MAX_LOGO_BYTES } from "@/server/domain/branding";
+import { formatSize } from "@/server/domain/documents";
 import { getAuthContext } from "@/server/auth/session";
+import { getBranding, logoUrl } from "@/server/services/branding";
 import { listCompanies, listJobsites, listSites, listWarehouses, listWorkshops } from "@/server/services/organization";
-import { createCompanyAction, createJobsiteAction, createSiteAction, createWarehouseAction, createWorkshopAction } from "../actions";
+import {
+  createCompanyAction,
+  createJobsiteAction,
+  createSiteAction,
+  createWarehouseAction,
+  createWorkshopAction,
+  removeLogoAction,
+  updateBrandingAction,
+  uploadLogoAction,
+} from "../actions";
 
 export const metadata = { title: "Organisation" };
 
 export default async function OrganisationPage() {
   const ctx = await getAuthContext();
   if (!ctx.can("settings.manage")) return <Forbidden what="le paramétrage de l'organisation" />;
-  const [companies, sites, workshops, warehouses, jobsites] = await Promise.all([
+  const [branding, companies, sites, workshops, warehouses, jobsites] = await Promise.all([
+    getBranding(ctx),
     listCompanies(ctx),
     listSites(ctx),
     listWorkshops(ctx),
@@ -31,6 +44,7 @@ export default async function OrganisationPage() {
         title="Organisation"
         description="Groupe → sociétés → sites → ateliers et magasins ; les chantiers appartiennent à une société. Les codes sont uniques."
       />
+      <IdentityCard branding={branding} />
       <div className="grid gap-6 xl:grid-cols-2">
         <Card>
           <CardHeader title="Sociétés" />
@@ -266,5 +280,48 @@ export default async function OrganisationPage() {
         </Card>
       </div>
     </>
+  );
+}
+
+/** Identité : nom affiché sous « GMAO » et logo (en-tête de l'application, états imprimés). */
+function IdentityCard({ branding }: { branding: Awaited<ReturnType<typeof getBranding>> }) {
+  const logo = logoUrl(branding);
+  return (
+    <Card className="mb-6">
+      <CardHeader title="Identité de l'organisation" description="Nom et logo affichés sous « GMAO » dans l'application et sur les états imprimés." />
+      <CardBody className="grid gap-6 md:grid-cols-2">
+        <ActionForm action={updateBrandingAction} className="space-y-3">
+          <Field label="Nom affiché" name="displayName" hint={`Par défaut : ${branding.name}`}>
+            <Input name="displayName" defaultValue={branding.displayName ?? ""} maxLength={MAX_DISPLAY_NAME} placeholder={branding.name} />
+          </Field>
+          <SubmitButton variant="secondary">Enregistrer le nom</SubmitButton>
+        </ActionForm>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element -- image servie par l'API, après contrôle de session
+              <img src={logo} alt="Logo actuel" className="max-h-full max-w-full object-contain" />
+            ) : (
+              <span className="px-2 text-center text-xs text-slate-500">Aucun logo</span>
+            )}
+          </div>
+          <div className="min-w-0 flex-1 space-y-3">
+            <ActionForm action={uploadLogoAction} resetOnSuccess className="space-y-3">
+              <Field label="Logo" name="logo" required hint={`PNG, JPEG ou WebP ; ${formatSize(MAX_LOGO_BYTES)} au plus ; de préférence carré`}>
+                <Input type="file" name="logo" required accept={LOGO_ACCEPT} className="h-auto py-1.5" />
+              </Field>
+              <SubmitButton variant="secondary">{logo ? "Remplacer le logo" : "Ajouter le logo"}</SubmitButton>
+            </ActionForm>
+            {logo ? (
+              <ActionForm action={removeLogoAction}>
+                <SubmitButton variant="ghost" size="sm">
+                  Retirer le logo
+                </SubmitButton>
+              </ActionForm>
+            ) : null}
+          </div>
+        </div>
+      </CardBody>
+    </Card>
   );
 }

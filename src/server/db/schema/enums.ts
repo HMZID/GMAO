@@ -44,7 +44,7 @@ export const documentEntityEnum = pgEnum("document_entity", ["EQUIPMENT", "WORK_
 export const documentKindEnum = pgEnum("document_kind", ["MANUAL", "CERTIFICATE", "INVOICE", "PHOTO", "REPORT", "OTHER"]);
 
 // Imports (EQP-13, INT-01)
-export const importKindEnum = pgEnum("import_kind", ["EQUIPMENT", "PARTS", "INITIAL_STOCK"]);
+export const importKindEnum = pgEnum("import_kind", ["EQUIPMENT", "PARTS", "INITIAL_STOCK", "SUPPLIERS", "TECHNICIANS"]);
 
 export const importStatusEnum = pgEnum("import_status", ["SIMULATED", "RUNNING", "DONE", "FAILED"]);
 

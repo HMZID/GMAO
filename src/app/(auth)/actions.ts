@@ -18,7 +18,11 @@ export async function signInAction(_state: ActionState, formData: FormData): Pro
     await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
   } catch (error) {
     if (error instanceof APIError) {
-      return { status: "error", message: "Identifiants invalides ou compte désactivé.", at: Date.now() };
+      return {
+        status: "error",
+        message: "Identifiants invalides, compte désactivé ou accès de l'organisation terminé (fin de démonstration).",
+        at: Date.now(),
+      };
     }
     throw error;
   }

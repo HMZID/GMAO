@@ -1,8 +1,9 @@
-import { Building2, ClipboardCheck, ClipboardList, HardHat, Mail, ScrollText, Shapes, Users } from "lucide-react";
+import { Building2, ClipboardCheck, Download, Globe, HardHat, Mail, Plug, ScrollText, Shapes, Users } from "lucide-react";
 import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
 import { getAuthContext } from "@/server/auth/session";
+import { isPlatformAdmin } from "@/server/services/platform";
 
 export const metadata = { title: "Administration" };
 
@@ -10,9 +11,16 @@ export default async function AdministrationPage() {
   const ctx = await getAuthContext();
   const sections = [
     {
+      href: "/administration/plateforme",
+      title: "Organisations clientes (plateforme)",
+      text: "Démonstrations à durée limitée pour un client, prolongation, abonnement, suspension.",
+      icon: Globe,
+      show: isPlatformAdmin(ctx),
+    },
+    {
       href: "/administration/organisation",
       title: "Organisation",
-      text: "Sociétés, sites, ateliers, magasins et chantiers.",
+      text: "Nom affiché et logo, sociétés, sites, ateliers, magasins et chantiers.",
       icon: Building2,
       show: ctx.can("settings.manage"),
     },
@@ -59,10 +67,17 @@ export default async function AdministrationPage() {
       show: ctx.can("audit.read"),
     },
     {
-      href: "/api/v1",
-      title: "API REST v1",
-      text: "Catalogue des points d'entrée et schémas JSON : mêmes règles et mêmes droits que l'application.",
-      icon: ClipboardList,
+      href: "/administration/export",
+      title: "Export des données",
+      text: "Toutes les données de l'organisation en un classeur Excel, ou par jeu de données en Excel ou CSV.",
+      icon: Download,
+      show: ctx.can("data.export"),
+    },
+    {
+      href: "/administration/connecteur",
+      title: "Connecteur (API et ETL)",
+      text: "Clés d'API pour brancher un ETL ou un autre logiciel : export, extraction incrémentale, imports.",
+      icon: Plug,
       show: ctx.can("settings.manage"),
     },
   ].filter((s) => s.show);

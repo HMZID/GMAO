@@ -18,12 +18,16 @@ const PAGES = [
   "/stock/mouvements",
   "/achats",
   "/indicateurs",
+  "/indicateurs/personnalises",
   "/administration",
   "/administration/organisation",
   "/administration/utilisateurs",
   "/administration/techniciens",
   "/administration/referentiel",
   "/administration/journal",
+  "/administration/export",
+  "/administration/connecteur",
+  "/administration/plateforme",
   "/notifications",
 ];
 

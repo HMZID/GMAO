@@ -34,6 +34,9 @@ export default async function TechniciansPage() {
         {canCreate ? (
           <Disclosure summary="Nouveau technicien">
             <ActionForm action={createTechnicianAction} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
+              <Field label="Matricule" name="employeeNumber" hint="Unique ; sert à réimporter sans doublon">
+                <Input id="t-number" name="employeeNumber" maxLength={40} />
+              </Field>
               <Field label="Prénom" name="firstName" required>
                 <Input id="t-first" name="firstName" required maxLength={80} />
               </Field>
@@ -112,6 +115,7 @@ export default async function TechniciansPage() {
                 <TD className="font-medium text-slate-900">
                   {t.firstName} {t.lastName}
                   {!t.active ? <Badge className="ml-2">Inactif</Badge> : null}
+                  {t.employeeNumber ? <p className="font-mono text-xs font-normal text-slate-500">{t.employeeNumber}</p> : null}
                 </TD>
                 <TD>{t.site.name}</TD>
                 <TD>{t.qualification ?? "—"}</TD>

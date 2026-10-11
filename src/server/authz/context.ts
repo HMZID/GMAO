@@ -27,6 +27,8 @@ export type AuthContext = {
   /** Technicien lié au compte, pour l'exécution des OT. */
   technicianId: string | null;
   channel: Channel;
+  /** Clé d'API du connecteur à l'origine de la requête (jamais de droits de plateforme). */
+  apiKeyId?: string | null;
   roles: Role[];
   assignments: RoleAssignment[];
   /** Le droit est-il détenu sur au moins un périmètre ? */
@@ -93,6 +95,20 @@ export function buildAuthContext(user: ContextUser, allAssignments: RoleAssignme
       return s.all || s.companyIds.length > 0 || s.siteIds.length > 0;
     },
     canOn: (permission, target) => isInScope(scope(permission), target),
+  };
+}
+
+/**
+ * Contexte limité à une liste de droits (clés d'API du connecteur, couche MCP) : un droit absent de la
+ * liste est retiré, même si les rôles le donnent ; les périmètres des droits conservés sont inchangés.
+ */
+export function restrictAuthContext(ctx: AuthContext, allowed: readonly Permission[]): AuthContext {
+  const kept = new Set<Permission>(allowed);
+  return {
+    ...ctx,
+    scope: (permission) => (kept.has(permission) ? ctx.scope(permission) : NO_SCOPE),
+    can: (permission) => kept.has(permission) && ctx.can(permission),
+    canOn: (permission, target) => kept.has(permission) && ctx.canOn(permission, target),
   };
 }
 

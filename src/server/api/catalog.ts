@@ -5,7 +5,9 @@ import { documentDeleteInput, documentInput, documentListInput } from "@/server/
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
 import { decisionInput } from "@/server/services/approvals";
 import { preferencesInput } from "@/server/services/email";
+import { exportQuery } from "@/server/services/exports";
 import { executeInput } from "@/server/services/imports";
+import { indicatorInput } from "@/server/services/indicators";
 import { indicatorFilters } from "@/server/services/kpi";
 import { readingInput, replacementInput, reviewInput } from "@/server/services/meters";
 import { weekInput } from "@/server/services/planning";
@@ -43,6 +45,37 @@ type Endpoint = {
 export const ENDPOINTS: Endpoint[] = [
   { method: "GET", path: "/api/v1/me", summary: "Utilisateur connecté, rôles et droits effectifs par périmètre" },
   { method: "GET", path: "/api/v1/dashboard", summary: "Compteurs du tableau de bord dans le périmètre" },
+  { method: "GET", path: "/api/v1/organization", summary: "Identité de l'organisation : nom affiché et adresse du logo" },
+  { method: "GET", path: "/api/v1/organization/logo", summary: "Logo de l'organisation (image PNG, JPEG ou WebP)" },
+  {
+    method: "GET",
+    path: "/api/v1/indicators",
+    summary: "Indicateurs personnalisés de l'organisation, calculés dans le périmètre de l'utilisateur",
+    permission: "kpi.read",
+  },
+  {
+    method: "POST",
+    path: "/api/v1/indicators",
+    summary: "Composer un indicateur personnalisé",
+    permission: "indicator.manage",
+    body: indicatorInput,
+  },
+  { method: "GET", path: "/api/v1/indicators/{id}", summary: "Un indicateur personnalisé et sa valeur", permission: "kpi.read" },
+  { method: "DELETE", path: "/api/v1/indicators/{id}", summary: "Supprimer un indicateur personnalisé", permission: "indicator.manage" },
+  {
+    method: "GET",
+    path: "/api/v1/exports",
+    summary: "Jeux de données exportables (nombre de lignes, colonnes, adresses) ; ?format=xlsx : classeur complet",
+    permission: "data.export",
+  },
+  {
+    method: "GET",
+    path: "/api/v1/exports/{dataset}",
+    summary:
+      "Un jeu de données : JSON paginé (limit, offset, page.next), ou fichier complet ?format=csv|xlsx ; ?updatedSince=<ISO 8601> pour une extraction incrémentale",
+    permission: "data.export",
+    query: exportQuery,
+  },
 
   { method: "GET", path: "/api/v1/equipment", summary: "Liste paginée des équipements", permission: "equipment.read", query: equipmentFilters },
   {

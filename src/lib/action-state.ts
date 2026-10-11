@@ -8,6 +8,8 @@ export type ActionState = {
   fieldErrors?: Record<string, string[] | undefined>;
   /** Avertissements non bloquants (doublons, conflits de planning). */
   warnings?: string[];
+  /** Valeur à remettre une seule fois (clé d'API) : affichée avec un bouton « Copier », jamais conservée. */
+  secret?: string;
   at?: number;
 };
 

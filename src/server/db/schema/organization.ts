@@ -10,6 +10,17 @@ import { auditChannelEnum } from "./enums";
 export const tenants = pgTable("tenants", {
   id: id(),
   name: text("name").notNull(),
+  /** Nom affiché sous « GMAO » et sur les états imprimés ; à défaut, le nom du groupe. */
+  displayName: text("display_name"),
+  /** Logo (PNG, JPEG ou WebP, 512 Ko au plus), en base64 : servi par l'API, sans dépendre du stockage de fichiers. */
+  logoData: text("logo_data"),
+  logoContentType: text("logo_content_type"),
+  logoUpdatedAt: ts("logo_updated_at"),
+  /** ACTIVE (abonnement), DEMO (démonstration jusqu'à demo_ends_at) ou SUSPENDED (accès coupé). */
+  status: text("status").notNull().default("ACTIVE"),
+  demoEndsAt: ts("demo_ends_at"),
+  /** Contact du client (démonstration, relances). */
+  contactEmail: text("contact_email"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
