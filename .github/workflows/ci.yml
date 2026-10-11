@@ -32,6 +32,7 @@ jobs:
       DATABASE_URL: postgresql://gmao:gmao@localhost:5432/gmao
       BETTER_AUTH_SECRET: ci-secret-0123456789abcdef0123456789abcdef
       BETTER_AUTH_URL: http://localhost:3100
+      PLATFORM_ADMIN_EMAILS: admin@demo.gmao
       TZ: UTC
     steps:
       - uses: actions/checkout@v7

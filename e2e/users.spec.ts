@@ -45,7 +45,7 @@ test("cycle d'un compte : création, modification, nouveau mot de passe, désact
   await expect(row().getByText("Désactivé", { exact: true })).toBeVisible();
   await signIn(page, renamed, "Nouveau-Cycle-2026");
   await expect(page).toHaveURL(/\/login/);
-  await expect(page.getByText("Identifiants invalides ou compte désactivé.")).toBeVisible();
+  await expect(page.getByText(/^Identifiants invalides, compte désactivé/)).toBeVisible();
 
   // Réactivé : connexion avec le nouveau courriel et le nouveau mot de passe.
   await login(page, USERS.admin, "/administration/utilisateurs");

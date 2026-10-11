@@ -6,7 +6,8 @@ import { cache } from "react";
 import { buildAuthContext, type AuthContext, type Channel } from "@/server/authz/context";
 import type { Role } from "@/server/authz/permissions";
 import { db } from "@/server/db";
-import { roleAssignments, technicians, user } from "@/server/db/schema";
+import { roleAssignments, technicians, tenants, user } from "@/server/db/schema";
+import { tenantAccess } from "@/server/domain/tenants";
 import { UnauthorizedError } from "@/server/errors";
 import { apiKeyFromHeaders } from "@/server/domain/api-keys";
 import { authenticateApiKey } from "./api-key";
@@ -15,11 +16,22 @@ import { auth } from "./auth";
 /** Charge l'utilisateur, ses affectations de rôle et son technicien éventuel. */
 export async function loadAuthContext(userId: string, channel: Channel): Promise<AuthContext | null> {
   const [row] = await db
-    .select({ id: user.id, tenantId: user.tenantId, name: user.name, email: user.email, isActive: user.isActive })
+    .select({
+      id: user.id,
+      tenantId: user.tenantId,
+      name: user.name,
+      email: user.email,
+      isActive: user.isActive,
+      tenantStatus: tenants.status,
+      demoEndsAt: tenants.demoEndsAt,
+    })
     .from(user)
+    .innerJoin(tenants, eq(tenants.id, user.tenantId))
     .where(eq(user.id, userId))
     .limit(1);
   if (!row || !row.isActive) return null;
+  // Organisation suspendue ou démonstration échue : plus d'accès, même avec une session ouverte.
+  if (!tenantAccess({ status: row.tenantStatus, demoEndsAt: row.demoEndsAt }, new Date()).allowed) return null;
 
   const [assignments, [tech]] = await Promise.all([
     db

@@ -16,6 +16,11 @@ export const tenants = pgTable("tenants", {
   logoData: text("logo_data"),
   logoContentType: text("logo_content_type"),
   logoUpdatedAt: ts("logo_updated_at"),
+  /** ACTIVE (abonnement), DEMO (démonstration jusqu'à demo_ends_at) ou SUSPENDED (accès coupé). */
+  status: text("status").notNull().default("ACTIVE"),
+  demoEndsAt: ts("demo_ends_at"),
+  /** Contact du client (démonstration, relances). */
+  contactEmail: text("contact_email"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });

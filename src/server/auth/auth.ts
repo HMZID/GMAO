@@ -5,7 +5,8 @@ import { nextCookies } from "better-auth/next-js";
 import { bearer } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { account, session, user, verification } from "@/server/db/schema";
+import { account, session, tenants, user, verification } from "@/server/db/schema";
+import { tenantAccess } from "@/server/domain/tenants";
 import { publicUrl, trustedOrigins } from "@/server/public-url";
 
 const microsoftConfigured = !!process.env.MICROSOFT_CLIENT_ID && !!process.env.MICROSOFT_CLIENT_SECRET;
@@ -58,10 +59,17 @@ export const auth = betterAuth({
   databaseHooks: {
     session: {
       create: {
-        // HAB-08 : un compte désactivé ne peut plus ouvrir de session.
+        // HAB-08 : un compte désactivé ne peut plus ouvrir de session ; ni un compte d'une organisation
+        // suspendue ou dont la démonstration est échue.
         before: async (newSession) => {
-          const [row] = await db.select({ isActive: user.isActive }).from(user).where(eq(user.id, newSession.userId)).limit(1);
+          const [row] = await db
+            .select({ isActive: user.isActive, status: tenants.status, demoEndsAt: tenants.demoEndsAt })
+            .from(user)
+            .innerJoin(tenants, eq(tenants.id, user.tenantId))
+            .where(eq(user.id, newSession.userId))
+            .limit(1);
           if (!row?.isActive) return false;
+          if (!tenantAccess(row, new Date()).allowed) return false;
         },
       },
     },
