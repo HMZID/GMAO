@@ -112,6 +112,18 @@ describe("Imports : lignes", () => {
   it("clé du stock initial : article + magasin", () => {
     expect(rowKey("INITIAL_STOCK", { sku: "flt-1", warehouseCode: "mag" })).toBe("FLT-1|MAG");
   });
+
+  it("clés des fournisseurs (raison sociale) et des ouvriers (matricule)", () => {
+    expect(rowKey("SUPPLIERS", { name: " Hydro Services " })).toBe("HYDRO SERVICES");
+    expect(rowKey("TECHNICIANS", { employeeNumber: "mat-0142" })).toBe("MAT-0142");
+  });
+
+  it("modèles fournisseurs et ouvriers : colonnes obligatoires et listes", () => {
+    const required = (kind: "SUPPLIERS" | "TECHNICIANS") => IMPORT_DEFINITIONS[kind].columns.filter((c) => c.required).map((c) => c.key);
+    expect(required("SUPPLIERS")).toEqual(["name"]);
+    expect(required("TECHNICIANS")).toEqual(["employeeNumber", "lastName", "firstName", "siteCode"]);
+    expect(IMPORT_DEFINITIONS.TECHNICIANS.columns.find((c) => c.key === "siteCode")?.list).toBe("sites");
+  });
 });
 
 describe("Imports : exécution (§11.2)", () => {

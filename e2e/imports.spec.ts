@@ -198,3 +198,51 @@ test("articles puis stocks initiaux par le magasinier, dans son périmètre", as
   await expect(tile(page, "Déjà présentes")).toContainText("1");
   await expect(page.getByText("Stock déjà initialisé (mouvements existants) : ligne ignorée.")).toBeVisible();
 });
+
+test("import des fournisseurs par l'acheteur : identifiant fiscal en double refusé, réimportation sans doublon", async ({ page }) => {
+  const stamp = String(Date.now()).slice(-7);
+  await login(page, USERS.purchasing);
+  const workbook = await template(page, "suppliers");
+  expect(workbook.worksheets.map((w) => w.name)).toEqual(["Fournisseurs", "Aide", "Listes"]);
+  // Raison sociale, identifiant fiscal, courriel, téléphone, adresse, prestataire
+  const buffer = await fill(workbook, [
+    [`Hydro Services ${stamp}`, `TVA${stamp}1`, "contact@hydro.test", "04 78 00 00 00", "Lyon", "Oui"],
+    [`Pneus Express ${stamp}`, `TVA${stamp}1`, null, null, null, "Non"],
+    [`Levage Contrôle ${stamp}`, null, "pas-un-courriel", null, null, null],
+  ]);
+  await simulate(page, "Fournisseurs et prestataires", `fournisseurs-${stamp}.xlsx`, buffer);
+  await expect(tile(page, "À importer")).toContainText("1");
+  await expect(tile(page, "En erreur")).toContainText("2");
+  await expect(page.getByText("Identifiant fiscal en double dans le fichier (déjà en ligne 2).")).toBeVisible();
+  await page.getByRole("button", { name: "Importer les lignes valides (1)" }).click();
+  await expect(page.getByText(/Import exécuté : 1 ligne\(s\) créée\(s\)/)).toBeVisible();
+
+  await simulate(page, "Fournisseurs et prestataires", `fournisseurs-${stamp}.xlsx`, buffer);
+  await expect(tile(page, "Déjà présentes")).toContainText("1");
+  await expect(tile(page, "À importer")).toContainText("0");
+});
+
+test("import des ouvriers par l'administrateur : matricule, site, taux horaire", async ({ page }) => {
+  const stamp = String(Date.now()).slice(-7);
+  await login(page, USERS.admin);
+  const workbook = await template(page, "technicians");
+  expect(workbook.worksheets.map((w) => w.name)).toEqual(["Ouvriers", "Aide", "Listes"]);
+  // Matricule, nom, prénom, site, qualification, heures par jour, taux horaire
+  const buffer = await fill(workbook, [
+    [`M${stamp}A`, "Durand", "Léa", "LYO", "Mécanicienne engins", 7, 41.5],
+    [`m${stamp}a`, "Martin", "Hugo", "LYO", null, null, null],
+    [`M${stamp}C`, "Petit", "Sam", "INCONNU", null, 15, null],
+  ]);
+  await simulate(page, "Ouvriers et techniciens", `ouvriers-${stamp}.xlsx`, buffer);
+  await expect(tile(page, "À importer")).toContainText("1");
+  await expect(tile(page, "En erreur")).toContainText("2");
+  await expect(page.getByText("Matricule en double dans le fichier (déjà en ligne 2).")).toBeVisible();
+  await expect(page.getByText("Site « INCONNU » inconnu.")).toBeVisible();
+  await page.getByRole("button", { name: "Importer les lignes valides (1)" }).click();
+  await expect(page.getByText(/Import exécuté : 1 ligne\(s\) créée\(s\)/)).toBeVisible();
+
+  await page.goto("/administration/techniciens");
+  const row = page.getByRole("row").filter({ hasText: `M${stamp}A` });
+  await expect(row).toContainText("Léa Durand");
+  await expect(row).toContainText("Mécanicienne engins");
+});

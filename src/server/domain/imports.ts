@@ -4,7 +4,7 @@
  * Les contrôles métier (références, droits, doublons en base) sont ceux des services de saisie.
  */
 
-export const IMPORT_KINDS = ["EQUIPMENT", "PARTS", "INITIAL_STOCK"] as const;
+export const IMPORT_KINDS = ["EQUIPMENT", "PARTS", "INITIAL_STOCK", "SUPPLIERS", "TECHNICIANS"] as const;
 export type ImportKind = (typeof IMPORT_KINDS)[number];
 
 export type ColumnType = "text" | "number" | "integer" | "date" | "enum" | "boolean";
@@ -185,6 +185,78 @@ export const IMPORT_DEFINITIONS: Record<ImportKind, { label: string; sheet: stri
       { key: "minQty", label: "Stock minimum", type: "number", min: 0, help: "Facultatif", example: "2" },
       { key: "reorderPoint", label: "Point de commande", type: "number", min: 0, help: "Facultatif", example: "4" },
       { key: "maxQty", label: "Stock maximum", type: "number", min: 0, help: "Facultatif, ≥ point de commande", example: "20" },
+    ],
+  },
+  SUPPLIERS: {
+    label: "Fournisseurs et prestataires",
+    sheet: "Fournisseurs",
+    key: "name",
+    columns: [
+      {
+        key: "name",
+        label: "Raison sociale",
+        required: true,
+        type: "text",
+        max: 160,
+        help: "Unique dans l'organisation ; clé de réimportation",
+        example: "Hydro Services Rhône",
+      },
+      {
+        key: "taxId",
+        label: "Identifiant fiscal",
+        type: "text",
+        max: 40,
+        help: "SIRET ou numéro de TVA ; unique s'il est renseigné",
+        example: "52312345600027",
+      },
+      { key: "email", label: "Courriel", type: "text", max: 160, help: "Adresse de contact", example: "contact@hydro-services.fr" },
+      { key: "phone", label: "Téléphone", type: "text", max: 30, help: "Numéro de contact", example: "04 78 00 00 00" },
+      { key: "address", label: "Adresse", type: "text", max: 300, help: "Adresse postale", example: "12 rue des Ateliers, 69007 Lyon" },
+      {
+        key: "isContractor",
+        label: "Prestataire",
+        type: "boolean",
+        help: "Oui si l'entreprise réalise des interventions (sous-traitance)",
+        example: "Oui",
+      },
+    ],
+  },
+  TECHNICIANS: {
+    label: "Ouvriers et techniciens",
+    sheet: "Ouvriers",
+    key: "employeeNumber",
+    columns: [
+      {
+        key: "employeeNumber",
+        label: "Matricule",
+        required: true,
+        type: "text",
+        max: 40,
+        help: "Unique dans l'organisation ; clé de réimportation",
+        example: "MAT-0142",
+      },
+      { key: "lastName", label: "Nom", required: true, type: "text", max: 80, help: "Nom de famille", example: "Moreau" },
+      { key: "firstName", label: "Prénom", required: true, type: "text", max: 80, help: "Prénom", example: "Julien" },
+      {
+        key: "siteCode",
+        label: "Site",
+        required: true,
+        type: "text",
+        list: "sites",
+        help: "Code du site de rattachement (planning, capacité)",
+        example: "LYON",
+      },
+      { key: "qualification", label: "Qualification", type: "text", max: 120, help: "Métier ou niveau", example: "Mécanicien engins" },
+      {
+        key: "dailyHours",
+        label: "Heures par jour",
+        type: "integer",
+        min: 1,
+        max: 12,
+        help: "Heures de présence prévues par jour (7 par défaut)",
+        example: "7",
+      },
+      { key: "hourlyRate", label: "Taux horaire", type: "number", min: 0, help: "Coût horaire en euros (coûts de main-d'œuvre)", example: "42" },
     ],
   },
 };

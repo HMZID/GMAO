@@ -16,6 +16,8 @@ import {
   sites,
   stockLevels,
   stockMovements,
+  suppliers,
+  technicians,
   user,
   warehouses,
 } from "@/server/db/schema";
@@ -40,7 +42,16 @@ import {
 import { AppError, BusinessRuleError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import { assertCan, audit, parseInput } from "./_shared";
 import { checkEquipmentCreation, createEquipment } from "./equipment";
-import { checkPartCreation, createMovement, createPart, stockLevelSettingsInput, updateStockLevelSettings } from "./stock";
+import {
+  checkPartCreation,
+  checkSupplierCreation,
+  createMovement,
+  createPart,
+  createSupplier,
+  stockLevelSettingsInput,
+  updateStockLevelSettings,
+} from "./stock";
+import { checkTechnicianCreation, createTechnician } from "./users";
 
 /* ------------------------------------------------------------------ */
 /* Droits                                                               */
@@ -51,6 +62,8 @@ export const IMPORT_PERMISSION: Record<ImportKind, Permission> = {
   EQUIPMENT: "equipment.write",
   PARTS: "part.write",
   INITIAL_STOCK: "stock.move",
+  SUPPLIERS: "supplier.write",
+  TECHNICIANS: "users.manage",
 };
 
 export function importableKinds(ctx: AuthContext) {
@@ -62,7 +75,7 @@ function importContext(ctx: AuthContext): AuthContext {
   return { ...ctx, channel: "IMPORT" };
 }
 
-const kindSchema = z.enum(IMPORT_KINDS, "Type d'import attendu : EQUIPMENT, PARTS ou INITIAL_STOCK");
+const kindSchema = z.enum(IMPORT_KINDS, `Type d'import attendu : ${IMPORT_KINDS.join(", ")}`);
 
 /* ------------------------------------------------------------------ */
 /* Référentiels (codes → identifiants)                                  */
@@ -198,6 +211,15 @@ function resolveEquipment(values: Record<string, unknown>, refs: References) {
   return { errors, input: { ...rest, companyId: company?.id, siteId: site?.id, categoryId: category?.id, modelId } };
 }
 
+/** Ouvrier : code du site → identifiant. */
+function resolveTechnician(values: Record<string, unknown>, refs: References) {
+  const errors: string[] = [];
+  const site = refs.sites.get(upper(values.siteCode));
+  if (values.siteCode && !site) errors.push(`Site « ${values.siteCode} » inconnu.`);
+  const { siteCode: _s, ...rest } = values;
+  return { errors, input: { ...rest, siteId: site?.id } };
+}
+
 function resolveStock(ctx: AuthContext, values: Record<string, unknown>, refs: References, partsBySku: Map<string, { id: string }>) {
   const errors: string[] = [];
   const part = partsBySku.get(upper(values.sku));
@@ -245,6 +267,19 @@ async function existingKeys(ctx: AuthContext, kind: ImportKind, rows: { values: 
       .where(and(eq(parts.tenantId, ctx.tenantId), inArray(parts.sku, skus)));
     return new Set(found.map((f) => upper(f.sku)));
   }
+  if (kind === "SUPPLIERS") {
+    const found = await db.select({ name: suppliers.name }).from(suppliers).where(eq(suppliers.tenantId, ctx.tenantId));
+    return new Set(found.map((f) => upper(f.name)));
+  }
+  if (kind === "TECHNICIANS") {
+    const numbers = [...new Set(rows.map((r) => upper(r.values.employeeNumber)).filter(Boolean))];
+    if (numbers.length === 0) return new Set<string>();
+    const found = await db
+      .select({ employeeNumber: technicians.employeeNumber })
+      .from(technicians)
+      .where(and(eq(technicians.tenantId, ctx.tenantId), inArray(technicians.employeeNumber, numbers)));
+    return new Set(found.map((f) => upper(f.employeeNumber)));
+  }
   // Stock initial : un article déjà mouvementé dans ce magasin n'est plus « initial ».
   const partIds = [...new Set(rows.map((r) => r.input?.partId as string | undefined).filter((v): v is string => !!v))];
   if (partIds.length === 0) return new Set<string>();
@@ -267,7 +302,9 @@ async function checkRows(ctx: AuthContext, kind: ImportKind, read: ReadResult["r
       ? secondaryDuplicateLines(read, ["manufacturer", "serialNumber"], "Marque et numéro de série")
       : kind === "PARTS"
         ? secondaryDuplicateLines(read, ["manufacturer", "manufacturerRef"], "Marque et référence fabricant")
-        : new Map<number, string>();
+        : kind === "SUPPLIERS"
+          ? secondaryDuplicateLines(read, ["taxId", "taxId"], "Identifiant fiscal")
+          : new Map<number, string>();
 
   let partsBySku = new Map<string, { id: string }>();
   if (kind === "INITIAL_STOCK") {
@@ -285,6 +322,7 @@ async function checkRows(ctx: AuthContext, kind: ImportKind, read: ReadResult["r
     if (kind === "EQUIPMENT") return { ...r, ...(resolveEquipment(r.values, refs) as { errors: string[]; input: Record<string, unknown> }) };
     if (kind === "INITIAL_STOCK")
       return { ...r, ...(resolveStock(ctx, r.values, refs, partsBySku) as { errors: string[]; input: Record<string, unknown> }) };
+    if (kind === "TECHNICIANS") return { ...r, ...(resolveTechnician(r.values, refs) as { errors: string[]; input: Record<string, unknown> }) };
     return { ...r, errors: [] as string[], input: { ...r.values } as Record<string, unknown> };
   });
   const existing = await existingKeys(ctx, kind, resolved);
@@ -321,6 +359,8 @@ async function checkRow(ctx: AuthContext, kind: ImportKind, input: Record<string
   try {
     if (kind === "EQUIPMENT") await checkEquipmentCreation(ctx, input);
     else if (kind === "PARTS") await checkPartCreation(ctx, input);
+    else if (kind === "SUPPLIERS") await checkSupplierCreation(ctx, input);
+    else if (kind === "TECHNICIANS") await checkTechnicianCreation(ctx, input);
     else {
       const quantity = Number(input.quantity);
       if (!(quantity > 0)) throw new BusinessRuleError(["Quantité : supérieure à 0 attendue."]);
@@ -336,6 +376,8 @@ async function checkRow(ctx: AuthContext, kind: ImportKind, input: Record<string
 async function importRow(ctx: AuthContext, kind: ImportKind, input: Record<string, unknown>): Promise<string> {
   if (kind === "EQUIPMENT") return (await createEquipment(ctx, input)).id;
   if (kind === "PARTS") return (await createPart(ctx, input)).id;
+  if (kind === "SUPPLIERS") return (await createSupplier(ctx, input)).id;
+  if (kind === "TECHNICIANS") return (await createTechnician(ctx, input)).id;
   const movement = await createMovement(ctx, {
     type: "RECEIPT",
     partId: input.partId,
