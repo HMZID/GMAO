@@ -43,6 +43,8 @@ type Endpoint = {
 export const ENDPOINTS: Endpoint[] = [
   { method: "GET", path: "/api/v1/me", summary: "Utilisateur connecté, rôles et droits effectifs par périmètre" },
   { method: "GET", path: "/api/v1/dashboard", summary: "Compteurs du tableau de bord dans le périmètre" },
+  { method: "GET", path: "/api/v1/organization", summary: "Identité de l'organisation : nom affiché et adresse du logo" },
+  { method: "GET", path: "/api/v1/organization/logo", summary: "Logo de l'organisation (image PNG, JPEG ou WebP)" },
 
   { method: "GET", path: "/api/v1/equipment", summary: "Liste paginée des équipements", permission: "equipment.read", query: equipmentFilters },
   {

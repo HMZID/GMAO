@@ -12,7 +12,7 @@ export default async function AdministrationPage() {
     {
       href: "/administration/organisation",
       title: "Organisation",
-      text: "Sociétés, sites, ateliers, magasins et chantiers.",
+      text: "Nom affiché et logo, sociétés, sites, ateliers, magasins et chantiers.",
       icon: Building2,
       show: ctx.can("settings.manage"),
     },

@@ -7,6 +7,7 @@ import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Skeleton } from "@/components/ui/primitives";
 import { ROLE } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
+import { getBranding, logoUrl } from "@/server/services/branding";
 import { countUnread } from "@/server/services/notifications";
 import { signOutAction } from "../(auth)/actions";
 
@@ -18,7 +19,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-ink-900 text-white lg:flex">
-        <Brand />
+        <Suspense fallback={<Brand />}>
+          <TenantBrand />
+        </Suspense>
         <Suspense fallback={<NavFallback />}>
           <Navigation />
         </Suspense>
@@ -30,12 +33,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Suspense fallback={<div className="h-11 w-11" />}>
               <MobileNavigation />
             </Suspense>
-            <Link href="/" className="flex items-center gap-2 rounded-md px-1 py-1 font-semibold text-slate-900">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600 text-white">
-                <Wrench className="h-4 w-4" aria-hidden />
-              </span>
-              GMAO
-            </Link>
+            <Suspense fallback={<MobileBrand />}>
+              <TenantMobileBrand />
+            </Suspense>
           </div>
           <div className="hidden lg:block" />
           <Suspense fallback={<Skeleton className="h-8 w-48" />}>
@@ -51,15 +51,50 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Brand() {
+/** Marque : logo de l'organisation (à défaut, l'icône GMAO), « GMAO » et le nom de la société en dessous. */
+function Brand({ label, logo }: { label?: string; logo?: string | null }) {
   return (
-    <Link href="/" className="flex h-14 items-center gap-2 border-b border-white/10 px-6">
-      <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand-600">
-        <Wrench className="h-4 w-4" aria-hidden />
+    <Link href="/" className="flex h-14 items-center gap-2.5 border-b border-white/10 px-6">
+      <BrandMark logo={logo} className="h-8 w-8" />
+      <span className="min-w-0 leading-tight">
+        <span className="block text-lg font-semibold">GMAO</span>
+        {label ? <span className="block truncate text-xs text-slate-300">{label}</span> : null}
       </span>
-      <span className="text-lg font-semibold">GMAO</span>
     </Link>
   );
+}
+
+function MobileBrand({ label, logo }: { label?: string; logo?: string | null }) {
+  return (
+    <Link href="/" className="flex min-w-0 items-center gap-2 rounded-md px-1 py-1 text-slate-900">
+      <BrandMark logo={logo} className="h-7 w-7" />
+      <span className="min-w-0 leading-tight">
+        <span className="block font-semibold">GMAO</span>
+        {label ? <span className="block max-w-40 truncate text-[11px] text-slate-500">{label}</span> : null}
+      </span>
+    </Link>
+  );
+}
+
+function BrandMark({ logo, className }: { logo?: string | null; className: string }) {
+  return logo ? (
+    // eslint-disable-next-line @next/next/no-img-element -- image servie par l'API, après contrôle de session
+    <img src={logo} alt="" className={`${className} shrink-0 rounded-md bg-white object-contain p-0.5`} />
+  ) : (
+    <span className={`${className} flex shrink-0 items-center justify-center rounded-md bg-brand-600 text-white`}>
+      <Wrench className="h-4 w-4" aria-hidden />
+    </span>
+  );
+}
+
+async function TenantBrand() {
+  const branding = await getBranding(await getAuthContext());
+  return <Brand label={branding.label} logo={logoUrl(branding)} />;
+}
+
+async function TenantMobileBrand() {
+  const branding = await getBranding(await getAuthContext());
+  return <MobileBrand label={branding.label} logo={logoUrl(branding)} />;
 }
 
 function NavFallback() {

@@ -2,10 +2,28 @@
 
 import type { ActionState } from "@/lib/action-state";
 import { act } from "@/server/actions";
+import { removeLogo, setLogo, updateBranding } from "@/server/services/branding";
 import { createCategory, createModel } from "@/server/services/equipment";
 import { createCompany, createJobsite, createSite, createWarehouse, createWorkshop } from "@/server/services/organization";
 import { addAbsence, addRoleAssignment, createTechnician, createUser, removeRoleAssignment, setUserActive } from "@/server/services/users";
 import { formToObject } from "@/server/validation";
+
+/* Identité de l'organisation : nom affiché sous « GMAO » et logo */
+
+export async function updateBrandingAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  return act((ctx) => updateBranding(ctx, formToObject(formData, { keepEmpty: true })), "Nom affiché enregistré.");
+}
+
+export async function uploadLogoAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  return act(async (ctx) => {
+    const file = formData.get("logo");
+    await setLogo(ctx, file instanceof File && file.size > 0 ? { name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) } : null);
+  }, "Logo enregistré.");
+}
+
+export async function removeLogoAction(_: ActionState): Promise<ActionState> {
+  return act((ctx) => removeLogo(ctx), "Logo retiré.");
+}
 
 /* Organisation (CDC §1.3) */
 
