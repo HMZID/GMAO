@@ -23,6 +23,8 @@ export default async function UsersPage() {
     ...sites.map((s) => ({ value: `SITE:${s.id}`, label: `Site — ${s.name}` })),
   ];
   const now = new Date();
+  // Rôles d'une organisation : celui d'administrateur de la plateforme ne se donne pas ici.
+  const roleOptions = options(ROLE).filter((o) => o.value !== "ADMIN");
   const active = users.filter((u) => u.isActive).length;
 
   return (
@@ -49,7 +51,7 @@ export default async function UsersPage() {
             <Input id="u-password" name="password" type="password" required minLength={10} autoComplete="new-password" />
           </Field>
           <Field label="Rôle" name="role" required>
-            <Select id="u-role" name="role" required options={options(ROLE)} defaultValue="TECHNICIAN" />
+            <Select id="u-role" name="role" required options={roleOptions} defaultValue="TECHNICIAN" />
           </Field>
           <Field label="Périmètre" name="scopeId" required>
             <Select id="u-scope" name="scope" required options={scopeOptions} />
@@ -102,7 +104,7 @@ export default async function UsersPage() {
                   <Disclosure summary="Ajouter un rôle ou une délégation" className="mt-2">
                     <ActionForm action={addRoleAction.bind(null, u.id)} className="grid gap-2 sm:grid-cols-2">
                       <Field label="Rôle" name="role" required>
-                        <Select id={`r-${u.id}`} name="role" required options={options(ROLE)} />
+                        <Select id={`r-${u.id}`} name="role" required options={roleOptions} />
                       </Field>
                       <Field label="Périmètre" name="scopeId" required>
                         <Select id={`s-${u.id}`} name="scope" required options={scopeOptions} />

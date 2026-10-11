@@ -15,7 +15,7 @@ test("cycle d'un compte : création, modification, nouveau mot de passe, désact
   const renamed = `cycle.renomme.${stamp}@demo.gmao`;
   const name = `Compte Cycle ${stamp}`;
 
-  await login(page, USERS.admin, "/administration/utilisateurs");
+  await login(page, USERS.executive, "/administration/utilisateurs");
   await page.getByText("Nouveau compte").click();
   const create = page.locator("form").filter({ has: page.getByRole("button", { name: "Créer le compte" }) });
   await create.getByLabel("Nom et prénom").fill(name);
@@ -48,7 +48,7 @@ test("cycle d'un compte : création, modification, nouveau mot de passe, désact
   await expect(page.getByText(/^Identifiants invalides, compte désactivé/)).toBeVisible();
 
   // Réactivé : connexion avec le nouveau courriel et le nouveau mot de passe.
-  await login(page, USERS.admin, "/administration/utilisateurs");
+  await login(page, USERS.executive, "/administration/utilisateurs");
   await row().getByRole("button", { name: "Réactiver" }).click();
   await expect(row().getByText("Actif", { exact: true })).toBeVisible();
   await signIn(page, renamed, "Nouveau-Cycle-2026");
@@ -56,7 +56,7 @@ test("cycle d'un compte : création, modification, nouveau mot de passe, désact
 });
 
 test("un courriel déjà utilisé est refusé à la modification", async ({ page }) => {
-  await login(page, USERS.admin, "/administration/utilisateurs");
+  await login(page, USERS.executive, "/administration/utilisateurs");
   const row = page.getByRole("row").filter({ hasText: USERS.operator });
   await row.getByText("Modifier le compte").click();
   await row.getByLabel("Courriel (identifiant)").fill(USERS.storekeeper);

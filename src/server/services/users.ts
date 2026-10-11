@@ -10,6 +10,7 @@ import { absences, account, auditLogs, companies, laborRates, roleAssignments, s
 import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { bool, date, optionalDate, optionalId, optionalText, text } from "@/server/validation";
 import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
+import { isPlatformAdmin } from "./platform";
 
 /* ------------------------------------------------------------------ */
 /* Utilisateurs et habilitations (CDC §2)                               */
@@ -83,6 +84,12 @@ export const userInput = z
  * Périmètre d'un rôle à donner : de l'organisation, et compris dans le périmètre d'administration de
  * l'utilisateur (un administrateur limité à une société ne donne jamais un rôle sur tout le groupe).
  */
+/** Le rôle « Administrateur » (plateforme) n'est donné que par un administrateur de la plateforme. */
+function assertCanGrantRole(ctx: AuthContext, role: string) {
+  if (role === "ADMIN" && !isPlatformAdmin(ctx))
+    throw new ForbiddenError("Le rôle Administrateur de la plateforme ne se donne pas depuis une organisation.");
+}
+
 async function assertScopeInTenant(ctx: AuthContext, scopeType: "TENANT" | "COMPANY" | "SITE", scopeId?: string) {
   if (scopeType === "TENANT") {
     if (!ctx.scope("users.manage").all) throw new ForbiddenError("Seul un administrateur de toute l'organisation donne un rôle sur tout le groupe.");
@@ -111,6 +118,12 @@ async function assertScopeInTenant(ctx: AuthContext, scopeType: "TENANT" | "COMP
  * comptes dont tous les rôles sont dans son périmètre (jamais un compte qui a un rôle sur tout le groupe).
  */
 async function assertCanManageUser(ctx: AuthContext, userId: string) {
+  // Le compte d'un administrateur de la plateforme n'est géré que par un administrateur de la plateforme.
+  const [platformRole] = await db
+    .select({ id: roleAssignments.id })
+    .from(roleAssignments)
+    .where(and(eq(roleAssignments.userId, userId), eq(roleAssignments.tenantId, ctx.tenantId), eq(roleAssignments.role, "ADMIN")));
+  if (platformRole && !isPlatformAdmin(ctx)) throw new ForbiddenError("Ce compte est un administrateur de la plateforme.");
   if (ctx.scope("users.manage").all) return;
   const rows = await db
     .select({ scopeType: roleAssignments.scopeType, scopeId: roleAssignments.scopeId, siteCompanyId: sites.companyId })
@@ -133,6 +146,7 @@ async function assertCanManageUser(ctx: AuthContext, userId: string) {
 export async function createUser(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "users.manage");
   const input = parseInput(userInput, raw);
+  assertCanGrantRole(ctx, input.role);
   const scopeId = await assertScopeInTenant(ctx, input.scopeType, input.scopeId);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
   if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
@@ -172,6 +186,7 @@ export async function addRoleAssignment(ctx: AuthContext, userId: string, raw: u
     .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
   if (!target) throw new NotFoundError("Utilisateur");
   await assertCanManageUser(ctx, userId);
+  assertCanGrantRole(ctx, input.role);
   const scopeId = await assertScopeInTenant(ctx, input.scopeType, input.scopeId);
   if (input.validFrom && input.validTo && input.validTo <= input.validFrom)
     throw new BusinessRuleError(["La fin de délégation doit suivre son début."]);

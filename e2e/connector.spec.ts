@@ -18,7 +18,7 @@ async function createKey(page: Page, name: string, access: "READ" | "IMPORT") {
 
 test("clé « lecture » : export sans session, import refusé, révocation immédiate", async ({ page, playwright, baseURL }) => {
   const name = `ETL lecture ${Date.now()}`;
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   const key = await createKey(page, name, "READ");
 
   // Client sans cookie : seule la clé authentifie.
@@ -51,7 +51,7 @@ test("clé « lecture » : export sans session, import refusé, révocation imm�
 });
 
 test("clé « import » : modèle d'import accessible, paramétrage toujours refusé", async ({ page, playwright, baseURL }) => {
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   const key = await createKey(page, `ETL import ${Date.now()}`, "IMPORT");
   const client = await playwright.request.newContext({ baseURL, extraHTTPHeaders: { Authorization: `Bearer ${key}` } });
   expect((await client.get("/api/v1/imports/templates/suppliers")).status()).toBe(200);
@@ -59,8 +59,8 @@ test("clé « import » : modèle d'import accessible, paramétrage toujours ref
   await client.dispose();
 });
 
-test("le connecteur est réservé à l'administrateur", async ({ page }) => {
-  await login(page, USERS.maintenanceManager);
+test("le connecteur est réservé à la direction et au responsable maintenance", async ({ page }) => {
+  await login(page, USERS.storekeeper);
   await page.goto("/administration/connecteur");
   await expect(page.getByRole("heading", { name: "Accès refusé" })).toBeVisible();
 });

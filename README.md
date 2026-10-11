@@ -40,8 +40,8 @@ Mot de passe commun : `Demo-Gmao-2026`. Les données sont datées par rapport au
 
 | Compte | Rôle | Périmètre |
 | --- | --- | --- |
-| `admin@demo.gmao` | Administrateur | Tout le groupe |
-| `resp.maintenance@demo.gmao` | Responsable maintenance | Tout le groupe |
+| `admin@demo.gmao` | Administrateur de la plateforme : organisations clientes, démonstrations (aucun accès à la maintenance) | Plateforme |
+| `resp.maintenance@demo.gmao` | Responsable maintenance : tous les accès de l'organisation | Tout le groupe |
 | `flotte@demo.gmao` | Gestionnaire de flotte | Société SBTP |
 | `chef.lyon@demo.gmao` | Chef d'atelier (+ délégation responsable maintenance) | Site de Lyon |
 | `chef.grenoble@demo.gmao` | Chef d'atelier | Site de Grenoble |
@@ -50,7 +50,9 @@ Mot de passe commun : `Demo-Gmao-2026`. Les données sont datées par rapport au
 | `conducteur@demo.gmao` | Conducteur | Site de Lyon |
 | `magasin@demo.gmao` | Magasinier | Société SBTP |
 | `achats@demo.gmao` | Responsable achats | Tout le groupe |
-| `direction@demo.gmao` | Direction | Tout le groupe |
+| `direction@demo.gmao` | Direction : tous les accès de l'organisation, dont la gestion des accès des membres | Tout le groupe |
+
+Chaque organisation cliente est gérée par sa **Direction** et son **Responsable maintenance**, qui ont tous les accès de leur organisation et donnent les accès à chaque membre ; les autres rôles ne voient que leur partie (menu et écrans selon leurs droits).
 
 ### Situations prêtes à dérouler (scénarios de recette du CDC §15)
 
