@@ -128,3 +128,16 @@ body {
     outline-offset: 2px;
   }
 }
+
+/* États imprimés (fiche d'intervention) : page A4, couleurs des bordures et fonds conservées. */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+@media print {
+  body {
+    background: #fff;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
