@@ -2,6 +2,7 @@
 
 import type { ActionState } from "@/lib/action-state";
 import { act } from "@/server/actions";
+import { createApiKey, revokeApiKey } from "@/server/services/api-keys";
 import { removeLogo, setLogo, updateBranding } from "@/server/services/branding";
 import { createCategory, createModel } from "@/server/services/equipment";
 import { createCompany, createJobsite, createSite, createWarehouse, createWorkshop } from "@/server/services/organization";
@@ -32,6 +33,23 @@ export async function uploadLogoAction(_: ActionState, formData: FormData): Prom
 
 export async function removeLogoAction(_: ActionState): Promise<ActionState> {
   return act((ctx) => removeLogo(ctx), "Logo retiré.");
+}
+
+/* Connecteur de l'organisation : clés d'API (INT-01, INT-05) */
+
+export async function createApiKeyAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  return act(async (ctx) => {
+    const created = await createApiKey(ctx, formToObject(formData, { keepEmpty: true }));
+    return {
+      status: "success",
+      message: `Clé « ${created.name} » créée. Copiez-la maintenant : elle ne sera plus affichée.`,
+      secret: created.key,
+    } satisfies ActionState;
+  });
+}
+
+export async function revokeApiKeyAction(id: string, _: ActionState): Promise<ActionState> {
+  return act((ctx) => revokeApiKey(ctx, id), "Clé révoquée : elle est refusée dès maintenant.");
 }
 
 /* Organisation (CDC §1.3) */

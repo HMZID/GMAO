@@ -26,6 +26,7 @@ const PAGES = [
   "/administration/referentiel",
   "/administration/journal",
   "/administration/export",
+  "/administration/connecteur",
   "/notifications",
 ];
 

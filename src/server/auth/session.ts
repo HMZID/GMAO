@@ -8,6 +8,8 @@ import type { Role } from "@/server/authz/permissions";
 import { db } from "@/server/db";
 import { roleAssignments, technicians, user } from "@/server/db/schema";
 import { UnauthorizedError } from "@/server/errors";
+import { apiKeyFromHeaders } from "@/server/domain/api-keys";
+import { authenticateApiKey } from "./api-key";
 import { auth } from "./auth";
 
 /** Charge l'utilisateur, ses affectations de rôle et son technicien éventuel. */
@@ -57,8 +59,17 @@ export const getAuthContext = cache(async (): Promise<AuthContext> => {
   return ctx;
 });
 
-/** Contexte pour les routes API : cookie de session ou en-tête `Authorization: Bearer`. */
+/**
+ * Contexte pour les routes API : clé d'API du connecteur (`Authorization: Bearer gmk_…` ou `X-Api-Key`),
+ * sinon cookie de session ou jeton de session `Authorization: Bearer`.
+ */
 export async function getApiContext(request: Request): Promise<AuthContext> {
+  const key = apiKeyFromHeaders(request.headers);
+  if (key) {
+    const ctx = await authenticateApiKey(key);
+    if (!ctx) throw new UnauthorizedError("Clé d'API invalide, révoquée ou expirée.");
+    return ctx;
+  }
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) throw new UnauthorizedError();
   const channel: Channel = request.headers.get("x-client") === "mobile" ? "MOBILE" : "API";

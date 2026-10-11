@@ -64,6 +64,13 @@
       "when": 1791731473486,
       "tag": "0008_custom_indicators",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791731960901,
+      "tag": "0009_api_keys",
+      "breakpoints": true
     }
   ]
 }
