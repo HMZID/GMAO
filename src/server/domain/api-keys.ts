@@ -10,12 +10,13 @@ import type { Permission, Role } from "@/server/authz/permissions";
 export const API_KEY_PREFIX = "gmk_";
 
 /** Niveaux d'accès d'une clé. */
-export const API_KEY_ACCESS = ["READ", "IMPORT"] as const;
+export const API_KEY_ACCESS = ["READ", "IMPORT", "ASSISTANT"] as const;
 export type ApiKeyAccess = (typeof API_KEY_ACCESS)[number];
 
 export const API_KEY_ACCESS_LABEL: Record<ApiKeyAccess, string> = {
   READ: "Lecture et export",
   IMPORT: "Lecture, export et import",
+  ASSISTANT: "Assistant IA (MCP) : lecture et signalement de pannes",
 };
 
 /** Durées de validité proposées, en jours (null : sans échéance). */
@@ -43,6 +44,8 @@ const READ: Permission[] = [
 export const API_KEY_PERMISSIONS: Record<ApiKeyAccess, readonly Permission[]> = {
   READ,
   IMPORT: [...READ, "equipment.write", "part.write", "stock.move", "supplier.write", "users.manage"],
+  // Couche MCP : un assistant lit les données et peut signaler une panne (demande d'intervention), sans plus.
+  ASSISTANT: [...READ, "request.create"],
 };
 
 /** Rôles du contexte d'une clé, sur tout le groupe, avant restriction à ses droits. */

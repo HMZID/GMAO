@@ -150,6 +150,13 @@ export default async function ConnectorPage() {
               ].join("\n")}
             </Code>
           </Step>
+          <Step title="Assistant IA (MCP) : clé « Assistant IA », serveur MCP en HTTP">
+            <Code>{`claude mcp add --transport http gmao ${base}/api/mcp --header "Authorization: Bearer gmk_…"`}</Code>
+            <p className="mt-1 text-xs text-slate-500">
+              Outils : recherche et fiche d&apos;équipement, ordres de travail, demandes, signalement de panne, échéances, indicateurs, extraction de
+              données. Tout client compatible MCP (« Streamable HTTP ») peut s&apos;y brancher.
+            </p>
+          </Step>
           <Step title="Indicateurs personnalisés">
             <Code>{`GET ${base}/api/v1/indicators`}</Code>
           </Step>
