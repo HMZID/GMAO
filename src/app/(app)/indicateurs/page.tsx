@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FilterBar, FilterField } from "@/components/filter-bar";
 import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
+import { ButtonLink } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/inputs";
 import { Card, CardBody, CardHeader, EmptyState, StatTile, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
 import { formatCurrency, formatDate, formatHours, formatNumber, formatPercent, toDateInput } from "@/lib/format";
@@ -41,6 +42,11 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
       <PageHeader
         title="Indicateurs de maintenance"
         description={`Période du ${formatDate(k.from)} au ${formatDate(k.to)} — ${k.fleetSize} équipement(s). Les indicateurs calculés sur moins de 3 événements sont « non significatifs ».`}
+        actions={
+          <ButtonLink href="/indicateurs/personnalises" variant="secondary">
+            Indicateurs personnalisés
+          </ButtonLink>
+        }
       />
       <Card className="mb-6">
         <FilterBar resetHref="/indicateurs">

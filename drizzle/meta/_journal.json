@@ -57,6 +57,13 @@
       "when": 1791730325416,
       "tag": "0007_imports_suppliers_technicians",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791731473486,
+      "tag": "0008_custom_indicators",
+      "breakpoints": true
     }
   ]
 }

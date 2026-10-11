@@ -7,6 +7,7 @@ import { decisionInput } from "@/server/services/approvals";
 import { preferencesInput } from "@/server/services/email";
 import { exportQuery } from "@/server/services/exports";
 import { executeInput } from "@/server/services/imports";
+import { indicatorInput } from "@/server/services/indicators";
 import { indicatorFilters } from "@/server/services/kpi";
 import { readingInput, replacementInput, reviewInput } from "@/server/services/meters";
 import { weekInput } from "@/server/services/planning";
@@ -46,6 +47,21 @@ export const ENDPOINTS: Endpoint[] = [
   { method: "GET", path: "/api/v1/dashboard", summary: "Compteurs du tableau de bord dans le périmètre" },
   { method: "GET", path: "/api/v1/organization", summary: "Identité de l'organisation : nom affiché et adresse du logo" },
   { method: "GET", path: "/api/v1/organization/logo", summary: "Logo de l'organisation (image PNG, JPEG ou WebP)" },
+  {
+    method: "GET",
+    path: "/api/v1/indicators",
+    summary: "Indicateurs personnalisés de l'organisation, calculés dans le périmètre de l'utilisateur",
+    permission: "kpi.read",
+  },
+  {
+    method: "POST",
+    path: "/api/v1/indicators",
+    summary: "Composer un indicateur personnalisé",
+    permission: "indicator.manage",
+    body: indicatorInput,
+  },
+  { method: "GET", path: "/api/v1/indicators/{id}", summary: "Un indicateur personnalisé et sa valeur", permission: "kpi.read" },
+  { method: "DELETE", path: "/api/v1/indicators/{id}", summary: "Supprimer un indicateur personnalisé", permission: "indicator.manage" },
   {
     method: "GET",
     path: "/api/v1/exports",
