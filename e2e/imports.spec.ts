@@ -224,7 +224,7 @@ test("import des fournisseurs par l'acheteur : identifiant fiscal en double refu
 
 test("import des ouvriers par l'administrateur : matricule, site, taux horaire", async ({ page }) => {
   const stamp = String(Date.now()).slice(-7);
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   const workbook = await template(page, "technicians");
   expect(workbook.worksheets.map((w) => w.name)).toEqual(["Ouvriers", "Aide", "Listes"]);
   // Matricule, nom, prénom, site, qualification, heures par jour, taux horaire

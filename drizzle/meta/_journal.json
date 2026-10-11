@@ -78,6 +78,13 @@
       "when": 1791732730920,
       "tag": "0010_tenant_status",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791756376893,
+      "tag": "0011_client_admin_to_executive",
+      "breakpoints": true
     }
   ]
 }

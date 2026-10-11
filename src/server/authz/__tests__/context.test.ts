@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildAuthContext, isInScope, restrictAuthContext } from "../context";
+import { PERMISSIONS, roleHas } from "../permissions";
 
 const user = { id: "u1", tenantId: "t1", name: "Test", email: "t@example.com" };
 
@@ -18,7 +19,7 @@ describe("Contexte d'autorisation (HAB-02, HAB-03)", () => {
   });
 
   it("un périmètre TENANT couvre tout le groupe", () => {
-    const ctx = buildAuthContext(user, [{ role: "EXECUTIVE", scopeType: "TENANT", scopeId: null }]);
+    const ctx = buildAuthContext(user, [{ role: "PURCHASING_MANAGER", scopeType: "TENANT", scopeId: null }]);
     expect(ctx.scope("kpi.read")).toEqual({ all: true });
     expect(ctx.can("equipment.write")).toBe(false);
   });
@@ -52,7 +53,7 @@ describe("Contexte d'autorisation (HAB-02, HAB-03)", () => {
 
 describe("Contexte restreint (clés d'API, couche MCP)", () => {
   it("retire les droits hors liste, garde le périmètre des autres", () => {
-    const ctx = buildAuthContext(user, [{ role: "ADMIN", scopeType: "TENANT", scopeId: null }]);
+    const ctx = buildAuthContext(user, [{ role: "EXECUTIVE", scopeType: "TENANT", scopeId: null }]);
     const restricted = restrictAuthContext(ctx, ["equipment.read", "equipment.write"]);
     expect(restricted.can("equipment.write")).toBe(true);
     expect(restricted.scope("equipment.read")).toEqual({ all: true });
@@ -64,5 +65,28 @@ describe("Contexte restreint (clés d'API, couche MCP)", () => {
   it("n'ajoute jamais un droit que les rôles ne donnent pas", () => {
     const ctx = buildAuthContext(user, [{ role: "OPERATOR", scopeType: "SITE", scopeId: "s1" }]);
     expect(restrictAuthContext(ctx, ["data.export"]).can("data.export")).toBe(false);
+  });
+});
+
+describe("Rôles : plateforme et organisation", () => {
+  it("l'administrateur gère la plateforme, sans aucun droit sur la maintenance des organisations", () => {
+    expect(roleHas("ADMIN", "platform.manage")).toBe(true);
+    for (const permission of PERMISSIONS.filter((p) => p !== "platform.manage")) expect(roleHas("ADMIN", permission), permission).toBe(false);
+  });
+
+  it("la direction et le responsable maintenance ont tous les droits de l'organisation, pas ceux de la plateforme", () => {
+    for (const role of ["EXECUTIVE", "MAINTENANCE_MANAGER"] as const) {
+      for (const permission of PERMISSIONS.filter((p) => p !== "platform.manage"))
+        expect(roleHas(role, permission), `${role} ${permission}`).toBe(true);
+      expect(roleHas(role, "platform.manage")).toBe(false);
+    }
+  });
+
+  it("les autres membres ne voient que leur partie", () => {
+    expect(roleHas("OPERATOR", "request.create")).toBe(true);
+    expect(roleHas("OPERATOR", "stock.read")).toBe(false);
+    expect(roleHas("TECHNICIAN", "users.manage")).toBe(false);
+    expect(roleHas("STOREKEEPER", "stock.move")).toBe(true);
+    expect(roleHas("STOREKEEPER", "workorder.manage")).toBe(false);
   });
 });

@@ -25,7 +25,7 @@ test("une organisation ne peut ni lire ni relier les données d'une autre", asyn
   await page.getByText("Nouvelle démonstration").click();
   const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Ouvrir la démonstration" }) });
   await form.getByLabel("Organisation (client)").fill(`Client B ${stamp}`);
-  await form.getByLabel("Administrateur du client").fill("Admin B");
+  await form.getByLabel("Direction du client (premier compte)").fill("Admin B");
   await form.getByLabel("Courriel (identifiant)").fill(email);
   await form.getByLabel("Mot de passe initial").fill(password);
   await form.getByRole("button", { name: "Ouvrir la démonstration" }).click();
@@ -65,7 +65,7 @@ test("une organisation ne peut ni lire ni relier les données d'une autre", asyn
 
   // Ni ses magasins dans les listes de A, ni la société de B dans un export (administrateur, qui a le droit d'exporter).
   expect(warehousesA.map((w: { id: string }) => w.id)).not.toContain(warehouseB.id);
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   expect((await page.request.get(`/api/v1/exports?companyId=${warehouseB.companyId}`)).status()).toBe(404);
 
   // 3. Retour chez B : son article n'a ni stock ni réservation venant de A.

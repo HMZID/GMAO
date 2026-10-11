@@ -30,7 +30,7 @@ test("préférences de courriel : une alerte facultative se désactive, une aler
 });
 
 test("l'administrateur suit la file d'envoi et la traite", async ({ page }) => {
-  await login(page, USERS.admin, "/administration/courriels");
+  await login(page, USERS.executive, "/administration/courriels");
   // Les validations et affectations de la démonstration ont mis des courriels en file
   await expect(page.getByText(/À valider : DA-/).first()).toBeVisible();
   await page.getByRole("button", { name: "Traiter la file maintenant" }).click();

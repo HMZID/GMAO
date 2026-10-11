@@ -5,7 +5,7 @@ import { USERS, login, statusMessage } from "./helpers";
 const PNG_1PX = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
 
 test("identité de l'organisation : nom affiché et logo sous « GMAO », puis retour à l'état initial", async ({ page }) => {
-  await login(page, USERS.admin, "/administration/organisation");
+  await login(page, USERS.executive, "/administration/organisation");
   const brand = page.locator("aside").getByRole("link").first();
   await expect(brand).toContainText("Groupe Démo BTP");
 
@@ -45,7 +45,7 @@ test("le logo n'est servi qu'à un utilisateur connecté", async ({ request }) =
 
 test("organisation en arbre : chaque société a ses sites, chaque site ses ateliers et magasins", async ({ page }) => {
   const stamp = String(Date.now()).slice(-6);
-  await login(page, USERS.admin, "/administration/organisation");
+  await login(page, USERS.executive, "/administration/organisation");
   await expect(page.locator("section[aria-label^='Société']").first()).toBeVisible();
 
   // Nouveau site dans la première société, puis un atelier et un magasin dans ce site.

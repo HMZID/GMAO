@@ -221,7 +221,7 @@ export const MOVEMENT_TYPE: Record<string, { label: string; sign: 1 | -1 | 0 }> 
 };
 
 export const ROLE: Record<string, string> = {
-  ADMIN: "Administrateur",
+  ADMIN: "Administrateur de la plateforme",
   MAINTENANCE_MANAGER: "Responsable maintenance",
   FLEET_MANAGER: "Gestionnaire de flotte",
   WORKSHOP_MANAGER: "Chef d'atelier",

@@ -16,11 +16,13 @@ import { audit, parseInput } from "./_shared";
 /* ------------------------------------------------------------------ */
 
 /**
- * Administrateur de la plateforme : courriel listé dans PLATFORM_ADMIN_EMAILS, connecté en personne
- * (jamais par une clé d'API, même créée par lui).
+ * Administrateur de la plateforme : rôle « Administrateur » (droit platform.manage), connecté en personne
+ * (jamais par une clé d'API). Si PLATFORM_ADMIN_EMAILS est renseignée, son courriel doit aussi y figurer.
  */
 export function isPlatformAdmin(ctx: AuthContext) {
-  return !ctx.apiKeyId && platformAdmins(process.env.PLATFORM_ADMIN_EMAILS).has(ctx.email.toLowerCase());
+  if (ctx.apiKeyId || !ctx.can("platform.manage")) return false;
+  const allowed = platformAdmins(process.env.PLATFORM_ADMIN_EMAILS);
+  return allowed.size === 0 || allowed.has(ctx.email.toLowerCase());
 }
 
 function assertPlatformAdmin(ctx: AuthContext) {
@@ -101,7 +103,8 @@ export async function createDemoTenant(ctx: AuthContext, raw: unknown, now = new
       .insert(user)
       .values({ id: userId, name: input.adminName, email: input.adminEmail, emailVerified: true, tenantId: tenant.id, isActive: true });
     await tx.insert(account).values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: passwordHash });
-    await tx.insert(roleAssignments).values({ tenantId: tenant.id, userId, role: "ADMIN", scopeType: "TENANT", scopeId: null });
+    // Le client est géré par sa direction : tous les droits de son organisation, dont la gestion des accès.
+    await tx.insert(roleAssignments).values({ tenantId: tenant.id, userId, role: "EXECUTIVE", scopeType: "TENANT", scopeId: null });
 
     const after = { name: tenant.name, status: "DEMO", demoEndsAt: endsAt, admin: input.adminEmail };
     // Journal de la plateforme (organisation de l'administrateur) et journal du client.

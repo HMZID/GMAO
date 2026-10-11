@@ -22,7 +22,7 @@ async function rpc(client: APIRequestContext, method: string, params?: unknown) 
 }
 
 test("un assistant IA dialogue avec la GMAO par MCP : outils, recherche, signalement", async ({ page, playwright, baseURL }) => {
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   const key = await createKey(page, `Assistant ${Date.now()}`, "ASSISTANT");
   const client = await playwright.request.newContext({
     baseURL,
@@ -62,7 +62,7 @@ test("un assistant IA dialogue avec la GMAO par MCP : outils, recherche, signale
 });
 
 test("MCP : clé de lecture sans signalement, sans clé refusé, origine étrangère refusée", async ({ page, playwright, baseURL }) => {
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   const key = await createKey(page, `Lecture MCP ${Date.now()}`, "READ");
   const reader = await playwright.request.newContext({ baseURL, extraHTTPHeaders: { Authorization: `Bearer ${key}` } });
   const equipment = await rpc(reader, "tools/call", { name: "search_equipment", arguments: { query: "PE-007" } });

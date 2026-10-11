@@ -32,7 +32,7 @@ const PAGES = [
 ];
 
 test("toutes les pages s'affichent sans erreur pour l'administrateur", async ({ page }) => {
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   for (const path of PAGES) {
     const response = await page.goto(path);
     expect(response?.status(), path).toBeLessThan(500);
@@ -43,7 +43,7 @@ test("toutes les pages s'affichent sans erreur pour l'administrateur", async ({ 
 
 test("l'administrateur crée un équipement : les plans de la catégorie s'appliquent", async ({ page }) => {
   const code = `GE-${String(Date.now()).slice(-5)}`;
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   await page.goto("/equipements/nouveau");
   await page.getByLabel("Code parc").fill(code);
   await page.getByLabel("Désignation").fill("Groupe électrogène 60 kVA");
@@ -62,7 +62,7 @@ test("l'administrateur crée un équipement : les plans de la catégorie s'appli
 
 test("l'administrateur crée un compte, doublon refusé", async ({ page }) => {
   const email = `test.${Date.now()}@demo.gmao`;
-  await login(page, USERS.admin);
+  await login(page, USERS.executive);
   await page.goto("/administration/utilisateurs");
   await page.getByText("Nouveau compte").click();
   const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Créer le compte" }) });

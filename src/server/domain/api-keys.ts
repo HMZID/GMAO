@@ -49,7 +49,7 @@ export const API_KEY_PERMISSIONS: Record<ApiKeyAccess, readonly Permission[]> = 
 };
 
 /** Rôles du contexte d'une clé, sur tout le groupe, avant restriction à ses droits. */
-export const API_KEY_ROLES: readonly Role[] = ["ADMIN", "EXECUTIVE", "STOREKEEPER", "MAINTENANCE_MANAGER"];
+export const API_KEY_ROLES: readonly Role[] = ["EXECUTIVE"];
 
 /** Nouvelle clé : la valeur à remettre une seule fois, son préfixe affichable et son empreinte. */
 export function generateApiKey() {

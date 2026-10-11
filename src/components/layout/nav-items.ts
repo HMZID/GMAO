@@ -19,7 +19,8 @@ export type NavItem = { href: string; label: string; icon: NavIcon; permission?:
 
 /** Menu principal ; chaque entrée n'est affichée que si l'utilisateur détient le droit requis. */
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Tableau de bord", icon: "dashboard" },
+  // Membres d'une organisation ; l'administrateur de la plateforme ne voit que l'administration.
+  { href: "/", label: "Tableau de bord", icon: "dashboard", permission: "equipment.read" },
   { href: "/equipements", label: "Équipements", icon: "equipment", permission: "equipment.read" },
   { href: "/demandes", label: "Demandes d'intervention", icon: "requests", permission: "request.read" },
   { href: "/ordres-de-travail", label: "Ordres de travail", icon: "workorders", permission: "workorder.read" },
@@ -30,7 +31,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/achats", label: "Fournisseurs", icon: "purchasing", permission: "supplier.read" },
   { href: "/indicateurs", label: "Indicateurs", icon: "kpi", permission: "kpi.read" },
   // HAB-04 : tout utilisateur peut être valideur (rôle dans un circuit, personne nommée ou suppléant).
-  { href: "/validations", label: "Validations", icon: "approvals" },
+  { href: "/validations", label: "Validations", icon: "approvals", permission: "equipment.read" },
   { href: "/imports", label: "Imports", icon: "imports", anyOf: ["equipment.write", "part.write", "stock.move"] },
-  { href: "/administration", label: "Administration", icon: "admin", anyOf: ["settings.manage", "users.manage", "audit.read"] },
+  { href: "/administration", label: "Administration", icon: "admin", anyOf: ["settings.manage", "users.manage", "audit.read", "platform.manage"] },
 ];
