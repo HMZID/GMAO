@@ -7,7 +7,7 @@ test.describe("Authentification et habilitations (HAB-01, HAB-02)", () => {
     await page.getByLabel("Courriel").fill(USERS.admin);
     await page.getByLabel("Mot de passe").fill("mauvais-mot-de-passe");
     await page.getByRole("button", { name: "Se connecter" }).click();
-    await expect(page.getByText("Identifiants invalides ou compte désactivé.")).toBeVisible();
+    await expect(page.getByText(/^Identifiants invalides, compte désactivé/)).toBeVisible();
   });
 
   test("renvoie vers la connexion puis vers la page demandée", async ({ page }) => {

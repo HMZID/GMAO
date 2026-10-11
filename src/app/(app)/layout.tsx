@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/primitives";
 import { ROLE } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { getBranding, logoUrl } from "@/server/services/branding";
+import { getOwnTenantAccess } from "@/server/services/platform";
 import { countUnread } from "@/server/services/notifications";
 import { signOutAction } from "../(auth)/actions";
 
@@ -44,7 +45,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         {/* Marge du bas sur téléphone : la barre d'onglets ne masque pas la fin de la page. */}
         <main className="flex-1 px-3 pb-28 pt-4 sm:px-4 sm:pt-6 md:pb-8 lg:px-8">
-          <div className="mx-auto max-w-7xl">{children}</div>
+          <div className="mx-auto max-w-7xl">
+            <Suspense fallback={null}>
+              <DemoBanner />
+            </Suspense>
+            {children}
+          </div>
         </main>
       </div>
     </div>
@@ -84,6 +90,22 @@ function BrandMark({ logo, className }: { logo?: string | null; className: strin
     <span className={`${className} flex shrink-0 items-center justify-center rounded-md bg-brand-600 text-white`}>
       <Wrench className="h-4 w-4" aria-hidden />
     </span>
+  );
+}
+
+/** Organisation en démonstration : jours restants, rappelés sur chaque page. */
+async function DemoBanner() {
+  const access = await getOwnTenantAccess(await getAuthContext());
+  if (!access?.allowed || !access.demo) return null;
+  const { daysLeft, endsAt } = access.demo;
+  return (
+    <p
+      role="status"
+      className={`mb-4 rounded-md border px-3 py-2 text-sm ${daysLeft <= 3 ? "border-amber-300 bg-amber-50 text-amber-900" : "border-violet-200 bg-violet-50 text-violet-900"}`}
+    >
+      <strong>Version de démonstration</strong> : il reste {daysLeft} jour{daysLeft > 1 ? "s" : ""}, jusqu&apos;au{" "}
+      {endsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}. Vos données sont conservées à la fin de la période.
+    </p>
   );
 }
 

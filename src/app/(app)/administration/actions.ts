@@ -4,6 +4,7 @@ import type { ActionState } from "@/lib/action-state";
 import { act } from "@/server/actions";
 import { createApiKey, revokeApiKey } from "@/server/services/api-keys";
 import { removeLogo, setLogo, updateBranding } from "@/server/services/branding";
+import { createDemoTenant, updateTenantAccess } from "@/server/services/platform";
 import { createCategory, createModel } from "@/server/services/equipment";
 import { createCompany, createJobsite, createSite, createWarehouse, createWorkshop } from "@/server/services/organization";
 import {
@@ -33,6 +34,30 @@ export async function uploadLogoAction(_: ActionState, formData: FormData): Prom
 
 export async function removeLogoAction(_: ActionState): Promise<ActionState> {
   return act((ctx) => removeLogo(ctx), "Logo retiré.");
+}
+
+/* Plateforme : organisations clientes et démonstrations */
+
+export async function createDemoTenantAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  return act(async (ctx) => {
+    const created = await createDemoTenant(ctx, formToObject(formData));
+    return {
+      status: "success",
+      message: `Démonstration « ${created.name} » ouverte jusqu'au ${created.demoEndsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} : communiquer à ${created.adminEmail} son mot de passe initial.`,
+    } satisfies ActionState;
+  });
+}
+
+const TENANT_ACTION_MESSAGE: Record<string, string> = {
+  EXTEND: "Démonstration prolongée.",
+  ACTIVATE: "Organisation passée en abonnement : accès sans échéance.",
+  SUSPEND: "Organisation suspendue : ses utilisateurs et ses clés d'API n'ont plus accès.",
+  RESUME: "Accès rétabli.",
+};
+
+export async function updateTenantAccessAction(tenantId: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  const data = formToObject(formData);
+  return act((ctx) => updateTenantAccess(ctx, tenantId, data), TENANT_ACTION_MESSAGE[String(data.action)] ?? "Enregistré.");
 }
 
 /* Connecteur de l'organisation : clés d'API (INT-01, INT-05) */

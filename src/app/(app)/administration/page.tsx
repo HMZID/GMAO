@@ -1,14 +1,22 @@
-import { Building2, ClipboardCheck, Download, HardHat, Mail, Plug, ScrollText, Shapes, Users } from "lucide-react";
+import { Building2, ClipboardCheck, Download, Globe, HardHat, Mail, Plug, ScrollText, Shapes, Users } from "lucide-react";
 import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
 import { getAuthContext } from "@/server/auth/session";
+import { isPlatformAdmin } from "@/server/services/platform";
 
 export const metadata = { title: "Administration" };
 
 export default async function AdministrationPage() {
   const ctx = await getAuthContext();
   const sections = [
+    {
+      href: "/administration/plateforme",
+      title: "Organisations clientes (plateforme)",
+      text: "Démonstrations à durée limitée pour un client, prolongation, abonnement, suspension.",
+      icon: Globe,
+      show: isPlatformAdmin(ctx),
+    },
     {
       href: "/administration/organisation",
       title: "Organisation",

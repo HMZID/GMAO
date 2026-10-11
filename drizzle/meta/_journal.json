@@ -71,6 +71,13 @@
       "when": 1791731960901,
       "tag": "0009_api_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791732730920,
+      "tag": "0010_tenant_status",
+      "breakpoints": true
     }
   ]
 }

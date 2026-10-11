@@ -27,6 +27,8 @@ export type AuthContext = {
   /** Technicien lié au compte, pour l'exécution des OT. */
   technicianId: string | null;
   channel: Channel;
+  /** Clé d'API du connecteur à l'origine de la requête (jamais de droits de plateforme). */
+  apiKeyId?: string | null;
   roles: Role[];
   assignments: RoleAssignment[];
   /** Le droit est-il détenu sur au moins un périmètre ? */
