@@ -179,6 +179,8 @@ export const auditLogs = pgTable(
     before: jsonb("before"),
     after: jsonb("after"),
     channel: auditChannelEnum("channel").notNull().default("WEB"),
+    /** Administrateur de la plateforme connecté « en tant que » l'utilisateur au moment de l'action. */
+    impersonatedById: text("impersonated_by_id"),
     createdAt: createdAt(),
   },
   (t) => [index("audit_logs_entity_idx").on(t.entityType, t.entityId), index("audit_logs_tenant_created_idx").on(t.tenantId, t.createdAt)],

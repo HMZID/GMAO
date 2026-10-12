@@ -29,6 +29,8 @@ export type AuthContext = {
   channel: Channel;
   /** Clé d'API du connecteur à l'origine de la requête (jamais de droits de plateforme). */
   apiKeyId?: string | null;
+  /** Administrateur de la plateforme connecté « en tant que » cet utilisateur (tracé au journal d'audit). */
+  impersonator?: { id: string; name: string; email: string } | null;
   roles: Role[];
   assignments: RoleAssignment[];
   /** Le droit est-il détenu sur au moins un périmètre ? */

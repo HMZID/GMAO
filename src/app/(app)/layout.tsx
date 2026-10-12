@@ -10,7 +10,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { getBranding, logoUrl } from "@/server/services/branding";
 import { getOwnTenantAccess } from "@/server/services/platform";
 import { countUnread } from "@/server/services/notifications";
-import { signOutAction } from "../(auth)/actions";
+import { signOutAction, stopImpersonationAction } from "../(auth)/actions";
 
 /**
  * Coquille de l'application : la structure est statique, les éléments qui dépendent de la session
@@ -46,6 +46,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Marge du bas sur téléphone : la barre d'onglets ne masque pas la fin de la page. */}
         <main className="flex-1 px-3 pb-28 pt-4 sm:px-4 sm:pt-6 md:pb-8 lg:px-8">
           <div className="mx-auto max-w-7xl">
+            <Suspense fallback={null}>
+              <ImpersonationBanner />
+            </Suspense>
             <Suspense fallback={null}>
               <DemoBanner />
             </Suspense>
@@ -90,6 +93,26 @@ function BrandMark({ logo, className }: { logo?: string | null; className: strin
     <span className={`${className} flex shrink-0 items-center justify-center rounded-md bg-brand-600 text-white`}>
       <Wrench className="h-4 w-4" aria-hidden />
     </span>
+  );
+}
+
+/** Connexion « en tant que » : rappel permanent et retour au compte de l'administrateur. */
+async function ImpersonationBanner() {
+  const ctx = await getAuthContext();
+  if (!ctx.impersonator) return null;
+  const branding = await getBranding(ctx);
+  return (
+    <div role="status" className="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
+      <p className="min-w-0 flex-1">
+        <strong>Connecté en tant que {ctx.name}</strong> ({ctx.email}) — organisation {branding.label}. Vous voyez et agissez comme cet utilisateur ;
+        les actions sont tracées au nom de {ctx.impersonator.name}.
+      </p>
+      <form action={stopImpersonationAction}>
+        <button type="submit" className="rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-800">
+          Revenir à mon compte
+        </button>
+      </form>
+    </div>
   );
 }
 

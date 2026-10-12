@@ -9,13 +9,24 @@ import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode 
 export function FilterField({ label, htmlFor, children, className }: { label: string; htmlFor: string; children: ReactNode; className?: string }) {
   const uid = useId();
   const id = `${htmlFor}${uid}`;
-  const control = isValidElement(children) ? cloneElement(children as ReactElement<Record<string, unknown>>, { id }) : children;
+  const valid = isValidElement(children);
+  const control = valid ? cloneElement(children as ReactElement<Record<string, unknown>>, { id }) : children;
   return (
     <div className={className ?? "w-44"}>
-      <label htmlFor={id} className="mb-1 block text-xs font-medium text-slate-500">
-        {label}
-      </label>
-      {control}
+      {valid ? (
+        <>
+          <label htmlFor={id} className="mb-1 block text-xs font-medium text-slate-500">
+            {label}
+          </label>
+          {control}
+        </>
+      ) : (
+        // Champ qui ne peut pas recevoir d'identifiant : le libellé l'englobe pour garder l'association.
+        <label className="block">
+          <span className="mb-1 block text-xs font-medium text-slate-500">{label}</span>
+          {control}
+        </label>
+      )}
     </div>
   );
 }

@@ -85,6 +85,7 @@ export async function audit(tx: DbOrTx, ctx: AuthContext, entry: AuditEntry) {
     before: toJson(entry.before),
     after: toJson(entry.after),
     channel: ctx.channel,
+    impersonatedById: ctx.impersonator?.id ?? null,
   });
 }
 

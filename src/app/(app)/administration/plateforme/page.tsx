@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form";
 import { PageHeader } from "@/components/layout/page-header";
@@ -25,7 +26,7 @@ export default async function PlatformPage() {
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Organisations clientes"
-        description="Ouvrir une version de démonstration pour un client pendant une période définie, la prolonger, passer en abonnement ou suspendre l'accès."
+        description="Toutes les organisations de la plateforme : démonstrations et périodes, abonnements, suspensions. Ouvrir une organisation pour voir ses sociétés et ses comptes, créer un compte ou se connecter en tant que l'un de ses utilisateurs."
       />
       <Disclosure summary="Nouvelle démonstration" className="mb-6">
         <ActionForm action={createDemoTenantAction} resetOnSuccess className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -72,7 +73,9 @@ export default async function PlatformPage() {
               <TR key={t.id}>
                 <TD>
                   <p className="font-medium text-slate-900">
-                    {t.displayName || t.name}
+                    <Link href={`/administration/plateforme/${t.id}`} className="text-brand-700 hover:underline">
+                      {t.displayName || t.name}
+                    </Link>
                     {t.own ? <Badge className="ml-2">Votre organisation</Badge> : null}
                   </p>
                   {t.contactEmail ? <p className="text-xs text-slate-500">{t.contactEmail}</p> : null}
