@@ -37,7 +37,10 @@ export default async function ConnectorPage() {
       />
 
       <Card className="mb-6">
-        <CardHeader title="Clés d'API" description="Une clé par outil ou par flux : on peut la révoquer sans gêner les autres." />
+        <CardHeader
+          title="Clés d'API"
+          description="Une clé par outil ou par flux : on peut la révoquer sans gêner les autres. Elle agit avec le périmètre de son créateur (groupe, société ou site), jamais au-delà."
+        />
         <CardBody className="border-b border-slate-100">
           <Disclosure summary="Nouvelle clé">
             <ActionForm action={createApiKeyAction} resetOnSuccess className="grid gap-3 sm:grid-cols-3">

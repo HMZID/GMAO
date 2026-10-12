@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildAuthContext, restrictAuthContext } from "@/server/authz/context";
-import { API_KEY_PERMISSIONS, API_KEY_ROLES, apiKeyFromHeaders, apiKeyState, generateApiKey, hashApiKey, isApiKey } from "../api-keys";
+import { API_KEY_PERMISSIONS, apiKeyFromHeaders, apiKeyState, generateApiKey, hashApiKey, isApiKey } from "../api-keys";
 
 describe("Clés d'API : génération et reconnaissance", () => {
   it("génère une clé préfixée, unique, dont seule l'empreinte est conservée", () => {
@@ -35,10 +35,9 @@ describe("Clés d'API : génération et reconnaissance", () => {
 });
 
 describe("Clés d'API : droits", () => {
-  const ctx = buildAuthContext(
-    { id: "u1", tenantId: "t1", name: "Connecteur", email: "admin@example.com" },
-    API_KEY_ROLES.map((role) => ({ role, scopeType: "TENANT" as const, scopeId: null })),
-  );
+  const ctx = buildAuthContext({ id: "u1", tenantId: "t1", name: "Connecteur", email: "admin@example.com" }, [
+    { role: "EXECUTIVE", scopeType: "TENANT", scopeId: null },
+  ]);
 
   it("lecture : export et lecture, aucune écriture ni administration", () => {
     const read = restrictAuthContext(ctx, API_KEY_PERMISSIONS.READ);
@@ -65,5 +64,15 @@ describe("Clés d'API : droits", () => {
     expect(write.can("settings.manage")).toBe(false);
     expect(write.can("workorder.manage")).toBe(false);
     expect(write.can("audit.read")).toBe(false);
+  });
+
+  it("une clé garde le périmètre de son créateur : jamais plus que lui (HAB-02)", () => {
+    const companyExecutive = buildAuthContext({ id: "u2", tenantId: "t1", name: "Connecteur", email: "direction@example.com" }, [
+      { role: "EXECUTIVE", scopeType: "COMPANY", scopeId: "c1" },
+    ]);
+    const key = restrictAuthContext(companyExecutive, API_KEY_PERMISSIONS.READ);
+    expect(key.scope("data.export")).toEqual({ all: false, companyIds: ["c1"], siteIds: [] });
+    expect(key.canOn("equipment.read", { companyId: "c1" })).toBe(true);
+    expect(key.canOn("equipment.read", { companyId: "c2" })).toBe(false);
   });
 });

@@ -7,6 +7,7 @@ export const USERS = {
   admin: "admin@demo.gmao",
   maintenanceManager: "resp.maintenance@demo.gmao",
   workshopLyon: "chef.lyon@demo.gmao",
+  workshopGrenoble: "chef.grenoble@demo.gmao",
   technicianLyon: "tech.lyon@demo.gmao",
   operator: "conducteur@demo.gmao",
   storekeeper: "magasin@demo.gmao",

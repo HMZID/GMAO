@@ -2,16 +2,19 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import { buildAuthContext, restrictAuthContext, type AuthContext, type Channel } from "@/server/authz/context";
 import { db } from "@/server/db";
-import { apiKeys, tenants, user } from "@/server/db/schema";
-import { API_KEY_PERMISSIONS, API_KEY_ROLES, apiKeyState, hashApiKey, type ApiKeyAccess } from "@/server/domain/api-keys";
+import { apiKeys, roleAssignments, tenants, user } from "@/server/db/schema";
+import { API_KEY_PERMISSIONS, apiKeyState, hashApiKey, type ApiKeyAccess } from "@/server/domain/api-keys";
 import { tenantAccess } from "@/server/domain/tenants";
+import type { Role } from "@/server/authz/permissions";
 
 /** Intervalle minimal entre deux mises à jour de la date de dernière utilisation (limite les écritures). */
 const LAST_USED_RESOLUTION_MS = 5 * 60 * 1000;
 
 /**
- * Contexte d'une clé d'API : tout le groupe de l'organisation, restreint aux droits de son niveau d'accès.
- * Refusée si elle est révoquée, expirée, ou si son créateur est désactivé.
+ * Contexte d'une clé d'API : les habilitations actuelles de son créateur (rôles × périmètres), restreintes
+ * aux droits de son niveau d'accès. Une clé ne voit donc jamais plus que celui qui l'a créée : une direction
+ * limitée à une société n'obtient pas une clé sur tout le groupe (HAB-02). Refusée si elle est révoquée,
+ * expirée, si son créateur est désactivé ou si l'organisation n'a plus accès.
  */
 export async function authenticateApiKey(key: string, channel: Channel = "API", now = new Date()): Promise<AuthContext | null> {
   const [row] = await db
@@ -38,9 +41,19 @@ export async function authenticateApiKey(key: string, channel: Channel = "API", 
   if (!row.lastUsedAt || now.getTime() - row.lastUsedAt.getTime() > LAST_USED_RESOLUTION_MS) {
     await db.update(apiKeys).set({ lastUsedAt: now }).where(eq(apiKeys.id, row.id));
   }
+  const assignments = await db
+    .select({
+      role: roleAssignments.role,
+      scopeType: roleAssignments.scopeType,
+      scopeId: roleAssignments.scopeId,
+      validFrom: roleAssignments.validFrom,
+      validTo: roleAssignments.validTo,
+    })
+    .from(roleAssignments)
+    .where(and(eq(roleAssignments.userId, row.userId), eq(roleAssignments.tenantId, row.tenantId)));
   const ctx = buildAuthContext(
     { id: row.userId, tenantId: row.tenantId, name: `Connecteur « ${row.name} »`, email: row.email },
-    API_KEY_ROLES.map((role) => ({ role, scopeType: "TENANT" as const, scopeId: null })),
+    assignments.map((a) => ({ ...a, role: a.role as Role })),
     { channel, now },
   );
   return { ...restrictAuthContext(ctx, API_KEY_PERMISSIONS[row.access as ApiKeyAccess] ?? []), apiKeyId: row.id };

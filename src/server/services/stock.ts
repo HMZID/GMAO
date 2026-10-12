@@ -5,7 +5,7 @@ import type { AuthContext } from "@/server/authz/context";
 import { db, type DbOrTx } from "@/server/db";
 import { parts, sites, stockLevels, stockMovements, stockReservations, suppliers, warehouses, workOrders } from "@/server/db/schema";
 import { checkIssue, checkReservation, weightedAverageCost } from "@/server/domain/stock";
-import { BusinessRuleError, ConflictError, NotFoundError } from "@/server/errors";
+import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { bool, clearable, optionalText, text } from "@/server/validation";
 import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
 import { isUniqueViolation } from "./organization";
@@ -309,6 +309,18 @@ export const ADJUSTMENT_VALIDATION_THRESHOLD = 100;
  * Idempotent par clientId ; stock physique jamais négatif ; ligne verrouillée pendant la mise à jour.
  */
 export async function createMovement(ctx: AuthContext, raw: unknown) {
+  // Une clé d'API n'initialise le stock que par l'import contrôlé (simulation, sans doublon) : pas de
+  // réception, de rebut, d'ajustement ni de transfert direct par un outil externe.
+  if (ctx.apiKeyId) throw new ForbiddenError("Une clé d'API ne peut pas enregistrer de mouvement de stock : utiliser l'import des stocks initiaux.");
+  return writeMovement(ctx, raw);
+}
+
+/** Réception du stock initial par l'import (`imports.ts`), seul chemin ouvert aux clés d'API. */
+export async function createInitialStockReceipt(ctx: AuthContext, raw: { type: "RECEIPT" } & Record<string, unknown>) {
+  return writeMovement(ctx, raw);
+}
+
+async function writeMovement(ctx: AuthContext, raw: unknown) {
   const input = parseInput(movementInput, raw);
   return db.transaction(async (tx) => {
     if (input.clientId) {

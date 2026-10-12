@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { signImpersonation, verifyImpersonation } from "../impersonation";
+import { impersonationRefusals, signImpersonation, verifyImpersonation } from "../impersonation";
 
 const secret = "secret-de-test-0123456789abcdef0123";
 const now = new Date("2026-10-12T10:00:00Z");
@@ -21,5 +21,24 @@ describe("Connexion « en tant que »", () => {
 
   it("refuse de se prendre soi-même pour cible", () => {
     expect(verifyImpersonation(signImpersonation({ ...valid, targetId: "admin-1" }, secret), secret, now)).toBeNull();
+  });
+});
+
+describe("Connexion « en tant que » : qui peut être visé", () => {
+  const target = { id: "user-2", isActive: true, isPlatformAdmin: false };
+
+  it("autorise un utilisateur actif d'une organisation", () => {
+    expect(impersonationRefusals({ adminId: "admin-1", alreadyImpersonating: false, target })).toEqual([]);
+  });
+
+  it("refuse un autre administrateur de la plateforme et un compte désactivé, avec toutes les raisons", () => {
+    expect(
+      impersonationRefusals({ adminId: "admin-1", alreadyImpersonating: false, target: { ...target, isPlatformAdmin: true, isActive: false } }),
+    ).toEqual(["Impossible de prendre la place d'un autre administrateur de la plateforme.", "Ce compte est désactivé : le réactiver d'abord."]);
+  });
+
+  it("refuse soi-même et une connexion en cascade", () => {
+    expect(impersonationRefusals({ adminId: "admin-1", alreadyImpersonating: false, target: { ...target, id: "admin-1" } })).toHaveLength(1);
+    expect(impersonationRefusals({ adminId: "admin-1", alreadyImpersonating: true, target })).toEqual(["Revenir d'abord à votre compte."]);
   });
 });

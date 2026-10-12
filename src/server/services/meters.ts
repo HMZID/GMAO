@@ -7,7 +7,7 @@ import { equipment, meterEvents, meterReadings, meters } from "@/server/db/schem
 import { averageDailyUsage, checkReading, offsetAfterReplacement, toCumulative } from "@/server/domain/meters";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { optionalDate, optionalText, text } from "@/server/validation";
-import { assertCanOn, audit, parseInput } from "./_shared";
+import { assertCanOn, assertVisible, audit, parseInput } from "./_shared";
 import { recomputeDueItems } from "./preventive";
 
 export const readingInput = z.object({
@@ -253,7 +253,7 @@ export async function replaceMeter(ctx: AuthContext, meterId: string, raw: unkno
 
 export async function listReadings(ctx: AuthContext, meterId: string, limit = 50) {
   const { companyId, siteId } = await loadMeter(db, ctx, meterId);
-  assertCanOn(ctx, "meter.read", { companyId, siteId });
+  assertVisible(ctx, "meter.read", { companyId, siteId }, "Compteur");
   return db.query.meterReadings.findMany({
     where: eq(meterReadings.meterId, meterId),
     orderBy: desc(meterReadings.readAt),
@@ -264,7 +264,7 @@ export async function listReadings(ctx: AuthContext, meterId: string, limit = 50
 
 export async function listMeterEvents(ctx: AuthContext, meterId: string) {
   const { companyId, siteId } = await loadMeter(db, ctx, meterId);
-  assertCanOn(ctx, "meter.read", { companyId, siteId });
+  assertVisible(ctx, "meter.read", { companyId, siteId }, "Compteur");
   return db.select().from(meterEvents).where(eq(meterEvents.meterId, meterId)).orderBy(desc(meterEvents.occurredAt));
 }
 
