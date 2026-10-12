@@ -101,6 +101,24 @@ export function buildAuthContext(user: ContextUser, allAssignments: RoleAssignme
 }
 
 /**
+ * Contexte des traitements planifiés (recalcul des échéances, génération des OT préventifs) : aucun
+ * utilisateur n'agit. Les colonnes d'auteur, toutes facultatives, restent vides et le journal d'audit
+ * porte le canal SYSTEM. Droits du responsable maintenance sur toute l'organisation.
+ */
+export function systemContext(tenantId: string, now: Date = new Date()): AuthContext {
+  const ctx = buildAuthContext(
+    { id: "", tenantId, name: "Traitement planifié", email: "" },
+    [{ role: "MAINTENANCE_MANAGER", scopeType: "TENANT", scopeId: null }],
+    {
+      channel: "SYSTEM",
+      now,
+    },
+  );
+  // Pas d'utilisateur : NULL dans les colonnes d'auteur (références vers `user`), jamais un identifiant inventé.
+  return { ...ctx, userId: null as unknown as string };
+}
+
+/**
  * Contexte limité à une liste de droits (clés d'API du connecteur, couche MCP) : un droit absent de la
  * liste est retiré, même si les rôles le donnent ; les périmètres des droits conservés sont inchangés.
  */

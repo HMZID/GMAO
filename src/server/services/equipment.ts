@@ -24,7 +24,18 @@ import {
 import { OPEN_STATUSES } from "@/server/domain/work-order-status";
 import { BusinessRuleError, ConflictError, NotFoundError } from "@/server/errors";
 import { bool, clearable, date, optionalDate, optionalId, optionalNumber, optionalText, text } from "@/server/validation";
-import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere, type Page } from "./_shared";
+import {
+  assertCan,
+  assertCanOn,
+  assertSameTenant,
+  assertVisible,
+  audit,
+  offsetOf,
+  paginationSchema,
+  parseInput,
+  scopeWhere,
+  type Page,
+} from "./_shared";
 import { getActiveAssignment, setEquipmentStatus } from "./equipment-status";
 import { createMeter } from "./meters";
 import { isUniqueViolation } from "./organization";
@@ -123,7 +134,7 @@ export async function getEquipment(ctx: AuthContext, id: string) {
     },
   });
   if (!eqRow) throw new NotFoundError("Équipement");
-  assertCanOn(ctx, "equipment.read", eqRow);
+  assertVisible(ctx, "equipment.read", eqRow, "Équipement");
 
   const [due, recentWorkOrders, openRequests, plans] = await Promise.all([
     db
@@ -185,7 +196,7 @@ export async function findEquipmentByQrToken(ctx: AuthContext, token: string) {
     .from(equipment)
     .where(and(eq(equipment.qrToken, token), eq(equipment.tenantId, ctx.tenantId)));
   if (!row) throw new NotFoundError("Équipement");
-  assertCanOn(ctx, "equipment.read", row);
+  assertVisible(ctx, "equipment.read", row, "Équipement");
   return row;
 }
 

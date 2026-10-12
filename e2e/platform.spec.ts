@@ -135,7 +135,7 @@ test("l'administrateur voit chaque organisation, y crée un compte et se connect
   await expect(page.getByText("via l'administrateur de la plateforme").first()).toBeVisible();
 });
 
-test("une connexion « en tant que » ne vise jamais un administrateur de la plateforme ; un jeton forgé est ignoré", async ({ page, context }) => {
+test("un jeton « en tant que » forgé est ignoré : le compte reste celui de l'utilisateur connecté", async ({ page, context }) => {
   await login(page, USERS.maintenanceManager);
   // Jeton forgé (mauvaise signature) : le compte reste celui de l'utilisateur connecté.
   await context.addCookies([{ name: "gmao_impersonation", value: "x.y.9999999999999.forge", url: page.url() }]);

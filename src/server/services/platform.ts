@@ -7,7 +7,7 @@ import type { AuthContext } from "@/server/authz/context";
 import { db } from "@/server/db";
 import { account, companies, equipmentCategories, roleAssignments, sites, tenants, user, warehouses, workshops } from "@/server/db/schema";
 import { ROLES } from "@/server/authz/permissions";
-import { IMPERSONATION_TTL_MS, signImpersonation } from "@/server/domain/impersonation";
+import { IMPERSONATION_TTL_MS, impersonationRefusals, signImpersonation } from "@/server/domain/impersonation";
 import { companyCodeFrom, DEMO_DURATIONS, demoEndsAt, platformAdmins, tenantAccess, type TenantStatus } from "@/server/domain/tenants";
 import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { text } from "@/server/validation";
@@ -277,19 +277,21 @@ export async function createTenantUser(ctx: AuthContext, tenantId: string, raw: 
  */
 export async function startImpersonation(ctx: AuthContext, userId: string, now = new Date()) {
   assertPlatformAdmin(ctx);
-  if (ctx.impersonator) throw new BusinessRuleError(["Revenir d'abord à votre compte."]);
   const [target] = await db
     .select({ id: user.id, name: user.name, email: user.email, tenantId: user.tenantId, isActive: user.isActive })
     .from(user)
     .where(eq(user.id, userId));
   if (!target) throw new NotFoundError("Utilisateur");
-  if (target.id === ctx.userId) throw new BusinessRuleError(["Vous êtes déjà connecté avec ce compte."]);
-  if (!target.isActive) throw new BusinessRuleError(["Ce compte est désactivé : le réactiver d'abord."]);
   const [platformRole] = await db
     .select({ id: roleAssignments.id })
     .from(roleAssignments)
     .where(and(eq(roleAssignments.userId, target.id), eq(roleAssignments.role, "ADMIN")));
-  if (platformRole) throw new BusinessRuleError(["Impossible de prendre la place d'un autre administrateur de la plateforme."]);
+  const refusals = impersonationRefusals({
+    adminId: ctx.userId,
+    alreadyImpersonating: !!ctx.impersonator,
+    target: { id: target.id, isActive: target.isActive, isPlatformAdmin: !!platformRole },
+  });
+  if (refusals.length > 0) throw new BusinessRuleError(refusals);
   const expiresAt = now.getTime() + IMPERSONATION_TTL_MS;
   await db.transaction(async (tx) => {
     await audit(

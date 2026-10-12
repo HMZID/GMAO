@@ -1,10 +1,12 @@
 import { connection } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { processEmailQueue, runScheduledAlerts } from "@/server/services/email";
+import { runScheduledPreventive } from "@/server/services/preventive";
 
 /**
  * Déclenchement par une tâche planifiée externe (cron de l'hébergeur) quand le processus `npm run worker`
- * n'est pas utilisé : alertes calculées puis envoi de la file. Protégé par `Authorization: Bearer <CRON_SECRET>`.
+ * n'est pas utilisé : échéances préventives recalculées et OT générés, alertes calculées, puis envoi de la file.
+ * Protégé par `Authorization: Bearer <CRON_SECRET>`.
  */
 export async function POST(request: Request) {
   return run(request);
@@ -21,7 +23,8 @@ async function run(request: Request) {
   const given = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
   const ok = !!secret && secret.length >= 16 && given.length === secret.length && timingSafeEqual(Buffer.from(given), Buffer.from(secret));
   if (!ok) return Response.json({ error: { code: "unauthorized", message: "Authentification requise." } }, { status: 401 });
+  const preventive = await runScheduledPreventive();
   const alerts = await runScheduledAlerts();
   const queue = await processEmailQueue({ limit: 200 });
-  return Response.json({ data: { ...alerts, ...queue } });
+  return Response.json({ data: { preventive, ...alerts, ...queue } });
 }

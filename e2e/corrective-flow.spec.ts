@@ -65,6 +65,13 @@ test("cycle complet d'une panne : DI → OT → réalisation → remise en servi
   await page.getByRole("button", { name: "Terminer les travaux" }).click();
   await expect(page.getByText("Terminer les travaux : effectué.")).toBeVisible();
 
+  // L'exécutant ne valide jamais sa propre remise en service (COR-12, HAB-05), pas plus par l'API.
+  const workOrderId = workOrderUrl.split("/").pop();
+  const selfRelease = await page.request.post(`/api/v1/work-orders/${workOrderId}/transitions`, { data: { to: "TECH_CLOSED", testsPassed: true } });
+  expect(selfRelease.status()).toBe(422);
+  expect(JSON.stringify(await selfRelease.json())).toMatch(/séparation des tâches|personne habilitée|Seul un gestionnaire/);
+  expect((await (await page.request.get(`/api/v1/work-orders/${workOrderId}`)).json()).data.status).toBe("WORK_DONE");
+
   // 5. Le chef d'atelier valide la remise en service : l'équipement redevient exploitable
   await login(page, USERS.workshopLyon, workOrderUrl);
   await page.getByLabel("Essais de remise en service conformes").check();

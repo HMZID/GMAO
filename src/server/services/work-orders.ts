@@ -38,7 +38,7 @@ import {
 } from "@/server/domain/work-order-status";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { bool, optionalDate, optionalId, optionalNumber, optionalText, text } from "@/server/validation";
-import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
+import { assertCan, assertCanOn, assertSameTenant, assertVisible, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
 import type { Permission } from "@/server/authz/permissions";
 import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equipment-status";
 import { notifyAssignedTechnicians, notifyByPermission } from "./notifications";
@@ -266,7 +266,7 @@ export async function getWorkOrder(ctx: AuthContext, id: string) {
     },
   });
   if (!wo) throw new NotFoundError("Ordre de travail");
-  assertCanOn(ctx, "workorder.read", wo);
+  assertVisible(ctx, "workorder.read", wo, "Ordre de travail");
 
   const [partLines, reservations, meterRows, costs, snapshot, requests] = await Promise.all([
     db
@@ -544,7 +544,7 @@ export async function transitionWorkOrder(ctx: AuthContext, id: string, raw: unk
       .where(and(eq(workOrders.id, id), eq(workOrders.tenantId, ctx.tenantId)))
       .for("update");
     if (!wo) throw new NotFoundError("Ordre de travail");
-    assertCanOn(ctx, "workorder.read", wo);
+    assertVisible(ctx, "workorder.read", wo, "Ordre de travail");
 
     const snapshot = await buildSnapshot(tx, wo);
     const check = checkTransition(snapshot, { ...input, actor: actorFor(ctx, wo) }, now);
