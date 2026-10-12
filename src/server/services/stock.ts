@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { AuthContext } from "@/server/authz/context";
 import { db, type DbOrTx } from "@/server/db";
 import { parts, sites, stockLevels, stockMovements, stockReservations, suppliers, warehouses, workOrders } from "@/server/db/schema";
-import { checkIssue, checkReservation, weightedAverageCost } from "@/server/domain/stock";
+import { checkIssue, checkReservation, INVENTORY_VALIDATION_THRESHOLD, weightedAverageCost } from "@/server/domain/stock";
 import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { bool, clearable, optionalText, text } from "@/server/validation";
 import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
@@ -207,7 +207,7 @@ export async function updateStockLevelSettings(ctx: AuthContext, levelId: string
 /* Niveaux de stock                                                     */
 /* ------------------------------------------------------------------ */
 
-async function warehouseScope(tx: DbOrTx, ctx: AuthContext, warehouseId: string) {
+export async function warehouseScope(tx: DbOrTx, ctx: AuthContext, warehouseId: string) {
   const [row] = await tx
     .select({ id: warehouses.id, siteId: warehouses.siteId, companyId: sites.companyId, name: warehouses.name })
     .from(warehouses)
@@ -221,7 +221,7 @@ async function warehouseScope(tx: DbOrTx, ctx: AuthContext, warehouseId: string)
  * Ligne de stock verrouillée pour la durée de la transaction (règle 9 de §7.5). Toute modification de
  * quantité passe ici : l'article et le magasin doivent appartenir à l'organisation.
  */
-async function lockLevel(tx: DbOrTx, ctx: AuthContext, partId: string, warehouseId: string) {
+export async function lockLevel(tx: DbOrTx, ctx: AuthContext, partId: string, warehouseId: string) {
   await assertSameTenant(tx, ctx, parts, partId, "Article");
   await assertSameTenant(tx, ctx, warehouses, warehouseId, "Magasin");
   await tx
@@ -301,9 +301,6 @@ export const movementInput = z
   .refine((v) => v.type !== "ADJUSTMENT" || !!v.reason, { message: "Le motif est obligatoire", path: ["reason"] })
   .refine((v) => v.type !== "SCRAP" || !!v.reason, { message: "Le motif est obligatoire", path: ["reason"] });
 
-/** Seuil d'écart d'inventaire au-delà duquel une validation est requise, en valeur (STK-07) [AC]. */
-export const ADJUSTMENT_VALIDATION_THRESHOLD = 100;
-
 /**
  * Mouvements manuels : réception, ajustement d'inventaire, mise au rebut, transfert.
  * Idempotent par clientId ; stock physique jamais négatif ; ligne verrouillée pendant la mise à jour.
@@ -377,9 +374,11 @@ async function writeMovement(ctx: AuthContext, raw: unknown) {
     if (input.type === "ADJUSTMENT") {
       if (level.onHand + input.quantity < 0) throw new BusinessRuleError(["Le stock physique ne peut pas devenir négatif."]);
       const value = Math.abs(input.quantity) * part.averageCost;
-      if (value > ADJUSTMENT_VALIDATION_THRESHOLD && !ctx.canOn("inventory.validate", wh)) {
-        // TODO(STK-07) : laisser l'écart « à valider » au lieu de le refuser (circuit HAB-04).
-        throw new BusinessRuleError([`Écart de ${value.toFixed(2)} au-delà du seuil : validation du responsable maintenance requise.`]);
+      if (value > INVENTORY_VALIDATION_THRESHOLD && !ctx.canOn("inventory.validate", wh)) {
+        // STK-07 : un écart important passe par un comptage d'inventaire, « à valider » sans toucher au stock.
+        throw new BusinessRuleError([
+          `Écart de ${value.toFixed(2)} € au-delà du seuil : saisir un comptage (Pièces et stocks › Inventaire), l'écart sera soumis à validation.`,
+        ]);
       }
       await tx
         .update(stockLevels)

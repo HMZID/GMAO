@@ -5,6 +5,7 @@ import type { AuthContext } from "@/server/authz/context";
 import { db, type DbOrTx } from "@/server/db";
 import {
   absences,
+  documents,
   dueItems,
   equipment,
   jobsites,
@@ -21,9 +22,9 @@ import {
   warehouses,
   workOrderAssignees,
   workOrderCosts,
+  workOrders,
   workOrderStatusHistory,
   workOrderTasks,
-  workOrders,
   workRequests,
   workshops,
 } from "@/server/db/schema";
@@ -203,6 +204,15 @@ async function buildSnapshot(tx: DbOrTx, wo: WorkOrderRow): Promise<WorkOrderSna
     .select({ n: count() })
     .from(workOrderCosts)
     .where(and(eq(workOrderCosts.workOrderId, wo.id), eq(workOrderCosts.approvalStatus, "PENDING")));
+  const reportRows =
+    wo.type === "REGULATORY"
+      ? await tx
+          .select({ n: count() })
+          .from(documents)
+          .where(
+            and(eq(documents.entityType, "WORK_ORDER"), eq(documents.entityId, wo.id), eq(documents.kind, "REPORT"), isNull(documents.deletedAt)),
+          )
+      : [{ n: 0 }];
   const readingRows = primaryMeter
     ? await tx
         .select({ n: count() })
@@ -234,6 +244,8 @@ async function buildSnapshot(tx: DbOrTx, wo: WorkOrderRow): Promise<WorkOrderSna
     consumedPartLines: issueRows[0]?.n ?? 0,
     timeEntryCount: entries.length,
     externalCostKnown: wo.externalCost !== null,
+    isRegulatory: wo.type === "REGULATORY",
+    hasReportDocument: (reportRows[0]?.n ?? 0) > 0,
     pendingExpenses: pendingExpenseRows[0]?.n ?? 0,
   };
 }

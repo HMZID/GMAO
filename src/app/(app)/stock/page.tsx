@@ -28,9 +28,14 @@ export default async function PartsPage(props: PageProps<"/stock">) {
         actions={
           <>
             {ctx.can("stock.read") ? (
-              <ButtonLink href="/stock/mouvements" variant="secondary">
-                Mouvements
-              </ButtonLink>
+              <>
+                <ButtonLink href="/stock/mouvements" variant="secondary">
+                  Mouvements
+                </ButtonLink>
+                <ButtonLink href="/stock/inventaire" variant="secondary">
+                  Inventaire
+                </ButtonLink>
+              </>
             ) : null}
             {ctx.can("part.write") ? <ButtonLink href="/stock/articles/nouveau">Nouvel article</ButtonLink> : null}
           </>
