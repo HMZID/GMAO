@@ -50,6 +50,10 @@ export type WorkOrderSnapshot = {
   consumedPartLines: number;
   timeEntryCount: number;
   externalCostKnown: boolean;
+  /** Contrôle réglementaire (OT de type REGULATORY) : rapport de l'organisme obligatoire (PRV-12). */
+  isRegulatory: boolean;
+  /** Document de type « Rapport » joint à l'OT. */
+  hasReportDocument: boolean;
   /** Dépenses en attente de validation (HAB-04). */
   pendingExpenses?: number;
 };
@@ -143,6 +147,10 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
       }
       if (wo.activeReservations > 0) {
         errors.push("Des réservations de pièces sont encore actives : les consommer ou les retourner.");
+      }
+      // PRV-12 : pas de clôture d'un contrôle réglementaire sans le rapport de l'organisme.
+      if (wo.isRegulatory && !wo.hasReportDocument) {
+        errors.push("Le rapport du contrôle réglementaire doit être joint (document de type « Rapport »).");
       }
       break;
     }

@@ -1,6 +1,6 @@
 import { index, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { createdAt, id, money, quantity } from "./columns";
-import { movementTypeEnum, reservationStatusEnum } from "./enums";
+import { createdAt, id, money, quantity, ts } from "./columns";
+import { inventoryCountStatusEnum, movementTypeEnum, reservationStatusEnum } from "./enums";
 import { user } from "./auth";
 import { workOrders } from "./maintenance";
 import { costCenters, storageLocations, tenants, warehouses } from "./organization";
@@ -70,4 +70,48 @@ export const stockReservations = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("stock_reservations_wo_idx").on(t.workOrderId), index("stock_reservations_part_idx").on(t.partId)],
+);
+
+/**
+ * Comptages d'inventaire (STK-07, règle 8 de §7.5). L'écart est calculé sur le stock théorique à l'heure
+ * du comptage : les mouvements postérieurs (sortie sur OT pendant l'inventaire) restent enregistrés à part.
+ * Au-delà du seuil en valeur, l'écart est « à valider » et ne modifie pas le stock avant la validation.
+ */
+export const inventoryCounts = pgTable(
+  "inventory_counts",
+  {
+    id: id(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id),
+    partId: uuid("part_id")
+      .notNull()
+      .references(() => parts.id),
+    warehouseId: uuid("warehouse_id")
+      .notNull()
+      .references(() => warehouses.id),
+    countedQuantity: quantity("counted_quantity").notNull(),
+    /** Stock physique théorique à l'heure du comptage. */
+    expectedQuantity: quantity("expected_quantity").notNull(),
+    difference: quantity("difference").notNull(),
+    /** Coût moyen pondéré au comptage : valeur de l'écart comparée au seuil. */
+    unitCost: money("unit_cost").notNull(),
+    countedAt: ts("counted_at").notNull(),
+    status: inventoryCountStatusEnum("status").notNull(),
+    comment: text("comment"),
+    decisionComment: text("decision_comment"),
+    /** Mouvement d'ajustement créé à l'application de l'écart. */
+    adjustmentId: uuid("adjustment_id").references(() => stockMovements.id),
+    /** Identifiant généré par le client : un comptage reçu deux fois n'est enregistré qu'une fois. */
+    clientId: text("client_id"),
+    createdById: text("created_by_id").references(() => user.id),
+    decidedById: text("decided_by_id").references(() => user.id),
+    decidedAt: ts("decided_at"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("inventory_counts_status_idx").on(t.tenantId, t.status),
+    index("inventory_counts_part_idx").on(t.partId, t.warehouseId),
+    uniqueIndex("inventory_counts_client_uq").on(t.tenantId, t.clientId),
+  ],
 );

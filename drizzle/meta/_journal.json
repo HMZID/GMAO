@@ -92,6 +92,13 @@
       "when": 1791813090724,
       "tag": "0012_audit_impersonation",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791840560472,
+      "tag": "0013_inventory_counts",
+      "breakpoints": true
     }
   ]
 }

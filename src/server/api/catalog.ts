@@ -9,6 +9,7 @@ import { exportQuery } from "@/server/services/exports";
 import { executeInput } from "@/server/services/imports";
 import { indicatorInput } from "@/server/services/indicators";
 import { indicatorFilters } from "@/server/services/kpi";
+import { inventoryCountInput, inventoryDecisionInput } from "@/server/services/inventory";
 import { readingInput, replacementInput, reviewInput } from "@/server/services/meters";
 import { weekInput } from "@/server/services/planning";
 import { applyPlanInput, dueFilters, planInput } from "@/server/services/preventive";
@@ -244,6 +245,26 @@ export const ENDPOINTS: Endpoint[] = [
     summary: "Réception, transfert, ajustement, rebut (idempotent par clientId)",
     permission: "stock.move",
     body: movementInput,
+  },
+  {
+    method: "GET",
+    path: "/api/v1/inventory-counts",
+    summary: "Comptages d'inventaire (filtre status : PENDING, APPLIED, REJECTED)",
+    permission: "stock.read",
+  },
+  {
+    method: "POST",
+    path: "/api/v1/inventory-counts",
+    summary: "Comptage : écart sur le stock théorique à l'heure du comptage, « à valider » au-delà du seuil (idempotent par clientId)",
+    permission: "inventory.adjust",
+    body: inventoryCountInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/inventory-counts/{id}/decision",
+    summary: "Validation ou refus d'un écart à valider (motif obligatoire en cas de refus)",
+    permission: "inventory.validate",
+    body: inventoryDecisionInput,
   },
   { method: "GET", path: "/api/v1/warehouses", summary: "Magasins du périmètre (sortie de pièces depuis le mobile)" },
   { method: "GET", path: "/api/v1/suppliers", summary: "Fournisseurs et prestataires", permission: "supplier.read" },

@@ -220,6 +220,13 @@ export const MOVEMENT_TYPE: Record<string, { label: string; sign: 1 | -1 | 0 }> 
   SCRAP: { label: "Mise au rebut", sign: -1 },
 };
 
+/** Comptage d'inventaire (STK-07). */
+export const INVENTORY_COUNT_STATUS: Record<string, { label: string; tone: Tone }> = {
+  PENDING: { label: "À valider", tone: "amber" },
+  APPLIED: { label: "Appliqué", tone: "green" },
+  REJECTED: { label: "Refusé", tone: "red" },
+};
+
 export const ROLE: Record<string, string> = {
   ADMIN: "Administrateur de la plateforme",
   MAINTENANCE_MANAGER: "Responsable maintenance",
