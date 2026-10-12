@@ -92,3 +92,52 @@ test("l'administrateur gère la plateforme, pas la maintenance ; la direction g�
   await page.goto("/demandes/nouvelle");
   await expect(page.getByRole("heading", { name: "Signaler une panne" })).toBeVisible();
 });
+
+test("l'administrateur voit chaque organisation, y crée un compte et se connecte en tant qu'un utilisateur", async ({ page }) => {
+  const stamp = Date.now();
+  await login(page, USERS.admin, "/administration/plateforme");
+  await page
+    .locator("table")
+    .getByRole("link", { name: /Groupe Démo BTP/ })
+    .click();
+  await expect(page).toHaveURL(/\/administration\/plateforme\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { name: "Sociétés et sites" })).toBeVisible();
+
+  // Création d'un compte dans l'organisation.
+  await page.getByText("Nouveau compte").click();
+  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Créer le compte" }) });
+  await form.getByLabel("Nom et prénom").fill(`Compte Plateforme ${stamp}`);
+  await form.getByLabel("Courriel (identifiant)").fill(`plateforme.${stamp}@demo.gmao`);
+  await form.getByLabel("Mot de passe initial").fill("Plateforme-2026-ok");
+  await form.getByRole("combobox", { name: "Rôle" }).selectOption("TECHNICIAN");
+  await form.getByRole("button", { name: "Créer le compte" }).click();
+  await expect(statusMessage(page).filter({ hasText: /Compte créé/ })).toBeVisible();
+  await expect(page.getByRole("row").filter({ hasText: `plateforme.${stamp}@demo.gmao` })).toBeVisible();
+
+  // Connexion en tant que le conducteur : ses menus, ses droits, un bandeau permanent.
+  await page.getByRole("row").filter({ hasText: USERS.operator }).getByRole("button", { name: "Se connecter en tant que" }).click();
+  await expect(page.getByText(/Connecté en tant que Paul Girard/)).toBeVisible();
+  const me = await (await page.request.get("/api/v1/me")).json();
+  expect(me.data.email).toBe(USERS.operator);
+  const menu = page.getByRole("navigation", { name: "Navigation principale" }).first();
+  await expect(menu.getByRole("link", { name: "Demandes d'intervention" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: "Administration" })).toHaveCount(0);
+  await page.goto("/demandes/nouvelle");
+  await expect(page.getByRole("heading", { name: "Signaler une panne" })).toBeVisible();
+
+  // Retour au compte de l'administrateur.
+  await page.getByRole("button", { name: "Revenir à mon compte" }).click();
+  await expect(page).toHaveURL(/\/administration\/plateforme$/);
+  expect((await (await page.request.get("/api/v1/me")).json()).data.email).toBe(USERS.admin);
+
+  // La connexion « en tant que » est tracée au journal de l'organisation.
+  await login(page, USERS.executive, "/administration/journal");
+  await expect(page.getByText("via l'administrateur de la plateforme").first()).toBeVisible();
+});
+
+test("une connexion « en tant que » ne vise jamais un administrateur de la plateforme ; un jeton forgé est ignoré", async ({ page, context }) => {
+  await login(page, USERS.maintenanceManager);
+  // Jeton forgé (mauvaise signature) : le compte reste celui de l'utilisateur connecté.
+  await context.addCookies([{ name: "gmao_impersonation", value: "x.y.9999999999999.forge", url: page.url() }]);
+  expect((await (await page.request.get("/api/v1/me")).json()).data.email).toBe(USERS.maintenanceManager);
+});

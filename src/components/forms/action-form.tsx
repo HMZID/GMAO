@@ -158,6 +158,17 @@ export function Field({
   const child = isValidElement<{ id?: string }>(children) ? children : null;
   const controlId = child ? `${child.props.id ?? name}${uid}` : name;
   const messageId = `${controlId}-message`;
+  const labelContent = (
+    <>
+      {label}
+      {required ? (
+        <span className="text-red-600" aria-hidden>
+          {" "}
+          *
+        </span>
+      ) : null}
+    </>
+  );
   const control = child
     ? cloneElement(child as ReactElement<Record<string, unknown>>, {
         id: controlId,
@@ -167,16 +178,21 @@ export function Field({
     : children;
   return (
     <div className={cn("space-y-1", className)}>
-      <label htmlFor={controlId} className="block text-sm font-medium text-slate-700">
-        {label}
-        {required ? (
-          <span className="text-red-600" aria-hidden>
-            {" "}
-            *
-          </span>
-        ) : null}
-      </label>
-      {control}
+      {child ? (
+        <>
+          <label htmlFor={controlId} className="block text-sm font-medium text-slate-700">
+            {labelContent}
+          </label>
+          {control}
+        </>
+      ) : (
+        // Champ reçu sous une forme qui ne peut pas recevoir d'identifiant (élément différé du flux serveur) :
+        // le libellé l'englobe, ce qui garde l'association.
+        <label className="block space-y-1">
+          <span className="block text-sm font-medium text-slate-700">{labelContent}</span>
+          {control}
+        </label>
+      )}
       {error ? (
         <p id={messageId} className="text-xs text-red-700" role="alert">
           {error}

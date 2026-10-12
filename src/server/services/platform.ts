@@ -1,11 +1,13 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { AuthContext } from "@/server/authz/context";
 import { db } from "@/server/db";
 import { account, companies, equipmentCategories, roleAssignments, sites, tenants, user, warehouses, workshops } from "@/server/db/schema";
+import { ROLES } from "@/server/authz/permissions";
+import { IMPERSONATION_TTL_MS, signImpersonation } from "@/server/domain/impersonation";
 import { companyCodeFrom, DEMO_DURATIONS, demoEndsAt, platformAdmins, tenantAccess, type TenantStatus } from "@/server/domain/tenants";
 import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { text } from "@/server/validation";
@@ -164,4 +166,147 @@ export async function updateTenantAccess(ctx: AuthContext, tenantId: string, raw
 export async function getOwnTenantAccess(ctx: AuthContext, now = new Date()) {
   const [tenant] = await db.select({ status: tenants.status, demoEndsAt: tenants.demoEndsAt }).from(tenants).where(eq(tenants.id, ctx.tenantId));
   return tenant ? tenantAccess(tenant, now) : null;
+}
+
+/* ------------------------------------------------------------------ */
+/* Organisations : détail, comptes, connexion « en tant que »           */
+/* ------------------------------------------------------------------ */
+
+/** Une organisation vue par la plateforme : sociétés et sites, comptes et rôles. */
+export async function getTenantDetail(ctx: AuthContext, tenantId: string, now = new Date()) {
+  assertPlatformAdmin(ctx);
+  if (!z.uuid().safeParse(tenantId).success) throw new NotFoundError("Organisation");
+  const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId));
+  if (!tenant) throw new NotFoundError("Organisation");
+  const companyRows = await db.select().from(companies).where(eq(companies.tenantId, tenantId)).orderBy(asc(companies.name));
+  const siteRows = await db.select().from(sites).where(eq(sites.tenantId, tenantId)).orderBy(asc(sites.name));
+  const users = await db
+    .select({ id: user.id, name: user.name, email: user.email, isActive: user.isActive })
+    .from(user)
+    .where(eq(user.tenantId, tenantId))
+    .orderBy(asc(user.name));
+  const assignments = users.length
+    ? await db
+        .select({
+          userId: roleAssignments.userId,
+          role: roleAssignments.role,
+          scopeType: roleAssignments.scopeType,
+          scopeId: roleAssignments.scopeId,
+        })
+        .from(roleAssignments)
+        .where(
+          and(
+            eq(roleAssignments.tenantId, tenantId),
+            inArray(
+              roleAssignments.userId,
+              users.map((u) => u.id),
+            ),
+          ),
+        )
+    : [];
+  const scopeLabel = (a: (typeof assignments)[number]) =>
+    a.scopeType === "TENANT"
+      ? "Tout le groupe"
+      : a.scopeType === "COMPANY"
+        ? (companyRows.find((c) => c.id === a.scopeId)?.name ?? "Société")
+        : (siteRows.find((x) => x.id === a.scopeId)?.name ?? "Site");
+  return {
+    tenant: { ...tenant, logoData: undefined, access: tenantAccess(tenant, now), own: tenant.id === ctx.tenantId },
+    companies: companyRows.map((c) => ({ ...c, sites: siteRows.filter((x) => x.companyId === c.id) })),
+    users: users.map((u) => {
+      const roles = assignments.filter((a) => a.userId === u.id);
+      return {
+        ...u,
+        roles: roles.map((a) => ({ role: a.role, scope: scopeLabel(a) })),
+        platformAdmin: roles.some((a) => a.role === "ADMIN"),
+      };
+    }),
+  };
+}
+
+export const tenantUserInput = z
+  .object({
+    name: text(120, "Nom obligatoire"),
+    email: z.email("Courriel invalide").transform((v) => v.toLowerCase()),
+    password: z.string().min(10, "10 caractères minimum").max(128),
+    role: z.enum(ROLES.filter((r) => r !== "ADMIN") as [string, ...string[]], "Rôle obligatoire"),
+    scope: z.string().min(1, "Périmètre obligatoire"),
+  })
+  .transform((v) => {
+    const [scopeType, scopeId] = v.scope.split(":");
+    return { ...v, scopeType: scopeType as "TENANT" | "COMPANY" | "SITE", scopeId: scopeId || null };
+  });
+
+/** Compte créé par la plateforme dans une organisation (rôle et périmètre de cette organisation). */
+export async function createTenantUser(ctx: AuthContext, tenantId: string, raw: unknown) {
+  assertPlatformAdmin(ctx);
+  const input = parseInput(tenantUserInput, raw);
+  const [tenant] = await db.select({ id: tenants.id }).from(tenants).where(eq(tenants.id, tenantId));
+  if (!tenant) throw new NotFoundError("Organisation");
+  if (input.scopeType === "COMPANY" || input.scopeType === "SITE") {
+    const table = input.scopeType === "COMPANY" ? companies : sites;
+    const [scope] = await db
+      .select({ id: table.id })
+      .from(table)
+      .where(and(eq(table.id, input.scopeId ?? ""), eq(table.tenantId, tenantId)));
+    if (!scope) throw new NotFoundError(input.scopeType === "COMPANY" ? "Société" : "Site");
+  } else if (input.scopeType !== "TENANT") throw new BusinessRuleError(["Périmètre inconnu."]);
+  const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
+  if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  const passwordHash = await hashPassword(input.password);
+  return db.transaction(async (tx) => {
+    const id = randomUUID();
+    await tx.insert(user).values({ id, name: input.name, email: input.email, emailVerified: true, tenantId, isActive: true });
+    await tx.insert(account).values({ id: randomUUID(), accountId: id, providerId: "credential", userId: id, password: passwordHash });
+    await tx.insert(roleAssignments).values({
+      tenantId,
+      userId: id,
+      role: input.role as (typeof ROLES)[number],
+      scopeType: input.scopeType,
+      scopeId: input.scopeType === "TENANT" ? null : input.scopeId,
+    });
+    const after = { id, name: input.name, email: input.email, role: input.role, scopeType: input.scopeType };
+    await audit(tx, { ...ctx, tenantId }, { entityType: "user", entityId: id, action: "create_by_platform", after });
+    return after;
+  });
+}
+
+/**
+ * Connexion « en tant que » : jeton signé à poser dans un cookie. Jamais vers un autre administrateur de
+ * la plateforme ni vers un compte désactivé ; l'ouverture est tracée au journal de l'organisation.
+ */
+export async function startImpersonation(ctx: AuthContext, userId: string, now = new Date()) {
+  assertPlatformAdmin(ctx);
+  if (ctx.impersonator) throw new BusinessRuleError(["Revenir d'abord à votre compte."]);
+  const [target] = await db
+    .select({ id: user.id, name: user.name, email: user.email, tenantId: user.tenantId, isActive: user.isActive })
+    .from(user)
+    .where(eq(user.id, userId));
+  if (!target) throw new NotFoundError("Utilisateur");
+  if (target.id === ctx.userId) throw new BusinessRuleError(["Vous êtes déjà connecté avec ce compte."]);
+  if (!target.isActive) throw new BusinessRuleError(["Ce compte est désactivé : le réactiver d'abord."]);
+  const [platformRole] = await db
+    .select({ id: roleAssignments.id })
+    .from(roleAssignments)
+    .where(and(eq(roleAssignments.userId, target.id), eq(roleAssignments.role, "ADMIN")));
+  if (platformRole) throw new BusinessRuleError(["Impossible de prendre la place d'un autre administrateur de la plateforme."]);
+  const expiresAt = now.getTime() + IMPERSONATION_TTL_MS;
+  await db.transaction(async (tx) => {
+    await audit(
+      tx,
+      // L'ouverture elle-même est marquée « via l'administrateur de la plateforme ».
+      { ...ctx, tenantId: target.tenantId, impersonator: { id: ctx.userId, name: ctx.name, email: ctx.email } },
+      {
+        entityType: "user",
+        entityId: target.id,
+        action: "impersonation_start",
+        after: { by: ctx.email, until: new Date(expiresAt) },
+      },
+    );
+  });
+  return {
+    token: signImpersonation({ adminId: ctx.userId, targetId: target.id, expiresAt }, process.env.BETTER_AUTH_SECRET ?? ""),
+    expiresAt: new Date(expiresAt),
+    target: { name: target.name, email: target.email },
+  };
 }

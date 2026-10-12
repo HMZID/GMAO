@@ -69,7 +69,10 @@ export default async function AuditPage(props: PageProps<"/administration/journa
               {rows.map((r) => (
                 <TR key={r.id}>
                   <TD className="whitespace-nowrap">{formatDateTime(r.createdAt)}</TD>
-                  <TD>{r.userName ?? "Système"}</TD>
+                  <TD>
+                    {r.userName ?? "Système"}
+                    {r.impersonatedBy ? <p className="text-xs text-red-700">via l&apos;administrateur de la plateforme</p> : null}
+                  </TD>
                   <TD>{AUDIT_CHANNEL[r.channel] ?? r.channel}</TD>
                   <TD>
                     {ENTITY_TYPE[r.entityType] ?? r.entityType}

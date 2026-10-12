@@ -1,10 +1,11 @@
 "use server";
 
 import { APIError } from "better-auth/api";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/action-state";
 import { auth } from "@/server/auth/auth";
+import { IMPERSONATION_COOKIE } from "@/server/domain/impersonation";
 
 /** Connexion email + mot de passe (le cookie de session est posé par le plugin nextCookies). */
 export async function signInAction(_state: ActionState, formData: FormData): Promise<ActionState> {
@@ -30,6 +31,14 @@ export async function signInAction(_state: ActionState, formData: FormData): Pro
 }
 
 export async function signOutAction() {
+  // Une connexion « en tant que » se termine avec la session de l'administrateur.
+  (await cookies()).delete(IMPERSONATION_COOKIE);
   await auth.api.signOut({ headers: await headers() });
   redirect("/login");
+}
+
+/** Fin de la connexion « en tant que » : retour au compte de l'administrateur de la plateforme. */
+export async function stopImpersonationAction() {
+  (await cookies()).delete(IMPERSONATION_COOKIE);
+  redirect("/administration/plateforme");
 }

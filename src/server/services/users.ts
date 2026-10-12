@@ -449,6 +449,7 @@ export async function listAuditLogs(ctx: AuthContext, raw: unknown = {}) {
       after: auditLogs.after,
       createdAt: auditLogs.createdAt,
       userName: user.name,
+      impersonatedBy: auditLogs.impersonatedById,
     })
     .from(auditLogs)
     .leftJoin(user, eq(user.id, auditLogs.userId))
