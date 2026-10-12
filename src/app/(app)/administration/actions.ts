@@ -1,10 +1,14 @@
 "use server";
 
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/action-state";
-import { act } from "@/server/actions";
+import { act, runAction } from "@/server/actions";
+import { getAuthContext } from "@/server/auth/session";
+import { IMPERSONATION_COOKIE } from "@/server/domain/impersonation";
 import { createApiKey, revokeApiKey } from "@/server/services/api-keys";
 import { removeLogo, setLogo, updateBranding } from "@/server/services/branding";
-import { createDemoTenant, updateTenantAccess } from "@/server/services/platform";
+import { createDemoTenant, createTenantUser, startImpersonation, updateTenantAccess } from "@/server/services/platform";
 import { createCategory, createModel } from "@/server/services/equipment";
 import { createCompany, createJobsite, createSite, createWarehouse, createWorkshop } from "@/server/services/organization";
 import {
@@ -58,6 +62,26 @@ const TENANT_ACTION_MESSAGE: Record<string, string> = {
 export async function updateTenantAccessAction(tenantId: string, _: ActionState, formData: FormData): Promise<ActionState> {
   const data = formToObject(formData);
   return act((ctx) => updateTenantAccess(ctx, tenantId, data), TENANT_ACTION_MESSAGE[String(data.action)] ?? "Enregistré.");
+}
+
+/** Compte créé par l'administrateur de la plateforme dans une organisation. */
+export async function createTenantUserAction(tenantId: string, _: ActionState, formData: FormData): Promise<ActionState> {
+  return act((ctx) => createTenantUser(ctx, tenantId, formToObject(formData)), "Compte créé : communiquer le mot de passe initial à l'utilisateur.");
+}
+
+/** Connexion « en tant que » : l'administrateur de la plateforme prend la place de l'utilisateur. */
+export async function startImpersonationAction(userId: string, _: ActionState): Promise<ActionState> {
+  return runAction(async () => {
+    const result = await startImpersonation(await getAuthContext(), userId);
+    (await cookies()).set(IMPERSONATION_COOKIE, result.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      expires: result.expiresAt,
+    });
+    redirect("/");
+  });
 }
 
 /* Connecteur de l'organisation : clés d'API (INT-01, INT-05) */
