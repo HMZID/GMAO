@@ -42,13 +42,13 @@ Mise en place, une seule fois :
 
    | Variable Preview | Valeur créée par le pipeline |
    | --- | --- |
-   | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | Adresses de `gmao_dev` dans la branche `develop`, lues dans Neon (avec et sans pooling, sans `channel_binding`) ; jamais la branche par défaut |
+   | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | Adresses de `gmao_dev` dans la branche `develop`, **relues dans Neon à chaque exécution** (avec et sans pooling, `?sslmode=require` seul) : un changement de mot de passe dans Neon est repris au déploiement suivant ; jamais la branche par défaut |
    | `BETTER_AUTH_SECRET` | Secret aléatoire propre à la recette |
    | `BETTER_AUTH_URL` | `https://gmao-develop.vercel.app` (ou `DEVELOP_ALIAS`) |
    | `PREVIEW_MIGRATIONS`, `SEED_DEMO_DATA` | `true` |
    | `PLATFORM_ADMIN_EMAILS` | Secret GitHub `DEVELOP_PLATFORM_ADMIN_EMAILS` |
 
-   Variables GitHub utilisées : `NEON_PROJECT_ID` (identifiant du projet Neon), et facultatives `NEON_DEV_BRANCH` (`develop`), `NEON_DEV_DATABASE` (`gmao_dev`), `DEVELOP_ALIAS`. Une variable Preview déjà déclarée n'est jamais modifiée. Sans `NEON_API_KEY`, les variables se déclarent à la main dans Vercel (portée Preview seulement). Le dépôt est public : aucune valeur n'est écrite dans les journaux.
+   Variables GitHub utilisées : `NEON_PROJECT_ID` (identifiant du projet Neon), et facultatives `NEON_DEV_BRANCH` (`develop`), `NEON_DEV_DATABASE` (`gmao_dev`), `DEVELOP_ALIAS`. Hors adresses de la base, une variable Preview déjà déclarée n'est jamais modifiée. Sans `NEON_API_KEY`, les variables se déclarent à la main dans Vercel (portée Preview seulement). Le dépôt est public : aucune valeur n'est écrite dans les journaux.
 4. **Vercel → Settings → Deployment Protection** : soit désactiver la protection des prévisualisations (l'application garde sa propre connexion), soit créer un secret *Protection Bypass for Automation* et le déclarer dans GitHub sous `VERCEL_AUTOMATION_BYPASS_SECRET`. Le pipeline le signale s'il est bloqué.
 5. Premier déploiement : la prochaine fusion dans `develop`, ou **Actions → Pipeline développement → dernière exécution → Re-run all jobs** (aussi pour redéployer après un changement de variable). Si la configuration est incomplète, l'étape 2 s'arrête en nommant ce qui manque.
 
