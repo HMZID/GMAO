@@ -29,28 +29,28 @@ Les déploiements automatiques de l'intégration GitHub de Vercel sont désactiv
 Le pipeline **Pipeline développement** (`.github/workflows/deploy-develop.yml`) part automatiquement sur chaque push vers `develop` (fusion d'une branche de tâche), sans approbation. Ses étapes, chacune bloquante pour la suivante :
 
 1. **Vérifications et tests** : la CI complète (`ci.yml`, réutilisée).
-2. **Configuration Vercel** : par l'API Vercel (noms et portées seulement, jamais les valeurs), les variables obligatoires de portée Preview existent et `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` ne sont pas partagées avec la production.
+2. **Configuration Vercel** (`scripts/ci/preview-env.sh`) : par l'API Vercel (noms et portées seulement), `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` ne sont pas partagées avec la production ; les variables Preview manquantes sont créées depuis Neon (voir ci-dessous), puis les obligatoires sont vérifiées.
 3. **Déploiement** : prévisualisation Vercel (`VERCEL_ENV=preview`) attachée à l'adresse fixe, puis `/api/health` : `status` ok, version déployée, `environment` à `development`. Un bandeau jaune « Environnement de développement » s'affiche sur chaque page. Les tâches planifiées de Vercel ne tournent pas sur une prévisualisation, et sans `SMTP_HOST` les courriels restent dans le journal (Administration › Courriels).
 
 **Garde-fou de la base.** Chaque base porte la marque de son environnement (table `platform_settings`, posée au déploiement par `scripts/predeploy.ts`). Le développement refuse une base marquée « production » ou une base existante non marquée ; la production refuse une base marquée « development ». La construction s'arrête alors avec un message clair, avant toute écriture.
 
 Mise en place, une seule fois :
 
-1. **Neon** : créer une base **vide** pour le développement, par exemple une branche `develop` puis, dans cette branche, une nouvelle base `gmao_dev` (Databases → New database). Une branche copiée de la production avec ses données est refusée par le garde-fou. Si l'intégration Neon de Vercel crée une branche par prévisualisation, la désactiver pour ce projet.
-2. **Vercel → Settings → Environment Variables** : vérifier que les variables de la production sont de portée **Production** seulement, puis déclarer pour la portée **Preview** :
+1. **Neon** : une base **vide** pour le développement, par exemple la branche `develop` et, dans cette branche, la base `gmao_dev` (Databases → New database). Une branche copiée de la production avec ses données est refusée par le garde-fou. Si l'intégration Neon de Vercel crée une branche par prévisualisation, la désactiver pour ce projet.
+2. **Vercel → Settings → Environment Variables** : les variables de la production ne doivent être que de portée **Production** (le pipeline s'arrête sinon).
+3. **Clé d'API Neon** : Neon → Account settings → API keys → *Create new API key*, puis GitHub → Settings → Secrets and variables → Actions → **New repository secret** `NEON_API_KEY`. Le pipeline crée alors lui-même les variables Preview manquantes :
 
-   | Variable | Valeur |
+   | Variable Preview | Valeur créée par le pipeline |
    | --- | --- |
-   | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | Adresses de la base `gmao_dev` (avec et sans pooling) |
-   | `BETTER_AUTH_SECRET` | Un secret **différent** de la production (32 caractères au moins) |
-   | `BETTER_AUTH_URL` | `https://gmao-develop.vercel.app` (ou l'adresse fixe choisie) |
-   | `PREVIEW_MIGRATIONS` | `true` : migrations et marque « development » à chaque déploiement |
-   | `SEED_DEMO_DATA` | `true` : comptes et données de démonstration (une seule fois, base vide) |
-   | `PLATFORM_ADMIN_EMAILS` | Comptes administrateurs de la plateforme en recette |
+   | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | Adresses de `gmao_dev` dans la branche `develop`, lues dans Neon (avec et sans pooling, sans `channel_binding`) ; jamais la branche par défaut |
+   | `BETTER_AUTH_SECRET` | Secret aléatoire propre à la recette |
+   | `BETTER_AUTH_URL` | `https://gmao-develop.vercel.app` (ou `DEVELOP_ALIAS`) |
+   | `PREVIEW_MIGRATIONS`, `SEED_DEMO_DATA` | `true` |
+   | `PLATFORM_ADMIN_EMAILS` | Secret GitHub `DEVELOP_PLATFORM_ADMIN_EMAILS` |
 
-3. **Vercel → Settings → Deployment Protection** : soit désactiver la protection des prévisualisations (l'application garde sa propre connexion), soit créer un secret *Protection Bypass for Automation* et le déclarer dans GitHub sous `VERCEL_AUTOMATION_BYPASS_SECRET` (les testeurs ont alors besoin d'un compte Vercel).
-4. **GitHub** (facultatif) : variable `DEVELOP_ALIAS` si l'adresse fixe n'est pas `gmao-develop.vercel.app`. L'environnement GitHub `development` est limité à la branche `develop`.
-5. Premier déploiement : la prochaine fusion dans `develop`, ou **Actions → Pipeline développement → dernière exécution → Re-run all jobs** (aussi pour redéployer après un changement de variable). Si la configuration Vercel est incomplète, l'étape 2 s'arrête en nommant les variables manquantes.
+   Variables GitHub utilisées : `NEON_PROJECT_ID` (identifiant du projet Neon), et facultatives `NEON_DEV_BRANCH` (`develop`), `NEON_DEV_DATABASE` (`gmao_dev`), `DEVELOP_ALIAS`. Une variable Preview déjà déclarée n'est jamais modifiée. Sans `NEON_API_KEY`, les variables se déclarent à la main dans Vercel (portée Preview seulement). Le dépôt est public : aucune valeur n'est écrite dans les journaux.
+4. **Vercel → Settings → Deployment Protection** : soit désactiver la protection des prévisualisations (l'application garde sa propre connexion), soit créer un secret *Protection Bypass for Automation* et le déclarer dans GitHub sous `VERCEL_AUTOMATION_BYPASS_SECRET`. Le pipeline le signale s'il est bloqué.
+5. Premier déploiement : la prochaine fusion dans `develop`, ou **Actions → Pipeline développement → dernière exécution → Re-run all jobs** (aussi pour redéployer après un changement de variable). Si la configuration est incomplète, l'étape 2 s'arrête en nommant ce qui manque.
 
 ### Configuration du dépôt GitHub (Settings)
 
