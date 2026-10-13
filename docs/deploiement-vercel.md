@@ -10,7 +10,7 @@ Aucune autre branche n'est déployée.
 ## Pipeline de mise en production
 
 ```
-GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──▶ CI ──▶ Vercel (développement, recette)
+GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──▶ Pipeline développement (tests, config, Vercel recette)
                                                └──PR (garde : develop uniquement), fusion manuelle──▶ main ──▶ CI ──▶ approbation ──▶ Vercel (production)
 ```
 
@@ -26,7 +26,11 @@ Les déploiements automatiques de l'intégration GitHub de Vercel sont désactiv
 
 ## Environnement de développement (`develop`)
 
-Le workflow **Déploiement développement** (`.github/workflows/deploy-develop.yml`) part à la fin de la CI sur `develop`, sans approbation. Il publie une prévisualisation Vercel (`VERCEL_ENV=preview`), l'attache à l'adresse fixe et vérifie `/api/health` : `status` ok, version déployée, `environment` à `development`. Un bandeau jaune « Environnement de développement » s'affiche sur chaque page. Les tâches planifiées de Vercel ne tournent pas sur une prévisualisation, et sans `SMTP_HOST` les courriels restent dans le journal (Administration › Courriels).
+Le pipeline **Pipeline développement** (`.github/workflows/deploy-develop.yml`) part automatiquement sur chaque push vers `develop` (fusion d'une branche de tâche), sans approbation. Ses étapes, chacune bloquante pour la suivante :
+
+1. **Vérifications et tests** : la CI complète (`ci.yml`, réutilisée).
+2. **Configuration Vercel** : par l'API Vercel (noms et portées seulement, jamais les valeurs), les variables obligatoires de portée Preview existent et `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` ne sont pas partagées avec la production.
+3. **Déploiement** : prévisualisation Vercel (`VERCEL_ENV=preview`) attachée à l'adresse fixe, puis `/api/health` : `status` ok, version déployée, `environment` à `development`. Un bandeau jaune « Environnement de développement » s'affiche sur chaque page. Les tâches planifiées de Vercel ne tournent pas sur une prévisualisation, et sans `SMTP_HOST` les courriels restent dans le journal (Administration › Courriels).
 
 **Garde-fou de la base.** Chaque base porte la marque de son environnement (table `platform_settings`, posée au déploiement par `scripts/predeploy.ts`). Le développement refuse une base marquée « production » ou une base existante non marquée ; la production refuse une base marquée « development ». La construction s'arrête alors avec un message clair, avant toute écriture.
 
@@ -45,8 +49,8 @@ Mise en place, une seule fois :
    | `PLATFORM_ADMIN_EMAILS` | Comptes administrateurs de la plateforme en recette |
 
 3. **Vercel → Settings → Deployment Protection** : soit désactiver la protection des prévisualisations (l'application garde sa propre connexion), soit créer un secret *Protection Bypass for Automation* et le déclarer dans GitHub sous `VERCEL_AUTOMATION_BYPASS_SECRET` (les testeurs ont alors besoin d'un compte Vercel).
-4. **GitHub → Settings → Secrets and variables → Actions → Variables** : `DEVELOP_DEPLOY` = `true` (le workflow reste inactif tant qu'elle n'est pas posée), et `DEVELOP_ALIAS` si l'adresse fixe n'est pas `gmao-develop.vercel.app`. L'environnement GitHub `development` est limité à la branche `develop`.
-5. Premier déploiement : **Actions → Déploiement développement → Run workflow** (branche `develop`).
+4. **GitHub** (facultatif) : variable `DEVELOP_ALIAS` si l'adresse fixe n'est pas `gmao-develop.vercel.app`. L'environnement GitHub `development` est limité à la branche `develop`.
+5. Premier déploiement : la prochaine fusion dans `develop`, ou **Actions → Pipeline développement → dernière exécution → Re-run all jobs** (aussi pour redéployer après un changement de variable). Si la configuration Vercel est incomplète, l'étape 2 s'arrête en nommant les variables manquantes.
 
 ### Configuration du dépôt GitHub (Settings)
 
