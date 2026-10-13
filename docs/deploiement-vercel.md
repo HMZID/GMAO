@@ -10,7 +10,7 @@ Aucune autre branche n'est déployée.
 ## Pipeline de mise en production
 
 ```
-GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──▶ CI ──▶ Vercel (développement, recette)
+GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──▶ CI (push) ──▶ Vercel (développement, recette)
                                                └──PR (garde : develop uniquement), fusion manuelle──▶ main ──▶ CI ──▶ approbation ──▶ Vercel (production)
 ```
 
@@ -26,7 +26,7 @@ Les déploiements automatiques de l'intégration GitHub de Vercel sont désactiv
 
 ## Environnement de développement (`develop`)
 
-Le workflow **Déploiement développement** (`.github/workflows/deploy-develop.yml`) part à la fin de la CI sur `develop`, sans approbation. Il publie une prévisualisation Vercel (`VERCEL_ENV=preview`), l'attache à l'adresse fixe et vérifie `/api/health` : `status` ok, version déployée, `environment` à `development`. Un bandeau jaune « Environnement de développement » s'affiche sur chaque page. Les tâches planifiées de Vercel ne tournent pas sur une prévisualisation, et sans `SMTP_HOST` les courriels restent dans le journal (Administration › Courriels).
+Le job **Déploiement développement** de la CI (workflow réutilisable `.github/workflows/deploy-develop.yml`) part sur chaque push vers `develop`, après les vérifications et les tests, sans approbation. Il publie une prévisualisation Vercel (`VERCEL_ENV=preview`), l'attache à l'adresse fixe et vérifie `/api/health` : `status` ok, version déployée, `environment` à `development`. Un bandeau jaune « Environnement de développement » s'affiche sur chaque page. Les tâches planifiées de Vercel ne tournent pas sur une prévisualisation, et sans `SMTP_HOST` les courriels restent dans le journal (Administration › Courriels).
 
 **Garde-fou de la base.** Chaque base porte la marque de son environnement (table `platform_settings`, posée au déploiement par `scripts/predeploy.ts`). Le développement refuse une base marquée « production » ou une base existante non marquée ; la production refuse une base marquée « development ». La construction s'arrête alors avec un message clair, avant toute écriture.
 
@@ -46,7 +46,7 @@ Mise en place, une seule fois :
 
 3. **Vercel → Settings → Deployment Protection** : soit désactiver la protection des prévisualisations (l'application garde sa propre connexion), soit créer un secret *Protection Bypass for Automation* et le déclarer dans GitHub sous `VERCEL_AUTOMATION_BYPASS_SECRET` (les testeurs ont alors besoin d'un compte Vercel).
 4. **GitHub → Settings → Secrets and variables → Actions → Variables** : `DEVELOP_DEPLOY` = `true` (le workflow reste inactif tant qu'elle n'est pas posée), et `DEVELOP_ALIAS` si l'adresse fixe n'est pas `gmao-develop.vercel.app`. L'environnement GitHub `development` est limité à la branche `develop`.
-5. Premier déploiement : **Actions → Déploiement développement → Run workflow** (branche `develop`).
+5. Premier déploiement : la prochaine fusion dans `develop`, ou **Actions → CI → dernière exécution sur `develop` → Re-run all jobs**. Même chose pour redéployer.
 
 ### Configuration du dépôt GitHub (Settings)
 

@@ -1,7 +1,9 @@
 # Déploiement de l'environnement de développement (recette) sur Vercel, depuis `develop`.
 #
-# Déclenchement : fin de la CI sur `develop` (fusion d'une branche GMAO-NN), uniquement si la CI a réussi.
-# Pas d'approbation : c'est l'environnement de recette, avant la PR develop → main.
+# Déclenchement : job « Déploiement développement » de la CI (`ci.yml`), après les vérifications et les tests,
+# sur un push vers `develop` (fusion d'une branche GMAO-NN). Workflow réutilisable : il s'exécute dans la version
+# de develop, sans attendre qu'il soit sur main. Pas d'approbation : c'est l'environnement de recette, avant la
+# PR develop → main. Redéployer : relancer la CI de develop (Actions → CI → dernière exécution sur develop → Re-run).
 # Le déploiement est une prévisualisation Vercel (VERCEL_ENV=preview), construite avec les variables de portée
 # « Preview » : sa propre base Neon, jamais celle de la production. `scripts/predeploy.ts` refuse de construire
 # si la base est marquée « production » ou si c'est une base existante non marquée.
@@ -15,12 +17,7 @@
 name: Déploiement développement
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [develop]
-  # Redéploiement manuel de `develop`.
-  workflow_dispatch:
+  workflow_call:
 
 # Seul le dernier état de develop compte : un déploiement en cours est remplacé par le suivant.
 concurrency:
@@ -33,11 +30,7 @@ permissions:
 jobs:
   deploy:
     name: Déployer sur Vercel (développement)
-    if: >-
-      vars.DEVELOP_DEPLOY == 'true' && (
-        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') ||
-        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop')
-      )
+    if: vars.DEVELOP_DEPLOY == 'true' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
@@ -59,8 +52,6 @@ jobs:
           if [ -n "$missing" ]; then echo "::error::Configuration manquante dans les réglages du dépôt :$missing"; exit 1; fi
 
       - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       # Une ancienne exécution relancée ne remet pas en ligne une version dépassée de develop.
       - name: Version à jour
