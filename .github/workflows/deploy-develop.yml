@@ -4,17 +4,19 @@
 # `push` prend le workflow de la branche poussée : le pipeline fonctionne sans attendre son arrivée sur main.
 # Étapes, chacune bloquante pour la suivante :
 #   1. vérifications et tests : la CI complète (ci.yml, réutilisée) ;
-#   2. configuration Vercel : variables de portée Preview présentes et base distincte de la production
-#      (noms et portées seulement, lus par l'API Vercel ; aucune valeur n'est lue ni affichée) ;
+#   2. configuration Vercel : base et secrets distincts de la production, variables de portée Preview présentes,
+#      créées depuis Neon si elles manquent (scripts/ci/preview-env.sh ; aucune valeur affichée) ;
 #   3. déploiement : prévisualisation Vercel (VERCEL_ENV=preview), construite avec les variables Preview ;
 #      `scripts/predeploy.ts` refuse en plus toute base marquée « production » ou existante non marquée ;
 #      adresse fixe (DEVELOP_ALIAS, par défaut gmao-develop.vercel.app), puis sonde de santé.
 # Pas d'approbation : c'est l'environnement de recette, avant la PR develop → main.
 # Redéployer : Actions → Pipeline développement → dernière exécution → Re-run all jobs.
 #
-# Réglages GitHub : mêmes VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID que la production ; variable
-# facultative DEVELOP_ALIAS ; secret facultatif VERCEL_AUTOMATION_BYPASS_SECRET si la protection Vercel
-# des prévisualisations est active. Réglages Vercel : docs/deploiement-vercel.md.
+# Réglages GitHub : mêmes VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID que la production ; pour créer
+# automatiquement les variables Vercel de la recette : secret NEON_API_KEY, variable NEON_PROJECT_ID, secret
+# DEVELOP_PLATFORM_ADMIN_EMAILS ; facultatifs : DEVELOP_ALIAS, NEON_DEV_BRANCH, NEON_DEV_DATABASE, secret
+# VERCEL_AUTOMATION_BYPASS_SECRET si la protection Vercel des prévisualisations est active.
+# Détails : docs/deploiement-vercel.md.
 name: Pipeline développement
 
 on:
@@ -54,30 +56,18 @@ jobs:
           [ -n "$VERCEL_PROJECT_ID" ] || missing="$missing variable:VERCEL_PROJECT_ID"
           if [ -n "$missing" ]; then echo "::error::Configuration manquante dans les réglages du dépôt :$missing"; exit 1; fi
 
-      # Noms et portées des variables du projet Vercel (l'API ne renvoie pas les valeurs chiffrées).
+      - uses: actions/checkout@v7
+
+      # Noms et portées des variables Vercel (jamais les valeurs) ; variables Preview manquantes créées depuis
+      # Neon si NEON_API_KEY est déclaré (scripts/ci/preview-env.sh). Aucune valeur n'est affichée.
       - name: Variables de l'environnement de développement
-        run: |
-          team=""
-          case "$VERCEL_ORG_ID" in team_*) team="?teamId=$VERCEL_ORG_ID";; esac
-          code=$(curl -sS -o envs.json -w "%{http_code}" -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env$team")
-          if [ "$code" != "200" ]; then echo "::error::Lecture des variables Vercel impossible (HTTP $code) : vérifier VERCEL_TOKEN et VERCEL_PROJECT_ID."; exit 1; fi
-          has_preview() { jq -e --arg k "$1" '[.envs[] | select(.key == $k and (.target | index("preview")))] | length > 0' envs.json > /dev/null; }
-          shared() { jq -e --arg k "$1" '[.envs[] | select(.key == $k and (.target | index("preview")) and (.target | index("production")))] | length > 0' envs.json > /dev/null; }
-          errors=0
-          for key in DATABASE_URL BETTER_AUTH_SECRET BETTER_AUTH_URL PREVIEW_MIGRATIONS; do
-            has_preview "$key" || { echo "::error::Variable Vercel absente pour la portée Preview : $key"; errors=1; }
-          done
-          for key in DATABASE_URL_UNPOOLED SEED_DEMO_DATA PLATFORM_ADMIN_EMAILS; do
-            has_preview "$key" || echo "::warning::Variable Vercel conseillée pour la portée Preview : $key"
-          done
-          # Une même variable pour Production et Preview : la recette écrirait dans la base de production.
-          for key in DATABASE_URL DATABASE_URL_UNPOOLED BETTER_AUTH_SECRET BETTER_AUTH_URL; do
-            shared "$key" && { echo "::error::$key est déclarée à la fois pour Production et Preview : séparer les deux (Vercel → Settings → Environment Variables)."; errors=1; }
-          done
-          rm -f envs.json
-          [ "$errors" = 0 ] || exit 1
-          echo "Variables de l'environnement de développement : correctes."
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          NEON_DEV_BRANCH: ${{ vars.NEON_DEV_BRANCH || 'develop' }}
+          NEON_DEV_DATABASE: ${{ vars.NEON_DEV_DATABASE || 'gmao_dev' }}
+          DEVELOP_PLATFORM_ADMIN_EMAILS: ${{ secrets.DEVELOP_PLATFORM_ADMIN_EMAILS }}
+        run: bash scripts/ci/preview-env.sh
 
   deploy:
     name: Déployer sur Vercel (développement)
