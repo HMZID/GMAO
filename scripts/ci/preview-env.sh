@@ -3,9 +3,9 @@
 #
 # 1. Lit par l'API Vercel les noms et portées des variables du projet (jamais les valeurs).
 # 2. Refuse toute variable de base ou d'authentification partagée entre Production et Preview.
-# 3. Crée les variables Preview manquantes, si NEON_API_KEY et NEON_PROJECT_ID sont fournis :
-#    adresses de la base de développement lues dans Neon (branche NEON_DEV_BRANCH, base NEON_DEV_DATABASE,
-#    jamais la branche par défaut de Neon), secret d'authentification généré ici, valeurs fixes de la recette.
+# 3. Si NEON_API_KEY et NEON_PROJECT_ID sont fournis : adresses de la base de développement toujours relues
+#    dans Neon (branche NEON_DEV_BRANCH, base NEON_DEV_DATABASE, jamais la branche par défaut de Neon, avec
+#    sslmode=require) ; autres variables Preview créées si elles manquent (secret généré, valeurs de la recette).
 #    Aucune valeur n'est affichée : le dépôt est public, ses journaux aussi.
 # 4. Vérifie que les variables obligatoires existent.
 #
@@ -71,8 +71,9 @@ neon_uri() {
   fi
   NEON_URI=$(jq -r '.uri // empty' <<<"$response")
   if [ -z "$NEON_URI" ]; then echo "::error::Réponse Neon sans adresse de connexion."; exit 1; fi
-  # Même forme que la production : sans channel_binding (docs/deploiement-vercel.md).
-  NEON_URI=$(sed -E 's/[&?]channel_binding=require//' <<<"$NEON_URI")
+  # Paramètres d'origine retirés (channel_binding…, dans n'importe quel ordre), puis chiffrement exigé :
+  # même forme que la production (docs/deploiement-vercel.md), « verify-full » posé par l'application.
+  NEON_URI="${NEON_URI%%\?*}?sslmode=require"
 }
 
 load_envs
@@ -89,21 +90,23 @@ done
 missing=()
 for key in "${REQUIRED[@]}" "${ADVISED[@]}"; do has_preview "$key" || missing+=("$key"); done
 
-if [ "${#missing[@]}" -gt 0 ] && [ -n "${NEON_API_KEY:-}" ] && [ -n "${NEON_PROJECT_ID:-}" ]; then
+if [ -n "${NEON_API_KEY:-}" ] && [ -n "${NEON_PROJECT_ID:-}" ]; then
   NEON_DEV_BRANCH=${NEON_DEV_BRANCH:-develop}
   NEON_DEV_DATABASE=${NEON_DEV_DATABASE:-gmao_dev}
   NEON_DEV_ROLE=${NEON_DEV_ROLE:-neondb_owner}
+  # Adresses de la base : toujours relues dans Neon (source de vérité), y compris après un changement de
+  # mot de passe. Les autres variables ne sont créées que si elles manquent.
+  neon_uri true && set_preview DATABASE_URL "$NEON_URI"
+  neon_uri false && set_preview DATABASE_URL_UNPOOLED "$NEON_URI"
   for key in "${missing[@]}"; do
     case "$key" in
-      DATABASE_URL) neon_uri true && set_preview "$key" "$NEON_URI" ;;
-      DATABASE_URL_UNPOOLED) neon_uri false && set_preview "$key" "$NEON_URI" ;;
       BETTER_AUTH_SECRET)
         secret=$(openssl rand -base64 32)
         set_preview "$key" "$secret"
         ;;
       BETTER_AUTH_URL) set_preview "$key" "https://$DEVELOP_ALIAS" ;;
       PREVIEW_MIGRATIONS | SEED_DEMO_DATA) set_preview "$key" "true" ;;
-      PLATFORM_ADMIN_EMAILS) [ -n "${DEVELOP_PLATFORM_ADMIN_EMAILS:-}" ] && set_preview "$key" "$DEVELOP_PLATFORM_ADMIN_EMAILS" ;;
+      PLATFORM_ADMIN_EMAILS) if [ -n "${DEVELOP_PLATFORM_ADMIN_EMAILS:-}" ]; then set_preview "$key" "$DEVELOP_PLATFORM_ADMIN_EMAILS"; fi ;;
     esac
   done
   load_envs
