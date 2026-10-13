@@ -99,6 +99,13 @@
       "when": 1791840560472,
       "tag": "0013_inventory_counts",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791902632724,
+      "tag": "0014_platform_settings",
+      "breakpoints": true
     }
   ]
 }

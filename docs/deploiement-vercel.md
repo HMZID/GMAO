@@ -1,11 +1,17 @@
 # Déploiement sur Vercel avec Neon
 
-L'application Next.js est déployée sur Vercel **uniquement depuis la branche `main`, par GitHub Actions après approbation humaine** ; la base est un PostgreSQL Neon. Aucune autre branche n'est déployée.
+L'application Next.js est déployée sur Vercel par GitHub Actions, dans deux environnements, chacun avec sa propre base PostgreSQL Neon :
+
+- **production** : branche `main`, après approbation humaine ;
+- **développement** (recette) : branche `develop`, automatiquement après une CI verte, à une adresse fixe (par défaut `https://gmao-develop.vercel.app`).
+
+Aucune autre branche n'est déployée.
 
 ## Pipeline de mise en production
 
 ```
-GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──PR (garde : develop uniquement), fusion manuelle──▶ main ──▶ CI ──▶ approbation ──▶ Vercel (production)
+GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──▶ CI ──▶ Vercel (développement, recette)
+                                               └──PR (garde : develop uniquement), fusion manuelle──▶ main ──▶ CI ──▶ approbation ──▶ Vercel (production)
 ```
 
 0. **PR `GMAO-NN` → `develop`** : le workflow **Fusion automatique vers develop** (`.github/workflows/auto-merge-develop.yml`) active la fusion automatique dès l'ouverture. GitHub fusionne seul quand toutes les vérifications obligatoires sont vertes (formatage, lint, types, tests unitaires, tests de bout en bout, application mobile). Si une vérification échoue, rien n'est fusionné : corriger la branche et pousser, la CI repart. Une PR en brouillon n'est pas fusionnée.
@@ -16,7 +22,31 @@ GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──PR (garde 
 
 Redéployer sans nouveau merge : **Actions → Déploiement production → Run workflow** (branche `main`), avec la même approbation. **Ne pas relancer (« Re-run ») une ancienne exécution** : elle remettrait en ligne une version dépassée ; le workflow la refuse (« Version dépassée ») si son commit n'est plus le dernier de `main`.
 
-Les déploiements automatiques de l'intégration GitHub de Vercel sont désactivés pour **toutes** les branches (`vercel.json` : `git.deploymentEnabled = false`) : ni prévisualisation des branches de tâche ou de `develop`, ni déploiement direct de `main`. Seul le workflow « Déploiement production » déploie. Si une prévisualisation est créée malgré tout (déploiement manuel), elle ne modifie jamais la base (ni migration ni démonstration, sauf `PREVIEW_MIGRATIONS=true` sur une base distincte).
+Les déploiements automatiques de l'intégration GitHub de Vercel sont désactivés pour **toutes** les branches (`vercel.json` : `git.deploymentEnabled = false`) : ni prévisualisation des branches de tâche, ni déploiement direct. Seuls les workflows « Déploiement production » (`main`) et « Déploiement développement » (`develop`) déploient. Si une prévisualisation est créée malgré tout (déploiement manuel), elle ne modifie jamais la base (ni migration ni démonstration, sauf `PREVIEW_MIGRATIONS=true` sur une base distincte).
+
+## Environnement de développement (`develop`)
+
+Le workflow **Déploiement développement** (`.github/workflows/deploy-develop.yml`) part à la fin de la CI sur `develop`, sans approbation. Il publie une prévisualisation Vercel (`VERCEL_ENV=preview`), l'attache à l'adresse fixe et vérifie `/api/health` : `status` ok, version déployée, `environment` à `development`. Un bandeau jaune « Environnement de développement » s'affiche sur chaque page. Les tâches planifiées de Vercel ne tournent pas sur une prévisualisation, et sans `SMTP_HOST` les courriels restent dans le journal (Administration › Courriels).
+
+**Garde-fou de la base.** Chaque base porte la marque de son environnement (table `platform_settings`, posée au déploiement par `scripts/predeploy.ts`). Le développement refuse une base marquée « production » ou une base existante non marquée ; la production refuse une base marquée « development ». La construction s'arrête alors avec un message clair, avant toute écriture.
+
+Mise en place, une seule fois :
+
+1. **Neon** : créer une base **vide** pour le développement, par exemple une branche `develop` puis, dans cette branche, une nouvelle base `gmao_dev` (Databases → New database). Une branche copiée de la production avec ses données est refusée par le garde-fou. Si l'intégration Neon de Vercel crée une branche par prévisualisation, la désactiver pour ce projet.
+2. **Vercel → Settings → Environment Variables** : vérifier que les variables de la production sont de portée **Production** seulement, puis déclarer pour la portée **Preview** :
+
+   | Variable | Valeur |
+   | --- | --- |
+   | `DATABASE_URL`, `DATABASE_URL_UNPOOLED` | Adresses de la base `gmao_dev` (avec et sans pooling) |
+   | `BETTER_AUTH_SECRET` | Un secret **différent** de la production (32 caractères au moins) |
+   | `BETTER_AUTH_URL` | `https://gmao-develop.vercel.app` (ou l'adresse fixe choisie) |
+   | `PREVIEW_MIGRATIONS` | `true` : migrations et marque « development » à chaque déploiement |
+   | `SEED_DEMO_DATA` | `true` : comptes et données de démonstration (une seule fois, base vide) |
+   | `PLATFORM_ADMIN_EMAILS` | Comptes administrateurs de la plateforme en recette |
+
+3. **Vercel → Settings → Deployment Protection** : soit désactiver la protection des prévisualisations (l'application garde sa propre connexion), soit créer un secret *Protection Bypass for Automation* et le déclarer dans GitHub sous `VERCEL_AUTOMATION_BYPASS_SECRET` (les testeurs ont alors besoin d'un compte Vercel).
+4. **GitHub → Settings → Secrets and variables → Actions → Variables** : `DEVELOP_DEPLOY` = `true` (le workflow reste inactif tant qu'elle n'est pas posée), et `DEVELOP_ALIAS` si l'adresse fixe n'est pas `gmao-develop.vercel.app`. L'environnement GitHub `development` est limité à la branche `develop`.
+5. Premier déploiement : **Actions → Déploiement développement → Run workflow** (branche `develop`).
 
 ### Configuration du dépôt GitHub (Settings)
 
@@ -75,7 +105,7 @@ Version de Node : `22.x` (`package.json`, `engines`), la même que la CI et le p
 
 ## Vérification
 
-- `https://<adresse>/api/health` : `{"status":"ok","version":"<commit>"}` ; sinon `reason` indique `configuration` (avec les noms des variables manquantes) ou `database`.
+- `https://<adresse>/api/health` : `{"status":"ok","version":"<commit>","environment":"production"}` (`development` sur l'adresse de recette) ; sinon `reason` indique `configuration` (avec les noms des variables manquantes) ou `database`.
 - Connexion avec un compte de démonstration (`admin@demo.gmao`, mot de passe du README) si `SEED_DEMO_DATA=true`.
 
 ## Sécurité

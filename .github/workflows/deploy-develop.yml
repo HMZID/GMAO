@@ -1,0 +1,102 @@
+# Déploiement de l'environnement de développement (recette) sur Vercel, depuis `develop`.
+#
+# Déclenchement : fin de la CI sur `develop` (fusion d'une branche GMAO-NN), uniquement si la CI a réussi.
+# Pas d'approbation : c'est l'environnement de recette, avant la PR develop → main.
+# Le déploiement est une prévisualisation Vercel (VERCEL_ENV=preview), construite avec les variables de portée
+# « Preview » : sa propre base Neon, jamais celle de la production. `scripts/predeploy.ts` refuse de construire
+# si la base est marquée « production » ou si c'est une base existante non marquée.
+# Il est ensuite attaché à une adresse fixe (variable DEVELOP_ALIAS).
+#
+# Activation (Settings → Secrets and variables → Actions → Variables) :
+# - DEVELOP_DEPLOY = true, une fois les variables Preview déclarées dans Vercel (docs/deploiement-vercel.md) ;
+# - DEVELOP_ALIAS : adresse fixe, par défaut gmao-develop.vercel.app ;
+# - secret facultatif VERCEL_AUTOMATION_BYPASS_SECRET si la protection des prévisualisations Vercel est active.
+# Mêmes VERCEL_TOKEN, VERCEL_ORG_ID et VERCEL_PROJECT_ID que la production.
+name: Déploiement développement
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [develop]
+  # Redéploiement manuel de `develop`.
+  workflow_dispatch:
+
+# Seul le dernier état de develop compte : un déploiement en cours est remplacé par le suivant.
+concurrency:
+  group: deploy-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Déployer sur Vercel (développement)
+    if: >-
+      vars.DEVELOP_DEPLOY == 'true' && (
+        (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') ||
+        (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: development
+      url: https://${{ vars.DEVELOP_ALIAS || 'gmao-develop.vercel.app' }}
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      DEVELOP_ALIAS: ${{ vars.DEVELOP_ALIAS || 'gmao-develop.vercel.app' }}
+    steps:
+      - name: Configuration
+        run: |
+          missing=""
+          [ -n "$VERCEL_TOKEN" ] || missing="$missing secret:VERCEL_TOKEN"
+          [ -n "$VERCEL_ORG_ID" ] || missing="$missing variable:VERCEL_ORG_ID"
+          [ -n "$VERCEL_PROJECT_ID" ] || missing="$missing variable:VERCEL_PROJECT_ID"
+          if [ -n "$missing" ]; then echo "::error::Configuration manquante dans les réglages du dépôt :$missing"; exit 1; fi
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      # Une ancienne exécution relancée ne remet pas en ligne une version dépassée de develop.
+      - name: Version à jour
+        run: |
+          latest=$(git ls-remote origin refs/heads/develop | cut -f1)
+          current=$(git rev-parse HEAD)
+          if [ "$current" != "$latest" ]; then
+            echo "::error::Version dépassée : ${current:0:7} n'est plus le dernier commit de develop (${latest:0:7})."
+            exit 1
+          fi
+          echo "APP_VERSION=${current:0:7}" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: CLI Vercel
+        run: npm install --global vercel@59.26.0
+
+      # Sans --prod : prévisualisation, variables de portée Preview (base de développement).
+      - name: Déploiement
+        id: deploy
+        run: |
+          url=$(vercel deploy --yes --token="$VERCEL_TOKEN" --env APP_VERSION="$APP_VERSION")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          vercel alias set "$url" "$DEVELOP_ALIAS" --token="$VERCEL_TOKEN"
+          echo "Déployé : $url, version $APP_VERSION, adresse fixe https://$DEVELOP_ALIAS"
+
+      - name: Vérification (sonde de santé, version et environnement)
+        run: |
+          header=()
+          [ -n "$BYPASS" ] && header=(-H "x-vercel-protection-bypass: $BYPASS")
+          for i in $(seq 1 20); do
+            body=$(curl -fsS "${header[@]}" "https://$DEVELOP_ALIAS/api/health" || true)
+            case "$body" in *'"status":"ok"'*'"version":"'"$APP_VERSION"'"'*'"environment":"development"'*) echo "$body"; exit 0;; esac
+            sleep 15
+          done
+          echo "::error::https://$DEVELOP_ALIAS/api/health ne répond pas « ok » en version $APP_VERSION (environnement development) : $body"
+          exit 1
