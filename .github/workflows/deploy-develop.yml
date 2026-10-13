@@ -1,49 +1,52 @@
-# Déploiement de l'environnement de développement (recette) sur Vercel, depuis `develop`.
+# Pipeline de l'environnement de développement (recette) : branche `develop` → Vercel (prévisualisation).
 #
-# Déclenchement : job « Déploiement développement » de la CI (`ci.yml`), après les vérifications et les tests,
-# sur un push vers `develop` (fusion d'une branche GMAO-NN). Workflow réutilisable : il s'exécute dans la version
-# de develop, sans attendre qu'il soit sur main. Pas d'approbation : c'est l'environnement de recette, avant la
-# PR develop → main. Redéployer : relancer la CI de develop (Actions → CI → dernière exécution sur develop → Re-run).
-# Le déploiement est une prévisualisation Vercel (VERCEL_ENV=preview), construite avec les variables de portée
-# « Preview » : sa propre base Neon, jamais celle de la production. `scripts/predeploy.ts` refuse de construire
-# si la base est marquée « production » ou si c'est une base existante non marquée.
-# Il est ensuite attaché à une adresse fixe (variable DEVELOP_ALIAS).
+# Déclenchement : chaque push vers `develop` (fusion d'une branche GMAO-NN), automatiquement. Un déclencheur
+# `push` prend le workflow de la branche poussée : le pipeline fonctionne sans attendre son arrivée sur main.
+# Étapes, chacune bloquante pour la suivante :
+#   1. vérifications et tests : la CI complète (ci.yml, réutilisée) ;
+#   2. configuration Vercel : variables de portée Preview présentes et base distincte de la production
+#      (noms et portées seulement, lus par l'API Vercel ; aucune valeur n'est lue ni affichée) ;
+#   3. déploiement : prévisualisation Vercel (VERCEL_ENV=preview), construite avec les variables Preview ;
+#      `scripts/predeploy.ts` refuse en plus toute base marquée « production » ou existante non marquée ;
+#      adresse fixe (DEVELOP_ALIAS, par défaut gmao-develop.vercel.app), puis sonde de santé.
+# Pas d'approbation : c'est l'environnement de recette, avant la PR develop → main.
+# Redéployer : Actions → Pipeline développement → dernière exécution → Re-run all jobs.
 #
-# Activation (Settings → Secrets and variables → Actions → Variables) :
-# - DEVELOP_DEPLOY = true, une fois les variables Preview déclarées dans Vercel (docs/deploiement-vercel.md) ;
-# - DEVELOP_ALIAS : adresse fixe, par défaut gmao-develop.vercel.app ;
-# - secret facultatif VERCEL_AUTOMATION_BYPASS_SECRET si la protection des prévisualisations Vercel est active.
-# Mêmes VERCEL_TOKEN, VERCEL_ORG_ID et VERCEL_PROJECT_ID que la production.
-name: Déploiement développement
+# Réglages GitHub : mêmes VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID que la production ; variable
+# facultative DEVELOP_ALIAS ; secret facultatif VERCEL_AUTOMATION_BYPASS_SECRET si la protection Vercel
+# des prévisualisations est active. Réglages Vercel : docs/deploiement-vercel.md.
+name: Pipeline développement
 
 on:
-  workflow_call:
+  push:
+    branches: [develop]
+  workflow_dispatch:
 
-# Seul le dernier état de develop compte : un déploiement en cours est remplacé par le suivant.
+# Seul le dernier état de develop compte : une exécution en cours est remplacée par la suivante.
 concurrency:
-  group: deploy-develop
+  group: pipeline-develop
   cancel-in-progress: true
 
 permissions:
   contents: read
 
+env:
+  VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  DEVELOP_ALIAS: ${{ vars.DEVELOP_ALIAS || 'gmao-develop.vercel.app' }}
+
 jobs:
-  deploy:
-    name: Déployer sur Vercel (développement)
-    if: vars.DEVELOP_DEPLOY == 'true' && github.ref == 'refs/heads/develop'
+  checks:
+    name: Vérifications et tests
+    uses: ./.github/workflows/ci.yml
+
+  vercel-config:
+    name: Configuration Vercel (Preview)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    environment:
-      name: development
-      url: https://${{ vars.DEVELOP_ALIAS || 'gmao-develop.vercel.app' }}
-    env:
-      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
-      DEVELOP_ALIAS: ${{ vars.DEVELOP_ALIAS || 'gmao-develop.vercel.app' }}
+    timeout-minutes: 5
     steps:
-      - name: Configuration
+      - name: Réglages du dépôt
         run: |
           missing=""
           [ -n "$VERCEL_TOKEN" ] || missing="$missing secret:VERCEL_TOKEN"
@@ -51,6 +54,42 @@ jobs:
           [ -n "$VERCEL_PROJECT_ID" ] || missing="$missing variable:VERCEL_PROJECT_ID"
           if [ -n "$missing" ]; then echo "::error::Configuration manquante dans les réglages du dépôt :$missing"; exit 1; fi
 
+      # Noms et portées des variables du projet Vercel (l'API ne renvoie pas les valeurs chiffrées).
+      - name: Variables de l'environnement de développement
+        run: |
+          team=""
+          case "$VERCEL_ORG_ID" in team_*) team="?teamId=$VERCEL_ORG_ID";; esac
+          code=$(curl -sS -o envs.json -w "%{http_code}" -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID/env$team")
+          if [ "$code" != "200" ]; then echo "::error::Lecture des variables Vercel impossible (HTTP $code) : vérifier VERCEL_TOKEN et VERCEL_PROJECT_ID."; exit 1; fi
+          has_preview() { jq -e --arg k "$1" '[.envs[] | select(.key == $k and (.target | index("preview")))] | length > 0' envs.json > /dev/null; }
+          shared() { jq -e --arg k "$1" '[.envs[] | select(.key == $k and (.target | index("preview")) and (.target | index("production")))] | length > 0' envs.json > /dev/null; }
+          errors=0
+          for key in DATABASE_URL BETTER_AUTH_SECRET BETTER_AUTH_URL PREVIEW_MIGRATIONS; do
+            has_preview "$key" || { echo "::error::Variable Vercel absente pour la portée Preview : $key"; errors=1; }
+          done
+          for key in DATABASE_URL_UNPOOLED SEED_DEMO_DATA PLATFORM_ADMIN_EMAILS; do
+            has_preview "$key" || echo "::warning::Variable Vercel conseillée pour la portée Preview : $key"
+          done
+          # Une même variable pour Production et Preview : la recette écrirait dans la base de production.
+          for key in DATABASE_URL DATABASE_URL_UNPOOLED BETTER_AUTH_SECRET BETTER_AUTH_URL; do
+            shared "$key" && { echo "::error::$key est déclarée à la fois pour Production et Preview : séparer les deux (Vercel → Settings → Environment Variables)."; errors=1; }
+          done
+          rm -f envs.json
+          [ "$errors" = 0 ] || exit 1
+          echo "Variables de l'environnement de développement : correctes."
+
+  deploy:
+    name: Déployer sur Vercel (développement)
+    needs: [checks, vercel-config]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: development
+      url: https://${{ vars.DEVELOP_ALIAS || 'gmao-develop.vercel.app' }}
+    env:
+      BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
       - uses: actions/checkout@v7
 
       # Une ancienne exécution relancée ne remet pas en ligne une version dépassée de develop.
@@ -73,10 +112,8 @@ jobs:
 
       # Sans --prod : prévisualisation, variables de portée Preview (base de développement).
       - name: Déploiement
-        id: deploy
         run: |
           url=$(vercel deploy --yes --token="$VERCEL_TOKEN" --env APP_VERSION="$APP_VERSION")
-          echo "url=$url" >> "$GITHUB_OUTPUT"
           vercel alias set "$url" "$DEVELOP_ALIAS" --token="$VERCEL_TOKEN"
           echo "Déployé : $url, version $APP_VERSION, adresse fixe https://$DEVELOP_ALIAS"
 
@@ -85,7 +122,12 @@ jobs:
           header=()
           [ -n "$BYPASS" ] && header=(-H "x-vercel-protection-bypass: $BYPASS")
           for i in $(seq 1 20); do
-            body=$(curl -fsS "${header[@]}" "https://$DEVELOP_ALIAS/api/health" || true)
+            code=$(curl -sS -o health.json -w "%{http_code}" "${header[@]}" "https://$DEVELOP_ALIAS/api/health" || true)
+            body=$(cat health.json 2>/dev/null || true)
+            if [ "$code" = "401" ] || [ "$code" = "403" ]; then
+              echo "::error::Protection des prévisualisations Vercel active (HTTP $code) : la désactiver (Settings → Deployment Protection) ou déclarer le secret VERCEL_AUTOMATION_BYPASS_SECRET."
+              exit 1
+            fi
             case "$body" in *'"status":"ok"'*'"version":"'"$APP_VERSION"'"'*'"environment":"development"'*) echo "$body"; exit 0;; esac
             sleep 15
           done
