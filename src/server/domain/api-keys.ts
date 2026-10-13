@@ -4,7 +4,7 @@
  * empreinte SHA-256 est enregistrée. Module pur, testé dans `__tests__/api-keys.test.ts`.
  */
 import { createHash, randomBytes } from "node:crypto";
-import type { Permission, Role } from "@/server/authz/permissions";
+import type { Permission } from "@/server/authz/permissions";
 
 /** Préfixe des clés : reconnaissable dans un en-tête, distinct des jetons de session. */
 export const API_KEY_PREFIX = "gmk_";
@@ -47,9 +47,6 @@ export const API_KEY_PERMISSIONS: Record<ApiKeyAccess, readonly Permission[]> = 
   // Couche MCP : un assistant lit les données et peut signaler une panne (demande d'intervention), sans plus.
   ASSISTANT: [...READ, "request.create"],
 };
-
-/** Rôles du contexte d'une clé, sur tout le groupe, avant restriction à ses droits. */
-export const API_KEY_ROLES: readonly Role[] = ["EXECUTIVE"];
 
 /** Nouvelle clé : la valeur à remettre une seule fois, son préfixe affichable et son empreinte. */
 export function generateApiKey() {

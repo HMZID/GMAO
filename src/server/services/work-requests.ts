@@ -7,7 +7,7 @@ import { equipment, notifications, sites, user, workOrders, workRequests } from 
 import { OPEN_STATUSES } from "@/server/domain/work-order-status";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { bool, optionalDate, optionalNumber, optionalText, text } from "@/server/validation";
-import { assertCan, assertCanOn, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
+import { assertCan, assertCanOn, assertVisible, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
 import { approvalTimeline, cancelPendingApproval, latestApproval, startApproval } from "./approvals";
 import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equipment-status";
 import { notifyByPermission } from "./notifications";
@@ -182,7 +182,7 @@ export async function getWorkRequest(ctx: AuthContext, id: string) {
     },
   });
   if (!row) throw new NotFoundError("Demande d'intervention");
-  assertCanOn(ctx, "request.read", row);
+  assertVisible(ctx, "request.read", row, "Demande d'intervention");
   const workOrder = row.workOrderId
     ? (
         await db

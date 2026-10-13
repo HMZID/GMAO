@@ -73,6 +73,40 @@ export function suggestedReorderQuantity(input: { onHand: number; reserved: numb
   return Math.max(round3(input.maxQty - (available(input.onHand, input.reserved) + (input.onOrder ?? 0))), 0);
 }
 
+/* ------------------------------------------------------------------ */
+/* Inventaires (STK-07, règle 8 de §7.5)                                */
+/* ------------------------------------------------------------------ */
+
+/** Seuil en valeur (€) au-delà duquel un écart d'inventaire ou un ajustement doit être validé. */
+export const INVENTORY_VALIDATION_THRESHOLD = 100;
+
+/**
+ * Stock théorique à l'heure du comptage : stock actuel diminué des mouvements enregistrés depuis.
+ * Une sortie sur OT pendant l'inventaire reste ainsi à part et n'est pas comptée deux fois dans l'écart.
+ */
+export function expectedQuantityAt(onHandNow: number, movementsSince: { type: MovementType; quantity: number }[]) {
+  return round3(movementsSince.reduce((stock, m) => stock - movementSign(m.type) * m.quantity, onHandNow));
+}
+
+/** Valeur absolue d'un écart, au coût moyen pondéré. */
+export function inventoryValue(difference: number, unitCost: number) {
+  return round2(Math.abs(difference) * unitCost);
+}
+
+/**
+ * Sort d'un comptage : appliqué tout de suite si l'écart est sous le seuil ou si l'auteur peut valider,
+ * sinon « à valider » sans toucher au stock (STK-07).
+ */
+export function inventoryCountStatus(input: {
+  difference: number;
+  unitCost: number;
+  canValidate: boolean;
+  threshold?: number;
+}): "APPLIED" | "PENDING" {
+  if (input.difference === 0 || input.canValidate) return "APPLIED";
+  return inventoryValue(input.difference, input.unitCost) > (input.threshold ?? INVENTORY_VALIDATION_THRESHOLD) ? "PENDING" : "APPLIED";
+}
+
 function round2(n: number) {
   return Math.round(n * 100) / 100;
 }

@@ -70,7 +70,8 @@ async function withImpersonation(ctx: AuthContext, token: string | undefined): P
   const claim = verifyImpersonation(token, process.env.BETTER_AUTH_SECRET ?? "", new Date());
   if (!claim || claim.adminId !== ctx.userId) return ctx;
   const target = await loadAuthContext(claim.targetId, ctx.channel, { ignoreTenantAccess: true });
-  if (!target) return ctx;
+  // Compte désactivé ou devenu administrateur de la plateforme depuis l'ouverture : la connexion cesse.
+  if (!target || target.can("platform.manage")) return ctx;
   return { ...target, impersonator: { id: ctx.userId, name: ctx.name, email: ctx.email } };
 }
 

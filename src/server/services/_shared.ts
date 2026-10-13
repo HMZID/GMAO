@@ -18,6 +18,14 @@ export function assertCanOn(ctx: AuthContext, permission: Permission, target: { 
   if (!ctx.canOn(permission, target)) throw new ForbiddenError();
 }
 
+/**
+ * Lecture d'un enregistrement hors du périmètre : « introuvable », comme s'il n'existait pas (HAB-02).
+ * Un 403 révélerait son existence (un identifiant deviné ou lu ailleurs confirmerait l'équipement d'une autre société).
+ */
+export function assertVisible(ctx: AuthContext, permission: Permission, target: { companyId: string; siteId?: string | null }, entity: string) {
+  if (!ctx.canOn(permission, target)) throw new NotFoundError(entity);
+}
+
 /** Table d'une organisation : identifiant et organisation propriétaire. */
 type TenantTable = PgTable & { id: AnyPgColumn; tenantId: AnyPgColumn };
 

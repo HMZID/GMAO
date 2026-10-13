@@ -20,6 +20,8 @@ const base: WorkOrderSnapshot = {
   consumedPartLines: 0,
   timeEntryCount: 0,
   externalCostKnown: false,
+  isRegulatory: false,
+  hasReportDocument: false,
 };
 
 const manager: TransitionInput["actor"] = { userId: "u-chef", canManage: true, canReleaseCriticalEquipment: true };
@@ -104,6 +106,13 @@ describe("Remise en service (COR-12, DON-07, HAB-05)", () => {
   });
   it("exige des essais conformes et aucune réservation active", () => {
     expect(errorsOf({ ...workDone, activeReservations: 1 }, { to: "TECH_CLOSED", actor: manager })).toHaveLength(2);
+  });
+  it("refuse de clôturer un contrôle réglementaire sans rapport joint (PRV-12)", () => {
+    const regulatory = { ...workDone, isRegulatory: true };
+    expect(errorsOf(regulatory, { to: "TECH_CLOSED", testsPassed: true, actor: manager })).toEqual([
+      "Le rapport du contrôle réglementaire doit être joint (document de type « Rapport »).",
+    ]);
+    expect(errorsOf({ ...regulatory, hasReportDocument: true }, { to: "TECH_CLOSED", testsPassed: true, actor: manager })).toEqual([]);
   });
 });
 
