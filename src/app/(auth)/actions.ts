@@ -4,7 +4,11 @@ import { APIError } from "better-auth/api";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/action-state";
+import { runAction } from "@/server/actions";
 import { auth } from "@/server/auth/auth";
+import { getOwnAuthContext } from "@/server/auth/session";
+import { needsPasswordChange, setInitialPassword } from "@/server/services/account";
+import { formToObject } from "@/server/validation";
 import { IMPERSONATION_COOKIE } from "@/server/domain/impersonation";
 
 /** Connexion email + mot de passe (le cookie de session est posé par le plugin nextCookies). */
@@ -15,8 +19,10 @@ export async function signInAction(_state: ActionState, formData: FormData): Pro
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "/");
   if (!email || !password) return { status: "error", message: "Saisir le courriel et le mot de passe.", at: Date.now() };
+  let userId: string;
   try {
-    await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
+    const result = await auth.api.signInEmail({ body: { email, password }, headers: await headers() });
+    userId = result.user.id;
   } catch (error) {
     if (error instanceof APIError) {
       return {
@@ -27,7 +33,19 @@ export async function signInAction(_state: ActionState, formData: FormData): Pro
     }
     throw error;
   }
+  // Compte ouvert depuis le site : choix du mot de passe personnel avant tout.
+  if (await needsPasswordChange(userId)) redirect("/premiere-connexion");
   redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/");
+}
+
+/** Première connexion : remplacement du mot de passe provisoire, puis accès à l'application. */
+export async function setInitialPasswordAction(_state: ActionState, formData: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const ctx = await getOwnAuthContext();
+    const current = await auth.api.getSession({ headers: await headers() });
+    await setInitialPassword(ctx, formToObject(formData, { keepEmpty: true }), current?.session.token);
+    redirect("/");
+  });
 }
 
 export async function signOutAction() {

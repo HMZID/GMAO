@@ -31,6 +31,8 @@ export type AuthContext = {
   apiKeyId?: string | null;
   /** Administrateur de la plateforme connecté « en tant que » cet utilisateur (tracé au journal d'audit). */
   impersonator?: { id: string; name: string; email: string } | null;
+  /** Mot de passe provisoire à remplacer avant d'utiliser l'application (compte ouvert depuis le site). */
+  mustChangePassword?: boolean;
   roles: Role[];
   assignments: RoleAssignment[];
   /** Le droit est-il détenu sur au moins un périmètre ? */

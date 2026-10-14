@@ -32,6 +32,8 @@ import {
   updateTask,
 } from "@/server/services/work-orders";
 import { createIndicator } from "@/server/services/indicators";
+import { submitDemoRequest } from "@/server/services/demo-requests";
+import { ensureSiteContent } from "@/server/services/site";
 import { convertToWorkOrder, createWorkRequest, qualifyWorkRequest } from "@/server/services/work-requests";
 
 export const DEMO_PASSWORD = "Demo-Gmao-2026";
@@ -1564,6 +1566,24 @@ async function main() {
 
   // Recalcul final des échéances
   for (const id of Object.values(eqIds)) await db.transaction((tx) => recomputeDueItems(tx, ctx, id, now));
+
+  // Site commercial : contenu initial et une demande de démonstration en attente (administration du site).
+  await ensureSiteContent();
+  await submitDemoRequest(
+    {
+      company: "Carrières du Vercors",
+      contactName: "Paul Garnier",
+      email: "p.garnier@carrieres-vercors.example",
+      jobTitle: "Responsable maintenance",
+      fleetSize: "50-200",
+      sector: "Carrières et granulats",
+      planInterest: "Flotte",
+      message: "85 engins sur 2 carrières, préventif suivi sur Excel. Nous voulons tester l'application mobile en zone blanche.",
+      consent: "on",
+      startedAt: now.getTime() - 60_000,
+    },
+    { now },
+  );
 
   console.log(`Données de démonstration créées. Comptes : ${seats.map((x) => x.email).join(", ")}`);
   console.log(`Mot de passe commun : ${DEMO_PASSWORD}`);

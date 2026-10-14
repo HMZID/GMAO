@@ -4,7 +4,7 @@ import { hashPassword } from "better-auth/crypto";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { AuthContext } from "@/server/authz/context";
-import { db } from "@/server/db";
+import { db, type DbOrTx } from "@/server/db";
 import { account, companies, equipmentCategories, roleAssignments, sites, tenants, user, warehouses, workshops } from "@/server/db/schema";
 import { ROLES } from "@/server/authz/permissions";
 import { IMPERSONATION_TTL_MS, impersonationRefusals, signImpersonation } from "@/server/domain/impersonation";
@@ -27,7 +27,7 @@ export function isPlatformAdmin(ctx: AuthContext) {
   return allowed.size === 0 || allowed.has(ctx.email.toLowerCase());
 }
 
-function assertPlatformAdmin(ctx: AuthContext) {
+export function assertPlatformAdmin(ctx: AuthContext) {
   if (!isPlatformAdmin(ctx)) throw new ForbiddenError("Réservé aux administrateurs de la plateforme.");
 }
 
@@ -84,36 +84,57 @@ export async function createDemoTenant(ctx: AuthContext, raw: unknown, now = new
   const endsAt = demoEndsAt(now, input.durationDays);
 
   return db.transaction(async (tx) => {
-    const [tenant] = await tx
-      .insert(tenants)
-      .values({ name: input.organizationName, status: "DEMO", demoEndsAt: endsAt, contactEmail: input.adminEmail })
-      .returning({ id: tenants.id, name: tenants.name });
-    const [company] = await tx
-      .insert(companies)
-      .values({ tenantId: tenant.id, code: companyCodeFrom(input.organizationName), name: input.organizationName })
-      .returning({ id: companies.id });
-    const [site] = await tx
-      .insert(sites)
-      .values({ tenantId: tenant.id, companyId: company.id, code: "SIEGE", name: "Site principal" })
-      .returning({ id: sites.id });
-    await tx.insert(workshops).values({ tenantId: tenant.id, siteId: site.id, code: "ATELIER", name: "Atelier principal" });
-    await tx.insert(warehouses).values({ tenantId: tenant.id, siteId: site.id, code: "MAGASIN", name: "Magasin principal" });
-    await tx.insert(equipmentCategories).values(STARTER_CATEGORIES.map((c) => ({ ...c, tenantId: tenant.id })));
-
-    const userId = randomUUID();
-    await tx
-      .insert(user)
-      .values({ id: userId, name: input.adminName, email: input.adminEmail, emailVerified: true, tenantId: tenant.id, isActive: true });
-    await tx.insert(account).values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: passwordHash });
-    // Le client est géré par sa direction : tous les droits de son organisation, dont la gestion des accès.
-    await tx.insert(roleAssignments).values({ tenantId: tenant.id, userId, role: "EXECUTIVE", scopeType: "TENANT", scopeId: null });
-
-    const after = { name: tenant.name, status: "DEMO", demoEndsAt: endsAt, admin: input.adminEmail };
-    // Journal de la plateforme (organisation de l'administrateur) et journal du client.
-    await audit(tx, ctx, { entityType: "tenant", entityId: tenant.id, action: "create_demo", after });
-    await audit(tx, { ...ctx, tenantId: tenant.id }, { entityType: "tenant", entityId: tenant.id, action: "create_demo", after });
-    return { id: tenant.id, name: tenant.name, demoEndsAt: endsAt, adminEmail: input.adminEmail };
+    const created = await provisionDemoTenant(tx, ctx, { ...input, passwordHash, endsAt, mustChangePassword: false });
+    return { id: created.tenantId, name: created.name, demoEndsAt: endsAt, adminEmail: input.adminEmail };
   });
+}
+
+/**
+ * Organisation de démonstration et son premier compte (direction du client), dans la transaction de
+ * l'appelant : ouverture manuelle par la plateforme ou acceptation d'une demande déposée sur le site.
+ * `mustChangePassword` : mot de passe provisoire, à remplacer à la première connexion.
+ */
+export async function provisionDemoTenant(
+  tx: DbOrTx,
+  ctx: AuthContext,
+  input: { organizationName: string; adminName: string; adminEmail: string; passwordHash: string; endsAt: Date; mustChangePassword: boolean },
+) {
+  const { endsAt } = input;
+  const [tenant] = await tx
+    .insert(tenants)
+    .values({ name: input.organizationName, status: "DEMO", demoEndsAt: endsAt, contactEmail: input.adminEmail })
+    .returning({ id: tenants.id, name: tenants.name });
+  const [company] = await tx
+    .insert(companies)
+    .values({ tenantId: tenant.id, code: companyCodeFrom(input.organizationName), name: input.organizationName })
+    .returning({ id: companies.id });
+  const [site] = await tx
+    .insert(sites)
+    .values({ tenantId: tenant.id, companyId: company.id, code: "SIEGE", name: "Site principal" })
+    .returning({ id: sites.id });
+  await tx.insert(workshops).values({ tenantId: tenant.id, siteId: site.id, code: "ATELIER", name: "Atelier principal" });
+  await tx.insert(warehouses).values({ tenantId: tenant.id, siteId: site.id, code: "MAGASIN", name: "Magasin principal" });
+  await tx.insert(equipmentCategories).values(STARTER_CATEGORIES.map((c) => ({ ...c, tenantId: tenant.id })));
+
+  const userId = randomUUID();
+  await tx.insert(user).values({
+    id: userId,
+    name: input.adminName,
+    email: input.adminEmail,
+    emailVerified: true,
+    tenantId: tenant.id,
+    isActive: true,
+    mustChangePassword: input.mustChangePassword,
+  });
+  await tx.insert(account).values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: input.passwordHash });
+  // Le client est géré par sa direction : tous les droits de son organisation, dont la gestion des accès.
+  await tx.insert(roleAssignments).values({ tenantId: tenant.id, userId, role: "EXECUTIVE", scopeType: "TENANT", scopeId: null });
+
+  const after = { name: tenant.name, status: "DEMO", demoEndsAt: endsAt, admin: input.adminEmail };
+  // Journal de la plateforme (organisation de l'administrateur) et journal du client.
+  await audit(tx, ctx, { entityType: "tenant", entityId: tenant.id, action: "create_demo", after });
+  await audit(tx, { ...ctx, tenantId: tenant.id }, { entityType: "tenant", entityId: tenant.id, action: "create_demo", after });
+  return { tenantId: tenant.id, userId, name: tenant.name };
 }
 
 export const tenantActionInput = z.object({

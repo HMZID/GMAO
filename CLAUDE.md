@@ -30,6 +30,7 @@ Avant de rendre la main : `npm run format`, `npm run lint`, `npm run typecheck`,
 - `src/server/services/` : cas d'usage. Chaque fonction exportée reçoit un `AuthContext`, valide l'entrée avec Zod (`parseInput`), vérifie les droits (`assertCan` / `assertCanOn`), filtre par périmètre (`scopeWhere`), écrit l'audit (`audit`) dans la même transaction.
 - Écrans (`src/app/(app)/`) et API (`src/app/api/v1/`) appellent les **mêmes** services : jamais de règle ni de contrôle de droit dans une page, une action ou une route.
 - `src/lib/labels.ts` : libellés français des énumérations (le code et la base sont en anglais).
+- Site commercial public (`src/app/(site)`, charte propre `src/components/site`) : servi sur `/` sans session (réécriture dans `src/proxy.ts`), contenu et demandes de démo administrés dans `/administration/site` ; voir `docs/site-commercial.md`.
 
 ## Conventions
 

@@ -1,0 +1,82 @@
+import {
+  Bell,
+  Building2,
+  CalendarDays,
+  ChartColumn,
+  ClipboardList,
+  Container,
+  Factory,
+  FileText,
+  Gauge,
+  HardHat,
+  Landmark,
+  Mountain,
+  Package,
+  Plug,
+  QrCode,
+  ShieldCheck,
+  ShoppingCart,
+  Smartphone,
+  Tractor,
+  Truck,
+  Users,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
+import type { SiteIcon as SiteIconName } from "@/server/domain/site";
+
+export const SITE_ICON_COMPONENTS: Record<SiteIconName, LucideIcon> = {
+  wrench: Wrench,
+  truck: Truck,
+  gauge: Gauge,
+  calendar: CalendarDays,
+  clipboard: ClipboardList,
+  package: Package,
+  cart: ShoppingCart,
+  chart: ChartColumn,
+  smartphone: Smartphone,
+  shield: ShieldCheck,
+  bell: Bell,
+  plug: Plug,
+  users: Users,
+  file: FileText,
+  qr: QrCode,
+  hardhat: HardHat,
+  mountain: Mountain,
+  building: Building2,
+  factory: Factory,
+  landmark: Landmark,
+  container: Container,
+  tractor: Tractor,
+};
+
+/** Libellés des icônes proposées dans l'administration du site. */
+export const SITE_ICON_LABELS: Record<SiteIconName, string> = {
+  wrench: "Clé",
+  truck: "Camion",
+  gauge: "Compteur",
+  calendar: "Calendrier",
+  clipboard: "Bon de travail",
+  package: "Pièces",
+  cart: "Achats",
+  chart: "Indicateurs",
+  smartphone: "Mobile",
+  shield: "Sécurité",
+  bell: "Alerte",
+  plug: "Connecteur",
+  users: "Équipe",
+  file: "Document",
+  qr: "QR code",
+  hardhat: "Casque",
+  mountain: "Carrière",
+  building: "Bâtiment",
+  factory: "Usine",
+  landmark: "Collectivité",
+  container: "Conteneur",
+  tractor: "Engin agricole",
+};
+
+export function SiteIcon({ name, className }: { name: string | null | undefined; className?: string }) {
+  const Icon = (name && SITE_ICON_COMPONENTS[name as SiteIconName]) || Wrench;
+  return <Icon className={className} aria-hidden />;
+}
