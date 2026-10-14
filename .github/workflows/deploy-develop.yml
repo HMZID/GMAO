@@ -100,13 +100,30 @@ jobs:
       - name: CLI Vercel
         run: npm install --global vercel@59.26.0
 
-      # Sans --prod : prévisualisation, variables de portée Preview (base de développement).
+      # Sans --prod : prévisualisation, variables de portée Preview (base de développement). Pas de --scope :
+      # avec lui, la CLI charge le profil de l'utilisateur du jeton, inaccessible ici (« User not found ») ;
+      # l'équipe vient de VERCEL_ORG_ID.
       - name: Déploiement
         run: |
-          url=$(vercel deploy --yes --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --env APP_VERSION="$APP_VERSION")
-          # Projet d'équipe Vercel : l'équipe doit être indiquée à `alias` (sinon « User not found »).
-          vercel alias set "$url" "$DEVELOP_ALIAS" --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
-          echo "Déployé : $url, version $APP_VERSION, adresse fixe https://$DEVELOP_ALIAS"
+          url=$(vercel deploy --yes --token="$VERCEL_TOKEN" --env APP_VERSION="$APP_VERSION")
+          echo "DEPLOYMENT_URL=$url" >> "$GITHUB_ENV"
+          echo "Déployé : $url, version $APP_VERSION"
+
+      # Adresse fixe par l'API Vercel (la commande `vercel alias` bute sur le même profil d'utilisateur).
+      - name: Adresse fixe
+        run: |
+          team=""
+          case "$VERCEL_ORG_ID" in team_*) team="?teamId=$VERCEL_ORG_ID" ;; esac
+          host=${DEPLOYMENT_URL#https://}
+          id=$(curl -sS -f -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/v13/deployments/$host$team" | jq -r '.id')
+          [ -n "$id" ] && [ "$id" != "null" ] || { echo "::error::Déploiement $host introuvable par l'API Vercel."; exit 1; }
+          code=$(jq -n --arg a "$DEVELOP_ALIAS" '{alias: $a}' |
+            curl -sS -o alias.json -w "%{http_code}" -X POST -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json"               --data-binary @- "https://api.vercel.com/v2/deployments/$id/aliases$team")
+          if [ "$code" != "200" ] && [ "$code" != "201" ]; then
+            echo "::error::Adresse fixe $DEVELOP_ALIAS non attribuée (HTTP $code) : $(jq -r '.error.message // empty' alias.json)"
+            exit 1
+          fi
+          echo "Adresse fixe : https://$DEVELOP_ALIAS → $DEPLOYMENT_URL"
 
       - name: Vérification (sonde de santé, version et environnement)
         run: |
