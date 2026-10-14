@@ -124,3 +124,19 @@ export const notifications = pgTable(
   },
   (t) => [index("notifications_user_idx").on(t.userId, t.readAt)],
 );
+
+/**
+ * Tentatives de connexion par courriel et mot de passe (TEC-04) : limitation des essais
+ * (`src/server/auth/login-throttle.ts`). L'adresse IP n'est conservée que sous forme d'empreinte.
+ */
+export const loginAttempts = pgTable(
+  "login_attempts",
+  {
+    id: id(),
+    email: text("email").notNull(),
+    ipHash: text("ip_hash"),
+    succeeded: boolean("succeeded").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("login_attempts_email_idx").on(t.email, t.createdAt), index("login_attempts_ip_idx").on(t.ipHash, t.createdAt)],
+);
