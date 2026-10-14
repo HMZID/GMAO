@@ -5,6 +5,11 @@
 # unitaires, tests de bout en bout, application mobile). Si une vérification échoue, rien n'est fusionné :
 # la branche doit être corrigée (nouveau commit poussé, la CI repart).
 #
+# Jeton : secret AUTO_MERGE_TOKEN (jeton personnel à granularité fine du responsable, dépôt GMAO seul :
+# Contents, Pull requests et Workflows en écriture). La fusion est alors faite en son nom : elle déclenche
+# le « Pipeline développement » et accepte les PR qui modifient un workflow. Avec le jeton intégré
+# (github-actions), GitHub ne déclenche aucun workflow après la fusion et refuse les PR de workflows.
+#
 # Prérequis côté dépôt (docs/deploiement-vercel.md, « Règles du dépôt ») : fusion automatique autorisée et
 # develop protégée avec les vérifications obligatoires. Sans ces réglages, le job n'active pas la fusion
 # automatique (avertissement, sans échec) : la PR se fusionne alors à la main une fois la CI verte.
@@ -48,8 +53,12 @@ jobs:
       - name: Fusionner dès que la CI est verte
         if: steps.settings.outputs.ready == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN || github.token }}
+          PERSONAL_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN != '' }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
+          if [ "$PERSONAL_TOKEN" != "true" ]; then
+            echo "::warning::Secret AUTO_MERGE_TOKEN absent : la fusion par github-actions ne déclenchera pas le Pipeline développement (redéployer à la main) et sera refusée si la PR modifie un workflow."
+          fi
           gh pr merge --auto --merge "$PR_URL" ||
             echo "::warning::Fusion automatique non activée : autoriser « Allow auto-merge » dans les réglages du dépôt (docs/deploiement-vercel.md)."

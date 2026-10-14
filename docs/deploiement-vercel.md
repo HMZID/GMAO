@@ -62,6 +62,7 @@ Mise en place, une seule fois :
 | Protection de `main` | PR obligatoire, contrôles requis (CI, application mobile, garde develop), pas de poussée forcée |
 | Protection de `develop` | PR obligatoire, contrôles requis « Vérifications et tests » et « Application mobile (Expo) », appliquée aussi aux administrateurs, pas de poussée forcée ni de suppression |
 | General → Pull Requests | « Allow auto-merge » coché |
+| Secret `AUTO_MERGE_TOKEN` | Jeton personnel à granularité fine (GitHub → Settings → Developer settings → Fine-grained tokens), dépôt `HMZID/GMAO` seul, permissions *Contents*, *Pull requests* et *Workflows* en lecture-écriture. Sans lui, une fusion automatique (faite par `github-actions`) ne déclenche pas le Pipeline développement et une PR qui modifie un workflow doit être fusionnée à la main |
 
 Commandes équivalentes (compte administrateur du dépôt, `gh auth login`) :
 
