@@ -80,6 +80,12 @@ export function PricingPlans({ plans, annualMonths, annualLabel }: { plans: Plan
                     <p className="flex items-start gap-1">
                       <span className="site-display text-6xl">{price.format(amount)}</span>
                       <span className="site-display mt-1 text-2xl">€</span>
+                      {plan.priceMonthly !== null && amount < plan.priceMonthly ? (
+                        <s className={`site-display ml-3 mt-1 text-2xl ${dark ? "text-white/40" : "text-asphalt-500/60"}`}>
+                          <span className="sr-only">au lieu de </span>
+                          {price.format(plan.priceMonthly)} €
+                        </s>
+                      ) : null}
                     </p>
                     <p className={`text-sm ${dark ? "text-white/70" : "text-asphalt-500"}`}>
                       {plan.priceUnit}
@@ -90,12 +96,19 @@ export function PricingPlans({ plans, annualMonths, annualLabel }: { plans: Plan
                 {plan.priceNote ? <p className={`site-label mt-2 text-[10px] ${dark ? "text-signal" : "text-asphalt"}`}>{plan.priceNote}</p> : null}
               </div>
               <ul className="mt-6 flex-1 space-y-3 text-sm">
-                {planFeatures(plan.features).map((f) => (
-                  <li key={f} className="flex gap-2.5">
-                    <Check className={`mt-0.5 h-4 w-4 shrink-0 ${dark ? "text-signal" : "text-asphalt"}`} aria-hidden />
-                    <span>{f}</span>
-                  </li>
-                ))}
+                {planFeatures(plan.features).map((f) =>
+                  // Ligne terminée par « : » (« Tout Atelier, plus : ») : intertitre, sans coche.
+                  f.endsWith(":") ? (
+                    <li key={f} className={`site-label pt-1 text-[11px] ${dark ? "text-signal" : "text-asphalt-500"}`}>
+                      {f}
+                    </li>
+                  ) : (
+                    <li key={f} className="flex gap-2.5">
+                      <Check className={`mt-0.5 h-4 w-4 shrink-0 ${dark ? "text-signal" : "text-asphalt"}`} aria-hidden />
+                      <span>{f}</span>
+                    </li>
+                  ),
+                )}
               </ul>
               <Link
                 href={`/essai-gratuit?offre=${encodeURIComponent(plan.name)}`}
