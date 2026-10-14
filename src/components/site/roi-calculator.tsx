@@ -50,12 +50,12 @@ export function RoiCalculator({ reductionPct, pricePerEquipment }: { reductionPc
         <Slider label="Pannes par mois (tout le parc)" value={breakdownsPerMonth} min={1} max={60} step={1} unit="pannes" onChange={setBreakdowns} />
         <Slider label="Immobilisation moyenne par panne" value={daysPerBreakdown} min={0.5} max={10} step={0.5} unit="jours" onChange={setDays} />
         <Slider
-          label="Coût d'une journée d'immobilisation"
+          label="Coût d'une journée d'immobilisation (location, retard)"
           value={dailyCost}
           min={100}
           max={3000}
           step={50}
-          unit="€ (location, retard)"
+          unit="€ / jour"
           onChange={setDailyCost}
         />
       </div>
