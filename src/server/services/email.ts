@@ -22,7 +22,7 @@ import {
 } from "@/server/db/schema";
 import {
   EMAIL_EVENT_DEFINITIONS,
-  EMAIL_EVENTS,
+  PREFERENCE_EVENTS,
   dayKey,
   documentExpiryStage,
   emailEventOf,
@@ -33,6 +33,7 @@ import {
   wantsEmail,
   type EmailContent,
   type EmailEvent,
+  type RenderedEmail,
 } from "@/server/domain/email";
 import { NotFoundError } from "@/server/errors";
 import { getEmailTransport, type EmailTransport } from "@/server/email/transport";
@@ -89,12 +90,38 @@ export async function enqueueEmail(tx: DbOrTx, request: EmailRequest): Promise<b
   return inserted.length > 0;
 }
 
+/**
+ * Courriel déjà mis en forme, adressé directement (comptes ouverts depuis le site, plateforme) : pas de
+ * préférences à consulter, le destinataire n'a parfois pas encore de compte. Même file, mêmes reprises.
+ */
+export async function enqueueDirectEmail(
+  tx: DbOrTx,
+  request: { tenantId: string; userId?: string | null; toAddress: string; event: EmailEvent; dedupKey: string; mail: RenderedEmail },
+) {
+  const inserted = await tx
+    .insert(emailOutbox)
+    .values({
+      tenantId: request.tenantId,
+      userId: request.userId ?? null,
+      toAddress: request.toAddress,
+      event: request.event,
+      dedupKey: request.dedupKey.slice(0, 300),
+      subject: request.mail.subject,
+      textBody: request.mail.text,
+      htmlBody: request.mail.html,
+    })
+    .onConflictDoNothing({ target: [emailOutbox.tenantId, emailOutbox.dedupKey] })
+    .returning({ id: emailOutbox.id });
+  return inserted[0]?.id ?? null;
+}
+
 const ENTITY_LINKS: Record<string, (id: string) => string> = {
   work_request: (id) => `/demandes/${id}`,
   work_order: (id) => `/ordres-de-travail/${id}`,
   equipment: (id) => `/equipements/${id}`,
   purchase_request: (id) => `/demandes-achat/${id}`,
   approval: () => "/validations",
+  demo_request: (id) => `/administration/site/demandes/${id}`,
 };
 
 export function linkOf(entityType?: string | null, entityId?: string | null) {
@@ -451,17 +478,17 @@ async function documentExpiries(tenantId: string, now: Date) {
 export async function getMyEmailPreferences(ctx: AuthContext) {
   const rows = await db.select().from(emailPreferences).where(eq(emailPreferences.userId, ctx.userId));
   const saved = new Map(rows.map((r) => [r.event, r.enabled]));
-  return EMAIL_EVENTS.map((event) => ({ event, ...EMAIL_EVENT_DEFINITIONS[event], enabled: wantsEmail(event, Object.fromEntries(saved)) }));
+  return PREFERENCE_EVENTS.map((event) => ({ event, ...EMAIL_EVENT_DEFINITIONS[event], enabled: wantsEmail(event, Object.fromEntries(saved)) }));
 }
 
-export const preferencesInput = z.object({ enabled: z.array(z.enum(EMAIL_EVENTS)).default([]) });
+export const preferencesInput = z.object({ enabled: z.array(z.enum(PREFERENCE_EVENTS)).default([]) });
 
 /** Les alertes cochées sont envoyées ; les alertes obligatoires restent actives quoi qu'il arrive. */
 export async function updateMyEmailPreferences(ctx: AuthContext, raw: unknown) {
   const input = parseInput(preferencesInput, raw);
   const enabled = new Set(input.enabled);
   await db.transaction(async (tx) => {
-    for (const event of EMAIL_EVENTS) {
+    for (const event of PREFERENCE_EVENTS) {
       const value = EMAIL_EVENT_DEFINITIONS[event].mandatory || enabled.has(event);
       await tx
         .insert(emailPreferences)

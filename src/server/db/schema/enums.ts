@@ -72,6 +72,9 @@ export const emailEventEnum = pgEnum("email_event", [
   "OVERDUE",
   "STOCK_ALERT",
   "DOCUMENT_EXPIRY",
+  "DEMO_REQUEST",
+  "DEMO_ACCESS",
+  "DEMO_DECISION",
 ]);
 
 export const emailStatusEnum = pgEnum("email_status", ["PENDING", "SENT", "FAILED", "CANCELLED"]);

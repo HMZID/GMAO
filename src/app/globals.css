@@ -141,3 +141,132 @@ body {
     -webkit-print-color-adjust: exact;
   }
 }
+
+/*
+ * Site commercial (src/app/(site)) : charte « chantier ». Asphalte et papier kraft, jaune de signalisation,
+ * titres condensés (Archivo), libellés en chasse fixe comme une plaque constructeur, rayures de balisage.
+ */
+@theme {
+  --color-paper: #f3f0e8;
+  --color-paper-deep: #e8e2d4;
+  --color-rule: #d6cfbf;
+  --color-asphalt: #141619;
+  --color-asphalt-800: #1c1f23;
+  --color-asphalt-700: #2a2e34;
+  --color-asphalt-500: #5d6168;
+  --color-signal: #ffb800;
+  --color-signal-600: #e6a400;
+  --color-rust: #e4572e;
+  --color-ok: #3fb37f;
+
+  --font-display: var(--font-site-display), ui-sans-serif, system-ui, sans-serif;
+  --font-plate: var(--font-site-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --animate-site-marquee: site-marquee 40s linear infinite;
+  --animate-site-fill: site-fill 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-site-blink: site-blink 1.4s steps(2, start) infinite;
+}
+
+@keyframes site-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes site-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes site-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+@layer components {
+  .site-display {
+    font-family: var(--font-display);
+    font-variation-settings: "wdth" 70;
+    font-stretch: 70%;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.005em;
+    line-height: 0.9;
+  }
+  .site-label {
+    font-family: var(--font-plate);
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  /* Rayures de balisage (jaune et noir). */
+  .site-hazard {
+    background: repeating-linear-gradient(-45deg, var(--color-signal) 0 14px, var(--color-asphalt) 14px 28px);
+  }
+  /* Quadrillage de plan technique, sur fond sombre ou clair. */
+  .site-blueprint {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .site-blueprint-light {
+    background-image: linear-gradient(rgb(20 22 25 / 0.06) 1px, transparent 1px), linear-gradient(90deg, rgb(20 22 25 / 0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  /* Plaque rivetée : quatre rivets dans les coins. */
+  .site-plate {
+    position: relative;
+    background-image:
+      radial-gradient(circle at 10px 10px, rgb(20 22 25 / 0.35) 2.5px, transparent 3px),
+      radial-gradient(circle at calc(100% - 10px) 10px, rgb(20 22 25 / 0.35) 2.5px, transparent 3px),
+      radial-gradient(circle at 10px calc(100% - 10px), rgb(20 22 25 / 0.35) 2.5px, transparent 3px),
+      radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), rgb(20 22 25 / 0.35) 2.5px, transparent 3px);
+  }
+  /* Bouton principal : ombre portée franche, enfoncé au clic. */
+  .site-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0 1.4rem;
+    font-weight: 700;
+    border: 2px solid var(--color-asphalt);
+    transition:
+      transform 0.12s,
+      box-shadow 0.12s,
+      background-color 0.12s;
+  }
+  .site-btn-signal {
+    background: var(--color-signal);
+    color: var(--color-asphalt);
+    box-shadow: 4px 4px 0 var(--color-asphalt);
+  }
+  .site-btn-signal:hover {
+    background: #ffc633;
+  }
+  .site-btn-signal:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 var(--color-asphalt);
+  }
+  .site-btn-ghost {
+    color: inherit;
+    border-color: currentColor;
+  }
+  .site-btn-ghost:hover {
+    background: rgb(255 255 255 / 0.08);
+  }
+  .site-focus :focus-visible {
+    outline: 3px solid var(--color-signal);
+    outline-offset: 3px;
+  }
+  .site-range {
+    accent-color: var(--color-signal);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe-only {
+    animation: none !important;
+  }
+}

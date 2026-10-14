@@ -24,6 +24,7 @@ export async function loadAuthContext(userId: string, channel: Channel, options:
       name: user.name,
       email: user.email,
       isActive: user.isActive,
+      mustChangePassword: user.mustChangePassword,
       tenantStatus: tenants.status,
       demoEndsAt: tenants.demoEndsAt,
     })
@@ -54,11 +55,12 @@ export async function loadAuthContext(userId: string, channel: Channel, options:
       .limit(1),
   ]);
 
-  return buildAuthContext(
+  const ctx = buildAuthContext(
     { id: row.id, tenantId: row.tenantId, name: row.name, email: row.email, technicianId: tech?.id ?? null },
     assignments.map((a) => ({ ...a, role: a.role as Role })),
     { channel },
   );
+  return row.mustChangePassword ? { ...ctx, mustChangePassword: true } : ctx;
 }
 
 /**
@@ -100,6 +102,8 @@ export const getOwnAuthContext = cache(async (): Promise<AuthContext> => {
  */
 export const getAuthContext = cache(async (): Promise<AuthContext> => {
   const own = await getOwnAuthContext();
+  // Mot de passe provisoire (compte ouvert depuis le site) : à remplacer avant toute autre page ou action.
+  if (own.mustChangePassword) redirect("/premiere-connexion");
   return withImpersonation(own, (await cookies()).get(IMPERSONATION_COOKIE)?.value);
 });
 

@@ -20,6 +20,8 @@ export const user = pgTable("user", {
     .references(() => tenants.id),
   /** HAB-08 : un utilisateur désactivé ne peut plus se connecter, son historique reste. */
   isActive: boolean("is_active").notNull().default(true),
+  /** Mot de passe provisoire (compte ouvert depuis le site) : à remplacer à la première connexion. */
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
