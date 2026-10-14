@@ -77,3 +77,34 @@ test("R-07 : un chef d'atelier d'une société ne voit rien d'une autre sociét�
   await page.goto(`/equipements/${sbtpTruck}`);
   await expect(page.getByText("Camion benne 8x4")).toHaveCount(0);
 });
+
+test("connexion : tentatives limitées (page et adresse HTTP), sans révéler si le compte existe", async ({ page, playwright, baseURL }) => {
+  const email = `inconnu.${Date.now()}@demo.gmao`;
+  await page.goto("/login");
+  for (let i = 0; i < 5; i++) {
+    await page.getByLabel("Courriel").fill(email);
+    await page.getByLabel("Mot de passe").fill(`mauvais-${i}-0123456789`);
+    await page.getByRole("button", { name: "Se connecter" }).click();
+    await expect(statusMessage(page).filter({ hasText: /Identifiants invalides/ })).toBeVisible();
+  }
+  // 6e essai : bloqué pendant 15 minutes, par l'écran comme par l'adresse utilisée par le mobile.
+  await page.getByLabel("Mot de passe").fill("encore-un-essai-0123456789");
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await expect(statusMessage(page).filter({ hasText: /Trop de tentatives/ })).toBeVisible();
+  const api = await playwright.request.newContext({ baseURL });
+  const blocked = await api.post("/api/auth/sign-in/email", { data: { email, password: "x-0123456789" }, headers: { Origin: baseURL! } });
+  expect(blocked.status()).toBe(429);
+  await api.dispose();
+});
+
+test("connexion : le retour après connexion reste dans l'application ; en-têtes de sécurité", async ({ page }) => {
+  const response = await page.goto(`/login?next=${encodeURIComponent("/\pirate.example")}`);
+  expect(response?.headers()["x-frame-options"]).toBe("DENY");
+  expect(response?.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(response?.headers()["x-content-type-options"]).toBe("nosniff");
+  await page.getByLabel("Courriel").fill(USERS.maintenanceManager);
+  await page.getByLabel("Mot de passe").fill(DEMO_PASSWORD);
+  await page.getByRole("button", { name: "Se connecter" }).click();
+  await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  expect(new URL(page.url()).host).toBe(new URL(response!.url()).host);
+});

@@ -92,6 +92,7 @@ Vercel exécute `npm run vercel-build` (`scripts/predeploy.ts`, puis `next build
 | `DATABASE_URL_UNPOOLED` | Adresse Neon **sans** pooling, pour les migrations (posée automatiquement par l'intégration Neon de Vercel) | Non |
 | `BETTER_AUTH_URL` | Adresse publique ; par défaut l'adresse de production Vercel (`VERCEL_PROJECT_PRODUCTION_URL`) | Non |
 | `PLATFORM_ADMIN_EMAILS` | Courriels des administrateurs de la plateforme (organisations clientes, démonstrations), séparés par des virgules | Pour les démonstrations |
+| `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | CAPTCHA de la page de connexion (Cloudflare Turnstile, voir ci-dessous). Sans elles, la page fonctionne sans CAPTCHA (poste local, CI) ; la limitation des tentatives reste active | Conseillé en production et en recette |
 | `CRON_SECRET` | Secret de la tâche planifiée des courriels (16 caractères au moins) | Pour les courriels |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM` | Serveur d'envoi des courriels | Pour les courriels |
 | `STORAGE_DRIVER=s3`, `S3_*` | Stockage des documents : le disque de Vercel est en lecture seule | Pour les documents |
@@ -107,6 +108,13 @@ Une variable modifiée n'est prise en compte qu'au déploiement suivant : **GitH
 Connexion à Neon : l'application écrit `sslmode=verify-full` à la place de `sslmode=require` (`src/server/db/connection-string.ts`) pour garder la vérification complète du certificat quand la bibliothèque `pg` changera la signification de `require`. Rien à modifier dans les variables.
 
 Version de Node : `22.x` (`package.json`, `engines`), la même que la CI et le poste de développement.
+
+## Sécurité de la connexion
+
+- **CAPTCHA** (Cloudflare Turnstile, souvent invisible) sur la page `/login` : Cloudflare → *Turnstile* → *Add widget*, noms de domaine `gmao-eight-alpha.vercel.app` (production) et `gmao-develop.vercel.app` (recette), mode *Managed*. Déclarer la clé du site et la clé secrète dans Vercel (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`), pour Production et Preview. Le serveur vérifie chaque jeton (action `login`, nom de domaine de l'application, usage unique) et refuse en cas de panne du service. L'adresse HTTP `/api/auth/sign-in/email`, utilisée par l'application mobile, n'exige pas de CAPTCHA.
+- **Tentatives limitées** pour l'écran, l'adresse HTTP et le mobile (table `login_attempts`, IP conservée en empreinte, purge à 30 jours) : 5 échecs d'un compte depuis une même adresse, 20 échecs d'un compte, ou 50 échecs depuis une adresse, en 15 minutes, bloquent la connexion pendant 15 minutes. La réponse ne dit pas si le compte existe.
+- **Retour après connexion** limité aux chemins de l'application (`safeRedirectPath`).
+- **En-têtes** sur toutes les réponses : `frame-ancestors 'none'` et `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, HSTS.
 
 ## Vérification
 
