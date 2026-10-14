@@ -6,6 +6,7 @@
 # 3. Si NEON_API_KEY et NEON_PROJECT_ID sont fournis : adresses de la base de développement toujours relues
 #    dans Neon (branche NEON_DEV_BRANCH, base NEON_DEV_DATABASE, jamais la branche par défaut de Neon, avec
 #    sslmode=require) ; autres variables Preview créées si elles manquent (secret généré, valeurs de la recette).
+#    PLATFORM_ADMIN_EMAILS est toujours repris du secret DEVELOP_PLATFORM_ADMIN_EMAILS quand il existe.
 #    Aucune valeur n'est affichée : le dépôt est public, ses journaux aussi.
 # 4. Vérifie que les variables obligatoires existent.
 #
@@ -87,6 +88,13 @@ for key in "${NOT_SHARED[@]}"; do
 done
 [ "$errors" = 0 ] || exit 1
 
+# Administrateurs de la plateforme en recette : toujours repris du secret GitHub DEVELOP_PLATFORM_ADMIN_EMAILS
+# (il doit nommer un compte qui existe dans la base de recette, par exemple admin@demo.gmao).
+if [ -n "${DEVELOP_PLATFORM_ADMIN_EMAILS:-}" ]; then
+  set_preview PLATFORM_ADMIN_EMAILS "$DEVELOP_PLATFORM_ADMIN_EMAILS"
+  load_envs
+fi
+
 missing=()
 for key in "${REQUIRED[@]}" "${ADVISED[@]}"; do has_preview "$key" || missing+=("$key"); done
 
@@ -106,7 +114,6 @@ if [ -n "${NEON_API_KEY:-}" ] && [ -n "${NEON_PROJECT_ID:-}" ]; then
         ;;
       BETTER_AUTH_URL) set_preview "$key" "https://$DEVELOP_ALIAS" ;;
       PREVIEW_MIGRATIONS | SEED_DEMO_DATA) set_preview "$key" "true" ;;
-      PLATFORM_ADMIN_EMAILS) if [ -n "${DEVELOP_PLATFORM_ADMIN_EMAILS:-}" ]; then set_preview "$key" "$DEVELOP_PLATFORM_ADMIN_EMAILS"; fi ;;
     esac
   done
   load_envs

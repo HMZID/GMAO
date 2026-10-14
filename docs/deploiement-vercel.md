@@ -46,7 +46,7 @@ Mise en place, une seule fois :
    | `BETTER_AUTH_SECRET` | Secret aléatoire propre à la recette |
    | `BETTER_AUTH_URL` | `https://gmao-develop.vercel.app` (ou `DEVELOP_ALIAS`) |
    | `PREVIEW_MIGRATIONS`, `SEED_DEMO_DATA` | `true` |
-   | `PLATFORM_ADMIN_EMAILS` | Secret GitHub `DEVELOP_PLATFORM_ADMIN_EMAILS` |
+   | `PLATFORM_ADMIN_EMAILS` | Secret GitHub `DEVELOP_PLATFORM_ADMIN_EMAILS`, **repris à chaque exécution** ; il doit nommer au moins un compte de la base de recette (`admin@demo.gmao`), sans quoi personne n'y administre la plateforme (demandes d'essai, organisations) |
 
    Variables GitHub utilisées : `NEON_PROJECT_ID` (identifiant du projet Neon), et facultatives `NEON_DEV_BRANCH` (`develop`), `NEON_DEV_DATABASE` (`gmao_dev`), `DEVELOP_ALIAS`. Hors adresses de la base, une variable Preview déjà déclarée n'est jamais modifiée. Sans `NEON_API_KEY`, les variables se déclarent à la main dans Vercel (portée Preview seulement). Le dépôt est public : aucune valeur n'est écrite dans les journaux.
 4. **Vercel → Settings → Deployment Protection** : soit désactiver la protection des prévisualisations (l'application garde sa propre connexion), soit créer un secret *Protection Bypass for Automation* et le déclarer dans GitHub sous `VERCEL_AUTOMATION_BYPASS_SECRET`. Le pipeline le signale s'il est bloqué.
