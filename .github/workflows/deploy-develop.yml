@@ -103,8 +103,9 @@ jobs:
       # Sans --prod : prévisualisation, variables de portée Preview (base de développement).
       - name: Déploiement
         run: |
-          url=$(vercel deploy --yes --token="$VERCEL_TOKEN" --env APP_VERSION="$APP_VERSION")
-          vercel alias set "$url" "$DEVELOP_ALIAS" --token="$VERCEL_TOKEN"
+          url=$(vercel deploy --yes --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID" --env APP_VERSION="$APP_VERSION")
+          # Projet d'équipe Vercel : l'équipe doit être indiquée à `alias` (sinon « User not found »).
+          vercel alias set "$url" "$DEVELOP_ALIAS" --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
           echo "Déployé : $url, version $APP_VERSION, adresse fixe https://$DEVELOP_ALIAS"
 
       - name: Vérification (sonde de santé, version et environnement)
