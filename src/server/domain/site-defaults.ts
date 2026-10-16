@@ -10,7 +10,7 @@ type DefaultItem = { kind: SiteItemKind; title: string; body?: string; meta?: st
 
 export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   { kind: "HIGHLIGHT", title: "30", meta: "jours", body: "d'essai sur votre propre espace, sans carte bancaire" },
-  { kind: "HIGHLIGHT", title: "0", meta: "€", body: "par utilisateur : toutes les offres sont en utilisateurs illimités" },
+  { kind: "HIGHLIGHT", title: "0", meta: "DT", body: "par utilisateur : toutes les offres sont en utilisateurs illimités" },
   { kind: "HIGHLIGHT", title: "100", meta: "%", body: "des saisies terrain possibles hors connexion sur mobile" },
   { kind: "HIGHLIGHT", title: "1", meta: "semaine", body: "pour importer votre parc depuis vos fichiers Excel" },
 
@@ -157,9 +157,9 @@ export const DEFAULT_SITE_PLANS: DefaultPlan[] = [
   {
     name: "Atelier",
     tagline: "Un site, un atelier, l'essentiel bien fait.",
-    priceMonthly: 7,
-    priceUnit: "€ HT / équipement / mois",
-    priceNote: "À partir de 10 équipements",
+    priceMonthly: null,
+    priceUnit: "Sur devis",
+    priceNote: "En dinars tunisiens, selon la taille du parc · dès 10 équipements",
     features: [
       "Équipements, compteurs et documents",
       "Préventif au compteur et au calendrier",
@@ -167,14 +167,14 @@ export const DEFAULT_SITE_PLANS: DefaultPlan[] = [
       "Application mobile terrain",
       "Utilisateurs illimités",
     ],
-    ctaLabel: "Essayer l'offre Atelier",
+    ctaLabel: "Demander un devis Atelier",
   },
   {
     name: "Flotte",
     tagline: "Plusieurs sites, le stock et les achats sous contrôle.",
-    priceMonthly: 12,
-    priceUnit: "€ HT / équipement / mois",
-    priceNote: "À partir de 20 équipements",
+    priceMonthly: null,
+    priceUnit: "Sur devis",
+    priceNote: "En dinars tunisiens, selon la taille du parc · dès 20 équipements",
     features: [
       "Tout Atelier, plus :",
       "Multi-sites et planning d'atelier",
@@ -183,7 +183,7 @@ export const DEFAULT_SITE_PLANS: DefaultPlan[] = [
       "Indicateurs : disponibilité, MTBF, MTTR, coûts",
       "Imports Excel accompagnés",
     ],
-    ctaLabel: "Essayer l'offre Flotte",
+    ctaLabel: "Demander un devis Flotte",
     badge: "Le plus choisi",
     highlighted: true,
   },
@@ -192,7 +192,7 @@ export const DEFAULT_SITE_PLANS: DefaultPlan[] = [
     tagline: "Multi-sociétés, intégrations et accompagnement dédié.",
     priceMonthly: null,
     priceUnit: "Sur devis",
-    priceNote: "Au-delà de 200 équipements ou plusieurs sociétés",
+    priceNote: "En dinars tunisiens · au-delà de 200 équipements ou plusieurs sociétés",
     features: [
       "Tout Flotte, plus :",
       "Multi-sociétés et périmètres fins",

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useId, useState } from "react";
 import { estimateRoi } from "@/server/domain/site";
 
-const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+const amount = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const decimal = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
 
 type SliderProps = { label: string; value: number; min: number; max: number; step: number; unit: string; onChange: (v: number) => void };
@@ -35,12 +35,17 @@ function Slider({ label, value, min, max, step, unit, onChange }: SliderProps) {
   );
 }
 
-/** Calculateur du coût des pannes : estimation indicative, selon les hypothèses du visiteur. */
-export function RoiCalculator({ reductionPct, pricePerEquipment }: { reductionPct: number; pricePerEquipment: number }) {
+/**
+ * Calculateur du coût des pannes : estimation indicative, selon les hypothèses du visiteur, dans la devise du site.
+ * Sans prix de référence (tarifs sur devis), l'abonnement et le retour sur investissement ne sont pas estimés.
+ */
+export function RoiCalculator({ reductionPct, pricePerEquipment, currency }: { reductionPct: number; pricePerEquipment: number; currency: string }) {
+  const money = (value: number) => `${amount.format(value)} ${currency}`;
+  const withSubscription = pricePerEquipment > 0;
   const [equipmentCount, setEquipmentCount] = useState(40);
   const [breakdownsPerMonth, setBreakdowns] = useState(6);
   const [daysPerBreakdown, setDays] = useState(2);
-  const [dailyCost, setDailyCost] = useState(600);
+  const [dailyCost, setDailyCost] = useState(1500);
   const r = estimateRoi({ equipmentCount, breakdownsPerMonth, daysPerBreakdown, dailyCost, reductionPct, pricePerEquipment });
 
   return (
@@ -52,10 +57,10 @@ export function RoiCalculator({ reductionPct, pricePerEquipment }: { reductionPc
         <Slider
           label="Coût d'une journée d'immobilisation (location, retard)"
           value={dailyCost}
-          min={100}
-          max={3000}
-          step={50}
-          unit="€ / jour"
+          min={200}
+          max={10000}
+          step={100}
+          unit={`${currency} / jour`}
           onChange={setDailyCost}
         />
       </div>
@@ -63,30 +68,35 @@ export function RoiCalculator({ reductionPct, pricePerEquipment }: { reductionPc
         <dl className="space-y-5">
           <div>
             <dt className="site-label text-[11px] text-white/60">Vos immobilisations coûtent aujourd&apos;hui</dt>
-            <dd className="site-display mt-1 text-4xl text-white">{euros.format(r.downtimeCost)} / an</dd>
+            <dd className="site-display mt-1 text-4xl text-white">{money(r.downtimeCost)} / an</dd>
           </div>
           <div>
             <dt className="site-label text-[11px] text-white/60">Économie avec −{decimal.format(reductionPct)} % d&apos;immobilisation</dt>
-            <dd className="site-display mt-1 text-5xl text-signal sm:text-6xl">{euros.format(r.savings)} / an</dd>
+            <dd className="site-display mt-1 text-5xl text-signal sm:text-6xl">{money(r.savings)} / an</dd>
           </div>
-          <div className="grid grid-cols-2 gap-4 border-t border-white/15 pt-4">
-            <div>
-              <dt className="site-label text-[10px] text-white/60">Abonnement estimé</dt>
-              <dd className="font-plate mt-1 text-lg font-bold">{euros.format(r.subscription)} / an</dd>
+          {withSubscription ? (
+            <div className="grid grid-cols-2 gap-4 border-t border-white/15 pt-4">
+              <div>
+                <dt className="site-label text-[10px] text-white/60">Abonnement estimé</dt>
+                <dd className="font-plate mt-1 text-lg font-bold">{money(r.subscription)} / an</dd>
+              </div>
+              <div>
+                <dt className="site-label text-[10px] text-white/60">Retour sur investissement</dt>
+                <dd className="font-plate mt-1 text-lg font-bold">{r.paybackMonths === null ? "—" : `${decimal.format(r.paybackMonths)} mois`}</dd>
+              </div>
             </div>
-            <div>
-              <dt className="site-label text-[10px] text-white/60">Retour sur investissement</dt>
-              <dd className="font-plate mt-1 text-lg font-bold">{r.paybackMonths === null ? "—" : `${decimal.format(r.paybackMonths)} mois`}</dd>
-            </div>
-          </div>
+          ) : null}
         </dl>
         <div>
           <Link href="/essai-gratuit" className="site-btn site-btn-signal w-full">
-            Vérifier sur mon parc, gratuitement
+            {withSubscription ? "Vérifier sur mon parc, gratuitement" : "Demander un devis pour mon parc"}
           </Link>
           <p className="mt-3 text-xs text-white/50">
             Estimation indicative fondée sur vos hypothèses et sur une réduction de {decimal.format(reductionPct)} % des journées
-            d&apos;immobilisation ; abonnement calculé à {euros.format(pricePerEquipment)} HT par équipement et par mois.
+            d&apos;immobilisation
+            {withSubscription
+              ? ` ; abonnement calculé à ${money(pricePerEquipment)} HT par équipement et par mois.`
+              : ". L'abonnement fait l'objet d'un devis selon la taille de votre parc."}
           </p>
         </div>
       </div>

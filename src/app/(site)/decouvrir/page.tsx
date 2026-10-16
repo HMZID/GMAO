@@ -173,7 +173,8 @@ async function Home() {
             <div className="mt-12">
               <RoiCalculator
                 reductionPct={settingNumber(s["roi.reductionPct"], 25)}
-                pricePerEquipment={settingNumber(s["roi.pricePerEquipment"], 12)}
+                pricePerEquipment={settingNumber(s["roi.pricePerEquipment"], 0)}
+                currency={s["pricing.currency"] || "DT"}
               />
             </div>
           </div>
@@ -186,7 +187,12 @@ async function Home() {
           <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
             <SectionHeading index={next()} label="Tarifs" title={s["pricing.title"]} text={s["pricing.subtitle"]} />
             <div className="mt-12">
-              <PricingPlans plans={plans} annualMonths={settingNumber(s["pricing.annualMonths"], 12)} annualLabel={s["pricing.annualLabel"]} />
+              <PricingPlans
+                plans={plans}
+                annualMonths={settingNumber(s["pricing.annualMonths"], 12)}
+                annualLabel={s["pricing.annualLabel"]}
+                currency={s["pricing.currency"] || "DT"}
+              />
             </div>
           </div>
         </section>

@@ -44,7 +44,12 @@ async function Pricing() {
           <SectionHeading index="01" label="Tarifs" title={s["pricing.title"]} text={s["pricing.subtitle"]} />
           <div className="mt-14">
             {plans.length > 0 ? (
-              <PricingPlans plans={plans} annualMonths={settingNumber(s["pricing.annualMonths"], 12)} annualLabel={s["pricing.annualLabel"]} />
+              <PricingPlans
+                plans={plans}
+                annualMonths={settingNumber(s["pricing.annualMonths"], 12)}
+                annualLabel={s["pricing.annualLabel"]}
+                currency={s["pricing.currency"] || "DT"}
+              />
             ) : (
               <p className="text-lg">Tarifs sur demande : écrivez-nous.</p>
             )}

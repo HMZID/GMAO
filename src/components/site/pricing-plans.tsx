@@ -20,8 +20,18 @@ export type PlanView = {
 
 const price = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
-/** Offres, avec bascule paiement mensuel / annuel (avantage annuel réglé dans l'administration). */
-export function PricingPlans({ plans, annualMonths, annualLabel }: { plans: PlanView[]; annualMonths: number; annualLabel: string }) {
+/** Offres, avec bascule paiement mensuel / annuel (avantage annuel réglé dans l'administration) ; devise du site (DT…). */
+export function PricingPlans({
+  plans,
+  annualMonths,
+  annualLabel,
+  currency,
+}: {
+  plans: PlanView[];
+  annualMonths: number;
+  annualLabel: string;
+  currency: string;
+}) {
   const [billing, setBilling] = useState<Billing>("yearly");
   const hasPrices = plans.some((p) => p.priceMonthly !== null);
   return (
@@ -79,11 +89,11 @@ export function PricingPlans({ plans, annualMonths, annualLabel }: { plans: Plan
                   <>
                     <p className="flex items-start gap-1">
                       <span className="site-display text-6xl">{price.format(amount)}</span>
-                      <span className="site-display mt-1 text-2xl">€</span>
+                      <span className="site-display mt-1 text-2xl">{currency}</span>
                       {plan.priceMonthly !== null && amount < plan.priceMonthly ? (
                         <s className={`site-display ml-3 mt-1 text-2xl ${dark ? "text-white/40" : "text-asphalt-500/60"}`}>
                           <span className="sr-only">au lieu de </span>
-                          {price.format(plan.priceMonthly)} €
+                          {price.format(plan.priceMonthly)} {currency}
                         </s>
                       ) : null}
                     </p>
