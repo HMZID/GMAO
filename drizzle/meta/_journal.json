@@ -120,6 +120,13 @@
       "when": 1791986262408,
       "tag": "0016_login_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792146695411,
+      "tag": "0017_site_tarifs_dinars",
+      "breakpoints": true
     }
   ]
 }

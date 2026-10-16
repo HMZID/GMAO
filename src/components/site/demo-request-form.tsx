@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps } from "react";
 import { ActionForm, Field, useActionFormState } from "@/components/forms/action-form";
@@ -31,7 +31,18 @@ function SelectInput({ options, ...props }: ComponentProps<"select"> & { options
  * Formulaire de demande d'essai. `startedAt` (heure d'affichage, fournie par le serveur) et le champ piège
  * « website » écartent les envois automatisés sans gêner les visiteurs.
  */
-export function DemoRequestForm({ startedAt, plans, plan }: { startedAt: number; plans: string[]; plan?: string }) {
+export function DemoRequestForm({
+  startedAt,
+  plans,
+  plan,
+  emailNotice,
+}: {
+  startedAt: number;
+  plans: string[];
+  plan?: string;
+  /** Message annonçant le courriel d'accès envoyé à l'acceptation de la demande. */
+  emailNotice?: string;
+}) {
   return (
     <ActionForm action={submitDemoRequestAction} className="grid gap-5 sm:grid-cols-2">
       <input type="hidden" name="startedAt" value={startedAt} />
@@ -81,6 +92,12 @@ export function DemoRequestForm({ startedAt, plans, plan }: { startedAt: number;
         />
       </Field>
       <Consent />
+      {emailNotice ? (
+        <p className="flex items-start gap-3 border-2 border-asphalt bg-signal/20 px-4 py-3 text-sm sm:col-span-2">
+          <Mail className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+          <span>{emailNotice}</span>
+        </p>
+      ) : null}
       <div className="sm:col-span-2">
         <Submit />
       </div>

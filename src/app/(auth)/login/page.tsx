@@ -25,8 +25,7 @@ export default function LoginPage(props: PageProps<"/login">) {
           <span className="text-xl font-semibold">GMAO</span>
         </div>
         <div className="rounded-lg bg-white p-6 shadow-xl">
-          <h1 className="text-lg font-semibold text-slate-900">Connexion</h1>
-          <p className="mb-5 mt-1 text-sm text-slate-500">Maintenance des engins, véhicules et équipements.</p>
+          <h1 className="mb-5 text-lg font-semibold text-slate-900">Connexion</h1>
           {/* Le formulaire dépend de « next » (URL) : en attendant, un gabarit non soumissible évite de perdre la page demandée. */}
           <Suspense fallback={<LoginFormSkeleton />}>
             <LoginFormWithNext searchParams={props.searchParams} />

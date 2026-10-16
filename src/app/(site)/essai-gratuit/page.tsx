@@ -74,6 +74,7 @@ async function Trial({ searchParams }: { searchParams: PageProps<"/essai-gratuit
               startedAt={site.renderedAt}
               plans={plans.map((p) => p.name)}
               plan={typeof sp.offre === "string" ? sp.offre : undefined}
+              emailNotice={s["form.emailNotice"]}
             />
           </div>
         </div>
