@@ -1,13 +1,16 @@
 import "server-only";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { bearer } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
 import { account, session, tenants, user, verification } from "@/server/db/schema";
+import { clientIp } from "@/server/domain/login-security";
 import { tenantAccess } from "@/server/domain/tenants";
 import { publicUrl, trustedOrigins } from "@/server/public-url";
+import { loginBlocked, recordLoginAttempt } from "./login-throttle";
 
 const microsoftConfigured = !!process.env.MICROSOFT_CLIENT_ID && !!process.env.MICROSOFT_CLIENT_SECRET;
 
@@ -73,6 +76,24 @@ export const auth = betterAuth({
         },
       },
     },
+  },
+  // Limitation des tentatives de connexion (TEC-04) : pour la page de connexion (appel direct au serveur),
+  // l'adresse HTTP et l'application mobile, qui passent toutes par ces hooks. Le limiteur intégré de
+  // Better Auth ne voit pas les appels directs et garde ses compteurs en mémoire (une instance Vercel chacune).
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email") return;
+      const email = String((ctx.body as { email?: unknown } | undefined)?.email ?? "");
+      if (await loginBlocked(email, clientIp(ctx.headers))) {
+        throw new APIError("TOO_MANY_REQUESTS", { message: "Trop de tentatives de connexion : réessayer dans 15 minutes." });
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email") return;
+      const email = String((ctx.body as { email?: unknown } | undefined)?.email ?? "");
+      if (!email) return;
+      await recordLoginAttempt(email, clientIp(ctx.headers), !(ctx.context.returned instanceof APIError));
+    }),
   },
   plugins: [bearer(), nextCookies()],
 });

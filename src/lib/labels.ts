@@ -336,3 +336,10 @@ export const ENTITY_TYPE: Record<string, string> = {
 export function options(map: Record<string, string | { label: string }>) {
   return Object.entries(map).map(([value, v]) => ({ value, label: typeof v === "string" ? v : v.label }));
 }
+
+/** Demandes de démonstration déposées sur le site commercial. */
+export const DEMO_REQUEST_STATUS: Record<string, { label: string; tone: Tone }> = {
+  PENDING: { label: "En attente", tone: "amber" },
+  APPROVED: { label: "Acceptée", tone: "green" },
+  REJECTED: { label: "Refusée", tone: "gray" },
+};

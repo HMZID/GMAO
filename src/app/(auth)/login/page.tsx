@@ -2,6 +2,7 @@ import { Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/primitives";
+import { captchaSiteKey } from "@/server/auth/captcha";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Connexion" };
@@ -9,7 +10,8 @@ export const metadata: Metadata = { title: "Connexion" };
 async function LoginFormWithNext({ searchParams }: { searchParams: PageProps<"/login">["searchParams"] }) {
   const sp = await searchParams;
   const next = typeof sp.next === "string" ? sp.next : undefined;
-  return <LoginForm next={next} />;
+  // Clé publique du CAPTCHA lue à l'exécution (après l'accès aux paramètres de la requête).
+  return <LoginForm next={next} captchaSiteKey={captchaSiteKey()} />;
 }
 
 export default function LoginPage(props: PageProps<"/login">) {

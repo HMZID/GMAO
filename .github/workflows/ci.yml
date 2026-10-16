@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Réutilisée par le pipeline de l'environnement de développement (deploy-develop.yml), sur develop.
+  workflow_call:
 
 concurrency:
   group: ci-${{ github.ref }}

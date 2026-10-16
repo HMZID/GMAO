@@ -20,6 +20,8 @@ export const user = pgTable("user", {
     .references(() => tenants.id),
   /** HAB-08 : un utilisateur désactivé ne peut plus se connecter, son historique reste. */
   isActive: boolean("is_active").notNull().default(true),
+  /** Mot de passe provisoire (compte ouvert depuis le site) : à remplacer à la première connexion. */
+  mustChangePassword: boolean("must_change_password").notNull().default(false),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -121,4 +123,20 @@ export const notifications = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index("notifications_user_idx").on(t.userId, t.readAt)],
+);
+
+/**
+ * Tentatives de connexion par courriel et mot de passe (TEC-04) : limitation des essais
+ * (`src/server/auth/login-throttle.ts`). L'adresse IP n'est conservée que sous forme d'empreinte.
+ */
+export const loginAttempts = pgTable(
+  "login_attempts",
+  {
+    id: id(),
+    email: text("email").notNull(),
+    ipHash: text("ip_hash"),
+    succeeded: boolean("succeeded").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("login_attempts_email_idx").on(t.email, t.createdAt), index("login_attempts_ip_idx").on(t.ipHash, t.createdAt)],
 );

@@ -7,6 +7,16 @@ import { auditChannelEnum } from "./enums";
  * groupe (tenant) → sociétés → sites → ateliers / magasins ; chantiers rattachés à une société.
  */
 
+/**
+ * Réglages de la plateforme, hors organisation. `environment` : marque de l'environnement servi par la base
+ * (production ou development), posée et contrôlée au déploiement (`scripts/predeploy.ts`).
+ */
+export const platformSettings = pgTable("platform_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: updatedAt(),
+});
+
 export const tenants = pgTable("tenants", {
   id: id(),
   name: text("name").notNull(),
