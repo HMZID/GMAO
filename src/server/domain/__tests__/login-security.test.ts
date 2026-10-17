@@ -14,7 +14,7 @@ describe("Destination après connexion", () => {
       "/\\pirate.example",
       "/\\/pirate.example",
       "\\\\pirate.example",
-      "/%09/pirate.example".replace("%09", "\t"),
+      "/\t/pirate.example",
       "javascript:alert(1)",
       "",
       null,
