@@ -127,6 +127,13 @@
       "when": 1792146695411,
       "tag": "0017_site_tarifs_dinars",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792242031336,
+      "tag": "0018_two_factor",
+      "breakpoints": true
     }
   ]
 }

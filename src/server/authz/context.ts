@@ -33,6 +33,8 @@ export type AuthContext = {
   impersonator?: { id: string; name: string; email: string } | null;
   /** Mot de passe provisoire à remplacer avant d'utiliser l'application (compte ouvert depuis le site). */
   mustChangePassword?: boolean;
+  /** Double authentification (TOTP) active sur le compte (TEC-04). */
+  twoFactorEnabled?: boolean;
   roles: Role[];
   assignments: RoleAssignment[];
   /** Le droit est-il détenu sur au moins un périmètre ? */

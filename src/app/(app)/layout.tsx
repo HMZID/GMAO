@@ -1,4 +1,4 @@
-import { Bell, LogOut, Wrench } from "lucide-react";
+import { Bell, LogOut, ShieldCheck, Wrench } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { MobileNav } from "@/components/layout/mobile-nav";
@@ -189,6 +189,14 @@ async function UserMenu() {
             {unread > 99 ? "99+" : unread}
           </span>
         ) : null}
+      </Link>
+      <Link
+        href="/compte/securite"
+        className="flex h-11 w-11 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
+        aria-label="Sécurité du compte"
+        title="Sécurité du compte (double authentification)"
+      >
+        <ShieldCheck className="h-5 w-5" aria-hidden />
       </Link>
       <div className="hidden text-right sm:block">
         <p className="text-sm font-medium text-slate-900">{ctx.name}</p>
