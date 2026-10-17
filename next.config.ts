@@ -9,7 +9,8 @@ const uploadLimitMb = (Number(process.env.DOCUMENT_MAX_SIZE_MB) || 20) + 1;
  */
 const securityHeaders = [
   // Aucune page dans un cadre d'un autre site (« clickjacking » sur la connexion notamment).
-  { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'" },
+  // form-action : aucun formulaire de l'application n'envoie de données vers un autre site.
+  { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

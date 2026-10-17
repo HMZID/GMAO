@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1147.0",
-    "better-auth": "^1.7.7",
+    "better-auth": "^1.7.10",
     "clsx": "^2.1.1",
     "dotenv": "^18.0.6",
     "drizzle-orm": "^0.45.3",
@@ -57,5 +57,10 @@
   },
   "engines": {
     "node": "22.x"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.2",
+    "mysql2": "^3.24.6",
+    "uuid": "^11.1.1"
   }
 }

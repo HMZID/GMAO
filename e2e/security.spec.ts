@@ -101,6 +101,7 @@ test("connexion : le retour après connexion reste dans l'application ; en-tête
   const response = await page.goto(`/login?next=${encodeURIComponent("/\pirate.example")}`);
   expect(response?.headers()["x-frame-options"]).toBe("DENY");
   expect(response?.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(response?.headers()["content-security-policy"]).toContain("form-action 'self'");
   expect(response?.headers()["x-content-type-options"]).toBe("nosniff");
   await page.getByLabel("Courriel").fill(USERS.maintenanceManager);
   await page.getByLabel("Mot de passe").fill(DEMO_PASSWORD);

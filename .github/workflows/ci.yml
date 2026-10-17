@@ -7,6 +7,10 @@ on:
   # Réutilisée par le pipeline de l'environnement de développement (deploy-develop.yml), sur develop.
   workflow_call:
 
+# Jeton de la CI en lecture seule : les jobs ne font que lire le dépôt.
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true

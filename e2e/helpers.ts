@@ -24,7 +24,12 @@ export async function login(page: Page, email: string, next = "/") {
   await page.getByLabel("Mot de passe").fill(DEMO_PASSWORD);
   await page.getByRole("button", { name: "Se connecter" }).click();
   await expect(page).not.toHaveURL(/\/login/);
-  if (target !== "/") await expect(page).toHaveURL(new RegExp(`${target.replace(/[?]/g, "\\?")}$`));
+  if (target !== "/") await expect(page).toHaveURL(new RegExp(`${escapeRegExp(target)}$`));
+}
+
+/** Texte littéral dans une expression régulière (tous les caractères spéciaux échappés). */
+export function escapeRegExp(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /** Message de succès ou d'erreur affiché par un formulaire d'action. */
