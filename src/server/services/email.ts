@@ -10,6 +10,8 @@ import {
   emailOutbox,
   emailPreferences,
   equipment,
+  equipmentDeadlines,
+  notifications,
   parts,
   planOperations,
   roleAssignments,
@@ -35,6 +37,7 @@ import {
   type EmailEvent,
   type RenderedEmail,
 } from "@/server/domain/email";
+import { DEADLINE_KIND_LABEL, daysUntil, deadlineAlertStage, deadlineAlertText } from "@/server/domain/fleet-deadlines";
 import { NotFoundError } from "@/server/errors";
 import { getEmailTransport, type EmailTransport } from "@/server/email/transport";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -280,6 +283,8 @@ export async function runScheduledAlerts(now: Date = new Date()) {
       queued += await stockDigest(tenantId, now, day);
     }
     queued += await documentExpiries(tenantId, now);
+    queued += await fleetDeadlineAlerts(tenantId, now);
+    await preventiveDueNotifications(tenantId, now);
   }
   return { queued, digest };
 }
@@ -469,6 +474,138 @@ async function documentExpiries(tenantId: string, now: Date) {
     }
   }
   return queued;
+}
+
+/** Notification dans l'application, une seule fois par destinataire pour un même type (étape d'une alerte). */
+async function notifyOnce(
+  tenantId: string,
+  userId: string,
+  notification: { type: string; title: string; body?: string; entityType: string; entityId: string },
+) {
+  const [existing] = await db
+    .select({ id: notifications.id })
+    .from(notifications)
+    .where(and(eq(notifications.userId, userId), eq(notifications.type, notification.type)))
+    .limit(1);
+  if (existing) return false;
+  await db.insert(notifications).values({ tenantId, userId, ...notification });
+  return true;
+}
+
+const inScopeOf = (scope: Scope, target: { companyId: string; siteId: string | null }) =>
+  scope.all || scope.companyIds.includes(target.companyId) || (!!target.siteId && scope.siteIds.includes(target.siteId));
+
+/**
+ * Échéances administratives du parc (assurance, visite technique, vignette) : notification et courriel au
+ * responsable du parc et au responsable maintenance du périmètre, à J−30, J−7, le jour même, puis chaque
+ * semaine de retard (étapes et clés anti-doublon : `src/server/domain/fleet-deadlines.ts`).
+ */
+async function fleetDeadlineAlerts(tenantId: string, now: Date) {
+  const rows = await db
+    .select({
+      id: equipmentDeadlines.id,
+      kind: equipmentDeadlines.kind,
+      label: equipmentDeadlines.label,
+      provider: equipmentDeadlines.provider,
+      reference: equipmentDeadlines.reference,
+      dueDate: equipmentDeadlines.dueDate,
+      equipmentId: equipment.id,
+      code: equipment.code,
+      name: equipment.name,
+      companyId: equipment.companyId,
+      siteId: equipment.siteId,
+    })
+    .from(equipmentDeadlines)
+    .innerJoin(equipment, eq(equipment.id, equipmentDeadlines.equipmentId))
+    .where(
+      and(
+        eq(equipmentDeadlines.tenantId, tenantId),
+        eq(equipmentDeadlines.status, "OPEN"),
+        lte(equipmentDeadlines.dueDate, new Date(now.getTime() + 31 * 86_400_000)),
+      ),
+    );
+  if (rows.length === 0) return 0;
+  const recipients = await recipientsFor(tenantId, EMAIL_EVENT_DEFINITIONS.FLEET_DEADLINE.roles!, now);
+  let queued = 0;
+  for (const row of rows) {
+    const stage = deadlineAlertStage(row.dueDate, now);
+    if (!stage) continue;
+    const days = daysUntil(row.dueDate, now);
+    const title = deadlineAlertText({ kind: row.kind, label: row.label, equipmentCode: row.code, days });
+    const details = [
+      `${DEADLINE_KIND_LABEL[row.kind]} — ${row.code} ${row.name}`,
+      `Échéance le ${formatDate(row.dueDate)}`,
+      row.provider ? `Organisme : ${row.provider}` : null,
+      row.reference ? `Référence : ${row.reference}` : null,
+    ].filter((line): line is string => !!line);
+    for (const [userId, scope] of recipients) {
+      if (!inScopeOf(scope, row)) continue;
+      await notifyOnce(tenantId, userId, {
+        type: `fleet_deadline:${row.id}:${stage}${days < 0 ? ":urgent" : ""}`,
+        title,
+        body: details.join(" · "),
+        entityType: "equipment",
+        entityId: row.equipmentId,
+      });
+      const ok = await enqueueEmail(db, {
+        tenantId,
+        userId,
+        event: "FLEET_DEADLINE",
+        dedupKey: `FLEET_DEADLINE:${row.id}:${stage}:${userId}`,
+        content: {
+          title,
+          intro: `${title} ${details.slice(1).join(". ")}.`,
+          link: linkOf("equipment", row.equipmentId),
+          linkLabel: "Ouvrir la fiche",
+        },
+      });
+      if (ok) queued++;
+    }
+  }
+  return queued;
+}
+
+const DUE_STATUS_TEXT: Record<string, string> = { PRE_ALERT: "en pré-alerte", DUE: "à faire", OVERDUE: "en retard" };
+
+/**
+ * Entretiens préventifs (vidanges, filtres, graissages…) : notification dans l'application au responsable du parc,
+ * au chef d'atelier et au responsable maintenance du périmètre, à la pré-alerte, à l'échéance et en retard.
+ * Le courriel reste le récapitulatif quotidien (DUE_DIGEST, OVERDUE).
+ */
+async function preventiveDueNotifications(tenantId: string, now: Date) {
+  const rows = await db
+    .select({
+      id: dueItems.id,
+      status: dueItems.status,
+      dueDate: dueItems.dueDate,
+      dueMeter: dueItems.dueMeterValue,
+      operation: planOperations.name,
+      equipmentId: equipment.id,
+      code: equipment.code,
+      companyId: equipment.companyId,
+      siteId: equipment.siteId,
+    })
+    .from(dueItems)
+    .innerJoin(equipment, eq(equipment.id, dueItems.equipmentId))
+    .innerJoin(planOperations, eq(planOperations.id, dueItems.operationId))
+    .where(and(eq(dueItems.tenantId, tenantId), inArray(dueItems.status, ["PRE_ALERT", "DUE", "OVERDUE"])));
+  if (rows.length === 0) return;
+  const recipients = await recipientsFor(tenantId, ["FLEET_MANAGER", "WORKSHOP_MANAGER", "MAINTENANCE_MANAGER"], now);
+  for (const row of rows) {
+    const due = [row.dueDate ? `le ${formatDate(row.dueDate)}` : null, row.dueMeter ? `à ${formatNumber(row.dueMeter)}` : null]
+      .filter(Boolean)
+      .join(" ou ");
+    for (const [userId, scope] of recipients) {
+      if (!inScopeOf(scope, row)) continue;
+      await notifyOnce(tenantId, userId, {
+        type: `preventive_due:${row.id}:${row.status}${row.status === "OVERDUE" ? ":urgent" : ""}`,
+        title: `${row.operation} — ${row.code} : ${DUE_STATUS_TEXT[row.status] ?? row.status}`,
+        body: due ? `Échéance ${due}.` : undefined,
+        entityType: "equipment",
+        entityId: row.equipmentId,
+      });
+    }
+  }
 }
 
 /* ------------------------------------------------------------------ */

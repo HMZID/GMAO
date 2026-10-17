@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import type { Permission } from "@/server/authz/permissions";
 import { documentDeleteInput, documentInput, documentListInput } from "@/server/services/documents";
+import { cancelInput as deadlineCancelInput, deadlineFilters, deadlineInput, renewalInput } from "@/server/services/fleet-deadlines";
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
 import { decisionInput } from "@/server/services/approvals";
 import { preferencesInput } from "@/server/services/email";
@@ -232,6 +233,34 @@ export const ENDPOINTS: Endpoint[] = [
   },
   { method: "GET", path: "/api/v1/maintenance-plans/{id}", summary: "Plan, opérations, déclencheurs et checklists", permission: "plan.read" },
   { method: "GET", path: "/api/v1/due-items", summary: "Échéances préventives ouvertes", permission: "plan.read", query: dueFilters },
+  {
+    method: "GET",
+    path: "/api/v1/equipment-deadlines",
+    summary: "Échéances administratives du parc (assurance, visite technique, vignette), de la plus proche à la plus lointaine",
+    permission: "equipment.read",
+    query: deadlineFilters,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines",
+    summary: "Nouvelle échéance administrative d'un équipement",
+    permission: "equipment.write",
+    body: deadlineInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines/{id}/renew",
+    summary: "Renouvellement : l'échéance est soldée et la suivante créée",
+    permission: "equipment.write",
+    body: renewalInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines/{id}/cancel",
+    summary: "Annulation, motif obligatoire",
+    permission: "equipment.write",
+    body: deadlineCancelInput,
+  },
   { method: "POST", path: "/api/v1/preventive/generate", summary: "Génération des OT préventifs (idempotente)", permission: "workorder.manage" },
 
   { method: "GET", path: "/api/v1/parts", summary: "Catalogue des pièces et quantités", permission: "part.read", query: partFilters },

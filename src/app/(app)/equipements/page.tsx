@@ -27,7 +27,14 @@ export default async function EquipmentListPage(props: PageProps<"/equipements">
       <PageHeader
         title="Équipements"
         description="Parc d'engins, véhicules et équipements dans votre périmètre."
-        actions={ctx.can("equipment.write") ? <ButtonLink href="/equipements/nouveau">Nouvel équipement</ButtonLink> : null}
+        actions={
+          <>
+            <ButtonLink href="/equipements/echeances" variant="secondary">
+              Échéances du parc
+            </ButtonLink>
+            {ctx.can("equipment.write") ? <ButtonLink href="/equipements/nouveau">Nouvel équipement</ButtonLink> : null}
+          </>
+        }
       />
       <Card>
         <FilterBar resetHref="/equipements">

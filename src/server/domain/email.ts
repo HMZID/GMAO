@@ -16,6 +16,7 @@ export const EMAIL_EVENTS = [
   "DEMO_REQUEST",
   "DEMO_ACCESS",
   "DEMO_DECISION",
+  "FLEET_DEADLINE",
 ] as const;
 export type EmailEvent = (typeof EMAIL_EVENTS)[number];
 
@@ -53,7 +54,7 @@ export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
     label: "Retards",
     description: "Récapitulatif quotidien des préventifs en retard et des ordres de travail en attente depuis plus de 5 jours.",
     mandatory: false,
-    roles: ["WORKSHOP_MANAGER", "MAINTENANCE_MANAGER"],
+    roles: ["WORKSHOP_MANAGER", "MAINTENANCE_MANAGER", "FLEET_MANAGER"],
   },
   STOCK_ALERT: {
     label: "Alertes de stock",
@@ -66,6 +67,12 @@ export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
     description: "Certificat ou rapport de contrôle expirant dans 30 jours, 7 jours ou expiré.",
     mandatory: false,
     roles: ["FLEET_MANAGER", "PURCHASING_MANAGER"],
+  },
+  FLEET_DEADLINE: {
+    label: "Échéances administratives du parc",
+    description: "Assurance, visite technique ou vignette à renouveler : à 30 jours, 7 jours, le jour même, puis chaque semaine de retard.",
+    mandatory: false,
+    roles: ["FLEET_MANAGER", "MAINTENANCE_MANAGER"],
   },
   DEMO_REQUEST: {
     label: "Demande de démonstration (site)",
