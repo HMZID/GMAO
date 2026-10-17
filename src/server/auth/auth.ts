@@ -3,10 +3,10 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError, createAuthMiddleware } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
-import { bearer } from "better-auth/plugins";
+import { bearer, twoFactor as twoFactorPlugin } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { db } from "@/server/db";
-import { account, session, tenants, user, verification } from "@/server/db/schema";
+import { account, session, tenants, twoFactor, user, verification } from "@/server/db/schema";
 import { clientIp } from "@/server/domain/login-security";
 import { tenantAccess } from "@/server/domain/tenants";
 import { publicUrl, trustedOrigins } from "@/server/public-url";
@@ -21,7 +21,8 @@ const microsoftConfigured = !!process.env.MICROSOFT_CLIENT_ID && !!process.env.M
  * - jeton Bearer accepté pour l'application mobile et les intégrations (plugin `bearer`).
  * Aucune inscription libre : les comptes sont créés par l'administrateur (HAB-01).
  *
- * TODO(TEC-04) : double facteur obligatoire pour les administrateurs (plugin twoFactor).
+ * - double authentification TOTP (plugin twoFactor), obligatoire pour l'administrateur de la plateforme
+ *   (`src/server/domain/two-factor.ts`), avec codes de secours.
  */
 export const auth = betterAuth({
   appName: "GMAO",
@@ -30,7 +31,7 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: "pg",
-    schema: { user, session, account, verification },
+    schema: { user, session, account, verification, twoFactor },
   }),
   emailAndPassword: {
     enabled: true,
@@ -95,7 +96,12 @@ export const auth = betterAuth({
       await recordLoginAttempt(email, clientIp(ctx.headers), !(ctx.context.returned instanceof APIError));
     }),
   },
-  plugins: [bearer(), nextCookies()],
+  plugins: [
+    bearer(),
+    // Secret et codes de secours chiffrés par Better Auth ; essais limités et verrouillage après des codes faux.
+    twoFactorPlugin({ issuer: "GMAO", backupCodeOptions: { amount: 10 } }),
+    nextCookies(),
+  ],
 });
 
 export type Session = typeof auth.$Infer.Session;

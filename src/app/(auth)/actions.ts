@@ -12,6 +12,7 @@ import { needsPasswordChange, setInitialPassword } from "@/server/services/accou
 import { formToObject } from "@/server/validation";
 import { IMPERSONATION_COOKIE } from "@/server/domain/impersonation";
 import { clientIp, safeRedirectPath } from "@/server/domain/login-security";
+import { normalizeBackupCode, normalizeTotpCode } from "@/server/domain/two-factor";
 
 /**
  * Connexion email + mot de passe (le cookie de session est posé par le plugin nextCookies). CAPTCHA vérifié
@@ -32,6 +33,11 @@ export async function signInAction(_state: ActionState, formData: FormData): Pro
   let userId: string;
   try {
     const result = await auth.api.signInEmail({ body: { email, password }, headers: requestHeaders });
+    // Double authentification active : pas encore de session, deuxième étape par le code (TEC-04).
+    if ("twoFactorRedirect" in result && result.twoFactorRedirect) {
+      redirect(`/connexion/verification${next === "/" ? "" : `?next=${encodeURIComponent(next)}`}`);
+    }
+    if (!("user" in result)) throw new Error("Réponse de connexion inattendue.");
     userId = result.user.id;
   } catch (error) {
     if (error instanceof APIError) {
@@ -72,4 +78,37 @@ export async function signOutAction() {
 export async function stopImpersonationAction() {
   (await cookies()).delete(IMPERSONATION_COOKIE);
   redirect("/administration/plateforme");
+}
+
+/**
+ * Deuxième étape de la connexion : code de l'application d'authentification, ou code de secours (TEC-04).
+ * Le cookie temporaire posé par Better Auth à la première étape porte l'identité ; la session est créée ici.
+ */
+export async function verifyTwoFactorAction(_state: ActionState, formData: FormData): Promise<ActionState> {
+  const next = safeRedirectPath(String(formData.get("next") ?? "/"));
+  const backup = formData.get("method") === "backup";
+  const raw = String(formData.get("code") ?? "");
+  const code = backup ? normalizeBackupCode(raw) : normalizeTotpCode(raw);
+  if (!code) {
+    return { status: "error", message: backup ? "Saisir un code de secours." : "Saisir les 6 chiffres affichés par l'application.", at: Date.now() };
+  }
+  let userId: string;
+  try {
+    const requestHeaders = await headers();
+    const result = backup
+      ? await auth.api.verifyBackupCode({ body: { code }, headers: requestHeaders })
+      : await auth.api.verifyTOTP({ body: { code }, headers: requestHeaders });
+    userId = result.user.id;
+  } catch (error) {
+    if (error instanceof APIError) {
+      return {
+        status: "error",
+        message: "Code incorrect ou expiré. Après plusieurs codes faux, la vérification est bloquée : reprendre la connexion depuis le début.",
+        at: Date.now(),
+      };
+    }
+    throw error;
+  }
+  if (await needsPasswordChange(userId)) redirect("/premiere-connexion");
+  redirect(next);
 }
