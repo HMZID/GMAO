@@ -709,6 +709,14 @@ export async function cancelEmail(ctx: AuthContext, id: string) {
 export async function runEmailJobsNow(ctx: AuthContext) {
   assertCan(ctx, "settings.manage");
   const alerts = await runScheduledAlerts();
-  const queue = await processEmailQueue();
+  // La file est vidée par lots de 50 (10 lots au plus) : un seul clic suffit après une vague d'alertes.
+  const queue = { sent: 0, retried: 0, failed: 0 };
+  for (let batch = 0; batch < 10; batch++) {
+    const r = await processEmailQueue();
+    queue.sent += r.sent;
+    queue.retried += r.retried;
+    queue.failed += r.failed;
+    if (r.sent + r.retried + r.failed < 50) break;
+  }
   return { ...alerts, ...queue };
 }
