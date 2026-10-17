@@ -1,6 +1,6 @@
 # Narration de la vidéo en arabe tunisien
 
-Voix off de `gmao-demo-ar.mp4` (voix ar-TN-ReemNeural), dans l'ordre du film. Texte source : `scripts/demo-video-ar.mjs` (constante `LINES`) ; modifier une phrase puis relancer le script ne régénère que cette phrase.
+Voix off de `gmao-demo-ar.mp4` (voix ar-TN-ReemNeural), dans l'ordre du film. Texte source : `scripts/demo-video-maintenance.mjs` (constante `LINES_AR`) ; modifier une phrase puis relancer le script avec `DEMO_LANG=ar` ne régénère que cette phrase.
 
 ## جولة كاملة في التطبيقة
 

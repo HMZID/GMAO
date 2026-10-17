@@ -1,10 +1,11 @@
 /**
- * Vidéo de démonstration en arabe tunisien (derja) : parcours complet du responsable maintenance
- * (resp.maintenance@demo.gmao) sur le jeu de démonstration du Groupe Démo BTP, avec voix off et sous-titres.
+ * Vidéo de démonstration du responsable maintenance (resp.maintenance@demo.gmao) sur le jeu de démonstration
+ * du Groupe Démo BTP : parcours complet, voix off, sous-titres et curseur visible sur chaque action.
+ * Langue : `DEMO_LANG=fr` (par défaut, voix fr-FR-DeniseNeural) ou `DEMO_LANG=ar` (derja tunisienne, ar-TN-ReemNeural).
  *
  * Prérequis : `npm run db:reset`, `npm run worker -- --once` (notifications), `npm run build`,
- * puis `npx next start -p 3100` ; Python avec `edge-tts` (voix ar-TN-ReemNeural) et ffmpeg.
- * Lancement : `node scripts/demo-video-ar.mjs` (sortie : docs/demo-video/gmao-demo-ar.mp4).
+ * puis `npx next start -p 3100` ; Python avec `edge-tts` et ffmpeg.
+ * Lancement : `node scripts/demo-video-maintenance.mjs` (sortie : docs/demo-video/gmao-demo-<langue>.mp4).
  * `DRY=1` : tournage sans voix (pauses fixes), pour vérifier le parcours.
  */
 import { spawnSync } from "node:child_process";
@@ -15,11 +16,14 @@ import { chromium } from "@playwright/test";
 
 const BASE = process.env.DEMO_URL ?? "http://localhost:3100";
 const OUT = path.resolve("docs/demo-video");
-const RAW = path.join(OUT, "brut-ar");
-const VOICE_DIR = path.join(OUT, "voix-ar");
+const LANG = process.env.DEMO_LANG === "ar" ? "ar" : "fr";
+const RTL = LANG === "ar";
+const RAW = path.join(OUT, `brut-${LANG}`);
+const VOICE_DIR = path.join(OUT, `voix-${LANG}`);
 const PASSWORD = "Demo-Gmao-2026";
 const MANAGER = "resp.maintenance@demo.gmao";
-const VOICE = process.env.VOICE ?? "ar-TN-ReemNeural";
+const VOICE = process.env.VOICE ?? (RTL ? "ar-TN-ReemNeural" : "fr-FR-DeniseNeural");
+const RATE = RTL ? "+6%" : "+4%";
 const DRY = process.env.DRY === "1";
 const FFMPEG = process.env.FFMPEG ?? "ffmpeg";
 const FFPROBE = process.env.FFPROBE ?? "ffprobe";
@@ -29,7 +33,7 @@ const PYTHON = process.env.PYTHON ?? "python";
 /* Narration : titre, sous-titre affiché (c) et texte lu (v, si différent) */
 /* ------------------------------------------------------------------ */
 
-const LINES = {
+const LINES_AR = {
   intro: {
     t: "جولة كاملة في التطبيقة",
     c: "عسلامة! في الفيديو هذا باش نعملو جولة كاملة في تطبيقة GMAO، مع كريم، مسؤول الصيانة في مجموعة Démo BTP. باش نشوفو كيفاش يتبع الماكينات والكراهب، الصيانة الوقائية، الأعطال، البياسات والمصاريف، الكل في بلاصة وحدة.",
@@ -229,6 +233,214 @@ const LINES = {
   },
 };
 
+const LINES_FR = {
+  intro: {
+    t: "Visite complète",
+    c: "Bonjour ! Dans cette vidéo, nous faisons le tour complet de GMAO avec Karim, responsable maintenance du Groupe Démo BTP : le parc d'engins et de véhicules, le préventif, les pannes, les pièces et les coûts, le tout au même endroit.",
+  },
+  login: {
+    t: "Connexion",
+    c: "On commence par la connexion : Karim saisit son courriel et son mot de passe. Il peut aussi protéger son compte par un code de vérification sur son téléphone.",
+  },
+  dash1: {
+    t: "Tableau de bord",
+    c: "Voici le tableau de bord. D'un coup d'œil, Karim voit les engins immobilisés, en maintenance et disponibles, les demandes à qualifier, les ordres de travail ouverts et le coût du mois.",
+  },
+  dash2: {
+    t: "Alertes administratives",
+    c: "Ce bandeau rouge l'alerte sur les assurances, visites techniques et vignettes qui arrivent à échéance ou sont dépassées.",
+  },
+  dash3: {
+    t: "Suivi au quotidien",
+    c: "Plus bas, les ordres de travail classés par priorité, et les échéances préventives à traiter.",
+  },
+  fleet1: {
+    t: "Le parc",
+    c: "La liste des équipements : vingt-six engins et véhicules, camions, pelles, chargeuses, compacteurs, chariots, groupes électrogènes et utilitaires, répartis sur trois sites.",
+  },
+  fleet2: {
+    t: "Recherche et filtres",
+    c: "On recherche par code ou par immatriculation, ou on filtre par état, site, catégorie et criticité. Ici, uniquement les camions.",
+  },
+  eq1: {
+    t: "Fiche équipement",
+    c: "Ouvrons la fiche du camion CA-101 : son compteur kilométrique et l'historique complet des relevés.",
+  },
+  eq2: {
+    t: "Préventif et interventions",
+    c: "Plus bas, son préventif, l'entretien tous les trente mille kilomètres ou chaque année et le contrôle technique annuel, puis les interventions passées avec leur coût.",
+  },
+  dl1: {
+    t: "Assurance, visite technique, vignette",
+    c: "Voici les échéances administratives : assurance, visite technique et vignette. Le responsable du parc est alerté dans l'application et par courriel à trente jours, à sept jours, le jour même, puis chaque semaine de retard.",
+  },
+  dl2: {
+    t: "Renouveler l'assurance",
+    c: "L'assurance de ce camion expire dans douze jours. On la renouvelle : nouvelle date d'échéance, numéro de police et montant payé.",
+  },
+  dl3: {
+    t: "Assurance renouvelée",
+    c: "C'est fait : la nouvelle assurance est suivie, et l'ancienne reste dans l'historique.",
+  },
+  dl4: {
+    t: "Échéances de tout le parc",
+    c: "Cette page regroupe les échéances de tout le parc, de la plus proche à la plus lointaine : ce qui est dépassé, et ce qui est à renouveler dans les trente jours.",
+  },
+  notif: {
+    t: "Notifications",
+    c: "Les notifications arrivent dans l'application et par courriel : vidanges et changements de filtres, assurances, visites techniques, pannes urgentes. Chacun ne reçoit que ce qui concerne son périmètre.",
+  },
+  prev1: {
+    t: "Plans d'entretien",
+    c: "Le préventif : chaque catégorie d'équipement a son plan d'entretien, à la date ou au compteur, en heures ou en kilomètres.",
+  },
+  prev2: {
+    t: "Exemple : vidange et filtres",
+    c: "Par exemple pour les chargeuses : vidange, filtre à huile et filtre à gazole toutes les deux cent cinquante heures ou tous les trois mois, au premier seuil atteint.",
+  },
+  prev3: {
+    t: "Échéances préventives",
+    c: "La liste des échéances : à venir, en pré-alerte, échues et en retard. En un clic, l'application génère les ordres de travail manquants, sans jamais créer de doublon.",
+  },
+  r1a: {
+    t: "Scénario 1 : entretien à échéance",
+    c: "Scénario 1 : un entretien arrivé à échéance. L'ordre de travail de la chargeuse CH-012 est planifié avec Julien. Karim démarre l'intervention.",
+  },
+  r1b: {
+    t: "Checklist",
+    c: "On renseigne la checklist : vidange, filtres, niveaux, graissage et pneus. Chaque point obligatoire doit être renseigné.",
+  },
+  r1c: {
+    t: "Pièces, temps et compteur",
+    c: "On sort les pièces du magasin, le filtre à huile et l'huile moteur, puis on saisit le temps passé, le relevé du compteur et le compte rendu.",
+  },
+  r1d: {
+    t: "Fin des travaux",
+    c: "Les travaux sont terminés : l'application a vérifié qu'il ne manquait ni compte rendu, ni checklist, ni compteur, ni temps passé.",
+  },
+  r1e: {
+    t: "Remise en service",
+    c: "Essais conformes : l'engin est remis en service. Les coûts sont calculés automatiquement, main-d'œuvre, pièces et prestataire, et l'échéance suivante est recalculée.",
+  },
+  r1f: {
+    t: "Fiche d'intervention",
+    c: "Et voici la fiche d'intervention à signer, avec le logo de l'entreprise, à imprimer ou à enregistrer en PDF.",
+  },
+  r2a: {
+    t: "Scénario 2 : panne",
+    c: "Scénario 2 : une panne. Le conducteur ou le technicien envoie une demande d'intervention depuis son téléphone ou un ordinateur. Karim retrouve ici toutes les nouvelles demandes.",
+  },
+  r2b: {
+    t: "Qualification",
+    c: "Une demande sur le camion CA-104 : un grincement au freinage. Karim lui donne une priorité haute et immobilise le camion jusqu'à la réparation.",
+  },
+  r2c: {
+    t: "De la demande à l'ordre de travail",
+    c: "En un clic, la demande devient un ordre de travail, avec l'équipement, le symptôme et la priorité.",
+  },
+  r2d: {
+    t: "Planification",
+    c: "On le planifie demain matin avec Samir, technicien à Marseille. Une absence bloque la planification, et un chevauchement est signalé.",
+  },
+  r2e: {
+    t: "Planifié",
+    c: "L'ordre de travail est planifié, et Samir reçoit une notification.",
+  },
+  r3a: {
+    t: "Scénario 3 : pièce manquante",
+    c: "Scénario 3 : une pièce manquante. Le chariot CE-031 est immobilisé, en attente d'une pompe hydraulique.",
+  },
+  r3b: {
+    t: "Réservation impossible",
+    c: "On tente de réserver la pompe au magasin de Lyon : l'application refuse, il n'y en a pas. Mais il en reste une au magasin de Marseille.",
+  },
+  r3c: {
+    t: "Transfert entre magasins",
+    c: "On fait un transfert de Marseille vers Lyon. Le stock ne peut jamais devenir négatif.",
+  },
+  r3d: {
+    t: "Réservation",
+    c: "La réservation passe maintenant : la pompe est réservée pour cet ordre de travail.",
+  },
+  r3e: {
+    t: "Validation de la dépense",
+    c: "La location d'un chariot de remplacement, mille quatre cent cinquante euros, dépasse le seuil : elle doit être validée par le responsable maintenance. Karim valide, et la décision est tracée.",
+  },
+  r4: {
+    t: "Scénario 4 : compteur remplacé",
+    c: "Scénario 4 : le compteur de la pelle PE-002 a été remplacé. L'application conserve les heures cumulées, pour que le préventif reste juste.",
+  },
+  r5a: {
+    t: "Scénario 5 : contrôle réglementaire",
+    c: "Scénario 5 : le contrôle réglementaire du chariot CE-020 est dépassé. Le chariot a été immobilisé automatiquement.",
+  },
+  r5b: {
+    t: "Affectation refusée",
+    c: "On essaie de l'affecter à un chantier : c'est refusé. Il ne sera remis en service qu'avec le rapport de contrôle joint.",
+  },
+  plan: {
+    t: "Planning",
+    c: "Le planning de la semaine : la charge de chaque technicien jour par jour, les absences, et les interventions à planifier.",
+  },
+  stock1: {
+    t: "Stocks",
+    c: "Les stocks : les pièces de chaque magasin, les quantités réservées, et les articles sous le point de commande.",
+  },
+  r6a: {
+    t: "Scénario 6 : inventaire",
+    c: "Scénario 6 : l'inventaire. Le magasinier a compté un écart sur les filtres à air. L'écart est important : il doit être validé.",
+  },
+  r6b: {
+    t: "Validation de l'écart",
+    c: "Karim valide : le stock est ajusté au coût moyen, et tout est tracé.",
+  },
+  da1: {
+    t: "Demande d'achat",
+    c: "Une demande d'achat : Karim commande des filtres hydrauliques pour une chargeuse, et la demande suit le circuit de validation des achats.",
+  },
+  kpi1: {
+    t: "Indicateurs",
+    c: "Les indicateurs : disponibilité, temps moyen entre pannes, temps moyen de réparation, respect du préventif, et coûts par catégorie et par équipement.",
+  },
+  kpi2: {
+    t: "Les plus coûteux",
+    c: "On voit aussi les équipements les plus coûteux et les pièces les plus consommées.",
+  },
+  audit: {
+    t: "Journal d'audit",
+    c: "Et chaque action est enregistrée dans le journal d'audit : qui a fait quoi, et quand.",
+  },
+  mob1: {
+    t: "Sur téléphone",
+    c: "La même application fonctionne sur téléphone et sur tablette. Et l'application mobile des techniciens fonctionne même sur chantier, sans connexion.",
+  },
+  mob2: {
+    t: "Planning sur téléphone",
+    c: "Le planning jour par jour, et les ordres de travail en cartes faciles à lire.",
+  },
+  outro: {
+    t: "Merci",
+    c: "C'est terminé ! GMAO vous aide à réduire les pannes, à maîtriser vos coûts et à ne manquer aucune échéance. Merci de votre attention.",
+  },
+};
+
+const LINES = RTL ? LINES_AR : LINES_FR;
+
+/** Écrans de titre. */
+const CARDS = RTL
+  ? {
+      intro: "جولة كاملة مع مسؤول الصيانة — مجموعة Démo BTP",
+      phoneTitle: "على التليفون",
+      phone: "نفس التطبيقة، على الشاشات الصغيرة",
+      outro: "الصيانة متاع المعدات، الكراهب والآلات",
+    }
+  : {
+      intro: "Visite complète avec le responsable maintenance — Groupe Démo BTP",
+      phoneTitle: "Sur téléphone",
+      phone: "La même application, sur petit écran",
+      outro: "Maintenance des engins, véhicules et équipements",
+    };
+
 /* ------------------------------------------------------------------ */
 /* Voix : un fichier par phrase, régénéré seulement si le texte change    */
 /* ------------------------------------------------------------------ */
@@ -246,7 +458,9 @@ if (!DRY) {
     const hash = createHash("sha1").update(`${VOICE}|${text}`).digest("hex").slice(0, 10);
     const file = path.join(VOICE_DIR, `${id}-${hash}.mp3`);
     if (!existsSync(file)) {
-      const r = spawnSync(PYTHON, ["-m", "edge_tts", "--voice", VOICE, "--rate=+6%", "--text", text, "--write-media", file], { stdio: "inherit" });
+      const r = spawnSync(PYTHON, ["-m", "edge_tts", "--voice", VOICE, `--rate=${RATE}`, "--text", text, "--write-media", file], {
+        stdio: "inherit",
+      });
       if (r.status !== 0) throw new Error(`Synthèse vocale en échec : ${id}`);
     }
     voice[id] = { file, duration: probeDuration(file) };
@@ -305,12 +519,12 @@ async function say(page, id) {
   await settle(page);
   const { t, c } = LINES[id];
   await page.evaluate(
-    ([title, text]) => {
+    ([title, text, rtl]) => {
       let el = document.getElementById("demo-caption");
       if (!el) {
         el = document.createElement("div");
         el.id = "demo-caption";
-        el.dir = "rtl";
+        el.dir = rtl ? "rtl" : "ltr";
         el.style.cssText =
           "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:2147483647;width:min(1180px,94vw);" +
           "background:rgba(14,40,65,.95);color:#fff;border-radius:14px;padding:14px 24px;font:500 22px/1.55 'Segoe UI',Tahoma,sans-serif;" +
@@ -321,7 +535,7 @@ async function say(page, id) {
       const isolated = text.replace(/([A-Z]{2}-\d{3}|GMAO|Démo BTP|PDF)/g, "<bdi>$1</bdi>");
       el.innerHTML = `<div style="font-size:16px;font-weight:700;color:#5eead4;margin-bottom:4px">${title}</div>${isolated}`;
     },
-    [t, c],
+    [t, c, RTL],
   );
   await speak(page, id);
 }
@@ -333,18 +547,18 @@ async function hideCaption(page) {
 /** Écran de titre plein écran, avec une phrase lue (facultative). */
 async function card(page, title, subtitle, id, ms = 2500) {
   await page.evaluate(
-    ([t, s]) => {
+    ([t, s, rtl]) => {
       document.getElementById("demo-caption")?.remove();
       const el = document.createElement("div");
       el.id = "demo-card";
-      el.dir = "rtl";
+      el.dir = rtl ? "rtl" : "ltr";
       el.style.cssText =
         "position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;align-items:center;justify-content:center;" +
         "background:linear-gradient(135deg,#0e2841,#0f766e);color:#fff;font-family:'Segoe UI',Tahoma,sans-serif;text-align:center;padding:40px";
       el.innerHTML = `<div style="font-size:60px;font-weight:700">${t}</div><div style="margin-top:22px;font-size:28px;opacity:.92;max-width:1050px;line-height:1.6">${s}</div>`;
       document.body.appendChild(el);
     },
-    [title, subtitle],
+    [title, subtitle, RTL],
   );
   if (id) await speak(page, id);
   else await pause(ms);
@@ -375,14 +589,16 @@ async function login(page, email, next = "/", typed = false) {
     // Saisie visible : attendre que la page soit interactive, sinon les premiers caractères sont perdus.
     await settle(page);
     await pause(1200);
-    await page.getByLabel("Courriel").click();
+    await click(page.getByLabel("Courriel"));
     await page.getByLabel("Courriel").pressSequentially(email, { delay: 45 });
+    await click(page.getByLabel("Mot de passe"));
     await page.getByLabel("Mot de passe").pressSequentially(PASSWORD, { delay: 45 });
   } else {
     await page.getByLabel("Courriel").fill(email);
     await page.getByLabel("Mot de passe").fill(PASSWORD);
   }
-  await page.getByRole("button", { name: "Se connecter" }).click();
+  if (typed) await click(page.getByRole("button", { name: "Se connecter" }));
+  else await page.getByRole("button", { name: "Se connecter" }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 30_000 });
   await settle(page);
 }
@@ -397,6 +613,105 @@ async function equipmentId(page, code) {
 }
 
 const section = (page, title) => page.locator("section", { has: page.getByRole("heading", { name: title, exact: true }) });
+
+/* ------------------------------------------------------------------ */
+/* Curseur visible : flèche qui suit la souris, halo sur l'élément visé, onde au clic */
+/* ------------------------------------------------------------------ */
+
+/** Injecté dans chaque page filmée (Playwright n'enregistre pas le pointeur système). */
+function installCursor() {
+  const place = (x, y) => {
+    const cursor = document.getElementById("demo-cursor");
+    if (cursor) cursor.style.transform = `translate(${x - 3}px, ${y - 2}px)`;
+  };
+  const install = () => {
+    if (document.getElementById("demo-cursor")) return;
+    const cursor = document.createElement("div");
+    cursor.id = "demo-cursor";
+    cursor.innerHTML =
+      '<svg width="30" height="30" viewBox="0 0 24 24"><path d="M4 2v18l5-5 3.6 7.2 3.1-1.5-3.6-7.2H19z" fill="#111827" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+    cursor.style.cssText = "position:fixed;left:0;top:0;z-index:2147483647;pointer-events:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))";
+    document.documentElement.appendChild(cursor);
+    let saved = { x: 720, y: 450 };
+    try {
+      saved = JSON.parse(sessionStorage.getItem("demo-cursor") ?? "") ?? saved;
+    } catch {}
+    place(saved.x, saved.y);
+  };
+  document.addEventListener(
+    "mousemove",
+    (event) => {
+      place(event.clientX, event.clientY);
+      try {
+        sessionStorage.setItem("demo-cursor", JSON.stringify({ x: event.clientX, y: event.clientY }));
+      } catch {}
+    },
+    true,
+  );
+  document.addEventListener(
+    "mousedown",
+    (event) => {
+      const ring = document.createElement("div");
+      ring.style.cssText =
+        `position:fixed;left:${event.clientX - 22}px;top:${event.clientY - 22}px;width:44px;height:44px;border-radius:50%;` +
+        "border:3px solid #f59e0b;background:rgba(245,158,11,.25);z-index:2147483646;pointer-events:none";
+      document.documentElement.appendChild(ring);
+      ring.animate(
+        [
+          { transform: "scale(.4)", opacity: 1 },
+          { transform: "scale(1.6)", opacity: 0 },
+        ],
+        { duration: 650, easing: "ease-out" },
+      ).onfinish = () => ring.remove();
+    },
+    true,
+  );
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", install);
+  else install();
+}
+
+/** Amène le curseur sur l'élément (déplacement progressif) et l'entoure d'un halo : l'action est visible. */
+async function point(locator) {
+  const target = locator.first();
+  await target.scrollIntoViewIfNeeded().catch(() => {});
+  const box = await target.boundingBox();
+  if (!box) return;
+  const page = target.page();
+  await page.mouse.move(box.x + Math.min(box.width / 2, 60), box.y + box.height / 2, { steps: 22 });
+  await target
+    .evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const halo = document.createElement("div");
+      halo.style.cssText =
+        `position:fixed;left:${r.left - 5}px;top:${r.top - 5}px;width:${r.width + 10}px;height:${r.height + 10}px;` +
+        "border:3px solid #f59e0b;border-radius:10px;box-shadow:0 0 0 6px rgba(245,158,11,.18);z-index:2147483645;pointer-events:none";
+      document.documentElement.appendChild(halo);
+      halo.animate([{ opacity: 0 }, { opacity: 1, offset: 0.2 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], { duration: 1500 }).onfinish = () =>
+        halo.remove();
+    })
+    .catch(() => {});
+  await pause(450);
+}
+
+async function click(locator) {
+  await point(locator);
+  await locator.click();
+}
+
+async function fill(locator, value) {
+  await point(locator);
+  await locator.fill(value);
+}
+
+async function select(locator, option) {
+  await point(locator);
+  await locator.selectOption(option);
+}
+
+async function check(locator) {
+  await point(locator);
+  await locator.check();
+}
 
 const failures = [];
 /** Page filmée en cours (capture d'écran d'un chapitre en échec). */
@@ -447,13 +762,14 @@ const desktop = await browser.newContext({
   timezoneId: "Europe/Paris",
   recordVideo: { dir: RAW, size: { width: 1440, height: 900 } },
 });
+await desktop.addInitScript(installCursor);
 const page = await desktop.newPage();
 activePage = page;
 startOf.set(page, { t0: Date.now(), track: "desktop" });
 const desktopVideo = page.video();
 page.setDefaultTimeout(20_000);
 await page.goto(`${BASE}/login`);
-await card(page, "GMAO", "جولة كاملة مع مسؤول الصيانة — مجموعة Démo BTP", "intro");
+await card(page, "GMAO", CARDS.intro, "intro");
 
 await chapter("Connexion et tableau de bord", async () => {
   await page.context().clearCookies();
@@ -471,11 +787,11 @@ await chapter("Connexion et tableau de bord", async () => {
 await chapter("Parc et fiche équipement", async () => {
   await go(page, "/equipements");
   await say(page, "fleet1");
-  await page.getByRole("combobox", { name: "Catégorie" }).selectOption({ label: "Camion porteur" });
-  await page.getByRole("button", { name: "Filtrer" }).click();
+  await select(page.getByRole("combobox", { name: "Catégorie" }), { label: "Camion porteur" });
+  await click(page.getByRole("button", { name: "Filtrer" }));
   await say(page, "fleet2");
   await hideCaption(page);
-  await page.getByRole("link", { name: "CA-101", exact: true }).first().click();
+  await click(page.getByRole("link", { name: "CA-101", exact: true }).first());
   await page.waitForURL(/\/equipements\/[0-9a-f-]{36}$/);
   await say(page, "eq1");
   await scrollTo(section(page, "Préventif"));
@@ -487,12 +803,12 @@ await chapter("Échéances administratives", async () => {
   await scrollTo(card);
   await say(page, "dl1");
   const insurance = card.getByRole("row").filter({ hasText: "POL-2025-0412" });
-  await insurance.getByText("Renouveler", { exact: true }).click();
+  await click(insurance.getByText("Renouveler", { exact: true }));
   await say(page, "dl2");
-  await insurance.getByLabel("Nouvelle échéance").fill(isoDay(377));
-  await insurance.getByLabel("Nouvelle référence").fill("POL-2026-0412");
-  await insurance.getByLabel("Montant payé").fill("2850");
-  await insurance.getByRole("button", { name: "Enregistrer le renouvellement" }).click();
+  await fill(insurance.getByLabel("Nouvelle échéance"), isoDay(377));
+  await fill(insurance.getByLabel("Nouvelle référence"), "POL-2026-0412");
+  await fill(insurance.getByLabel("Montant payé"), "2850");
+  await click(insurance.getByRole("button", { name: "Enregistrer le renouvellement" }));
   await card.getByText("Échéance renouvelée : la suivante est suivie.").waitFor();
   await scrollTo(card);
   await say(page, "dl3");
@@ -511,12 +827,12 @@ await chapter("Préventif", async () => {
   await go(page, "/preventif");
   await say(page, "prev1");
   await hideCaption(page);
-  await page.getByRole("link", { name: "Chargeuse sur pneus — entretien périodique" }).click();
+  await click(page.getByRole("link", { name: "Chargeuse sur pneus — entretien périodique" }));
   await settle(page);
   await say(page, "prev2");
   await go(page, "/preventif/echeances");
   await say(page, "prev3");
-  await page.getByRole("button", { name: "Générer les ordres de travail préventifs" }).click();
+  await click(page.getByRole("button", { name: "Générer les ordres de travail préventifs" }));
   await pause(1800);
 });
 
@@ -526,7 +842,7 @@ await chapter("R-01 : entretien à échéance", async () => {
   await go(page, `/ordres-de-travail/${wo.id}`);
   await say(page, "r1a");
   await hideCaption(page);
-  await page.getByRole("button", { name: "Démarrer / reprendre" }).click();
+  await click(page.getByRole("button", { name: "Démarrer / reprendre" }));
   await page.getByText("Démarrer / reprendre : effectué.").waitFor();
   const checklist = section(page, "Checklist");
   await scrollTo(checklist);
@@ -534,7 +850,7 @@ await chapter("R-01 : entretien à échéance", async () => {
   await hideCaption(page);
   for (let i = 1; i <= 6; i++) {
     const item = checklist.getByRole("listitem").filter({ hasText: new RegExp(`^${i}\\. `) });
-    await item.getByRole("button", { name: "Conforme", exact: true }).click();
+    await click(item.getByRole("button", { name: "Conforme", exact: true }));
     await item
       .getByText("Point enregistré.")
       .waitFor({ timeout: 6000 })
@@ -547,50 +863,51 @@ await chapter("R-01 : entretien à échéance", async () => {
     ["FLT-HUI-01 — Filtre à huile moteur (u)", "1"],
     ["HUI-MOT-15W40 — Huile moteur 15W40 (L)", "32"],
   ]) {
-    await parts.getByRole("combobox", { name: "Opération" }).selectOption({ label: "Sortir du stock (consommer)" });
-    await parts.getByRole("combobox", { name: "Magasin" }).selectOption({ label: "Magasin Lyon — Dépôt Lyon" });
-    await parts.getByRole("combobox", { name: "Article" }).selectOption({ label });
-    await parts.getByRole("spinbutton", { name: "Quantité" }).fill(quantity);
-    await parts.getByRole("button", { name: "Valider" }).click();
+    await select(parts.getByRole("combobox", { name: "Opération" }), { label: "Sortir du stock (consommer)" });
+    await select(parts.getByRole("combobox", { name: "Magasin" }), { label: "Magasin Lyon — Dépôt Lyon" });
+    await select(parts.getByRole("combobox", { name: "Article" }), { label });
+    await fill(parts.getByRole("spinbutton", { name: "Quantité" }), quantity);
+    await click(parts.getByRole("button", { name: "Valider" }));
     await pause(1500);
   }
   await say(page, "r1c");
   await hideCaption(page);
   const times = section(page, "Temps passés");
   await scrollTo(times);
-  await times.getByText("Saisir une durée").click();
-  await times.getByRole("combobox", { name: "Technicien" }).selectOption({ label: "Julien Moreau" });
-  await times.getByLabel("Durée (minutes)").fill("180");
-  await times.getByRole("button", { name: "Enregistrer", exact: true }).click();
+  await click(times.getByText("Saisir une durée"));
+  await select(times.getByRole("combobox", { name: "Technicien" }), { label: "Julien Moreau" });
+  await fill(times.getByLabel("Durée (minutes)"), "180");
+  await click(times.getByRole("button", { name: "Enregistrer", exact: true }));
   await page.getByText("Temps enregistré.").waitFor();
   const report = section(page, "Compte rendu");
   await scrollTo(report);
   const detail = await api(page, `/api/v1/work-orders/${wo.id}`);
   // Une heure après le relevé de prise de poste : +1 h reste vraisemblable (DON-02).
-  await report.getByLabel("Relevé (h)").fill(String(Math.round(Number(detail.meters[0].lastValue) + 1)));
-  await report.getByRole("button", { name: "Enregistrer le relevé" }).click();
+  await fill(report.getByLabel("Relevé (h)"), String(Math.round(Number(detail.meters[0].lastValue) + 1)));
+  await click(report.getByRole("button", { name: "Enregistrer le relevé" }));
   await page
     .getByText(/^Relevé enregistré/)
     .first()
     .waitFor();
-  await report
-    .getByLabel("Travaux réalisés")
-    .fill("Vidange moteur, filtres à huile et à gazole remplacés, niveaux et graissage faits, pneus contrôlés.");
-  await report.getByRole("button", { name: "Enregistrer le compte rendu" }).click();
+  await fill(
+    report.getByLabel("Travaux réalisés"),
+    "Vidange moteur, filtres à huile et à gazole remplacés, niveaux et graissage faits, pneus contrôlés.",
+  );
+  await click(report.getByRole("button", { name: "Enregistrer le compte rendu" }));
   await page.getByText("Compte rendu enregistré.").waitFor();
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   await pause(800);
-  await page.getByRole("button", { name: "Terminer les travaux" }).click();
+  await click(page.getByRole("button", { name: "Terminer les travaux" }));
   await page.getByText("Terminer les travaux : effectué.").waitFor();
   await say(page, "r1d");
   await hideCaption(page);
-  await page.getByLabel("Essais de remise en service conformes").check();
-  await page.getByRole("button", { name: "Valider la remise en service" }).click();
+  await check(page.getByLabel("Essais de remise en service conformes"));
+  await click(page.getByRole("button", { name: "Valider la remise en service" }));
   await page.getByText("Valider la remise en service : effectué.").waitFor();
   await scrollTo(section(page, "Coûts"));
   await say(page, "r1e");
   await hideCaption(page);
-  await page.getByRole("link", { name: "Fiche à signer" }).click();
+  await click(page.getByRole("link", { name: "Fiche à signer" }));
   await page.waitForURL(/impression/);
   await say(page, "r1f");
   await scroll(page, 800, 1800);
@@ -602,26 +919,26 @@ await chapter("R-02 : panne signalée, qualifiée, planifiée", async () => {
   const requests = (await api(page, "/api/v1/work-requests?pageSize=50")).items;
   const di = requests.find((r) => r.equipmentCode === "CA-104" && r.status === "NEW");
   await go(page, `/demandes/${di.id}`);
-  await page.getByRole("combobox", { name: "Priorité" }).selectOption({ label: "P2 · Haute" });
-  await page.getByLabel("Immobiliser l'équipement").check();
+  await select(page.getByRole("combobox", { name: "Priorité" }), { label: "P2 · Haute" });
+  await check(page.getByLabel("Immobiliser l'équipement"));
   await say(page, "r2b");
   await hideCaption(page);
-  await page.getByRole("button", { name: "Qualifier" }).click();
+  await click(page.getByRole("button", { name: "Qualifier" }));
   await page.getByText("Demande qualifiée.").waitFor();
-  await page.getByRole("button", { name: "Transformer en ordre de travail" }).click();
+  await click(page.getByRole("button", { name: "Transformer en ordre de travail" }));
   await page.waitForURL(/\/ordres-de-travail\/[0-9a-f-]{36}$/);
   await say(page, "r2c");
   const planning = section(page, "Planification");
   await scrollTo(planning);
-  await planning.getByLabel("Début prévu").fill(`${isoDay(1)}T08:00`);
-  await planning.getByLabel("Durée estimée (minutes)").fill("120");
-  await planning.getByLabel("Samir Kaci").check();
+  await fill(planning.getByLabel("Début prévu"), `${isoDay(1)}T08:00`);
+  await fill(planning.getByLabel("Durée estimée (minutes)"), "120");
+  await check(planning.getByLabel("Samir Kaci"));
   await say(page, "r2d");
   await hideCaption(page);
-  await planning.getByRole("button", { name: "Enregistrer la planification" }).click();
+  await click(planning.getByRole("button", { name: "Enregistrer la planification" }));
   await page.getByText("Planification enregistrée.").waitFor();
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
-  await page.getByRole("button", { name: "Planifier", exact: true }).click();
+  await click(page.getByRole("button", { name: "Planifier", exact: true }));
   await page.getByText("Planifier : effectué.").waitFor();
   await say(page, "r2e");
 });
@@ -635,11 +952,11 @@ await chapter("R-03 : rupture de pièce", async () => {
   const reserve = async () => {
     const parts = section(page, "Pièces");
     await scrollTo(parts);
-    await parts.getByRole("combobox", { name: "Opération" }).selectOption({ label: "Réserver" });
-    await parts.getByRole("combobox", { name: "Magasin" }).selectOption({ label: "Magasin Lyon — Dépôt Lyon" });
-    await parts.getByRole("combobox", { name: "Article" }).selectOption({ label: "POMPE-HYD-TOY — Pompe hydraulique chariot 8FBE (u)" });
-    await parts.getByRole("spinbutton", { name: "Quantité" }).fill("1");
-    await parts.getByRole("button", { name: "Valider" }).click();
+    await select(parts.getByRole("combobox", { name: "Opération" }), { label: "Réserver" });
+    await select(parts.getByRole("combobox", { name: "Magasin" }), { label: "Magasin Lyon — Dépôt Lyon" });
+    await select(parts.getByRole("combobox", { name: "Article" }), { label: "POMPE-HYD-TOY — Pompe hydraulique chariot 8FBE (u)" });
+    await fill(parts.getByRole("spinbutton", { name: "Quantité" }), "1");
+    await click(parts.getByRole("button", { name: "Valider" }));
     await pause(1500);
   };
   await hideCaption(page);
@@ -647,24 +964,24 @@ await chapter("R-03 : rupture de pièce", async () => {
   await say(page, "r3b");
   await go(page, "/stock/mouvements");
   const move = page.locator("form").filter({ has: page.getByRole("button", { name: "Enregistrer le mouvement" }) });
-  await move.getByRole("combobox", { name: "Type de mouvement" }).selectOption({ label: "Transfert entre magasins" });
-  await move.getByRole("combobox", { name: "Article" }).selectOption({ label: "POMPE-HYD-TOY — Pompe hydraulique chariot 8FBE (u)" });
-  await move.getByRole("combobox", { name: "Magasin", exact: true }).selectOption({ label: "Magasin Marseille — Agence Marseille" });
-  await move.getByRole("spinbutton", { name: "Quantité" }).fill("1");
-  await move.getByRole("combobox", { name: "Magasin de destination" }).selectOption({ label: "Magasin Lyon — Dépôt Lyon" });
+  await select(move.getByRole("combobox", { name: "Type de mouvement" }), { label: "Transfert entre magasins" });
+  await select(move.getByRole("combobox", { name: "Article" }), { label: "POMPE-HYD-TOY — Pompe hydraulique chariot 8FBE (u)" });
+  await select(move.getByRole("combobox", { name: "Magasin", exact: true }), { label: "Magasin Marseille — Agence Marseille" });
+  await fill(move.getByRole("spinbutton", { name: "Quantité" }), "1");
+  await select(move.getByRole("combobox", { name: "Magasin de destination" }), { label: "Magasin Lyon — Dépôt Lyon" });
   await say(page, "r3c");
   await hideCaption(page);
-  await move.getByRole("button", { name: "Enregistrer le mouvement" }).click();
+  await click(move.getByRole("button", { name: "Enregistrer le mouvement" }));
   await pause(1800);
   await go(page, url);
   await reserve();
   await say(page, "r3d");
   const approval = section(page, "Validation des dépenses");
   await scrollTo(approval);
-  await approval.getByLabel("Commentaire").fill("Accord : chariot indispensable au quai de chargement.");
+  await fill(approval.getByLabel("Commentaire"), "Accord : chariot indispensable au quai de chargement.");
   await say(page, "r3e");
   await hideCaption(page);
-  await approval.getByRole("button", { name: "Valider", exact: true }).click();
+  await click(approval.getByRole("button", { name: "Valider", exact: true }));
   await pause(2000);
 });
 
@@ -680,10 +997,10 @@ await chapter("R-06 : contrôle réglementaire échu", async () => {
   await hideCaption(page);
   const assignment = section(page, "Affectation");
   await scrollTo(assignment);
-  await assignment.getByText("Nouvelle affectation").click();
+  await click(assignment.getByText("Nouvelle affectation"));
   const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Affecter" }) });
-  await form.getByRole("combobox", { name: "Chantier" }).selectOption({ index: 1 });
-  await form.getByRole("button", { name: "Affecter" }).click();
+  await select(form.getByRole("combobox", { name: "Chantier" }), { index: 1 });
+  await click(form.getByRole("button", { name: "Affecter" }));
   await page.getByText("Un équipement immobilisé ou réformé ne peut pas être affecté.").waitFor();
   await say(page, "r5b");
 });
@@ -701,20 +1018,20 @@ await chapter("Stock et R-08 : inventaire", async () => {
   await scrollTo(page.getByRole("heading", { name: /Écarts à valider/ }));
   await say(page, "r6a");
   await hideCaption(page);
-  await page.locator("li").filter({ hasText: "FLT-AIR-01" }).getByRole("button", { name: "Valider l'écart" }).click();
+  await click(page.locator("li").filter({ hasText: "FLT-AIR-01" }).getByRole("button", { name: "Valider l'écart" }));
   await page.getByText("Écart validé : stock ajusté.").waitFor();
   await say(page, "r6b");
 });
 
 await chapter("Demande d'achat", async () => {
   await go(page, "/demandes-achat/nouvelle");
-  await page.getByLabel("Objet de la demande").fill("Jeu de filtres hydrauliques");
-  await page.getByRole("spinbutton", { name: "Quantité" }).fill("4");
-  await page.getByLabel("Prix unitaire estimé (€)").fill("96");
-  await page.getByRole("combobox", { name: "Équipement" }).selectOption({ label: "CH-012 — Chargeuse sur pneus 950M" });
+  await fill(page.getByLabel("Objet de la demande"), "Jeu de filtres hydrauliques");
+  await fill(page.getByRole("spinbutton", { name: "Quantité" }), "4");
+  await fill(page.getByLabel("Prix unitaire estimé (€)"), "96");
+  await select(page.getByRole("combobox", { name: "Équipement" }), { label: "CH-012 — Chargeuse sur pneus 950M" });
   await say(page, "da1");
   await hideCaption(page);
-  await page.getByRole("button", { name: "Soumettre la demande" }).click();
+  await click(page.getByRole("button", { name: "Soumettre la demande" }));
   await page.waitForURL(/\/demandes-achat\/[0-9a-f-]{36}/);
   await pause(1800);
 });
@@ -730,7 +1047,7 @@ await chapter("Indicateurs et journal", async () => {
 
 await hideCaption(page);
 await page.goto(`${BASE}/`);
-await card(page, "على التليفون", "نفس التطبيقة، على الشاشات الصغيرة", null, 2500);
+await card(page, CARDS.phoneTitle, CARDS.phone, null, 2500);
 await desktop.close();
 
 /* ------------------------------------------------------------------ */
@@ -760,7 +1077,7 @@ await chapter("Téléphone", async () => {
   await scroll(mobile, 500, 1200);
   await go(mobile, "/ordres-de-travail");
   await scroll(mobile, 600, 1200);
-  await card(mobile, "GMAO", "الصيانة متاع المعدات، الكراهب والآلات", "outro");
+  await card(mobile, "GMAO", CARDS.outro, "outro");
 });
 await phone.close();
 await browser.close();
@@ -822,7 +1139,7 @@ const desktopMs = Math.round(probeDuration(parts[0]) * 1000);
   }
   writeFileSync(path.join(RAW, "timeline.json"), JSON.stringify(timeline, null, 2));
 }
-const output = path.join(OUT, DRY ? "gmao-demo-ar-essai.mp4" : "gmao-demo-ar.mp4");
+const output = path.join(OUT, DRY ? `gmao-demo-${LANG}-essai.mp4` : `gmao-demo-${LANG}.mp4`);
 const args = ["-y", "-i", parts[0], "-i", parts[1]];
 let filter =
   `[0:v]drawbox=x=iw-${SYNC_SIZE}:y=ih-${SYNC_SIZE}:w=${SYNC_SIZE}:h=${SYNC_SIZE}:color=0xf8fafc:t=fill,scale=1440:900,setsar=1,fps=25[a];` +

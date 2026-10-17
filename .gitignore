@@ -50,6 +50,6 @@ next-env.d.ts
 
 # Vidéos de démonstration : fichiers de travail (seules les vidéos finales sont versionnées)
 docs/demo-video/brut/
-docs/demo-video/brut-ar/
-docs/demo-video/voix-ar/
+docs/demo-video/brut-*/
+docs/demo-video/voix-*/
 docs/demo-video/*-essai.mp4
