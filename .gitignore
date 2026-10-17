@@ -47,3 +47,9 @@ next-env.d.ts
 
 # fichiers joints (stockage local, EQP-07)
 /storage/
+
+# Vidéos de démonstration : fichiers de travail (seules les vidéos finales sont versionnées)
+docs/demo-video/brut/
+docs/demo-video/brut-ar/
+docs/demo-video/voix-ar/
+docs/demo-video/*-essai.mp4
