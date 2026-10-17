@@ -33,3 +33,20 @@ export function verifyImpersonation(token: string | null | undefined, secret: st
   if (!adminId || !targetId || adminId === targetId) return null;
   return { adminId, targetId };
 }
+
+/**
+ * Règles d'ouverture d'une connexion « en tant que » : jamais en cascade, jamais vers soi-même, un compte
+ * désactivé ou un autre administrateur de la plateforme. Liste vide = autorisé (toutes les raisons sinon).
+ */
+export function impersonationRefusals(input: {
+  adminId: string;
+  alreadyImpersonating: boolean;
+  target: { id: string; isActive: boolean; isPlatformAdmin: boolean };
+}): string[] {
+  if (input.alreadyImpersonating) return ["Revenir d'abord à votre compte."];
+  if (input.target.id === input.adminId) return ["Vous êtes déjà connecté avec ce compte."];
+  const errors: string[] = [];
+  if (input.target.isPlatformAdmin) errors.push("Impossible de prendre la place d'un autre administrateur de la plateforme.");
+  if (!input.target.isActive) errors.push("Ce compte est désactivé : le réactiver d'abord.");
+  return errors;
+}

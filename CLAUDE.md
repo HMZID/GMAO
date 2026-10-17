@@ -21,7 +21,8 @@ Avant de rendre la main : `npm run format`, `npm run lint`, `npm run typecheck`,
 - `main` : production. `develop` : intégration et recette.
 - Chaque tâche a sa branche `GMAO-NN` (numéro suivant : `GMAO-01`, `GMAO-02`…), créée depuis `develop` à jour.
 - Pull Request `GMAO-NN` → `develop` : fusionnée automatiquement par GitHub quand la CI est verte (`auto-merge-develop.yml`, `develop` protégée) ; en cas d'échec, rien n'est fusionné tant que la branche n'est pas corrigée. Jamais de PR d'une branche de tâche vers `main`.
-- Après les tests sur `develop`, Pull Request `develop` → `main` pour la mise en production, sur décision du responsable du projet. Le merge déclenche la CI puis le workflow « Déploiement production », qui attend une approbation humaine avant de déployer sur Vercel (`docs/deploiement-vercel.md`). Vercel ne déploie aucune branche de lui-même (`vercel.json`).
+- `develop` est déployée automatiquement après la CI sur l'environnement de développement (recette) : « Pipeline développement » (`deploy-develop.yml` : CI, contrôle des variables Vercel, déploiement), base Neon distincte ; un garde-fou refuse la base de production (`scripts/predeploy.ts`).
+- Après les tests sur `develop`, Pull Request `develop` → `main` pour la mise en production, sur décision du responsable du projet. Le merge déclenche la CI puis le workflow « Déploiement production », qui attend une approbation humaine avant de déployer sur Vercel (`docs/deploiement-vercel.md`). Vercel ne déploie aucune branche de lui-même (`vercel.json`) : seuls « Déploiement production » et « Pipeline développement » déploient.
 
 ## Architecture
 
@@ -29,6 +30,7 @@ Avant de rendre la main : `npm run format`, `npm run lint`, `npm run typecheck`,
 - `src/server/services/` : cas d'usage. Chaque fonction exportée reçoit un `AuthContext`, valide l'entrée avec Zod (`parseInput`), vérifie les droits (`assertCan` / `assertCanOn`), filtre par périmètre (`scopeWhere`), écrit l'audit (`audit`) dans la même transaction.
 - Écrans (`src/app/(app)/`) et API (`src/app/api/v1/`) appellent les **mêmes** services : jamais de règle ni de contrôle de droit dans une page, une action ou une route.
 - `src/lib/labels.ts` : libellés français des énumérations (le code et la base sont en anglais).
+- Site commercial public (`src/app/(site)`, charte propre `src/components/site`) : servi sur `/` sans session (réécriture dans `src/proxy.ts`), contenu et demandes de démo administrés dans `/administration/site` ; voir `docs/site-commercial.md`.
 
 ## Conventions
 

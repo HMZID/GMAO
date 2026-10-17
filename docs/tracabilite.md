@@ -8,21 +8,21 @@ Statuts : **Fait** (critère d'acceptation couvert), **Partiel** (l'essentiel es
 
 | | Fait | Partiel | À faire | Phases suivantes | Total |
 | --- | --- | --- | --- | --- | --- |
-| Exigences du MVP | 59 | 33 | 11 | 0 | 103 |
-| Toutes les exigences | 65 | 44 | 11 | 43 | 163 |
+| Exigences du MVP | 69 | 32 | 5 | 0 | 106 |
+| Toutes les exigences | 76 | 43 | 5 | 39 | 163 |
 
-Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests de bout en bout (`npm run test:e2e`), dont le cycle complet d'une panne (scénario R-02) et le remplacement de compteur (R-05).
+Vérification : 187 tests unitaires des règles métier (`npm test`), 9 tests de l'application mobile (`mobile/`) et 58 tests de bout en bout (`npm run test:e2e`) ; état des scénarios de recette R-01 à R-08 en fin de document. « Phases suivantes » regroupe les phases 2 à 4, les options et ce qui est prévu avant le déploiement général.
 
 ## Habilitations (HAB)
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **HAB-01** Rôles paramétrables | Must | oui | Partiel | Rôles attribuables par l'administrateur, cumulables, par périmètre ; la matrice rôle → droits est figée dans le code. | `src/server/authz/permissions.ts`, `src/app/(app)/administration/utilisateurs` |
-| **HAB-02** Cloisonnement par périmètre | Must | oui | Fait | Périmètre appliqué à toutes les listes, recherches et API ; hors périmètre = introuvable. | `src/server/services/_shared.ts (scopeWhere)`, `src/server/pages.ts` |
+| **HAB-01** Rôles paramétrables | Must | oui | Partiel | Rôles cumulables par périmètre (groupe, société, site), attribués par la direction et le responsable maintenance ; l'administrateur de la plateforme gère les organisations, pas leurs données. La matrice rôle → droits est figée dans le code. | `src/server/authz/permissions.ts`, `src/app/(app)/administration/utilisateurs`, `e2e/users.spec.ts` |
+| **HAB-02** Cloisonnement par périmètre | Must | oui | Fait | Périmètre appliqué à toutes les listes, recherches, exports et API ; hors périmètre = introuvable (404, jamais 403). Une clé d'API garde le périmètre de son créateur. Vérifié entre sociétés d'un même groupe (R-07) et entre organisations. | `src/server/services/_shared.ts (scopeWhere, assertVisible)`, `e2e/security.spec.ts`, `e2e/isolation.spec.ts`, `e2e/auth.spec.ts` |
 | **HAB-03** Cumul et délégation | Should |  | Fait | Rôles cumulés, délégation bornée dans le temps (validFrom, validTo). | `src/server/authz/context.ts` |
 | **HAB-04** Circuits de validation | Must | oui | Fait | Circuits paramétrables par type d'objet (DI, demande d'achat, dépense de maintenance) et par société : étapes ordonnées, rôle valideur dans le périmètre de l'objet ou personne nommée, seuils financiers, priorités, suppléants datés. Étapes figées à la soumission, décision tracée (auteur, date, commentaire obligatoire en cas de refus), demandeur exclu, un valideur par étape. Restent : relances et escalades automatiques (NOT-02). Validations existantes conservées : remise en service, écart d'inventaire. | `src/server/services/approvals.ts`, `src/server/domain/approvals.ts`, `e2e/approvals.spec.ts` |
-| **HAB-05** Séparation des tâches | Must | oui | Partiel | Le technicien exécutant ne peut pas valider la remise en service d'un équipement A. Demandes d'achat : avec le flux achats. | `src/server/domain/work-order-status.ts` |
-| **HAB-06** Journal d'audit | Must | oui | Fait | Journal en ajout seul écrit dans la transaction de chaque modification, avec le canal ; consultation filtrable. | `src/server/services/_shared.ts (audit)`, `src/app/(app)/administration/journal` |
+| **HAB-05** Séparation des tâches | Must | oui | Fait | Le technicien exécutant ne valide pas la remise en service (écran et API) ; le demandeur ne valide pas sa demande d'achat ; la personne qui a compté ne valide pas son écart d'inventaire. | `src/server/domain/work-order-status.ts`, `src/server/services/approvals.ts`, `e2e/corrective-flow.spec.ts`, `e2e/approvals.spec.ts`, `e2e/recette.spec.ts` |
+| **HAB-06** Journal d'audit | Must | oui | Fait | Journal en ajout seul écrit dans la transaction de chaque modification, avec le canal (web, API, mobile, import, système) ; actions faites « en tant que » par l'administrateur de la plateforme marquées ; consultation filtrable. | `src/server/services/_shared.ts (audit)`, `src/app/(app)/administration/journal`, `e2e/platform.spec.ts` |
 | **HAB-07** Accès prestataire | Should |  | Partiel | Rôle Prestataire externe et ses droits ; portail restreint aux OT confiés à construire. | `src/server/authz/permissions.ts` |
 | **HAB-08** Désactivation sans perte | Must | oui | Fait | Désactivation sans suppression, sessions fermées, connexion refusée. | `src/server/services/users.ts`, `src/server/auth/auth.ts` |
 | **HAB-09** Revue des habilitations | Should |  | Phase 2 | Revue périodique des habilitations (campagne, export signé). |  |
@@ -39,11 +39,11 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **EQP-06** Criticité | Must | oui | Fait | Criticité héritée de la catégorie ; A relève la priorité et impose la validation de remise en service. | `src/server/services/work-requests.ts` |
 | **EQP-07** Documents et photos | Must | oui | Fait | Documents et photos sur les fiches équipement et OT : types, expiration facultative, format et contenu contrôlés, taille paramétrable, stockage local ou S3, droits, audit ; alerte par courriel à J-30, J-7 et à l'échéance (§11.1). | `src/server/services/documents.ts`, `src/server/storage`, `src/server/services/email.ts`, `e2e/documents.spec.ts` |
 | **EQP-08** Sous-ensembles | Should |  | Phase 2 | Sous-ensembles (table prévue). |  |
-| **EQP-09** QR code et code-barres | Must | oui | Partiel | Jeton QR par équipement et résolution par l'API ; impression des étiquettes et scan mobile à faire. | `src/app/api/v1/equipment/by-qr` |
+| **EQP-09** QR code et code-barres | Must | oui | Partiel | Jeton QR par équipement, résolution par l'API et scan par l'application mobile (MOB-02) ; impression des étiquettes à faire. | `src/app/api/v1/equipment/by-qr`, `mobile/src/app/(tabs)/scan.tsx` |
 | **EQP-10** Historique des affectations | Must | oui | Fait | Affectations historisées, une seule active, sans chevauchement. | `src/server/services/equipment.ts` |
 | **EQP-11** Historique des compteurs | Must | oui | Fait | Historique des relevés et des remplacements de compteur. | `src/server/services/meters.ts` |
 | **EQP-12** Garanties et contrats | Should |  | Partiel | Fin de garantie (date ou compteur) sur la fiche ; contrats à faire. |  |
-| **EQP-13** Import en masse | Must | oui | Fait | Import Excel des équipements, articles et stocks initiaux : modèle téléchargeable, simulation avec les contrôles de la saisie, rapport ligne par ligne (écran et Excel), « tout ou rien » ou « lignes valides », réimportation sans doublon. Import CSV non proposé. | `src/server/services/imports.ts`, `src/server/domain/imports.ts`, `e2e/imports.spec.ts` |
+| **EQP-13** Import en masse | Must | oui | Fait | Import Excel des équipements, articles, stocks initiaux, fournisseurs et ouvriers : modèle téléchargeable, simulation avec les contrôles de la saisie, rapport ligne par ligne (écran et Excel), « tout ou rien » ou « lignes valides », réimportation sans doublon. Import CSV non proposé. | `src/server/services/imports.ts`, `src/server/domain/imports.ts`, `e2e/imports.spec.ts` |
 | **EQP-14** Réforme | Should |  | Partiel | Réforme refusée avec OT ouvert, plans désactivés, fiche en lecture seule ; circuit de validation à faire. | `src/server/services/equipment.ts` |
 | **EQP-15** Dernière position | Could |  | Phase 3 | Dernière position (télématique). |  |
 
@@ -58,11 +58,11 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **PRV-05** Paliers imbriqués | Should |  | Phase 2 | Paliers imbriqués (statut « soldée par palier » prévu). |  |
 | **PRV-06** Pré-alertes | Must | oui | Fait | Pré-alertes en jours et en compteur. | `src/server/domain/preventive.ts` |
 | **PRV-07** Projection des échéances compteur | Should |  | Fait | Projection par l'usage moyen sur 30 jours. | `src/server/domain/meters.ts`, `src/server/domain/preventive.ts` |
-| **PRV-08** Génération automatique des OT | Must | oui | Partiel | Génération idempotente avec la checklist, depuis l'écran ou l'API ; tâche planifiée quotidienne à brancher, pièces de gamme à reprendre sur l'OT. | `src/server/services/preventive.ts` |
+| **PRV-08** Génération automatique des OT | Must | oui | Partiel | Génération idempotente avec la checklist, depuis l'écran, l'API et la passe planifiée (`npm run worker`, `/api/cron/notifications`) ; aucun second OT pour une même échéance (R-01). Reste : pièces de la gamme à réserver sur l'OT. | `src/server/services/preventive.ts (runScheduledPreventive)`, `e2e/recette.spec.ts` |
 | **PRV-09** Retards et tolérances | Must | oui | Fait | Tolérance en % de l'intervalle, statut « en retard ». | `src/server/domain/preventive.ts` |
 | **PRV-10** Report et replanification | Must | oui | Partiel | Report daté et motivé, interdit au-delà de l'échéance légale d'un contrôle réglementaire ; validation au-delà de la tolérance à faire. | `src/server/services/preventive.ts` |
 | **PRV-11** Gammes et checklists | Must | oui | Fait | Checklists obligatoires, mesures avec bornes (hors bornes = non conforme). | `src/server/services/work-orders.ts` |
-| **PRV-12** Contrôles réglementaires | Must | oui | Fait | Contrôle réglementaire échu bloquant : équipement immobilisé jusqu'à la réalisation. | `src/server/services/preventive.ts`, `src/server/services/equipment-status.ts` |
+| **PRV-12** Contrôles réglementaires | Must | oui | Partiel | Contrôle échu bloquant : équipement immobilisé par la passe planifiée quotidienne, affectation refusée ; clôture refusée sans rapport joint ; remise en service à la clôture (R-06). Reste : suivi des réserves d'un rapport « conforme avec réserves ». | `src/server/services/preventive.ts`, `src/server/domain/work-order-status.ts`, `e2e/recette.spec.ts` |
 | **PRV-13** Suspension des plans | Should |  | Phase 2 | Suspension d'un plan (colonnes prévues). |  |
 | **PRV-14** Regroupement d'opérations | Could |  | Phase 3 |  |  |
 | **PRV-15** Prévision de charge | Could |  | Phase 3 |  |  |
@@ -71,18 +71,18 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **COR-01** Signalement rapide | Must | oui | Partiel | Signalement web en quelques champs, priorité proposée ; saisie mobile avec photo à faire. | `src/app/(app)/demandes/nouvelle` |
+| **COR-01** Signalement rapide | Must | oui | Partiel | Signalement web et mobile (hors connexion) en quelques champs, priorité proposée. Reste : photos jointes à la DI. | `src/app/(app)/demandes/nouvelle`, `mobile/src/app/request/new.tsx` |
 | **COR-02** Détection des doublons | Should |  | Fait | DI et OT ouverts sur le même équipement signalés, rattachement possible. | `src/server/services/work-requests.ts` |
 | **COR-03** Qualification | Must | oui | Fait | Qualification (priorité, type, immobilisation), rejet motivé avec notification. | `src/app/(app)/demandes/[id]` |
 | **COR-04** Codification des défauts | Should |  | Partiel | Codes symptôme, cause, remède en saisie libre ; listes de référence à faire. |  |
-| **COR-05** Ordres de travail | Must | oui | Fait | OT depuis une DI, le préventif ou en création directe ; numérotation par société et par an. | `src/server/services/work-orders.ts` |
+| **COR-05** Ordres de travail | Must | oui | Fait | OT depuis une DI, le préventif ou en création directe ; numérotation par société et par année à l'heure de Paris. | `src/server/services/work-orders.ts`, `src/server/domain/numbering.ts` |
 | **COR-06** Statuts et transitions | Must | oui | Fait | Machine à états complète, transitions interdites refusées (API comprise). | `src/server/domain/work-order-status.ts` |
 | **COR-07** État de l'équipement distinct | Must | oui | Fait | État de l'équipement distinct, immobilisations datées. | `src/server/services/equipment-status.ts` |
 | **COR-08** Affectation des intervenants | Must | oui | Fait | Intervenants internes ou prestataire. | `src/app/(app)/ordres-de-travail/[id]` |
 | **COR-09** Saisie du temps | Must | oui | Fait | Chronomètre ou durée saisie, un pointage à la fois par technicien. | `src/server/services/work-orders.ts (recordTime)` |
 | **COR-10** Pièces consommées | Must | oui | Fait | Réservation, sortie et retour de pièces sur l'OT. | `src/server/services/stock.ts` |
 | **COR-11** Compte rendu | Must | oui | Fait | Compte rendu et relevé de compteur obligatoires pour terminer les travaux. | `src/server/domain/work-order-status.ts` |
-| **COR-12** Validation de remise en service | Must | oui | Fait | Validation par une personne habilitée, différente de l'exécutant, pour les équipements A et la sécurité. | `src/server/domain/work-order-status.ts` |
+| **COR-12** Validation de remise en service | Must | oui | Fait | Validation par une personne habilitée, différente de l'exécutant, pour les équipements A et la sécurité ; refus vérifié par l'API. | `src/server/domain/work-order-status.ts`, `e2e/corrective-flow.spec.ts` |
 | **COR-13** Clôtures technique et administrative | Must | oui | Fait | Clôture technique puis administrative (coût prestataire requis). | `src/server/domain/work-order-status.ts` |
 | **COR-14** Réouverture et récidive | Should |  | Fait | Réouverture motivée sous 7 jours, puis OT de récidive lié. | `src/server/domain/work-order-status.ts` |
 | **COR-15** OT externe simple | Must | oui | Fait | OT externe : prestataire, provision puis montant facturé. | `src/server/services/work-orders.ts (setExternalCost)` |
@@ -114,14 +114,14 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **STK-04** Mouvements | Must | oui | Fait | Réception, sortie, retour, transfert, ajustement, rebut. | `src/app/(app)/stock/mouvements` |
 | **STK-05** Réservations | Must | oui | Fait | Réservations sur OT, libérées à l'annulation. | `src/server/services/stock.ts` |
 | **STK-06** Transferts | Should |  | Partiel | Transfert immédiat ; transit en deux temps à faire. |  |
-| **STK-07** Inventaires | Must | oui | Partiel | Ajustement d'inventaire, validation exigée au-delà du seuil (refusé sans le droit) ; inventaires complets et tournants, écarts « à valider », saisie mobile à faire. | `src/server/services/stock.ts` |
+| **STK-07** Inventaires | Must | oui | Fait | Comptage avec écart calculé sur le stock théorique à l'heure du comptage (mouvements postérieurs à part) ; au-delà du seuil, écart « à valider » sans effet sur le stock ; validation par un autre que le compteur, ajustement au coût moyen pondéré (R-08). Restent : campagnes d'inventaire complet et tournant, saisie mobile par scan (MOB-10). | `src/server/services/inventory.ts`, `src/app/(app)/stock/inventaire`, `e2e/recette.spec.ts` |
 | **STK-08** Seuils et alertes | Must | oui | Partiel | Mini, point de commande, maxi par magasin, articles « à commander » et compteur au tableau de bord ; alerte au magasinier et à l'acheteur à faire. | `src/app/(app)/stock/articles/[id]` |
 | **STK-09** Proposition de réapprovisionnement | Could |  | Phase 3 |  |  |
 | **STK-10** Numéros de série et lots | Should |  | Phase 2 | Mode de suivi (quantité, lot, série) prévu sur l'article. |  |
 | **STK-11** Montage et démontage | Should |  | Phase 2 |  |  |
 | **STK-12** Réparables | Should |  | Partiel | Indicateur « réparable » sur l'article ; circuit de réparation à faire. |  |
 | **STK-13** Échanges standard | Should |  | Phase 2 |  |  |
-| **STK-14** Intégrité des stocks | Must | oui | Fait | Verrou de ligne, stock physique jamais négatif, idempotence par clientId. | `src/server/services/stock.ts` |
+| **STK-14** Intégrité des stocks | Must | oui | Fait | Verrou de ligne, stock physique jamais négatif, idempotence par clientId ; mouvements directs refusés aux clés d'API. Reste : tests de concurrence et de rejeu en bout de chaîne. | `src/server/services/stock.ts` |
 | **STK-15** Valorisation | Must | oui | Fait | Coût moyen pondéré recalculé à chaque réception. | `src/server/domain/stock.ts` |
 
 ## Achats (ACH)
@@ -153,7 +153,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **KPI-08** Budget et réalisé | Should |  | Phase 2 |  |  |
 | **KPI-09** Réparer ou remplacer | Should |  | Phase 3 | Fonction de calcul prête dans le domaine. | `src/server/domain/kpi.ts (repairOrReplaceRatio)` |
 | **KPI-10** Tableaux de bord par profil | Must | oui | Partiel | Tableau de bord filtré par droits et périmètre, liens vers les listes ; vues propres à chaque profil à faire. | `src/app/(app)/page.tsx` |
-| **KPI-11** Export et outils de BI | Should |  | Phase 3 |  |  |
+| **KPI-11** Export et outils de BI | Should |  | Fait | Indicateurs personnalisés, exports Excel et CSV, connecteur ETL par clé d'API (lecture incrémentale) et serveur MCP pour les assistants IA, avec les droits et le périmètre du créateur de la clé. | `src/server/services/indicators.ts`, `src/app/api/v1/exports`, `src/app/api/mcp`, `e2e/connector.spec.ts`, `e2e/mcp.spec.ts` |
 | **KPI-12** Calculs documentés | Must | oui | Fait | Conventions de calcul documentées (écran Indicateurs, docs/architecture.md, tests). | `src/server/domain/kpi.ts` |
 | **KPI-13** Fraîcheur des données | Must | oui | Fait | Calcul à la demande sur les données du moment. |  |
 
@@ -181,7 +181,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | --- | --- | --- | --- | --- | --- |
 | **NOT-01** Règles de notification | Must | oui | Partiel | Notifications dans l'application et par courriel selon les droits et le périmètre ; préférences par utilisateur ; file d'envoi transactionnelle, envoi en arrière-plan avec reprises, clé anti-doublon par événement, suivi et relance par l'administrateur. Reste : règles paramétrables par l'administrateur (événement, condition, destinataires, canaux), notification mobile. | `src/server/services/notifications.ts`, `src/server/services/email.ts`, `scripts/worker.ts`, `e2e/notifications.spec.ts` |
 | **NOT-02** Escalade | Must | oui | À faire | Escalade. |  |
-| **NOT-03** Notifications par défaut | Must | oui | Partiel | Livré, dans l'application et par courriel : DI P1 (obligatoire), validation en attente et remise en service à valider (obligatoires), décision sur une demande, affectation à un OT, échéances en pré-alerte, préventifs en retard et OT en attente depuis plus de 5 jours, articles sous le point de commande, documents arrivant à échéance. Restent : pièce réservée reçue, compteur non relevé, échec d'interface, escalades (NOT-02). | `src/server/domain/email.ts` |
+| **NOT-03** Notifications par défaut | Must | oui | Partiel | Livré, dans l'application et par courriel : DI P1 (obligatoire), validation en attente et remise en service à valider (obligatoires), décision sur une demande, affectation à un OT, échéances en pré-alerte, préventifs en retard et OT en attente depuis plus de 5 jours, articles sous le point de commande, documents arrivant à échéance, échéances administratives du parc (assurance, visite technique, vignette) à J−30, J−7, le jour même puis chaque semaine de retard, et entretiens préventifs (vidanges, filtres…) en pré-alerte, échus ou en retard notifiés dans l'application au responsable du parc, au chef d'atelier et au responsable maintenance du périmètre. Restent : pièce réservée reçue, compteur non relevé, échec d'interface, escalades (NOT-02). | `src/server/domain/email.ts` |
 | **NOT-04** Récapitulatif quotidien | Should | oui | Fait | Récapitulatifs quotidiens des échéances, retards et alertes de stock : un courriel par destinataire et par jour, à partir de l'heure paramétrée (`EMAIL_DIGEST_HOUR`). | `src/server/services/email.ts` |
 | **NOT-05** SMS et messagerie d'équipe | Could |  | Phase 3 |  |  |
 
@@ -189,7 +189,7 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **INT-01** Imports et exports | Must | oui | Partiel | Imports Excel des équipements, articles et stocks initiaux (voir EQP-13), aussi par l'API (`/api/v1/imports`). Reste : autres modèles du §11.2 (compteurs, plans, fournisseurs, utilisateurs…), import CSV, exports filtrés des listes. | `src/app/api/v1/imports` |
+| **INT-01** Imports et exports | Must | oui | Partiel | Imports Excel (équipements, articles, stocks initiaux, fournisseurs, ouvriers), aussi par l'API ; export complet de l'organisation ou d'une société (Excel, CSV, API incrémentale) ; connecteur par clé d'API. Restent : modèles de compteurs, plans et utilisateurs, import CSV. | `src/app/api/v1/imports`, `src/server/services/exports.ts`, `e2e/exports.spec.ts` |
 | **INT-02** API ouverte | Must | oui | Fait | API REST v1 : mêmes règles et droits que les écrans, idempotence, catalogue public (GET /api/v1). | `src/app/api/v1`, `src/server/api/catalog.ts` |
 | **INT-03** Authentification unique | Must | oui | Partiel | SSO Microsoft Entra ID activable par configuration, sans création implicite de compte ; à recetter sur le tenant de l'entreprise. | `src/server/auth/auth.ts` |
 | **INT-04** ERP et comptabilité | Should |  | Phase 2 |  |  |
@@ -203,8 +203,8 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 
 | Exigence | Priorité | MVP | Statut | Couverture et reste à faire | Code |
 | --- | --- | --- | --- | --- | --- |
-| **TEC-01** Web et mobile | Must | oui | Partiel | Application web responsive ; application mobile à faire. |  |
-| **TEC-02** Isolation des clients | Must | oui | Fait | tenant_id sur toutes les tables métier, contrôlé dans chaque service. |  |
+| **TEC-01** Web et mobile | Must | oui | Partiel | Application web responsive et application mobile Expo (voir MOB-01), sur la même API. | `src/app/api/v1`, `mobile/` |
+| **TEC-02** Isolation des clients | Must | oui | Fait | tenant_id sur toutes les tables métier, contrôlé dans chaque service, identifiants reçus vérifiés (`assertSameTenant`) ; organisations clientes gérées par l'administrateur de la plateforme. | `src/server/services/_shared.ts`, `e2e/isolation.spec.ts` |
 | **TEC-03** Cloisonnement des sociétés | Must | oui | Fait | Périmètres société et site. | `src/server/authz/context.ts` |
 | **TEC-04** Authentification | Must | oui | Partiel | Mot de passe (10 caractères minimum), SSO, sessions de 12 h ; double facteur obligatoire pour les administrateurs à faire. | `src/server/auth/auth.ts` |
 | **TEC-05** Journal d'audit | Must | oui | Fait | Journal d'audit sans API de modification ni de suppression. |  |
@@ -214,9 +214,9 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **TEC-09** API documentée | Must | oui | Fait | Catalogue des points d'entrée avec schémas JSON générés depuis la validation. | `src/server/api/catalog.ts` |
 | **TEC-10** Performance | Must | oui | À faire | Index en place ; mesures de performance à réaliser. |  |
 | **TEC-11** Volumétrie et montée en charge | Should |  | Avant déploiement général |  |  |
-| **TEC-12** Sécurité applicative | Must | oui | Partiel | Validation de toutes les entrées, droits contrôlés côté serveur, Server Actions protégées par l'origine ; revue de sécurité et test d'intrusion à faire. |  |
+| **TEC-12** Sécurité applicative | Must | oui | Partiel | Validation de toutes les entrées, droits contrôlés côté serveur, Server Actions protégées par l'origine, hors périmètre = 404, clés d'API limitées au périmètre de leur créateur, connexion « en tant que » signée et bornée à 4 h. Reste : revue de sécurité et test d'intrusion. | `src/server/auth/api-key.ts`, `src/server/domain/impersonation.ts`, `e2e/security.spec.ts` |
 | **TEC-13** Données personnelles | Must | oui | À faire | Registre, durées de conservation, purge. |  |
-| **TEC-14** Réversibilité | Must | oui | Partiel | PostgreSQL standard et API complète ; export de réversibilité outillé à faire. |  |
+| **TEC-14** Réversibilité | Must | oui | Partiel | PostgreSQL standard, API complète, export complet de l'organisation ou d'une société (Excel, CSV, API incrémentale). Reste : test de rechargement dans une base vierge, fichiers joints. | `src/server/services/exports.ts` |
 | **TEC-15** Paramétrage sans code | Should |  | Partiel | Organisation, utilisateurs, référentiels et plans paramétrables à l'écran. | `src/app/(app)/administration/` |
 | **TEC-16** Hébergement sur site | Could |  | Option | Déploiement autonome possible (Node.js + PostgreSQL). |  |
 
@@ -240,3 +240,31 @@ Vérification : 70 tests unitaires des règles métier (`npm test`) et 14 tests 
 | **DON-14** Équipement réformé | Must | oui | Fait | Équipement réformé en lecture seule, ni DI, ni OT, ni relevé. |  |
 | **DON-15** Clôture de période | Should |  | Phase 2 |  |  |
 | **DON-16** Horodatage | Must | oui | Fait | Horodatages avec fuseau, affichage et saisie en Europe/Paris. | `src/server/validation.ts`, `src/lib/format.ts` |
+
+## Scénarios de recette (§15.9)
+
+| Scénario | Statut | Vérification | Reste à faire |
+| --- | --- | --- | --- |
+| **R-01** Entretien arrivé à échéance | Partiel | Calculs (`preventive.test.ts`) ; un seul OT malgré relevés et génération, exécution, coût main-d'œuvre + pièces, échéance suivante (`e2e/recette.spec.ts`). | Pièces de la gamme réservées à la création de l'OT (PRV-08), notification du chef d'atelier à la pré-alerte. |
+| **R-02** Panne urgente | Partiel | Cycle DI → OT → travaux → remise en service (`e2e/corrective-flow.spec.ts`), DI P1 (`e2e/approvals.spec.ts`). | Escalade (NOT-02), délai de notification mesuré. |
+| **R-03** Rupture de pièce | Partiel | Réservation impossible, stock de l'autre site, transfert, réservation, équipement toujours immobilisé (`e2e/recette.spec.ts`). | Transit en deux temps (STK-06), notification à la réception. |
+| **R-04** Mobile hors connexion | Partiel | Synchronisation simulée (`mobile/src/lib/__tests__/sync.test.ts`) et vérification manuelle contre le serveur (`mobile/scripts/verify-sync.ts`). | Essai sur terminal, alerte au chef d'atelier sur un OT réaffecté (MOB-09). |
+| **R-05** Remplacement de compteur | Partiel | Cumul et échéances (`meters.test.ts`), affichage (`e2e/modules.spec.ts`). | Relevé erroné après remplacement mis « à vérifier », en bout de chaîne. |
+| **R-06** Contrôle réglementaire échu | Partiel | Immobilisé, affectation refusée, clôture refusée sans rapport, remise en service (`e2e/recette.spec.ts`). | Suivi des réserves, alertes J-30 et J-7 propres aux contrôles. |
+| **R-07** Cloisonnement entre sociétés | Fait | Liste, recherche, fiche, OT et API hors périmètre introuvables ; clé d'API limitée à la société de son créateur (`e2e/security.spec.ts`, `e2e/auth.spec.ts`). | — |
+| **R-08** Inventaire avec écart | Fait | Écart « à valider », sortie pendant l'inventaire à part, validation par un autre que le compteur, ajustement au coût moyen (`e2e/recette.spec.ts`). | — |
+
+## Fonctions ajoutées hors cahier des charges
+
+| Fonction | Couverture | Code et tests |
+| --- | --- | --- |
+| Plateforme multi-organisation | Organisations clientes, démonstrations à durée limitée (seul l'administrateur de la plateforme donne la période), abonnement, suspension, création de comptes. | `src/server/services/platform.ts`, `e2e/platform.spec.ts`, `e2e/isolation.spec.ts` |
+| Connexion « en tant que » | L'administrateur de la plateforme agit comme un utilisateur : jeton signé, 4 h au plus, bandeau permanent, journal d'audit ; jamais vers un autre administrateur ni un compte désactivé. | `src/server/domain/impersonation.ts`, `e2e/platform.spec.ts` |
+| Identité de l'organisation | Nom affiché et logo, repris sur les fiches imprimées. | `src/server/services/branding.ts`, `e2e/organisation.spec.ts` |
+| Arbre de l'organisation | Sociétés, sites, ateliers, magasins et chantiers créés à l'écran. | `src/app/(app)/administration/organisation`, `e2e/organisation.spec.ts` |
+| Fiche d'intervention à signer | État A4 de l'OT, avec ou sans les coûts, trois cadres de signature. | `src/app/(print)/impression`, `e2e/print.spec.ts` |
+| Indicateurs personnalisés | Indicateurs composés par l'organisation (nombre, total, moyenne, regroupements). | `src/server/services/indicators.ts`, `e2e/indicators.spec.ts` |
+| Connecteur ETL | Clés d'API lecture, import ou assistant ; révocables, avec le périmètre de leur créateur. | `src/server/services/api-keys.ts`, `e2e/connector.spec.ts`, `e2e/security.spec.ts` |
+| Serveur MCP | Assistants IA : lecture des données et signalement de pannes, avec une clé « assistant ». | `src/app/api/mcp`, `e2e/mcp.spec.ts` |
+| Échéances administratives du parc | Assurance, visite technique, vignette et autres obligations datées par équipement : saisie, renouvellement (historique conservé), annulation motivée, liste du parc, bandeau du tableau de bord, API `/api/v1/equipment-deadlines`. Alertes dans l'application et par courriel au responsable du parc et au responsable maintenance (préférence « Échéances administratives du parc »). | `src/server/domain/fleet-deadlines.ts`, `src/server/services/fleet-deadlines.ts`, `src/server/services/email.ts`, `e2e/fleet-deadlines.spec.ts` |
+| Passe planifiée du préventif | Recalcul des échéances, immobilisation des contrôles échus, génération des OT, sans utilisateur (canal SYSTEM). | `src/server/services/preventive.ts (runScheduledPreventive)`, `scripts/worker.ts` |

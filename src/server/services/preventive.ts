@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, count, desc, eq, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import type { AuthContext } from "@/server/authz/context";
+import { systemContext, type AuthContext } from "@/server/authz/context";
 import { db, type DbOrTx } from "@/server/db";
 import {
   dueItems,
@@ -15,6 +15,7 @@ import {
   planTriggers,
   taskListItems,
   taskLists,
+  tenants,
   workOrders,
 } from "@/server/db/schema";
 import {
@@ -31,6 +32,7 @@ import {
   type OperationRule,
   type Trigger,
 } from "@/server/domain/preventive";
+import { tenantAccess } from "@/server/domain/tenants";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { bool, date, optionalDate, optionalId, optionalNumber, optionalText, text } from "@/server/validation";
 import { assertCan, assertCanOn, assertSameTenant, audit, parseInput, scopeWhere } from "./_shared";
@@ -477,6 +479,24 @@ export async function generatePreventiveWorkOrders(ctx: AuthContext, options: { 
     if (woId) created.push(woId);
   }
   return { created: created.length, workOrderIds: created };
+}
+
+/**
+ * Passe planifiée du préventif (PRV-08, PRV-09, PRV-12), lancée par `npm run worker` et `/api/cron/notifications` :
+ * pour chaque organisation qui a accès, recalcule les échéances (statuts calendaires, retards, immobilisation
+ * d'un équipement dont le contrôle réglementaire bloquant est échu) puis génère les OT dans l'horizon, sans doublon.
+ */
+export async function runScheduledPreventive(now: Date = new Date()) {
+  const rows = await db.select({ id: tenants.id, status: tenants.status, demoEndsAt: tenants.demoEndsAt }).from(tenants);
+  let recomputed = 0;
+  let generated = 0;
+  for (const tenant of rows) {
+    if (!tenantAccess(tenant, now).allowed) continue;
+    const ctx = systemContext(tenant.id, now);
+    recomputed += await recomputeAllDueItems(ctx, now);
+    generated += (await generatePreventiveWorkOrders(ctx, { now })).created;
+  }
+  return { recomputed, generated };
 }
 
 /**

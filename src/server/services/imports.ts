@@ -45,7 +45,7 @@ import { checkEquipmentCreation, createEquipment } from "./equipment";
 import {
   checkPartCreation,
   checkSupplierCreation,
-  createMovement,
+  createInitialStockReceipt,
   createPart,
   createSupplier,
   stockLevelSettingsInput,
@@ -378,7 +378,7 @@ async function importRow(ctx: AuthContext, kind: ImportKind, input: Record<strin
   if (kind === "PARTS") return (await createPart(ctx, input)).id;
   if (kind === "SUPPLIERS") return (await createSupplier(ctx, input)).id;
   if (kind === "TECHNICIANS") return (await createTechnician(ctx, input)).id;
-  const movement = await createMovement(ctx, {
+  const movement = await createInitialStockReceipt(ctx, {
     type: "RECEIPT",
     partId: input.partId,
     warehouseId: input.warehouseId,

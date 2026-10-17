@@ -31,7 +31,10 @@ import {
   updateReport,
   updateTask,
 } from "@/server/services/work-orders";
+import { createDeadline, renewDeadline } from "@/server/services/fleet-deadlines";
 import { createIndicator } from "@/server/services/indicators";
+import { submitDemoRequest } from "@/server/services/demo-requests";
+import { ensureSiteContent } from "@/server/services/site";
 import { convertToWorkOrder, createWorkRequest, qualifyWorkRequest } from "@/server/services/work-requests";
 
 export const DEMO_PASSWORD = "Demo-Gmao-2026";
@@ -298,6 +301,8 @@ async function main() {
         defaultCriticality: "C",
         attributeDefinitions: [{ key: "puissance", label: "Puissance", unit: "kVA" }],
       },
+      { tenantId: T, code: "COMPACTEUR", name: "Compacteur", defaultCriticality: "B" },
+      { tenantId: T, code: "VL", name: "Véhicule utilitaire léger", defaultCriticality: "C" },
     ])
     .returning();
   const cat = (code: string) => categoryRows.find((c) => c.code === code)!;
@@ -314,6 +319,16 @@ async function main() {
       { tenantId: T, categoryId: cat("CAMION").id, manufacturer: "Renault Trucks", name: "C 430 8x4" },
       { tenantId: T, categoryId: cat("TRACTO").id, manufacturer: "JCB", name: "3CX" },
       { tenantId: T, categoryId: cat("GROUPE").id, manufacturer: "SDMO", name: "J130" },
+      { tenantId: T, categoryId: cat("GROUPE").id, manufacturer: "Atlas Copco", name: "QAS 60" },
+      { tenantId: T, categoryId: cat("CHARGEUSE").id, manufacturer: "Komatsu", name: "WA320-8" },
+      { tenantId: T, categoryId: cat("PELLE").id, manufacturer: "Caterpillar", name: "323" },
+      { tenantId: T, categoryId: cat("CHARIOT").id, manufacturer: "Manitou", name: "MT 1840" },
+      { tenantId: T, categoryId: cat("CAMION").id, manufacturer: "Volvo Trucks", name: "FMX 460 6x4" },
+      { tenantId: T, categoryId: cat("CAMION").id, manufacturer: "Mercedes-Benz", name: "Arocs 4145 8x4" },
+      { tenantId: T, categoryId: cat("COMPACTEUR").id, manufacturer: "Bomag", name: "BW 213 D-5" },
+      { tenantId: T, categoryId: cat("COMPACTEUR").id, manufacturer: "Bomag", name: "BW 120 AD-5" },
+      { tenantId: T, categoryId: cat("VL").id, manufacturer: "Renault", name: "Master L3H2" },
+      { tenantId: T, categoryId: cat("VL").id, manufacturer: "Toyota", name: "Hilux double cabine" },
     ])
     .returning();
   const model = (mfr: string, name: string) => modelRows.find((m) => m.manufacturer === mfr && m.name === name)!;
@@ -648,6 +663,199 @@ async function main() {
       value: 158000,
       attributes: { poids: 23.4 },
     },
+    // Parc complémentaire : camions, utilitaires, compacteurs et engins de renfort sur les trois sites.
+    {
+      code: "CA-103",
+      name: "Camion benne 6x4",
+      cat: "CAMION",
+      model: ["Volvo Trucks", "FMX 460 6x4"],
+      company: sbtp,
+      site: lyo,
+      serial: "YV2XTY0G2NA334455",
+      registration: "GC-789-EF",
+      year: 2022,
+      meter: { type: "KM", current: 98400, perDay: 190 },
+      commissioned: "2022-02-14",
+      value: 138000,
+    },
+    {
+      code: "VL-001",
+      name: "Fourgon atelier",
+      cat: "VL",
+      model: ["Renault", "Master L3H2"],
+      company: sbtp,
+      site: lyo,
+      serial: "VF1MA000068112233",
+      registration: "GD-112-AB",
+      year: 2022,
+      meter: { type: "KM", current: 64300, perDay: 95 },
+      commissioned: "2022-05-09",
+      value: 42000,
+    },
+    {
+      code: "VL-002",
+      name: "Pick-up chef de chantier",
+      cat: "VL",
+      model: ["Toyota", "Hilux double cabine"],
+      company: sbtp,
+      site: lyo,
+      serial: "AHTKB3CD702445566",
+      registration: "GE-334-KL",
+      year: 2023,
+      meter: { type: "KM", current: 51200, perDay: 80 },
+      commissioned: "2023-01-23",
+      value: 39000,
+    },
+    {
+      code: "CP-001",
+      name: "Compacteur monocylindre",
+      cat: "COMPACTEUR",
+      model: ["Bomag", "BW 213 D-5"],
+      company: sbtp,
+      site: lyo,
+      serial: "101586231044",
+      year: 2021,
+      meter: { type: "HOURS", current: 2140, perDay: 3.4 },
+      commissioned: "2021-04-06",
+      value: 118000,
+    },
+    {
+      code: "PE-011",
+      name: "Pelle hydraulique 323",
+      cat: "PELLE",
+      model: ["Caterpillar", "323"],
+      company: sbtp,
+      site: lyo,
+      serial: "CAT0323GDKY01544",
+      year: 2022,
+      meter: { type: "HOURS", current: 3120, perDay: 5.5 },
+      commissioned: "2022-03-28",
+      value: 205000,
+      attributes: { poids: 24.5 },
+    },
+    {
+      code: "CA-104",
+      name: "Camion benne 8x4 Arocs",
+      cat: "CAMION",
+      model: ["Mercedes-Benz", "Arocs 4145 8x4"],
+      company: sbtp,
+      site: mrs,
+      serial: "WDB9640421L778899",
+      registration: "GF-556-MN",
+      year: 2021,
+      meter: { type: "KM", current: 143900, perDay: 200 },
+      commissioned: "2021-06-21",
+      value: 147000,
+    },
+    {
+      code: "VL-003",
+      name: "Fourgon atelier",
+      cat: "VL",
+      model: ["Renault", "Master L3H2"],
+      company: sbtp,
+      site: mrs,
+      serial: "VF1MA000064998877",
+      registration: "GG-778-PR",
+      year: 2021,
+      meter: { type: "KM", current: 88700, perDay: 110 },
+      commissioned: "2021-09-13",
+      value: 41000,
+    },
+    {
+      code: "CE-032",
+      name: "Chariot télescopique 18 m",
+      cat: "CHARIOT",
+      model: ["Manitou", "MT 1840"],
+      company: sbtp,
+      site: mrs,
+      serial: "MT1840-ME-553201",
+      year: 2020,
+      meter: { type: "HOURS", current: 3380, perDay: 3 },
+      commissioned: "2020-10-05",
+      value: 98000,
+      attributes: { capaciteLevage: 4000 },
+    },
+    {
+      code: "GE-002",
+      name: "Groupe électrogène 60 kVA",
+      cat: "GROUPE",
+      model: ["Atlas Copco", "QAS 60"],
+      company: sbtp,
+      site: mrs,
+      serial: "ACQAS60-AIP112233",
+      year: 2020,
+      meter: { type: "HOURS", current: 5480, perDay: 7.2 },
+      commissioned: "2020-07-15",
+      value: 18000,
+      attributes: { puissance: 60 },
+    },
+    {
+      code: "CH-021",
+      name: "Chargeuse sur pneus WA320",
+      cat: "CHARGEUSE",
+      model: ["Komatsu", "WA320-8"],
+      company: sbtp,
+      site: mrs,
+      serial: "KMTWA320C02K88123",
+      year: 2022,
+      meter: { type: "HOURS", current: 2610, perDay: 4.2 },
+      commissioned: "2022-06-01",
+      value: 172000,
+    },
+    {
+      code: "CA-105",
+      name: "Camion porteur 6x4 FMX",
+      cat: "CAMION",
+      model: ["Volvo Trucks", "FMX 460 6x4"],
+      company: loca,
+      site: gre,
+      serial: "YV2XTY0G4NA556677",
+      registration: "GH-990-ST",
+      year: 2022,
+      meter: { type: "KM", current: 112300, perDay: 170 },
+      commissioned: "2022-01-10",
+      value: 136000,
+    },
+    {
+      code: "VL-004",
+      name: "Pick-up chef de chantier",
+      cat: "VL",
+      model: ["Toyota", "Hilux double cabine"],
+      company: loca,
+      site: gre,
+      serial: "AHTKB3CD702667788",
+      registration: "GJ-221-UV",
+      year: 2022,
+      meter: { type: "KM", current: 73900, perDay: 90 },
+      commissioned: "2022-04-19",
+      value: 38000,
+    },
+    {
+      code: "TP-005",
+      name: "Tractopelle 3CX",
+      cat: "TRACTO",
+      model: ["JCB", "3CX"],
+      company: loca,
+      site: gre,
+      serial: "JCB3CX4TPM3012345",
+      year: 2021,
+      meter: { type: "HOURS", current: 4280, perDay: 4 },
+      commissioned: "2021-05-17",
+      value: 99000,
+    },
+    {
+      code: "CP-002",
+      name: "Compacteur tandem",
+      cat: "COMPACTEUR",
+      model: ["Bomag", "BW 120 AD-5"],
+      company: loca,
+      site: gre,
+      serial: "861880420177",
+      year: 2022,
+      meter: { type: "HOURS", current: 1870, perDay: 2.8 },
+      commissioned: "2022-03-07",
+      value: 52000,
+    },
   ];
 
   const eqIds: Record<string, string> = {};
@@ -884,6 +1092,53 @@ async function main() {
         },
       ],
     }),
+    COMPACTEUR: await createPlan(ctx, {
+      name: "Compacteur — entretien 250 h et vibration",
+      categoryId: cat("COMPACTEUR").id,
+      operations: [
+        {
+          code: "ENT-250",
+          name: "Entretien 250 h ou 3 mois",
+          mode: "SLIDING",
+          preAlertMeter: 25,
+          preAlertDays: 15,
+          estimatedMinutes: 150,
+          triggers: [
+            { kind: "METER", every: 250, meterType: "HOURS" },
+            { kind: "CALENDAR", every: 3, unit: "MONTH" },
+          ],
+          checklist: commonChecks,
+        },
+        {
+          code: "VIB-1000",
+          name: "Contrôle du système de vibration",
+          mode: "SLIDING",
+          preAlertMeter: 50,
+          estimatedMinutes: 180,
+          triggers: [{ kind: "METER", every: 1000, meterType: "HOURS" }],
+          checklist: ["Vidange des carters d'excitateur", "Contrôle des silentblocs", "Essai d'amplitude et de fréquence"],
+        },
+      ],
+    }),
+    VL: await createPlan(ctx, {
+      name: "Véhicule utilitaire — vidange et révision",
+      categoryId: cat("VL").id,
+      operations: [
+        {
+          code: "VL-15K",
+          name: "Vidange 15 000 km ou 1 an",
+          mode: "SLIDING",
+          preAlertMeter: 1000,
+          preAlertDays: 30,
+          estimatedMinutes: 90,
+          triggers: [
+            { kind: "METER", every: 15000, meterType: "KM" },
+            { kind: "CALENDAR", every: 1, unit: "YEAR" },
+          ],
+          checklist: ["Vidange moteur et filtre à huile", "Filtre à air et filtre d'habitacle", "Contrôle du freinage", "Contrôle des pneumatiques"],
+        },
+      ],
+    }),
   };
 
   // Dernière réalisation de chaque opération, en jours ; la valeur compteur correspondante est déduite de
@@ -902,6 +1157,21 @@ async function main() {
     "CA-102": { "ENT-30K": 90, "CT-1A": 200 },
     "TP-004": { "ENT-250": 64 },
     "GE-001": { "ENT-500": 48 },
+    // Parc complémentaire : VL-001 et CP-001 en pré-alerte (vidange et entretien 250 h), les autres à jour.
+    "CA-103": { "ENT-30K": 60, "CT-1A": 120 },
+    "CA-104": { "ENT-30K": 70, "CT-1A": 300 },
+    "CA-105": { "ENT-30K": 40, "CT-1A": 200 },
+    "VL-001": { "VL-15K": 150 },
+    "VL-002": { "VL-15K": 50 },
+    "VL-003": { "VL-15K": 30 },
+    "VL-004": { "VL-15K": 90 },
+    "CP-001": { "ENT-250": 68, "VIB-1000": 120 },
+    "CP-002": { "ENT-250": 30, "VIB-1000": 120 },
+    "PE-011": { "ENT-500": 30 },
+    "CH-021": { "ENT-250": 20, "HYD-1000": 100 },
+    "CE-032": { "ENT-6M": 60, "VGP-6M": 40 },
+    "GE-002": { "ENT-500": 25 },
+    "TP-005": { "ENT-250": 15 },
   };
   const planFor: Record<string, keyof typeof plans> = {
     "CH-012": "CHARGEUSE",
@@ -916,6 +1186,20 @@ async function main() {
     "CA-102": "CAMION",
     "TP-004": "TRACTO",
     "GE-001": "GROUPE",
+    "CA-103": "CAMION",
+    "CA-104": "CAMION",
+    "CA-105": "CAMION",
+    "VL-001": "VL",
+    "VL-002": "VL",
+    "VL-003": "VL",
+    "VL-004": "VL",
+    "CP-001": "COMPACTEUR",
+    "CP-002": "COMPACTEUR",
+    "PE-011": "PELLE",
+    "CH-021": "CHARGEUSE",
+    "CE-032": "CHARIOT",
+    "GE-002": "GROUPE",
+    "TP-005": "TRACTO",
   };
   for (const [code, ops] of Object.entries(lastDone)) {
     const equipmentId = eqIds[code];
@@ -1214,6 +1498,7 @@ async function main() {
     "Entretien semestriel": "ENT-6M",
     "Entretien 30 000 km ou 1 an": "ENT-30K",
     "Entretien 500 h ou 1 an": "ENT-500",
+    "Vidange 15 000 km ou 1 an": "VL-15K",
   };
   const LATE_DAYS: Record<string, number> = { "TP-004": 20 };
 
@@ -1221,6 +1506,249 @@ async function main() {
     const f = fleet.find((x) => x.code === code)!;
     return f.site.id === lyo.id ? whLyo.id : f.site.id === mrs.id ? whMrs.id : whGre.id;
   };
+
+  // Parc complémentaire : entretiens aux dates des dernières réalisations (et cycles précédents), pannes courantes.
+  // Les pièces consommées sont réapprovisionnées la veille : les niveaux de stock des scénarios restent inchangés.
+  const extraHistory: HistoryWo[] = [];
+  const service = (code: string, title: string, days: number[], minutes: number, tech: HistoryWo["tech"], parts: [string, number][]) => {
+    for (const d of days) {
+      extraHistory.push({
+        code,
+        type: "PREVENTIVE",
+        title,
+        daysAgo: d,
+        repairHours: Math.ceil(minutes / 60) + 1,
+        laborMinutes: minutes,
+        tech,
+        parts,
+      });
+    }
+  };
+  const engine = (oil: number, extra: [string, number][] = []): [string, number][] => [["FLT-HUI-01", 1], ["HUI-MOT-15W40", oil], ...extra];
+  service("CA-103", "Entretien 30 000 km ou 1 an", [60], 230, julien, engine(36, [["FLT-GAZ-01", 1]]));
+  service("CA-104", "Entretien 30 000 km ou 1 an", [70], 240, samir, engine(38));
+  service("CA-105", "Entretien 30 000 km ou 1 an", [40], 220, lucas, engine(34, [["FLT-GAZ-01", 1]]));
+  service("VL-001", "Vidange 15 000 km ou 1 an", [150], 80, nadia, engine(7));
+  service("VL-002", "Vidange 15 000 km ou 1 an", [50], 75, julien, engine(7));
+  service("VL-003", "Vidange 15 000 km ou 1 an", [30, 166], 80, samir, engine(7));
+  service("VL-004", "Vidange 15 000 km ou 1 an", [90], 75, lucas, engine(7));
+  service(
+    "CP-001",
+    "Entretien 250 h ou 3 mois",
+    [68, 141],
+    160,
+    julien,
+    engine(14, [
+      ["FLT-GAZ-01", 1],
+      ["GRA-EP2", 1],
+    ]),
+  );
+  service("CP-002", "Entretien 250 h ou 3 mois", [30, 120], 140, lucas, engine(10, [["GRA-EP2", 1]]));
+  service(
+    "PE-011",
+    "Entretien 500 h ou 6 mois",
+    [30, 121],
+    290,
+    nadia,
+    engine(30, [
+      ["FLT-GAZ-01", 1],
+      ["GRA-EP2", 2],
+    ]),
+  );
+  service("CH-021", "Entretien 250 h ou 3 mois", [20, 80, 140], 180, samir, engine(26, [["FLT-HYD-01", 1]]));
+  service("CE-032", "Entretien semestriel", [60], 150, samir, engine(12, [["FLT-HYD-01", 1]]));
+  service("GE-002", "Entretien 500 h ou 1 an", [25, 94, 163], 110, samir, engine(16));
+  service(
+    "TP-005",
+    "Entretien 250 h ou 3 mois",
+    [15, 77, 139],
+    150,
+    lucas,
+    engine(18, [
+      ["FLT-GAZ-01", 1],
+      ["GRA-EP2", 1],
+    ]),
+  );
+  extraHistory.push(
+    {
+      code: "CA-103",
+      type: "CORRECTIVE",
+      title: "Fuite sur le circuit d'air de freinage",
+      daysAgo: 40,
+      repairHours: 4,
+      laborMinutes: 210,
+      tech: julien,
+      parts: [["PLAQ-FREIN-PL", 1]],
+      cause: "Raccord pneumatique fissuré",
+    },
+    {
+      code: "VL-001",
+      type: "CORRECTIVE",
+      title: "Batterie hors service",
+      daysAgo: 95,
+      repairHours: 1,
+      laborMinutes: 45,
+      tech: nadia,
+      parts: [["BAT-12V-180", 1]],
+      cause: "Batterie en fin de vie",
+    },
+    {
+      code: "VL-002",
+      type: "CORRECTIVE",
+      title: "Crevaison pneu arrière",
+      daysAgo: 25,
+      repairHours: 2,
+      laborMinutes: 30,
+      tech: julien,
+      external: { supplier: supPL, amount: 210 },
+      cause: "Crevaison",
+    },
+    {
+      code: "CP-001",
+      type: "CORRECTIVE",
+      title: "Fuite vérin de direction",
+      daysAgo: 110,
+      repairHours: 6,
+      waitingHours: 24,
+      laborMinutes: 300,
+      tech: nadia,
+      parts: [
+        ["FLEX-HYD-12", 1],
+        ["HUI-HYD-46", 10],
+      ],
+      cause: "Usure flexible",
+    },
+    {
+      code: "PE-011",
+      type: "CORRECTIVE",
+      title: "Chenille détendue",
+      daysAgo: 75,
+      repairHours: 3,
+      laborMinutes: 150,
+      tech: julien,
+      cause: "Tendeur de chenille",
+    },
+    {
+      code: "CA-104",
+      type: "CORRECTIVE",
+      title: "Défaut de dépollution AdBlue",
+      daysAgo: 55,
+      repairHours: 5,
+      waitingHours: 30,
+      laborMinutes: 120,
+      tech: samir,
+      external: { supplier: supPL, amount: 640 },
+      cause: "Capteur NOx",
+    },
+    {
+      code: "VL-003",
+      type: "CORRECTIVE",
+      title: "Embrayage qui patine",
+      daysAgo: 130,
+      repairHours: 8,
+      waitingHours: 48,
+      laborMinutes: 60,
+      tech: samir,
+      external: { supplier: supPL, amount: 1150 },
+      cause: "Disque d'embrayage usé",
+    },
+    {
+      code: "CE-032",
+      type: "CORRECTIVE",
+      title: "Fuite flexible de télescopage",
+      daysAgo: 85,
+      repairHours: 5,
+      laborMinutes: 240,
+      tech: samir,
+      external: { supplier: supHydro, amount: 420 },
+      cause: "Usure flexible",
+    },
+    {
+      code: "GE-002",
+      type: "CORRECTIVE",
+      title: "Défaut de démarrage",
+      daysAgo: 33,
+      repairHours: 2,
+      laborMinutes: 90,
+      tech: samir,
+      cause: "Relais de démarrage",
+    },
+    {
+      code: "CH-021",
+      type: "CORRECTIVE",
+      title: "Climatisation cabine en panne",
+      daysAgo: 150,
+      repairHours: 4,
+      waitingHours: 16,
+      laborMinutes: 60,
+      tech: samir,
+      external: { supplier: supEngins, amount: 520 },
+      cause: "Compresseur de climatisation",
+    },
+    {
+      code: "CA-105",
+      type: "CORRECTIVE",
+      title: "Feux arrière défectueux",
+      daysAgo: 18,
+      repairHours: 1,
+      laborMinutes: 45,
+      tech: lucas,
+      cause: "Faisceau électrique",
+    },
+    {
+      code: "VL-004",
+      type: "CORRECTIVE",
+      title: "Bruit dans le train avant",
+      daysAgo: 65,
+      repairHours: 6,
+      waitingHours: 20,
+      laborMinutes: 60,
+      tech: lucas,
+      external: { supplier: supPL, amount: 380 },
+      cause: "Rotule de suspension",
+    },
+    {
+      code: "TP-005",
+      type: "CORRECTIVE",
+      title: "Fuite vérin de godet",
+      daysAgo: 100,
+      repairHours: 5,
+      laborMinutes: 270,
+      tech: lucas,
+      parts: [
+        ["KIT-JOINT-VER", 1],
+        ["HUI-HYD-46", 8],
+      ],
+      cause: "Joints de vérin",
+    },
+    {
+      code: "CP-002",
+      type: "CORRECTIVE",
+      title: "Arrosage du cylindre bouché",
+      daysAgo: 45,
+      repairHours: 2,
+      laborMinutes: 120,
+      tech: lucas,
+      cause: "Gicleurs colmatés",
+    },
+  );
+  for (const h of extraHistory) {
+    for (const [sku, qty] of h.parts ?? []) {
+      const p = part(sku);
+      await db.insert(s.stockMovements).values({
+        tenantId: T,
+        partId: p.id,
+        warehouseId: warehouseOf(h.code),
+        type: "RECEIPT",
+        quantity: qty,
+        unitCost: p.averageCost,
+        reference: "Réapprovisionnement fournisseur",
+        createdById: ctx.userId,
+        createdAt: daysAgo(h.daysAgo + 1),
+      });
+    }
+  }
+  history.push(...extraHistory);
 
   for (const h of history.sort((a, b) => b.daysAgo - a.daysAgo)) {
     const f = fleet.find((x) => x.code === h.code)!;
@@ -1362,6 +1890,12 @@ async function main() {
     ["GE-001", g03, 120],
     ["CH-015", g03, 40],
     ["CA-101", c15, 10],
+    ["PE-011", c15, 35],
+    ["CP-001", c15, 20],
+    ["CA-104", c22, 15],
+    ["CH-021", c22, 50],
+    ["TP-005", g03, 25],
+    ["CP-002", g03, 12],
   ] as const) {
     await assignEquipment(ctx, eqIds[code], { jobsiteId: jobsite.id, startAt: daysAgo(days) });
   }
@@ -1477,6 +2011,20 @@ async function main() {
   await updatePlanning(chefGreCtx, woPe010.id, { plannedStart: workday(1), estimatedMinutes: 360, assigneeIds: [lucas.id], workshopId: atGre.id });
   await transitionWorkOrder(chefGreCtx, woPe010.id, { to: "PLANNED" });
 
+  // Demandes courantes du parc complémentaire, à qualifier : ni urgentes ni immobilisantes.
+  await createWorkRequest(ctx, {
+    equipmentId: eqIds["VL-002"],
+    symptom: "La climatisation ne refroidit plus",
+    description: "Air tiède en cabine depuis deux jours.",
+    reportedAt: daysAgo(1),
+  });
+  await createWorkRequest(ctx, {
+    equipmentId: eqIds["CA-104"],
+    symptom: "Grincement au freinage",
+    description: "Bruit métallique à l'arrière en charge, freinage efficace.",
+    reportedAt: new Date(now.getTime() - 5 * 3_600_000),
+  });
+
   /* ---------------------------------------------------------------- */
   /* Circuits de validation par défaut (CDC §2.4, HAB-04)               */
   /* ---------------------------------------------------------------- */
@@ -1562,8 +2110,86 @@ async function main() {
     chart: "number",
   });
 
+  // Échéances administratives du parc : assurance à renouveler (J−30), vignette échue, visite technique à J−7,
+  // et une vignette déjà renouvelée (historique). Alertes au responsable du parc (flotte@demo.gmao).
+  const deadline = (code: string, kind: string, days: number, extra: Record<string, unknown> = {}) =>
+    createDeadline(ctx, { equipmentId: eqIds[code], kind, dueDate: daysFromNow(days).toISOString(), ...extra });
+  await deadline("CA-101", "INSURANCE", 12, { provider: "Assurances du Rhône", reference: "POL-2025-0412", amount: 2850 });
+  await deadline("CA-101", "VIGNETTE", -5, { label: "Vignette 2026", provider: "Recette des finances", amount: 420 });
+  await deadline("CA-101", "TECHNICAL_INSPECTION", 75, { provider: "Centre de visite technique Lyon Nord" });
+  await deadline("CA-102", "INSURANCE", 160, { provider: "Assurances du Rhône", reference: "POL-2025-0413", amount: 2850 });
+  await deadline("CA-102", "TECHNICAL_INSPECTION", 5, { provider: "Centre de visite technique Lyon Nord" });
+  const vignetteCa102 = await deadline("CA-102", "VIGNETTE", -300, { label: "Vignette 2025", provider: "Recette des finances", amount: 420 });
+  await renewDeadline(
+    ctx,
+    vignetteCa102.id,
+    { dueDate: daysFromNow(65).toISOString(), label: "Vignette 2026", reference: "QUIT-88213", amount: 420 },
+    daysAgo(290),
+  );
+  await deadline("TP-004", "INSURANCE", 40, { provider: "Mutuelle des engins", reference: "ENG-7781", amount: 1900 });
+  await deadline("CH-012", "INSURANCE", 210, { label: "Assurance bris de machine", provider: "Mutuelle des engins", amount: 3400 });
+  // Tout le parc : assurance, visite technique et vignette de chaque véhicule immatriculé, assurance de chaque engin.
+  const vehicles: [string, number, number, number, string][] = [
+    // code, assurance (jours), visite technique, vignette, centre de visite
+    ["CA-103", 95, 22, 140, "Centre de visite technique Lyon Nord"],
+    ["CA-104", 180, 48, -2, "Centre de visite technique Marseille Port"],
+    ["CA-105", 27, 130, 200, "Centre de visite technique Grenoble Sud"],
+    ["VL-001", 240, 160, 65, "Centre de visite technique Lyon Nord"],
+    ["VL-002", 8, 300, 65, "Centre de visite technique Lyon Nord"],
+    ["VL-003", 120, 18, 65, "Centre de visite technique Marseille Port"],
+    ["VL-004", 70, 210, 65, "Centre de visite technique Grenoble Sud"],
+  ];
+  for (const [code, insurance, inspection, vignette, center] of vehicles) {
+    const truck = code.startsWith("CA");
+    await deadline(code, "INSURANCE", insurance, {
+      provider: truck ? "Assurances du Rhône" : "Mutuelle des artisans",
+      reference: `POL-${code.replace("-", "")}-2026`,
+      amount: truck ? 2850 : 980,
+    });
+    await deadline(code, "TECHNICAL_INSPECTION", inspection, { provider: center, amount: truck ? 160 : 85 });
+    await deadline(code, "VIGNETTE", vignette, { label: "Vignette 2026", provider: "Recette des finances", amount: truck ? 420 : 180 });
+  }
+  const machines: [string, number][] = [
+    ["CH-020", 150],
+    ["CH-015", 85],
+    ["CH-021", 260],
+    ["PE-007", 45],
+    ["PE-002", 190],
+    ["PE-010", 120],
+    ["PE-011", 310],
+    ["CE-031", 230],
+    ["CE-020", 60],
+    ["CE-032", 19],
+    ["TP-005", 175],
+    ["GE-001", 280],
+    ["GE-002", 140],
+    ["CP-001", 100],
+    ["CP-002", 205],
+  ];
+  for (const [code, days] of machines) {
+    await deadline(code, "INSURANCE", days, { label: "Assurance bris de machine", provider: "Mutuelle des engins", amount: 1600 });
+  }
+
   // Recalcul final des échéances
   for (const id of Object.values(eqIds)) await db.transaction((tx) => recomputeDueItems(tx, ctx, id, now));
+
+  // Site commercial : contenu initial et une demande de démonstration en attente (administration du site).
+  await ensureSiteContent();
+  await submitDemoRequest(
+    {
+      company: "Carrières du Vercors",
+      contactName: "Paul Garnier",
+      email: "p.garnier@carrieres-vercors.example",
+      jobTitle: "Responsable maintenance",
+      fleetSize: "50-200",
+      sector: "Carrières et granulats",
+      planInterest: "Flotte",
+      message: "85 engins sur 2 carrières, préventif suivi sur Excel. Nous voulons tester l'application mobile en zone blanche.",
+      consent: "on",
+      startedAt: now.getTime() - 60_000,
+    },
+    { now },
+  );
 
   console.log(`Données de démonstration créées. Comptes : ${seats.map((x) => x.email).join(", ")}`);
   console.log(`Mot de passe commun : ${DEMO_PASSWORD}`);

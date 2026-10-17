@@ -196,6 +196,27 @@ export const DUE_STATUS: Record<string, { label: string; tone: Tone }> = {
   SKIPPED: { label: "Annulée", tone: "gray" },
 };
 
+/** Échéances administratives du parc : assurance, visite technique, vignette. */
+export const DEADLINE_KIND: Record<string, { label: string; tone: Tone }> = {
+  INSURANCE: { label: "Assurance", tone: "blue" },
+  TECHNICAL_INSPECTION: { label: "Visite technique", tone: "violet" },
+  VIGNETTE: { label: "Vignette", tone: "teal" },
+  OTHER: { label: "Autre échéance", tone: "gray" },
+};
+
+/** État d'une échéance ouverte (domaine : deadlineState). */
+export const DEADLINE_STATE: Record<string, { label: string; tone: Tone }> = {
+  OVERDUE: { label: "En retard", tone: "red" },
+  SOON: { label: "À renouveler", tone: "amber" },
+  OK: { label: "À jour", tone: "green" },
+};
+
+export const DEADLINE_STATUS: Record<string, { label: string; tone: Tone }> = {
+  OPEN: { label: "En cours", tone: "blue" },
+  DONE: { label: "Renouvelée", tone: "green" },
+  CANCELLED: { label: "Annulée", tone: "gray" },
+};
+
 export const OPERATION_MODE: Record<string, string> = {
   FIXED: "Fixe",
   SLIDING: "Glissant",
@@ -218,6 +239,13 @@ export const MOVEMENT_TYPE: Record<string, { label: string; sign: 1 | -1 | 0 }> 
   TRANSFER_IN: { label: "Transfert entrant", sign: 1 },
   ADJUSTMENT: { label: "Ajustement d'inventaire", sign: 0 },
   SCRAP: { label: "Mise au rebut", sign: -1 },
+};
+
+/** Comptage d'inventaire (STK-07). */
+export const INVENTORY_COUNT_STATUS: Record<string, { label: string; tone: Tone }> = {
+  PENDING: { label: "À valider", tone: "amber" },
+  APPLIED: { label: "Appliqué", tone: "green" },
+  REJECTED: { label: "Refusé", tone: "red" },
 };
 
 export const ROLE: Record<string, string> = {
@@ -329,3 +357,10 @@ export const ENTITY_TYPE: Record<string, string> = {
 export function options(map: Record<string, string | { label: string }>) {
   return Object.entries(map).map(([value, v]) => ({ value, label: typeof v === "string" ? v : v.label }));
 }
+
+/** Demandes de démonstration déposées sur le site commercial. */
+export const DEMO_REQUEST_STATUS: Record<string, { label: string; tone: Tone }> = {
+  PENDING: { label: "En attente", tone: "amber" },
+  APPROVED: { label: "Acceptée", tone: "green" },
+  REJECTED: { label: "Refusée", tone: "gray" },
+};

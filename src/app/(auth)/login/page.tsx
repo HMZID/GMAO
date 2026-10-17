@@ -2,6 +2,7 @@ import { Wrench } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/primitives";
+import { captchaSiteKey } from "@/server/auth/captcha";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Connexion" };
@@ -9,7 +10,8 @@ export const metadata: Metadata = { title: "Connexion" };
 async function LoginFormWithNext({ searchParams }: { searchParams: PageProps<"/login">["searchParams"] }) {
   const sp = await searchParams;
   const next = typeof sp.next === "string" ? sp.next : undefined;
-  return <LoginForm next={next} />;
+  // Clé publique du CAPTCHA lue à l'exécution (après l'accès aux paramètres de la requête).
+  return <LoginForm next={next} captchaSiteKey={captchaSiteKey()} />;
 }
 
 export default function LoginPage(props: PageProps<"/login">) {
@@ -23,8 +25,7 @@ export default function LoginPage(props: PageProps<"/login">) {
           <span className="text-xl font-semibold">GMAO</span>
         </div>
         <div className="rounded-lg bg-white p-6 shadow-xl">
-          <h1 className="text-lg font-semibold text-slate-900">Connexion</h1>
-          <p className="mb-5 mt-1 text-sm text-slate-500">Maintenance des engins, véhicules et équipements.</p>
+          <h1 className="mb-5 text-lg font-semibold text-slate-900">Connexion</h1>
           {/* Le formulaire dépend de « next » (URL) : en attendant, un gabarit non soumissible évite de perdre la page demandée. */}
           <Suspense fallback={<LoginFormSkeleton />}>
             <LoginFormWithNext searchParams={props.searchParams} />

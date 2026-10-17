@@ -81,5 +81,5 @@ test("achats : nombre d'OT par prestataire (sous-requête corrélée)", async ({
   await page.goto("/achats");
   const row = page.getByRole("row", { name: /Engins Services Rhône/ });
   await expect(row).toBeVisible();
-  await expect(row.getByRole("cell").last()).toHaveText("3");
+  await expect(row.getByRole("cell").last()).toHaveText("4");
 });

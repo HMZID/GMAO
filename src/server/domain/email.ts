@@ -13,6 +13,10 @@ export const EMAIL_EVENTS = [
   "OVERDUE",
   "STOCK_ALERT",
   "DOCUMENT_EXPIRY",
+  "DEMO_REQUEST",
+  "DEMO_ACCESS",
+  "DEMO_DECISION",
+  "FLEET_DEADLINE",
 ] as const;
 export type EmailEvent = (typeof EMAIL_EVENTS)[number];
 
@@ -23,6 +27,8 @@ type EventDefinition = {
   mandatory: boolean;
   /** Destinataires des alertes calculées (récapitulatifs), par rôle et dans le périmètre de ce rôle. */
   roles?: Role[];
+  /** Courriel de compte ou de la plateforme, absent des préférences de notification. */
+  hidden?: boolean;
 };
 
 export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
@@ -48,7 +54,7 @@ export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
     label: "Retards",
     description: "Récapitulatif quotidien des préventifs en retard et des ordres de travail en attente depuis plus de 5 jours.",
     mandatory: false,
-    roles: ["WORKSHOP_MANAGER", "MAINTENANCE_MANAGER"],
+    roles: ["WORKSHOP_MANAGER", "MAINTENANCE_MANAGER", "FLEET_MANAGER"],
   },
   STOCK_ALERT: {
     label: "Alertes de stock",
@@ -62,7 +68,34 @@ export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
     mandatory: false,
     roles: ["FLEET_MANAGER", "PURCHASING_MANAGER"],
   },
+  FLEET_DEADLINE: {
+    label: "Échéances administratives du parc",
+    description: "Assurance, visite technique ou vignette à renouveler : à 30 jours, 7 jours, le jour même, puis chaque semaine de retard.",
+    mandatory: false,
+    roles: ["FLEET_MANAGER", "MAINTENANCE_MANAGER"],
+  },
+  DEMO_REQUEST: {
+    label: "Demande de démonstration (site)",
+    description: "Un prospect a demandé un compte de démonstration sur le site.",
+    mandatory: true,
+    hidden: true,
+  },
+  DEMO_ACCESS: {
+    label: "Accès de démonstration",
+    description: "Lien de connexion, identifiant et mot de passe provisoire d'un compte ouvert depuis le site.",
+    mandatory: true,
+    hidden: true,
+  },
+  DEMO_DECISION: {
+    label: "Réponse à une demande de démonstration",
+    description: "Réponse au prospect dont la demande n'est pas retenue.",
+    mandatory: true,
+    hidden: true,
+  },
 };
+
+/** Événements proposés dans les préférences de notification de l'utilisateur. */
+export const PREFERENCE_EVENTS = EMAIL_EVENTS.filter((e) => !EMAIL_EVENT_DEFINITIONS[e].hidden);
 
 /** Notifications de l'application qui partent aussi par courriel. */
 const TYPE_TO_EVENT: Record<string, EmailEvent> = {
@@ -209,4 +242,137 @@ ${link ? `<p><a href="${escapeHtml(link)}" style="display:inline-block;backgroun
 </body></html>`;
 
   return { subject: `[${app}] ${content.title}`.slice(0, 250), text, html };
+}
+
+/* ------------------------------------------------------------------ */
+/* Courriels du site commercial (comptes de démonstration)              */
+/* ------------------------------------------------------------------ */
+
+/** Mise en page commune : bandeau sombre à liseré jaune, comme le site. */
+function brandedHtml(product: string, body: string, footer: string) {
+  return `<!doctype html><html lang="fr"><body style="margin:0;background:#f3f0e8;font-family:Arial,Helvetica,sans-serif;color:#15171a;line-height:1.55">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0e8;padding:24px 0"><tr><td align="center">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d9d4c7">
+<tr><td style="background:#15171a;border-bottom:4px solid #ffb800;padding:18px 28px;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:.5px">${escapeHtml(product)}</td></tr>
+<tr><td style="padding:28px">${body}</td></tr>
+<tr><td style="padding:16px 28px;border-top:1px solid #ece7da;color:#6b6659;font-size:12px">${escapeHtml(footer)}</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+function button(href: string, label: string) {
+  return `<p style="margin:24px 0"><a href="${escapeHtml(href)}" style="display:inline-block;background:#ffb800;color:#15171a;padding:12px 22px;font-weight:bold;text-decoration:none">${escapeHtml(label)}</a></p>`;
+}
+
+export type DemoAccessEmailInput = {
+  product: string;
+  recipientName: string;
+  organization: string;
+  login: string;
+  password: string;
+  loginUrl: string;
+  /** Date de fin de la démonstration, déjà mise en forme. */
+  endsOn: string;
+  /** Renvoi des accès : nouveau mot de passe provisoire, l'ancien ne fonctionne plus. */
+  resent?: boolean;
+};
+
+/** Accès de démonstration : lien de connexion, identifiant et mot de passe provisoire (à changer à la première connexion). */
+export function renderDemoAccessEmail(input: DemoAccessEmailInput): RenderedEmail {
+  const intro = input.resent
+    ? `Voici de nouveaux accès à votre espace « ${input.organization} ». Le mot de passe provisoire précédent ne fonctionne plus.`
+    : `Votre espace de démonstration « ${input.organization} » est ouvert jusqu'au ${input.endsOn}.`;
+  const steps = [
+    "Connectez-vous avec l'identifiant et le mot de passe provisoire ci-dessous.",
+    "Choisissez votre propre mot de passe (demandé à la première connexion).",
+    "Importez vos engins depuis Excel (menu Imports) et invitez vos équipes (Administration).",
+  ];
+  const text = [
+    `Bonjour ${input.recipientName},`,
+    "",
+    intro,
+    "",
+    `Adresse de connexion : ${input.loginUrl}`,
+    `Identifiant : ${input.login}`,
+    `Mot de passe provisoire : ${input.password}`,
+    "",
+    ...steps.map((s, i) => `${i + 1}. ${s}`),
+    "",
+    "Ce mot de passe est personnel : ne le transférez pas.",
+    "",
+    "--",
+    `${input.product} — accès de démonstration`,
+  ].join("\n");
+  const row = (label: string, value: string, mono = false) =>
+    `<tr><td style="padding:8px 12px;color:#6b6659;font-size:13px;border-bottom:1px solid #ece7da;white-space:nowrap">${escapeHtml(label)}</td><td style="padding:8px 12px;border-bottom:1px solid #ece7da;${mono ? "font-family:Consolas,Menlo,monospace;font-size:16px;font-weight:bold;letter-spacing:1px" : "font-weight:bold"}">${escapeHtml(value)}</td></tr>`;
+  const body = `<p style="margin-top:0">${escapeHtml(`Bonjour ${input.recipientName},`)}</p>
+<p>${escapeHtml(intro)}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #d9d4c7;background:#faf8f3;margin:20px 0">
+${row("Adresse de connexion", input.loginUrl)}${row("Identifiant", input.login)}${row("Mot de passe provisoire", input.password, true)}
+</table>
+${button(input.loginUrl, "Me connecter")}
+<ol style="padding-left:20px;margin:0">${steps.map((s) => `<li style="margin-bottom:6px">${escapeHtml(s)}</li>`).join("")}</ol>
+<p style="color:#6b6659;font-size:13px">Ce mot de passe est personnel : ne le transférez pas.</p>`;
+  return {
+    subject: `[${input.product}] ${input.resent ? "Vos nouveaux accès de démonstration" : "Votre espace de démonstration est prêt"}`,
+    text,
+    html: brandedHtml(input.product, body, `${input.product} — vous recevez ce message à la suite de votre demande de démonstration.`),
+  };
+}
+
+export type DemoRequestEmailInput = {
+  product: string;
+  company: string;
+  contactName: string;
+  email: string;
+  details: { label: string; value: string | null | undefined }[];
+  message?: string | null;
+  link: string;
+};
+
+/** Nouvelle demande de démonstration, pour les administrateurs de la plateforme. */
+export function renderDemoRequestEmail(input: DemoRequestEmailInput): RenderedEmail {
+  const details = input.details.filter((d) => d.value);
+  const text = [
+    "Bonjour,",
+    "",
+    `Nouvelle demande de démonstration : ${input.company} (${input.contactName}, ${input.email}).`,
+    ...details.map((d) => `- ${d.label} : ${d.value}`),
+    ...(input.message ? ["", `Message : ${input.message}`] : []),
+    "",
+    `Accepter ou refuser : ${input.link}`,
+    "",
+    "--",
+    `${input.product} — administration du site`,
+  ].join("\n");
+  const body = `<p style="margin-top:0">Bonjour,</p>
+<p>Nouvelle demande de démonstration : <strong>${escapeHtml(input.company)}</strong> (${escapeHtml(input.contactName)}, ${escapeHtml(input.email)}).</p>
+${details.length ? `<ul>${details.map((d) => `<li>${escapeHtml(d.label)} : ${escapeHtml(String(d.value))}</li>`).join("")}</ul>` : ""}
+${input.message ? `<blockquote style="margin:16px 0;padding:8px 14px;border-left:4px solid #ffb800;background:#faf8f3">${escapeHtml(input.message)}</blockquote>` : ""}
+${button(input.link, "Examiner la demande")}`;
+  return {
+    subject: `[${input.product}] Demande de démonstration : ${input.company}`.slice(0, 250),
+    text,
+    html: brandedHtml(input.product, body, `${input.product} — administration du site commercial.`),
+  };
+}
+
+/** Réponse au prospect dont la demande n'est pas retenue (motif facultatif). */
+export function renderDemoDeclinedEmail(input: {
+  product: string;
+  recipientName: string;
+  reason?: string | null;
+  contactEmail?: string | null;
+}): RenderedEmail {
+  const lines = [
+    `Merci pour l'intérêt que vous portez à ${input.product}. Nous ne pouvons pas donner suite à votre demande de démonstration pour le moment.`,
+    ...(input.reason ? [input.reason] : []),
+    ...(input.contactEmail ? [`Pour toute question : ${input.contactEmail}.`] : []),
+  ];
+  const text = [`Bonjour ${input.recipientName},`, "", ...lines, "", "--", input.product].join("\n");
+  const body = `<p style="margin-top:0">${escapeHtml(`Bonjour ${input.recipientName},`)}</p>${lines.map((l) => `<p>${escapeHtml(l)}</p>`).join("")}`;
+  return {
+    subject: `[${input.product}] Votre demande de démonstration`,
+    text,
+    html: brandedHtml(input.product, body, `${input.product} — réponse à votre demande de démonstration.`),
+  };
 }

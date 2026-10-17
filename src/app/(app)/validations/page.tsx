@@ -3,11 +3,12 @@ import { ActionForm, ActionPanel, Field, PanelForm, SubmitButton } from "@/compo
 import { PageHeader } from "@/components/layout/page-header";
 import { Disclosure } from "@/components/ui/disclosure";
 import { Input, Select, Textarea } from "@/components/ui/inputs";
-import { Badge, Card, CardBody, CardHeader, EmptyState, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
+import { Alert, Badge, Card, CardBody, CardHeader, EmptyState, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { APPROVAL_OBJECT, APPROVAL_STATUS } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { listMyApprovalRequests, listMySubstitutes, listPendingForMe, listUserOptions, objectLink } from "@/server/services/approvals";
+import { countPendingInventoryCounts } from "@/server/services/inventory";
 import { addSubstituteAction, decideFromListAction, removeSubstituteAction } from "./actions";
 
 export const metadata = { title: "Validations" };
@@ -15,11 +16,12 @@ export const metadata = { title: "Validations" };
 export default async function ValidationsPage() {
   const ctx = await getAuthContext();
   const now = new Date();
-  const [pending, mine, substitutes, users] = await Promise.all([
+  const [pending, mine, substitutes, users, inventoryPending] = await Promise.all([
     listPendingForMe(ctx, now),
     listMyApprovalRequests(ctx),
     listMySubstitutes(ctx),
     listUserOptions(ctx),
+    countPendingInventoryCounts(ctx),
   ]);
 
   return (
@@ -28,6 +30,18 @@ export default async function ValidationsPage() {
         title="Validations"
         description="Demandes d'intervention, demandes d'achat et dépenses soumises à un circuit de validation. Le demandeur ne valide jamais sa propre demande."
       />
+
+      {inventoryPending > 0 ? (
+        <div className="mb-6">
+          <Alert tone="amber">
+            {inventoryPending} écart(s) d&apos;inventaire à valider :{" "}
+            <Link href="/stock/inventaire" className="font-medium underline">
+              ouvrir l&apos;inventaire
+            </Link>
+            .
+          </Alert>
+        </div>
+      ) : null}
 
       <Card className="mb-6">
         <CardHeader title={`À valider (${pending.length})`} description="Étapes dont vous êtes valideur, directement ou comme suppléant" />

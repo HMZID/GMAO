@@ -11,7 +11,7 @@ import { tenantAccess } from "@/server/domain/tenants";
 import { UnauthorizedError } from "@/server/errors";
 import { apiKeyFromHeaders } from "@/server/domain/api-keys";
 import { IMPERSONATION_COOKIE, verifyImpersonation } from "@/server/domain/impersonation";
-import { isPlatformAdmin } from "@/server/services/platform";
+import { isPlatformAdmin, needsAdminTwoFactorSetup } from "@/server/services/platform";
 import { authenticateApiKey } from "./api-key";
 import { auth } from "./auth";
 
@@ -24,6 +24,8 @@ export async function loadAuthContext(userId: string, channel: Channel, options:
       name: user.name,
       email: user.email,
       isActive: user.isActive,
+      mustChangePassword: user.mustChangePassword,
+      twoFactorEnabled: user.twoFactorEnabled,
       tenantStatus: tenants.status,
       demoEndsAt: tenants.demoEndsAt,
     })
@@ -54,11 +56,12 @@ export async function loadAuthContext(userId: string, channel: Channel, options:
       .limit(1),
   ]);
 
-  return buildAuthContext(
+  const ctx = buildAuthContext(
     { id: row.id, tenantId: row.tenantId, name: row.name, email: row.email, technicianId: tech?.id ?? null },
     assignments.map((a) => ({ ...a, role: a.role as Role })),
     { channel },
   );
+  return { ...ctx, twoFactorEnabled: row.twoFactorEnabled, ...(row.mustChangePassword ? { mustChangePassword: true } : {}) };
 }
 
 /**
@@ -70,7 +73,8 @@ async function withImpersonation(ctx: AuthContext, token: string | undefined): P
   const claim = verifyImpersonation(token, process.env.BETTER_AUTH_SECRET ?? "", new Date());
   if (!claim || claim.adminId !== ctx.userId) return ctx;
   const target = await loadAuthContext(claim.targetId, ctx.channel, { ignoreTenantAccess: true });
-  if (!target) return ctx;
+  // Compte désactivé ou devenu administrateur de la plateforme depuis l'ouverture : la connexion cesse.
+  if (!target || target.can("platform.manage")) return ctx;
   return { ...target, impersonator: { id: ctx.userId, name: ctx.name, email: ctx.email } };
 }
 
@@ -99,6 +103,10 @@ export const getOwnAuthContext = cache(async (): Promise<AuthContext> => {
  */
 export const getAuthContext = cache(async (): Promise<AuthContext> => {
   const own = await getOwnAuthContext();
+  // Mot de passe provisoire (compte ouvert depuis le site) : à remplacer avant toute autre page ou action.
+  if (own.mustChangePassword) redirect("/premiere-connexion");
+  // Administrateur de la plateforme sans double authentification : à configurer avant tout (TEC-04).
+  if (needsAdminTwoFactorSetup(own)) redirect("/compte/securite?obligatoire=1");
   return withImpersonation(own, (await cookies()).get(IMPERSONATION_COOKIE)?.value);
 });
 

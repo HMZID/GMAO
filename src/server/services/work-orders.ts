@@ -5,6 +5,7 @@ import type { AuthContext } from "@/server/authz/context";
 import { db, type DbOrTx } from "@/server/db";
 import {
   absences,
+  documents,
   dueItems,
   equipment,
   jobsites,
@@ -21,9 +22,9 @@ import {
   warehouses,
   workOrderAssignees,
   workOrderCosts,
+  workOrders,
   workOrderStatusHistory,
   workOrderTasks,
-  workOrders,
   workRequests,
   workshops,
 } from "@/server/db/schema";
@@ -38,7 +39,7 @@ import {
 } from "@/server/domain/work-order-status";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
 import { bool, optionalDate, optionalId, optionalNumber, optionalText, text } from "@/server/validation";
-import { assertCan, assertCanOn, assertSameTenant, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
+import { assertCan, assertCanOn, assertSameTenant, assertVisible, audit, offsetOf, paginationSchema, parseInput, scopeWhere } from "./_shared";
 import type { Permission } from "@/server/authz/permissions";
 import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equipment-status";
 import { notifyAssignedTechnicians, notifyByPermission } from "./notifications";
@@ -203,6 +204,15 @@ async function buildSnapshot(tx: DbOrTx, wo: WorkOrderRow): Promise<WorkOrderSna
     .select({ n: count() })
     .from(workOrderCosts)
     .where(and(eq(workOrderCosts.workOrderId, wo.id), eq(workOrderCosts.approvalStatus, "PENDING")));
+  const reportRows =
+    wo.type === "REGULATORY"
+      ? await tx
+          .select({ n: count() })
+          .from(documents)
+          .where(
+            and(eq(documents.entityType, "WORK_ORDER"), eq(documents.entityId, wo.id), eq(documents.kind, "REPORT"), isNull(documents.deletedAt)),
+          )
+      : [{ n: 0 }];
   const readingRows = primaryMeter
     ? await tx
         .select({ n: count() })
@@ -234,6 +244,8 @@ async function buildSnapshot(tx: DbOrTx, wo: WorkOrderRow): Promise<WorkOrderSna
     consumedPartLines: issueRows[0]?.n ?? 0,
     timeEntryCount: entries.length,
     externalCostKnown: wo.externalCost !== null,
+    isRegulatory: wo.type === "REGULATORY",
+    hasReportDocument: (reportRows[0]?.n ?? 0) > 0,
     pendingExpenses: pendingExpenseRows[0]?.n ?? 0,
   };
 }
@@ -266,7 +278,7 @@ export async function getWorkOrder(ctx: AuthContext, id: string) {
     },
   });
   if (!wo) throw new NotFoundError("Ordre de travail");
-  assertCanOn(ctx, "workorder.read", wo);
+  assertVisible(ctx, "workorder.read", wo, "Ordre de travail");
 
   const [partLines, reservations, meterRows, costs, snapshot, requests] = await Promise.all([
     db
@@ -544,7 +556,7 @@ export async function transitionWorkOrder(ctx: AuthContext, id: string, raw: unk
       .where(and(eq(workOrders.id, id), eq(workOrders.tenantId, ctx.tenantId)))
       .for("update");
     if (!wo) throw new NotFoundError("Ordre de travail");
-    assertCanOn(ctx, "workorder.read", wo);
+    assertVisible(ctx, "workorder.read", wo, "Ordre de travail");
 
     const snapshot = await buildSnapshot(tx, wo);
     const check = checkTransition(snapshot, { ...input, actor: actorFor(ctx, wo) }, now);

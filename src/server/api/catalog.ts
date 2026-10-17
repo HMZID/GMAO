@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import type { Permission } from "@/server/authz/permissions";
 import { documentDeleteInput, documentInput, documentListInput } from "@/server/services/documents";
+import { cancelInput as deadlineCancelInput, deadlineFilters, deadlineInput, renewalInput } from "@/server/services/fleet-deadlines";
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
 import { decisionInput } from "@/server/services/approvals";
 import { preferencesInput } from "@/server/services/email";
@@ -9,6 +10,7 @@ import { exportQuery } from "@/server/services/exports";
 import { executeInput } from "@/server/services/imports";
 import { indicatorInput } from "@/server/services/indicators";
 import { indicatorFilters } from "@/server/services/kpi";
+import { inventoryCountInput, inventoryDecisionInput } from "@/server/services/inventory";
 import { readingInput, replacementInput, reviewInput } from "@/server/services/meters";
 import { weekInput } from "@/server/services/planning";
 import { applyPlanInput, dueFilters, planInput } from "@/server/services/preventive";
@@ -231,6 +233,34 @@ export const ENDPOINTS: Endpoint[] = [
   },
   { method: "GET", path: "/api/v1/maintenance-plans/{id}", summary: "Plan, opérations, déclencheurs et checklists", permission: "plan.read" },
   { method: "GET", path: "/api/v1/due-items", summary: "Échéances préventives ouvertes", permission: "plan.read", query: dueFilters },
+  {
+    method: "GET",
+    path: "/api/v1/equipment-deadlines",
+    summary: "Échéances administratives du parc (assurance, visite technique, vignette), de la plus proche à la plus lointaine",
+    permission: "equipment.read",
+    query: deadlineFilters,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines",
+    summary: "Nouvelle échéance administrative d'un équipement",
+    permission: "equipment.write",
+    body: deadlineInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines/{id}/renew",
+    summary: "Renouvellement : l'échéance est soldée et la suivante créée",
+    permission: "equipment.write",
+    body: renewalInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines/{id}/cancel",
+    summary: "Annulation, motif obligatoire",
+    permission: "equipment.write",
+    body: deadlineCancelInput,
+  },
   { method: "POST", path: "/api/v1/preventive/generate", summary: "Génération des OT préventifs (idempotente)", permission: "workorder.manage" },
 
   { method: "GET", path: "/api/v1/parts", summary: "Catalogue des pièces et quantités", permission: "part.read", query: partFilters },
@@ -244,6 +274,26 @@ export const ENDPOINTS: Endpoint[] = [
     summary: "Réception, transfert, ajustement, rebut (idempotent par clientId)",
     permission: "stock.move",
     body: movementInput,
+  },
+  {
+    method: "GET",
+    path: "/api/v1/inventory-counts",
+    summary: "Comptages d'inventaire (filtre status : PENDING, APPLIED, REJECTED)",
+    permission: "stock.read",
+  },
+  {
+    method: "POST",
+    path: "/api/v1/inventory-counts",
+    summary: "Comptage : écart sur le stock théorique à l'heure du comptage, « à valider » au-delà du seuil (idempotent par clientId)",
+    permission: "inventory.adjust",
+    body: inventoryCountInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/inventory-counts/{id}/decision",
+    summary: "Validation ou refus d'un écart à valider (motif obligatoire en cas de refus)",
+    permission: "inventory.validate",
+    body: inventoryDecisionInput,
   },
   { method: "GET", path: "/api/v1/warehouses", summary: "Magasins du périmètre (sortie de pièces depuis le mobile)" },
   { method: "GET", path: "/api/v1/suppliers", summary: "Fournisseurs et prestataires", permission: "supplier.read" },

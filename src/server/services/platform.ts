@@ -1,14 +1,16 @@
 import "server-only";
+import { assertPasswordNotBreached } from "@/server/auth/breached-password";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { AuthContext } from "@/server/authz/context";
-import { db } from "@/server/db";
+import { db, type DbOrTx } from "@/server/db";
 import { account, companies, equipmentCategories, roleAssignments, sites, tenants, user, warehouses, workshops } from "@/server/db/schema";
 import { ROLES } from "@/server/authz/permissions";
-import { IMPERSONATION_TTL_MS, signImpersonation } from "@/server/domain/impersonation";
+import { IMPERSONATION_TTL_MS, impersonationRefusals, signImpersonation } from "@/server/domain/impersonation";
 import { companyCodeFrom, DEMO_DURATIONS, demoEndsAt, platformAdmins, tenantAccess, type TenantStatus } from "@/server/domain/tenants";
+import { adminTwoFactorEnforced, needsTwoFactorSetup } from "@/server/domain/two-factor";
 import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { text } from "@/server/validation";
 import { audit, parseInput } from "./_shared";
@@ -21,13 +23,27 @@ import { audit, parseInput } from "./_shared";
  * Administrateur de la plateforme : rôle « Administrateur » (droit platform.manage), connecté en personne
  * (jamais par une clé d'API). Si PLATFORM_ADMIN_EMAILS est renseignée, son courriel doit aussi y figurer.
  */
-export function isPlatformAdmin(ctx: AuthContext) {
+function hasPlatformRole(ctx: AuthContext) {
   if (ctx.apiKeyId || !ctx.can("platform.manage")) return false;
   const allowed = platformAdmins(process.env.PLATFORM_ADMIN_EMAILS);
   return allowed.size === 0 || allowed.has(ctx.email.toLowerCase());
 }
 
-function assertPlatformAdmin(ctx: AuthContext) {
+/** Rôle de plateforme sans double authentification alors qu'elle est obligatoire (TEC-04). */
+export function needsAdminTwoFactorSetup(ctx: AuthContext) {
+  return needsTwoFactorSetup({
+    platformAdmin: hasPlatformRole(ctx),
+    enabled: ctx.twoFactorEnabled === true,
+    enforced: adminTwoFactorEnforced({ flag: process.env.ADMIN_TWO_FACTOR_REQUIRED, vercelEnv: process.env.VERCEL_ENV }),
+  });
+}
+
+/** Droits de plateforme : rôle, courriel autorisé et, si elle est obligatoire, double authentification active. */
+export function isPlatformAdmin(ctx: AuthContext) {
+  return hasPlatformRole(ctx) && !needsAdminTwoFactorSetup(ctx);
+}
+
+export function assertPlatformAdmin(ctx: AuthContext) {
   if (!isPlatformAdmin(ctx)) throw new ForbiddenError("Réservé aux administrateurs de la plateforme.");
 }
 
@@ -80,40 +96,62 @@ export async function createDemoTenant(ctx: AuthContext, raw: unknown, now = new
   if (!(DEMO_DURATIONS as readonly number[]).includes(input.durationDays)) throw new BusinessRuleError(["Durée de démonstration inconnue."]);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.adminEmail));
   if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  await assertPasswordNotBreached(input.adminPassword);
   const passwordHash = await hashPassword(input.adminPassword);
   const endsAt = demoEndsAt(now, input.durationDays);
 
   return db.transaction(async (tx) => {
-    const [tenant] = await tx
-      .insert(tenants)
-      .values({ name: input.organizationName, status: "DEMO", demoEndsAt: endsAt, contactEmail: input.adminEmail })
-      .returning({ id: tenants.id, name: tenants.name });
-    const [company] = await tx
-      .insert(companies)
-      .values({ tenantId: tenant.id, code: companyCodeFrom(input.organizationName), name: input.organizationName })
-      .returning({ id: companies.id });
-    const [site] = await tx
-      .insert(sites)
-      .values({ tenantId: tenant.id, companyId: company.id, code: "SIEGE", name: "Site principal" })
-      .returning({ id: sites.id });
-    await tx.insert(workshops).values({ tenantId: tenant.id, siteId: site.id, code: "ATELIER", name: "Atelier principal" });
-    await tx.insert(warehouses).values({ tenantId: tenant.id, siteId: site.id, code: "MAGASIN", name: "Magasin principal" });
-    await tx.insert(equipmentCategories).values(STARTER_CATEGORIES.map((c) => ({ ...c, tenantId: tenant.id })));
-
-    const userId = randomUUID();
-    await tx
-      .insert(user)
-      .values({ id: userId, name: input.adminName, email: input.adminEmail, emailVerified: true, tenantId: tenant.id, isActive: true });
-    await tx.insert(account).values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: passwordHash });
-    // Le client est géré par sa direction : tous les droits de son organisation, dont la gestion des accès.
-    await tx.insert(roleAssignments).values({ tenantId: tenant.id, userId, role: "EXECUTIVE", scopeType: "TENANT", scopeId: null });
-
-    const after = { name: tenant.name, status: "DEMO", demoEndsAt: endsAt, admin: input.adminEmail };
-    // Journal de la plateforme (organisation de l'administrateur) et journal du client.
-    await audit(tx, ctx, { entityType: "tenant", entityId: tenant.id, action: "create_demo", after });
-    await audit(tx, { ...ctx, tenantId: tenant.id }, { entityType: "tenant", entityId: tenant.id, action: "create_demo", after });
-    return { id: tenant.id, name: tenant.name, demoEndsAt: endsAt, adminEmail: input.adminEmail };
+    const created = await provisionDemoTenant(tx, ctx, { ...input, passwordHash, endsAt, mustChangePassword: false });
+    return { id: created.tenantId, name: created.name, demoEndsAt: endsAt, adminEmail: input.adminEmail };
   });
+}
+
+/**
+ * Organisation de démonstration et son premier compte (direction du client), dans la transaction de
+ * l'appelant : ouverture manuelle par la plateforme ou acceptation d'une demande déposée sur le site.
+ * `mustChangePassword` : mot de passe provisoire, à remplacer à la première connexion.
+ */
+export async function provisionDemoTenant(
+  tx: DbOrTx,
+  ctx: AuthContext,
+  input: { organizationName: string; adminName: string; adminEmail: string; passwordHash: string; endsAt: Date; mustChangePassword: boolean },
+) {
+  const { endsAt } = input;
+  const [tenant] = await tx
+    .insert(tenants)
+    .values({ name: input.organizationName, status: "DEMO", demoEndsAt: endsAt, contactEmail: input.adminEmail })
+    .returning({ id: tenants.id, name: tenants.name });
+  const [company] = await tx
+    .insert(companies)
+    .values({ tenantId: tenant.id, code: companyCodeFrom(input.organizationName), name: input.organizationName })
+    .returning({ id: companies.id });
+  const [site] = await tx
+    .insert(sites)
+    .values({ tenantId: tenant.id, companyId: company.id, code: "SIEGE", name: "Site principal" })
+    .returning({ id: sites.id });
+  await tx.insert(workshops).values({ tenantId: tenant.id, siteId: site.id, code: "ATELIER", name: "Atelier principal" });
+  await tx.insert(warehouses).values({ tenantId: tenant.id, siteId: site.id, code: "MAGASIN", name: "Magasin principal" });
+  await tx.insert(equipmentCategories).values(STARTER_CATEGORIES.map((c) => ({ ...c, tenantId: tenant.id })));
+
+  const userId = randomUUID();
+  await tx.insert(user).values({
+    id: userId,
+    name: input.adminName,
+    email: input.adminEmail,
+    emailVerified: true,
+    tenantId: tenant.id,
+    isActive: true,
+    mustChangePassword: input.mustChangePassword,
+  });
+  await tx.insert(account).values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: input.passwordHash });
+  // Le client est géré par sa direction : tous les droits de son organisation, dont la gestion des accès.
+  await tx.insert(roleAssignments).values({ tenantId: tenant.id, userId, role: "EXECUTIVE", scopeType: "TENANT", scopeId: null });
+
+  const after = { name: tenant.name, status: "DEMO", demoEndsAt: endsAt, admin: input.adminEmail };
+  // Journal de la plateforme (organisation de l'administrateur) et journal du client.
+  await audit(tx, ctx, { entityType: "tenant", entityId: tenant.id, action: "create_demo", after });
+  await audit(tx, { ...ctx, tenantId: tenant.id }, { entityType: "tenant", entityId: tenant.id, action: "create_demo", after });
+  return { tenantId: tenant.id, userId, name: tenant.name };
 }
 
 export const tenantActionInput = z.object({
@@ -253,6 +291,7 @@ export async function createTenantUser(ctx: AuthContext, tenantId: string, raw: 
   } else if (input.scopeType !== "TENANT") throw new BusinessRuleError(["Périmètre inconnu."]);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
   if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  await assertPasswordNotBreached(input.password);
   const passwordHash = await hashPassword(input.password);
   return db.transaction(async (tx) => {
     const id = randomUUID();
@@ -277,19 +316,21 @@ export async function createTenantUser(ctx: AuthContext, tenantId: string, raw: 
  */
 export async function startImpersonation(ctx: AuthContext, userId: string, now = new Date()) {
   assertPlatformAdmin(ctx);
-  if (ctx.impersonator) throw new BusinessRuleError(["Revenir d'abord à votre compte."]);
   const [target] = await db
     .select({ id: user.id, name: user.name, email: user.email, tenantId: user.tenantId, isActive: user.isActive })
     .from(user)
     .where(eq(user.id, userId));
   if (!target) throw new NotFoundError("Utilisateur");
-  if (target.id === ctx.userId) throw new BusinessRuleError(["Vous êtes déjà connecté avec ce compte."]);
-  if (!target.isActive) throw new BusinessRuleError(["Ce compte est désactivé : le réactiver d'abord."]);
   const [platformRole] = await db
     .select({ id: roleAssignments.id })
     .from(roleAssignments)
     .where(and(eq(roleAssignments.userId, target.id), eq(roleAssignments.role, "ADMIN")));
-  if (platformRole) throw new BusinessRuleError(["Impossible de prendre la place d'un autre administrateur de la plateforme."]);
+  const refusals = impersonationRefusals({
+    adminId: ctx.userId,
+    alreadyImpersonating: !!ctx.impersonator,
+    target: { id: target.id, isActive: target.isActive, isPlatformAdmin: !!platformRole },
+  });
+  if (refusals.length > 0) throw new BusinessRuleError(refusals);
   const expiresAt = now.getTime() + IMPERSONATION_TTL_MS;
   await db.transaction(async (tx) => {
     await audit(

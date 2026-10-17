@@ -1,4 +1,4 @@
-import { Building2, ClipboardCheck, Download, Globe, HardHat, Mail, Plug, ScrollText, Shapes, Users } from "lucide-react";
+import { Building2, ClipboardCheck, Download, Globe, HardHat, Mail, Megaphone, Plug, ScrollText, Shapes, Users } from "lucide-react";
 import Link from "next/link";
 import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
@@ -15,6 +15,13 @@ export default async function AdministrationPage() {
       title: "Organisations clientes (plateforme)",
       text: "Démonstrations à durée limitée pour un client, prolongation, abonnement, suspension.",
       icon: Globe,
+      show: isPlatformAdmin(ctx),
+    },
+    {
+      href: "/administration/site",
+      title: "Site commercial (plateforme)",
+      text: "Demandes de démonstration à accepter, textes, fonctionnalités, offres et tarifs, pages du site public.",
+      icon: Megaphone,
       show: isPlatformAdmin(ctx),
     },
     {

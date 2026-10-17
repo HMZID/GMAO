@@ -31,6 +31,10 @@ export type AuthContext = {
   apiKeyId?: string | null;
   /** Administrateur de la plateforme connecté « en tant que » cet utilisateur (tracé au journal d'audit). */
   impersonator?: { id: string; name: string; email: string } | null;
+  /** Mot de passe provisoire à remplacer avant d'utiliser l'application (compte ouvert depuis le site). */
+  mustChangePassword?: boolean;
+  /** Double authentification (TOTP) active sur le compte (TEC-04). */
+  twoFactorEnabled?: boolean;
   roles: Role[];
   assignments: RoleAssignment[];
   /** Le droit est-il détenu sur au moins un périmètre ? */
@@ -98,6 +102,24 @@ export function buildAuthContext(user: ContextUser, allAssignments: RoleAssignme
     },
     canOn: (permission, target) => isInScope(scope(permission), target),
   };
+}
+
+/**
+ * Contexte des traitements planifiés (recalcul des échéances, génération des OT préventifs) : aucun
+ * utilisateur n'agit. Les colonnes d'auteur, toutes facultatives, restent vides et le journal d'audit
+ * porte le canal SYSTEM. Droits du responsable maintenance sur toute l'organisation.
+ */
+export function systemContext(tenantId: string, now: Date = new Date()): AuthContext {
+  const ctx = buildAuthContext(
+    { id: "", tenantId, name: "Traitement planifié", email: "" },
+    [{ role: "MAINTENANCE_MANAGER", scopeType: "TENANT", scopeId: null }],
+    {
+      channel: "SYSTEM",
+      now,
+    },
+  );
+  // Pas d'utilisateur : NULL dans les colonnes d'auteur (références vers `user`), jamais un identifiant inventé.
+  return { ...ctx, userId: null as unknown as string };
 }
 
 /**

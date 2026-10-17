@@ -72,7 +72,15 @@ export const emailEventEnum = pgEnum("email_event", [
   "OVERDUE",
   "STOCK_ALERT",
   "DOCUMENT_EXPIRY",
+  "DEMO_REQUEST",
+  "DEMO_ACCESS",
+  "DEMO_DECISION",
+  "FLEET_DEADLINE",
 ]);
+
+/** Échéances administratives du parc (assurance, visite technique, vignette…). */
+export const deadlineKindEnum = pgEnum("deadline_kind", ["INSURANCE", "TECHNICAL_INSPECTION", "VIGNETTE", "OTHER"]);
+export const deadlineStatusEnum = pgEnum("deadline_status", ["OPEN", "DONE", "CANCELLED"]);
 
 export const emailStatusEnum = pgEnum("email_status", ["PENDING", "SENT", "FAILED", "CANCELLED"]);
 
@@ -121,5 +129,7 @@ export const partTrackingEnum = pgEnum("part_tracking", ["QUANTITY", "LOT", "SER
 export const movementTypeEnum = pgEnum("movement_type", ["RECEIPT", "ISSUE", "RETURN", "TRANSFER_OUT", "TRANSFER_IN", "ADJUSTMENT", "SCRAP"]);
 
 export const reservationStatusEnum = pgEnum("reservation_status", ["ACTIVE", "CONSUMED", "RELEASED"]);
+/** Comptage d'inventaire : écart appliqué, en attente de validation au-delà du seuil, ou refusé (STK-07). */
+export const inventoryCountStatusEnum = pgEnum("inventory_count_status", ["PENDING", "APPLIED", "REJECTED"]);
 
 export const absenceTypeEnum = pgEnum("absence_type", ["LEAVE", "TRAINING", "SICK", "OTHER"]);

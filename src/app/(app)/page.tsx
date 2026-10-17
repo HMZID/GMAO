@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { DueStatusBadge, PriorityBadge, WorkOrderStatusBadge } from "@/components/status-badges";
 import { PageHeader } from "@/components/layout/page-header";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, CardHeader, EmptyState, StatTile, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
+import { Alert, Card, CardHeader, EmptyState, StatTile, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import { getAuthContext } from "@/server/auth/session";
+import { countDeadlineAlerts } from "@/server/services/fleet-deadlines";
 import { getDashboard } from "@/server/services/kpi";
 import { listDueItems } from "@/server/services/preventive";
 import { listWorkOrders } from "@/server/services/work-orders";
@@ -16,10 +17,11 @@ export default async function DashboardPage() {
   const ctx = await getAuthContext();
   // Administrateur de la plateforme : pas de maintenance, il arrive sur les organisations clientes.
   if (!ctx.can("equipment.read")) redirect(ctx.can("platform.manage") ? "/administration/plateforme" : "/notifications");
-  const [dashboard, urgent, dues] = await Promise.all([
+  const [dashboard, urgent, dues, deadlines] = await Promise.all([
     getDashboard(ctx),
     ctx.can("workorder.read") ? listWorkOrders(ctx, { status: "OPEN", pageSize: 8 }) : null,
     ctx.can("plan.read") ? listDueItems(ctx, { status: "OPEN" }) : null,
+    countDeadlineAlerts(ctx),
   ]);
   const eq = dashboard.equipmentByStatus;
   const wo = dashboard.workOrders;
@@ -81,6 +83,23 @@ export default async function DashboardPage() {
           }
         />
       </div>
+
+      {deadlines.overdue + deadlines.soon > 0 ? (
+        <div className="mt-6">
+          <Alert tone={deadlines.overdue > 0 ? "red" : "amber"} title="Assurances, visites techniques et vignettes">
+            {[
+              deadlines.overdue > 0 ? `${deadlines.overdue} échéance(s) dépassée(s)` : null,
+              deadlines.soon > 0 ? `${deadlines.soon} à renouveler dans les 30 jours` : null,
+            ]
+              .filter(Boolean)
+              .join(", ")}
+            .{" "}
+            <Link href="/equipements/echeances?horizon=30" className="font-medium underline">
+              Voir les échéances du parc
+            </Link>
+          </Alert>
+        </div>
+      ) : null}
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         {urgent ? (

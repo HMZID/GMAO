@@ -92,6 +92,55 @@
       "when": 1791813090724,
       "tag": "0012_audit_impersonation",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791840560472,
+      "tag": "0013_inventory_counts",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791902632724,
+      "tag": "0014_platform_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791906902742,
+      "tag": "0015_site_vitrine",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791986262408,
+      "tag": "0016_login_attempts",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792146695411,
+      "tag": "0017_site_tarifs_dinars",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792242031336,
+      "tag": "0018_two_factor",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792243225221,
+      "tag": "0019_fleet_deadlines",
+      "breakpoints": true
     }
   ]
 }
