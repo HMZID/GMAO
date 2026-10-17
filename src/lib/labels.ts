@@ -196,6 +196,27 @@ export const DUE_STATUS: Record<string, { label: string; tone: Tone }> = {
   SKIPPED: { label: "Annulée", tone: "gray" },
 };
 
+/** Échéances administratives du parc : assurance, visite technique, vignette. */
+export const DEADLINE_KIND: Record<string, { label: string; tone: Tone }> = {
+  INSURANCE: { label: "Assurance", tone: "blue" },
+  TECHNICAL_INSPECTION: { label: "Visite technique", tone: "violet" },
+  VIGNETTE: { label: "Vignette", tone: "teal" },
+  OTHER: { label: "Autre échéance", tone: "gray" },
+};
+
+/** État d'une échéance ouverte (domaine : deadlineState). */
+export const DEADLINE_STATE: Record<string, { label: string; tone: Tone }> = {
+  OVERDUE: { label: "En retard", tone: "red" },
+  SOON: { label: "À renouveler", tone: "amber" },
+  OK: { label: "À jour", tone: "green" },
+};
+
+export const DEADLINE_STATUS: Record<string, { label: string; tone: Tone }> = {
+  OPEN: { label: "En cours", tone: "blue" },
+  DONE: { label: "Renouvelée", tone: "green" },
+  CANCELLED: { label: "Annulée", tone: "gray" },
+};
+
 export const OPERATION_MODE: Record<string, string> = {
   FIXED: "Fixe",
   SLIDING: "Glissant",

@@ -6,6 +6,7 @@ export const DEMO_PASSWORD = "Demo-Gmao-2026";
 export const USERS = {
   admin: "admin@demo.gmao",
   maintenanceManager: "resp.maintenance@demo.gmao",
+  fleetManager: "flotte@demo.gmao",
   workshopLyon: "chef.lyon@demo.gmao",
   workshopGrenoble: "chef.grenoble@demo.gmao",
   technicianLyon: "tech.lyon@demo.gmao",

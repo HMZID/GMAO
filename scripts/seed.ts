@@ -31,6 +31,7 @@ import {
   updateReport,
   updateTask,
 } from "@/server/services/work-orders";
+import { createDeadline, renewDeadline } from "@/server/services/fleet-deadlines";
 import { createIndicator } from "@/server/services/indicators";
 import { submitDemoRequest } from "@/server/services/demo-requests";
 import { ensureSiteContent } from "@/server/services/site";
@@ -1563,6 +1564,25 @@ async function main() {
     periodDays: 365,
     chart: "number",
   });
+
+  // Échéances administratives du parc : assurance à renouveler (J−30), vignette échue, visite technique à J−7,
+  // et une vignette déjà renouvelée (historique). Alertes au responsable du parc (flotte@demo.gmao).
+  const deadline = (code: string, kind: string, days: number, extra: Record<string, unknown> = {}) =>
+    createDeadline(ctx, { equipmentId: eqIds[code], kind, dueDate: daysFromNow(days).toISOString(), ...extra });
+  await deadline("CA-101", "INSURANCE", 12, { provider: "Assurances du Rhône", reference: "POL-2025-0412", amount: 2850 });
+  await deadline("CA-101", "VIGNETTE", -5, { label: "Vignette 2026", provider: "Recette des finances", amount: 420 });
+  await deadline("CA-101", "TECHNICAL_INSPECTION", 75, { provider: "Centre de visite technique Lyon Nord" });
+  await deadline("CA-102", "INSURANCE", 160, { provider: "Assurances du Rhône", reference: "POL-2025-0413", amount: 2850 });
+  await deadline("CA-102", "TECHNICAL_INSPECTION", 5, { provider: "Centre de visite technique Lyon Nord" });
+  const vignetteCa102 = await deadline("CA-102", "VIGNETTE", -300, { label: "Vignette 2025", provider: "Recette des finances", amount: 420 });
+  await renewDeadline(
+    ctx,
+    vignetteCa102.id,
+    { dueDate: daysFromNow(65).toISOString(), label: "Vignette 2026", reference: "QUIT-88213", amount: 420 },
+    daysAgo(290),
+  );
+  await deadline("TP-004", "INSURANCE", 40, { provider: "Mutuelle des engins", reference: "ENG-7781", amount: 1900 });
+  await deadline("CH-012", "INSURANCE", 210, { label: "Assurance bris de machine", provider: "Mutuelle des engins", amount: 3400 });
 
   // Recalcul final des échéances
   for (const id of Object.values(eqIds)) await db.transaction((tx) => recomputeDueItems(tx, ctx, id, now));

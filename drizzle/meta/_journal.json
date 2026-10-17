@@ -134,6 +134,13 @@
       "when": 1792242031336,
       "tag": "0018_two_factor",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792243225221,
+      "tag": "0019_fleet_deadlines",
+      "breakpoints": true
     }
   ]
 }
