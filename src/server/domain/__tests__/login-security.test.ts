@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { captchaRefusals, clientIp, isLoginBlocked, LOGIN_LIMITS, safeRedirectPath } from "../login-security";
+import { breachCountInRange, captchaRefusals, clientIp, isLoginBlocked, LOGIN_LIMITS, safeRedirectPath } from "../login-security";
 
 describe("Destination après connexion", () => {
   it("garde un chemin de l'application, avec sa recherche", () => {
@@ -57,5 +57,19 @@ describe("Adresse IP du client", () => {
     expect(clientIp(headers)).toBe("203.0.113.7");
     expect(clientIp(new Headers({ "x-real-ip": "198.51.100.2" }))).toBe("198.51.100.2");
     expect(clientIp(new Headers())).toBeNull();
+  });
+});
+
+describe("Mots de passe divulgués (Have I Been Pwned)", () => {
+  // Réponse de /range/{5 premiers caractères} : suffixe de l'empreinte et nombre de fuites ; « :0 » = remplissage.
+  const body = "0018A45C4D1DEF81644B54AB7F969B88D65:10\r\n00D4F6E8FA6EECAD2A3AA415EEC418D38EC:2\r\n011053FD0102E94D6AE2F8B83D76FAF94F6:0";
+
+  it("trouve le suffixe sans tenir compte de la casse, et renvoie le nombre de fuites", () => {
+    expect(breachCountInRange(body, "00d4f6e8fa6eecad2a3aa415eec418d38ec")).toBe(2);
+  });
+
+  it("ignore les lignes de remplissage et un suffixe absent", () => {
+    expect(breachCountInRange(body, "011053FD0102E94D6AE2F8B83D76FAF94F6")).toBe(0);
+    expect(breachCountInRange(body, "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")).toBe(0);
   });
 });

@@ -1,4 +1,5 @@
 import "server-only";
+import { assertPasswordNotBreached } from "@/server/auth/breached-password";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
 import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
@@ -42,6 +43,7 @@ export async function setInitialPassword(ctx: AuthContext, raw: unknown, current
     provisionalMatches: await verifyPassword({ hash: credential.password, password: input.password }),
   });
   if (errors.length) throw new BusinessRuleError(errors);
+  await assertPasswordNotBreached(input.password);
   const passwordHash = await hashPassword(input.password);
   await db.transaction(async (tx) => {
     await tx.update(account).set({ password: passwordHash }).where(eq(account.id, credential.id));

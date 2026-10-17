@@ -1,4 +1,5 @@
 import "server-only";
+import { assertPasswordNotBreached } from "@/server/auth/breached-password";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
@@ -150,6 +151,7 @@ export async function createUser(ctx: AuthContext, raw: unknown) {
   const scopeId = await assertScopeInTenant(ctx, input.scopeType, input.scopeId);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
   if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  await assertPasswordNotBreached(input.password);
   const passwordHash = await hashPassword(input.password);
   return db.transaction(async (tx) => {
     const id = randomUUID();
@@ -287,6 +289,7 @@ export async function setUserPassword(ctx: AuthContext, userId: string, raw: unk
     .where(and(eq(user.id, userId), eq(user.tenantId, ctx.tenantId)));
   if (!target) throw new NotFoundError("Utilisateur");
   await assertCanManageUser(ctx, userId);
+  await assertPasswordNotBreached(input.password);
   const passwordHash = await hashPassword(input.password);
   await db.transaction(async (tx) => {
     const [credential] = await tx

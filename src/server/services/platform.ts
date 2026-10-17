@@ -1,4 +1,5 @@
 import "server-only";
+import { assertPasswordNotBreached } from "@/server/auth/breached-password";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
@@ -80,6 +81,7 @@ export async function createDemoTenant(ctx: AuthContext, raw: unknown, now = new
   if (!(DEMO_DURATIONS as readonly number[]).includes(input.durationDays)) throw new BusinessRuleError(["Durée de démonstration inconnue."]);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.adminEmail));
   if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  await assertPasswordNotBreached(input.adminPassword);
   const passwordHash = await hashPassword(input.adminPassword);
   const endsAt = demoEndsAt(now, input.durationDays);
 
@@ -274,6 +276,7 @@ export async function createTenantUser(ctx: AuthContext, tenantId: string, raw: 
   } else if (input.scopeType !== "TENANT") throw new BusinessRuleError(["Périmètre inconnu."]);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
   if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  await assertPasswordNotBreached(input.password);
   const passwordHash = await hashPassword(input.password);
   return db.transaction(async (tx) => {
     const id = randomUUID();

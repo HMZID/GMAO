@@ -63,3 +63,16 @@ export function clientIp(headers: { get(name: string): string | null } | null | 
   if (!headers) return null;
   return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip")?.trim() || null;
 }
+
+/**
+ * Mot de passe divulgué (Have I Been Pwned, méthode k-anonymity) : l'empreinte SHA-1 est coupée en un préfixe
+ * de 5 caractères, seul envoyé au service, et un suffixe cherché dans la réponse (`SUFFIXE:NOMBRE` par ligne).
+ */
+export function breachCountInRange(rangeBody: string, suffix: string): number {
+  const wanted = suffix.toUpperCase();
+  for (const line of rangeBody.split(/\r?\n/)) {
+    const [candidate, count] = line.trim().split(":");
+    if (candidate?.toUpperCase() === wanted) return Number(count) || 0;
+  }
+  return 0;
+}
