@@ -22,6 +22,8 @@ updates:
     commit-message:
       prefix: "Dépendances"
 
+  # Application mobile : les versions d'Expo, de React et de React Native sont fixées par le SDK Expo et se
+  # mettent à jour ensemble (`npx expo install --fix`, lors d'un changement de SDK) ; Dependabot les laisse.
   - package-ecosystem: npm
     directory: /mobile
     target-branch: develop
@@ -37,6 +39,17 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "@expo/*"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "@types/react"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-*"
+      - dependency-name: "@react-native/*"
+      - dependency-name: "@react-native-async-storage/*"
+      - dependency-name: "@react-native-community/*"
     labels: [dependances]
     commit-message:
       prefix: "Dépendances mobile"
