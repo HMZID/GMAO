@@ -62,7 +62,7 @@ export default async function NewPurchaseRequestPage(props: PageProps<"/demandes
             </Field>
             <fieldset className="space-y-4 rounded-md border border-slate-200 p-4 sm:col-span-2">
               <legend className="px-1 text-sm font-medium text-slate-700">Rattachement (un au moins, ACH-01)</legend>
-              <Field label="Ordre de travail" name="workOrderId">
+              <Field label="Intervention à réaliser" name="workOrderId">
                 <Select
                   name="workOrderId"
                   defaultValue={workOrderId}

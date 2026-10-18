@@ -55,7 +55,7 @@ export default async function TechniciansPage() {
               <Field label="Taux horaire (€)" name="hourlyRate">
                 <Input id="t-rate" name="hourlyRate" type="number" min={0} step="0.01" />
               </Field>
-              <Field label="Compte utilisateur" name="userId" hint="Pour pointer et réaliser les ordres de travail" className="sm:col-span-2">
+              <Field label="Compte utilisateur" name="userId" hint="Pour pointer et réaliser les interventions" className="sm:col-span-2">
                 <Select
                   id="t-user"
                   name="userId"

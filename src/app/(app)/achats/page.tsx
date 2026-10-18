@@ -39,7 +39,7 @@ export default async function SuppliersPage() {
             <Field label="Adresse" name="address" className="lg:col-span-2">
               <Input id="address" name="address" maxLength={300} />
             </Field>
-            <Checkbox name="isContractor" label="Prestataire de maintenance (intervient sur les ordres de travail)" />
+            <Checkbox name="isContractor" label="Prestataire de maintenance (réalise des interventions)" />
             <div className="sm:col-span-2 lg:col-span-3">
               <SubmitButton>Créer</SubmitButton>
             </div>
@@ -57,7 +57,7 @@ export default async function SuppliersPage() {
                 <TH>Identifiant fiscal</TH>
                 <TH>Contact</TH>
                 <TH>Rôle</TH>
-                <TH className="text-right">Ordres de travail</TH>
+                <TH className="text-right">Interventions à réaliser</TH>
               </tr>
             </THead>
             <TBody>

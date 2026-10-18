@@ -2084,7 +2084,7 @@ async function main() {
 
   // Indicateurs personnalisés d'exemple (KPI-11)
   await createIndicator(ctx, {
-    name: "Ordres de travail par statut",
+    name: "Interventions à réaliser par statut",
     source: "work-orders",
     aggregate: "count",
     groupBy: "status",

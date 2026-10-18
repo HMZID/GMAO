@@ -76,7 +76,7 @@ test("l'administrateur gère la plateforme, pas la maintenance ; la direction g�
   await expect(page).toHaveURL(/\/administration\/plateforme$/);
   const menu = page.getByRole("navigation", { name: "Navigation principale" }).first();
   await expect(menu.getByRole("link", { name: "Administration" })).toBeVisible();
-  for (const entry of ["Tableau de bord", "Équipements", "Demandes d'intervention", "Ordres de travail"]) {
+  for (const entry of ["Tableau de bord", "Équipements", "Demandes d'intervention", "Interventions à réaliser"]) {
     await expect(menu.getByRole("link", { name: entry })).toHaveCount(0);
   }
   await page.goto("/demandes/nouvelle");
@@ -90,7 +90,7 @@ test("l'administrateur gère la plateforme, pas la maintenance ; la direction g�
   expect(roles).toContain("Direction");
   expect(roles).not.toContain("Administrateur de la plateforme");
   await page.goto("/demandes/nouvelle");
-  await expect(page.getByRole("heading", { name: "Signaler une panne" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Créer une demande d'intervention" })).toBeVisible();
 });
 
 test("l'administrateur voit chaque organisation, y crée un compte et se connecte en tant qu'un utilisateur", async ({ page }) => {
@@ -123,7 +123,7 @@ test("l'administrateur voit chaque organisation, y crée un compte et se connect
   await expect(menu.getByRole("link", { name: "Demandes d'intervention" })).toBeVisible();
   await expect(menu.getByRole("link", { name: "Administration" })).toHaveCount(0);
   await page.goto("/demandes/nouvelle");
-  await expect(page.getByRole("heading", { name: "Signaler une panne" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Créer une demande d'intervention" })).toBeVisible();
 
   // Retour au compte de l'administrateur.
   await page.getByRole("button", { name: "Revenir à mon compte" }).click();

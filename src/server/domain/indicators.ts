@@ -49,8 +49,8 @@ const site: IndicatorDimension = { key: "site", label: "Site" };
 
 export const INDICATOR_DEFINITIONS: Record<IndicatorSource, IndicatorSourceDefinition> = {
   "work-orders": {
-    label: "Ordres de travail",
-    noun: "ordre(s) de travail",
+    label: "Interventions à réaliser",
+    noun: "intervention(s)",
     dateLabel: "date de création",
     fields: [
       { key: "externalCost", label: "Coût prestataire", unit: "€" },
@@ -105,7 +105,7 @@ export const INDICATOR_DEFINITIONS: Record<IndicatorSource, IndicatorSourceDefin
     dimensions: [
       { key: "technician", label: "Technicien" },
       site,
-      { key: "workOrderType", label: "Type d'ordre de travail", choices: WORK_ORDER_TYPE },
+      { key: "workOrderType", label: "Type d'intervention", choices: WORK_ORDER_TYPE },
       month,
     ],
   },

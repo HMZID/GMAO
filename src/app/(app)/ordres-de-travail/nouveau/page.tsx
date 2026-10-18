@@ -13,11 +13,11 @@ import { listSupplierOptions } from "@/server/services/stock";
 import { listTechnicianOptions } from "@/server/services/work-orders";
 import { createWorkOrderAction } from "../actions";
 
-export const metadata = { title: "Nouvel ordre de travail" };
+export const metadata = { title: "Nouvelle intervention à réaliser" };
 
 export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-travail/nouveau">) {
   const ctx = await getAuthContext();
-  if (!ctx.can("workorder.create")) return <Forbidden what="la création d'ordres de travail" />;
+  if (!ctx.can("workorder.create")) return <Forbidden what="la création d'interventions" />;
   const sp = await props.searchParams;
   const preselected = isUuid(sp.equipmentId) ? sp.equipmentId : "";
   const [equipment, workshops, technicians, suppliers] = await Promise.all([
@@ -30,9 +30,9 @@ export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-trav
   return (
     <>
       <PageHeader
-        title="Nouvel ordre de travail"
-        description="Pour une panne signalée, préférer la transformation de la demande d'intervention. Un ordre de travail correctif « immobilisant » rend l'équipement inapte jusqu'à la remise en service."
-        back={{ href: "/ordres-de-travail", label: "Ordres de travail" }}
+        title="Nouvelle intervention à réaliser"
+        description="Pour une panne signalée, préférer la transformation de la demande d'intervention. Une intervention corrective « immobilisante » rend l'équipement inapte jusqu'à la remise en service."
+        back={{ href: "/ordres-de-travail", label: "Interventions à réaliser" }}
       />
       <Card className="max-w-4xl">
         <CardBody>
@@ -97,7 +97,7 @@ export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-trav
               </div>
             </fieldset>
             <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
-              <SubmitButton>Créer l&apos;ordre de travail</SubmitButton>
+              <SubmitButton>Créer l&apos;intervention à réaliser</SubmitButton>
               <ButtonLink href="/ordres-de-travail" variant="ghost">
                 Annuler
               </ButtonLink>

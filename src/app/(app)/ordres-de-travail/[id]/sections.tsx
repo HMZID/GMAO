@@ -44,14 +44,14 @@ export function TransitionsCard({ wo }: { wo: WorkOrder }) {
   const fromDone = wo.status === "WORK_DONE" || wo.status === "TECH_CLOSED";
   return (
     <Card>
-      <CardHeader title="Faire avancer l'ordre de travail" description="Les conditions manquantes sont toutes listées sous chaque action." />
+      <CardHeader title="Faire avancer l'intervention" description="Les conditions manquantes sont toutes listées sous chaque action." />
       <CardBody>
         <ActionPanel action={transitionAction.bind(null, wo.id)} className="grid gap-4 md:grid-cols-2 [&>[role]]:md:col-span-2">
           {wo.transitions.map((t) => {
             const label =
               t.to === "IN_PROGRESS" && fromDone
                 ? wo.status === "TECH_CLOSED"
-                  ? "Rouvrir l'ordre de travail"
+                  ? "Rouvrir l'intervention"
                   : "Reprendre (essai non concluant)"
                 : TRANSITION_ACTION[t.to];
             const variant = t.to === "CANCELLED" ? "danger" : t.to === "ON_HOLD" ? "secondary" : "primary";

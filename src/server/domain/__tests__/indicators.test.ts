@@ -75,7 +75,7 @@ describe("Indicateurs personnalisés : libellés", () => {
   });
 
   it("décrit l'indicateur en une phrase", () => {
-    expect(describeIndicator(base)).toBe("Nombre d'ordres de travail par statut");
+    expect(describeIndicator(base)).toBe("Nombre d'interventions à réaliser par statut");
     expect(
       describeIndicator({ name: "h", source: "labor", aggregate: "sum", field: "hours", groupBy: "technician", periodDays: 30, chart: "bar" }),
     ).toBe("Total : heures par technicien, 30 derniers jours (date du pointage)");

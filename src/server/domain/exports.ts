@@ -89,8 +89,8 @@ export const EXPORT_DEFINITIONS: Record<ExportDataset, ExportDefinition> = {
     ],
   },
   "work-orders": {
-    label: "Ordres de travail",
-    sheet: "Ordres de travail",
+    label: "Interventions à réaliser",
+    sheet: "Interventions à réaliser",
     description: "Interventions préventives, correctives et réglementaires : planification, réalisation, coûts externes.",
     changedAt: "updatedAt",
     columns: [
@@ -125,7 +125,7 @@ export const EXPORT_DEFINITIONS: Record<ExportDataset, ExportDefinition> = {
   "work-requests": {
     label: "Demandes d'intervention",
     sheet: "Demandes",
-    description: "Signalements de pannes et anomalies, leur qualification et l'ordre de travail créé.",
+    description: "Signalements de pannes et anomalies, leur qualification et l'intervention créée.",
     changedAt: "updatedAt",
     columns: [
       id,
@@ -141,7 +141,7 @@ export const EXPORT_DEFINITIONS: Record<ExportDataset, ExportDefinition> = {
       { key: "status", label: "Statut", type: "text", labels: REQUEST_STATUS },
       { key: "priority", label: "Priorité", type: "text", labels: PRIORITY },
       { key: "type", label: "Type", type: "text", labels: REQUEST_TYPE },
-      { key: "workOrderNumber", label: "Ordre de travail", type: "text" },
+      { key: "workOrderNumber", label: "Intervention à réaliser", type: "text" },
       { key: "qualifiedAt", label: "Qualifiée le", type: "date" },
       createdAt,
       updatedAt,
@@ -246,7 +246,7 @@ export const EXPORT_DEFINITIONS: Record<ExportDataset, ExportDefinition> = {
   "stock-movements": {
     label: "Mouvements de stock",
     sheet: "Mouvements",
-    description: "Entrées, sorties, transferts et ajustements, avec l'ordre de travail concerné.",
+    description: "Entrées, sorties, transferts et ajustements, avec l'intervention concernée.",
     changedAt: "createdAt",
     columns: [
       id,
@@ -256,7 +256,7 @@ export const EXPORT_DEFINITIONS: Record<ExportDataset, ExportDefinition> = {
       { key: "warehouseCode", label: "Magasin", type: "text" },
       { key: "quantity", label: "Quantité", type: "number" },
       { key: "unitCost", label: "Coût unitaire", type: "number" },
-      { key: "workOrderNumber", label: "Ordre de travail", type: "text" },
+      { key: "workOrderNumber", label: "Intervention à réaliser", type: "text" },
       { key: "reference", label: "Référence", type: "text" },
       { key: "reason", label: "Motif", type: "text" },
     ],

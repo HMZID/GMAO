@@ -41,7 +41,7 @@ export function checkIssue({ onHand, reserved, reservedForWorkOrder, quantity }:
   if (!(quantity > 0)) errors.push("La quantité doit être positive.");
   const free = available(onHand, reserved);
   if (quantity > reservedForWorkOrder + free) {
-    errors.push(`Stock insuffisant : ${round3(reservedForWorkOrder + free)} disponible(s) pour cet ordre de travail, ${quantity} demandé(s).`);
+    errors.push(`Stock insuffisant : ${round3(reservedForWorkOrder + free)} disponible(s) pour cette intervention, ${quantity} demandé(s).`);
   }
   if (onHand - quantity < 0) errors.push("Le stock physique ne peut pas devenir négatif.");
   return errors;

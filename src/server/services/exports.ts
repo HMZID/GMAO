@@ -511,7 +511,7 @@ async function buildWorkbook(
   info.addRow([]);
   info.addRow(["Remarque", "Codes et identifiants stables : préférer CSV ou JSON (API ou connecteur) pour une intégration automatique."]);
   if (company)
-    info.addRow(["Périmètre", "Fournisseurs : ceux intervenus sur les ordres de travail de la société. Articles : ceux stockés dans ses magasins."]);
+    info.addRow(["Périmètre", "Fournisseurs : ceux ayant réalisé des interventions de la société. Articles : ceux stockés dans ses magasins."]);
   info.getColumn(1).font = { bold: true };
 
   for (const { dataset, rows } of sheets) {
