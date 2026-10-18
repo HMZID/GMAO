@@ -23,7 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Tableau de bord", icon: "dashboard", permission: "equipment.read" },
   { href: "/equipements", label: "Équipements", icon: "equipment", permission: "equipment.read" },
   { href: "/demandes", label: "Demandes d'intervention", icon: "requests", permission: "request.read" },
-  { href: "/ordres-de-travail", label: "Ordres de travail", icon: "workorders", permission: "workorder.read" },
+  { href: "/ordres-de-travail", label: "Interventions à réaliser", icon: "workorders", permission: "workorder.read" },
   { href: "/preventif", label: "Préventif", icon: "preventive", permission: "plan.read" },
   { href: "/planning", label: "Planning", icon: "planning", permission: "planning.read" },
   { href: "/stock", label: "Pièces et stocks", icon: "stock", permission: "part.read" },

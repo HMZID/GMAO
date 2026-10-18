@@ -362,7 +362,7 @@ async function overdueDigest(tenantId: string, now: Date, day: string) {
       .limit(100);
     queued += await queueDigest(tenantId, userId, "OVERDUE", day, {
       title: `${late.length + held.length} retard(s) à traiter`,
-      intro: "Préventifs en retard au-delà de la tolérance et ordres de travail en attente depuis plus de 5 jours :",
+      intro: "Préventifs en retard au-delà de la tolérance et interventions en attente depuis plus de 5 jours :",
       items: [
         ...late.map((r) => ({
           label: `${r.code} — ${r.operation}`,
@@ -376,7 +376,7 @@ async function overdueDigest(tenantId: string, now: Date, day: string) {
         })),
       ],
       link: "/ordres-de-travail?status=ON_HOLD",
-      linkLabel: "Voir les ordres de travail en attente",
+      linkLabel: "Voir les interventions en attente",
     });
   }
   return queued;

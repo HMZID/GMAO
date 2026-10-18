@@ -222,7 +222,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
       <Card>
         <CardHeader
           title="À planifier"
-          description={`Ordres de travail créés ou en attente, par priorité — ${formatNumber(plan.backlogHours)} h estimées`}
+          description={`Interventions créées ou en attente, par priorité — ${formatNumber(plan.backlogHours)} h estimées`}
         />
         {plan.backlog.length === 0 ? (
           <EmptyState title="Rien à planifier" />
@@ -230,7 +230,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
           <Table>
             <THead>
               <tr>
-                <TH>Ordre de travail</TH>
+                <TH>Intervention</TH>
                 <TH>Équipement</TH>
                 <TH>Priorité</TH>
                 <TH>Durée estimée</TH>

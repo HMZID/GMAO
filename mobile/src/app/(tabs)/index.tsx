@@ -29,8 +29,8 @@ export default function MyWorkOrders() {
       {stale ? <Message tone="amber">Hors connexion : liste du {formatDateTime(stale)}.</Message> : null}
       {error ? <Message>{error}</Message> : null}
       {loading && !data ? <Loading /> : null}
-      <Card title={technician && !can("workorder.manage") ? "Mes ordres de travail" : "Ordres de travail ouverts"}>
-        {data?.items.length === 0 ? <Text style={styles.muted}>Aucun OT ouvert.</Text> : null}
+      <Card title={technician && !can("workorder.manage") ? "Mes interventions à réaliser" : "Interventions à réaliser"}>
+        {data?.items.length === 0 ? <Text style={styles.muted}>Aucune intervention à réaliser.</Text> : null}
         {data?.items.map((w) => (
           <Row
             key={w.id}

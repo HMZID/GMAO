@@ -33,8 +33,8 @@ type EventDefinition = {
 
 export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
   ASSIGNMENT: {
-    label: "Affectation à un ordre de travail",
-    description: "Vous êtes affecté comme intervenant à un ordre de travail.",
+    label: "Affectation à une intervention",
+    description: "Vous êtes affecté à une intervention à réaliser.",
     mandatory: false,
   },
   APPROVAL_PENDING: {
@@ -52,7 +52,7 @@ export const EMAIL_EVENT_DEFINITIONS: Record<EmailEvent, EventDefinition> = {
   },
   OVERDUE: {
     label: "Retards",
-    description: "Récapitulatif quotidien des préventifs en retard et des ordres de travail en attente depuis plus de 5 jours.",
+    description: "Récapitulatif quotidien des préventifs en retard et des interventions en attente depuis plus de 5 jours.",
     mandatory: false,
     roles: ["WORKSHOP_MANAGER", "MAINTENANCE_MANAGER", "FLEET_MANAGER"],
   },

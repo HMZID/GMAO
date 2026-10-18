@@ -614,7 +614,7 @@ export async function returnFromWorkOrder(
       ),
     );
   if (!(input.quantity > 0) || input.quantity > (net?.issued ?? 0)) {
-    throw new BusinessRuleError([`Retour impossible : ${net?.issued ?? 0} sortie(s) nette(s) sur cet ordre de travail.`]);
+    throw new BusinessRuleError([`Retour impossible : ${net?.issued ?? 0} sortie(s) nette(s) sur cette intervention.`]);
   }
   const level = await lockLevel(tx, ctx, input.partId, input.warehouseId);
   await tx

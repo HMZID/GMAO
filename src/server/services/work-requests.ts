@@ -311,7 +311,7 @@ export async function convertToWorkOrder(ctx: AuthContext, id: string) {
   const current = await loadForUpdate(ctx, id);
   assertCanOn(ctx, "workorder.manage", current);
   const errors: string[] = [];
-  if (current.status !== "QUALIFIED") errors.push("La demande doit être qualifiée avant d'être transformée en ordre de travail.");
+  if (current.status !== "QUALIFIED") errors.push("La demande doit être qualifiée avant d'être transformée en intervention à réaliser.");
   const approval = await latestApproval(db, "WORK_REQUEST", id);
   if (approval?.status === "PENDING")
     errors.push(
@@ -348,13 +348,12 @@ export async function mergeIntoWorkOrder(ctx: AuthContext, id: string, workOrder
     .select({ id: workOrders.id, equipmentId: workOrders.equipmentId, status: workOrders.status })
     .from(workOrders)
     .where(and(eq(workOrders.id, workOrderId), eq(workOrders.tenantId, ctx.tenantId)));
-  if (!wo) throw new NotFoundError("Ordre de travail");
-  if (wo.equipmentId !== current.equipmentId) throw new BusinessRuleError(["L'ordre de travail doit porter sur le même équipement."]);
-  if (!(OPEN_STATUSES as readonly string[]).includes(wo.status))
-    throw new BusinessRuleError(["L'ordre de travail de rattachement doit être ouvert."]);
+  if (!wo) throw new NotFoundError("Intervention");
+  if (wo.equipmentId !== current.equipmentId) throw new BusinessRuleError(["L'intervention doit porter sur le même équipement."]);
+  if (!(OPEN_STATUSES as readonly string[]).includes(wo.status)) throw new BusinessRuleError(["L'intervention de rattachement doit être ouverte."]);
   await db.transaction(async (tx) => {
     await tx.update(workRequests).set({ status: "MERGED", workOrderId }).where(eq(workRequests.id, id));
-    await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "Demande rattachée à un ordre de travail");
+    await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "Demande rattachée à une intervention à réaliser");
     if (current.immobilize) {
       // L'immobilisation décidée sur la DI est portée par l'OT : elle sera levée à sa remise en service.
       await tx.update(workOrders).set({ isImmobilizing: true }).where(eq(workOrders.id, workOrderId));

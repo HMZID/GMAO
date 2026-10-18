@@ -58,7 +58,7 @@ test("téléphone : planning jour par jour, navigation du bas, listes en cartes"
   await expect(page.getByText("Julien Moreau").locator("visible=true").first()).toBeVisible();
   // Navigation du bas, puis liste affichée en cartes sans défilement horizontal.
   await page.getByRole("navigation", { name: "Rubriques principales" }).getByRole("link", { name: "Travaux" }).click();
-  await expect(page.getByRole("heading", { name: "Ordres de travail" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Interventions à réaliser" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
 

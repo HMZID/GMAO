@@ -64,7 +64,7 @@ export async function taskAction(id: string, taskId: string, _: ActionState, for
       return {
         status: "success",
         message: "Mesure hors tolérance : point non conforme.",
-        warnings: ["Créer un ordre de travail correctif si nécessaire."],
+        warnings: ["Créer une intervention corrective si nécessaire."],
       } satisfies ActionState;
     }
   }, "Point enregistré.");

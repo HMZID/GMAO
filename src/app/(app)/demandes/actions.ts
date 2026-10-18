@@ -32,5 +32,5 @@ export async function convertWorkRequestAction(id: string, _: ActionState): Prom
 }
 
 export async function mergeWorkRequestAction(id: string, _: ActionState, formData: FormData): Promise<ActionState> {
-  return act((ctx) => mergeIntoWorkOrder(ctx, id, String(formData.get("workOrderId") ?? "")), "Demande rattachée à l'ordre de travail.");
+  return act((ctx) => mergeIntoWorkOrder(ctx, id, String(formData.get("workOrderId") ?? "")), "Demande rattachée à l'intervention à réaliser.");
 }

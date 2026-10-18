@@ -114,7 +114,7 @@ export const READING_STATUS: Record<string, { label: string; tone: Tone }> = {
 
 export const READING_SOURCE: Record<string, string> = {
   MANUAL: "Saisie",
-  WORK_ORDER: "Ordre de travail",
+  WORK_ORDER: "Intervention à réaliser",
   TELEMATICS: "Télématique",
   IMPORT: "Import",
 };
@@ -122,7 +122,7 @@ export const READING_SOURCE: Record<string, string> = {
 export const REQUEST_STATUS: Record<string, { label: string; tone: Tone }> = {
   NEW: { label: "Nouvelle", tone: "blue" },
   QUALIFIED: { label: "Qualifiée", tone: "violet" },
-  CONVERTED: { label: "Transformée en ordre de travail", tone: "green" },
+  CONVERTED: { label: "Transformée en intervention à réaliser", tone: "green" },
   REJECTED: { label: "Rejetée", tone: "gray" },
   MERGED: { label: "Rattachée", tone: "gray" },
 };
@@ -169,7 +169,7 @@ export const TRANSITION_ACTION: Record<string, string> = {
   WORK_DONE: "Terminer les travaux",
   TECH_CLOSED: "Valider la remise en service",
   CLOSED: "Clôturer (administratif)",
-  CANCELLED: "Annuler l'ordre de travail",
+  CANCELLED: "Annuler l'intervention",
 };
 
 export const HOLD_REASON: Record<string, string> = {
@@ -233,7 +233,7 @@ export const METER_UNIT_SHORT: Record<string, string> = { HOURS: "h", KM: "km", 
 
 export const MOVEMENT_TYPE: Record<string, { label: string; sign: 1 | -1 | 0 }> = {
   RECEIPT: { label: "Réception", sign: 1 },
-  ISSUE: { label: "Sortie sur ordre de travail", sign: -1 },
+  ISSUE: { label: "Sortie sur intervention", sign: -1 },
   RETURN: { label: "Retour en stock", sign: 1 },
   TRANSFER_OUT: { label: "Transfert sortant", sign: -1 },
   TRANSFER_IN: { label: "Transfert entrant", sign: 1 },
@@ -338,7 +338,7 @@ export const ENTITY_TYPE: Record<string, string> = {
   maintenance_plan: "Plan d'entretien",
   due_item: "Échéance",
   work_request: "Demande d'intervention",
-  work_order: "Ordre de travail",
+  work_order: "Intervention à réaliser",
   time_entry: "Pointage",
   part: "Article",
   stock_level: "Niveau de stock",

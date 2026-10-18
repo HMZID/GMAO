@@ -68,7 +68,7 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
                   { label: "Fournisseur suggéré", value: pr.supplier?.name },
                   { label: "Date de besoin", value: pr.neededBy ? formatDate(pr.neededBy) : null },
                   {
-                    label: "Ordre de travail",
+                    label: "Intervention à réaliser",
                     value: pr.workOrder ? (
                       <Link href={`/ordres-de-travail/${pr.workOrder.id}`} className="text-brand-700 hover:underline">
                         {pr.workOrder.number} — {pr.workOrder.title}

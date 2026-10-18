@@ -22,8 +22,8 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="login" options={{ title: "Connexion", headerShown: false }} />
             <Stack.Screen name="equipment/[id]" options={{ title: "Équipement" }} />
-            <Stack.Screen name="work-order/[id]" options={{ title: "Ordre de travail" }} />
-            <Stack.Screen name="request/new" options={{ title: "Signaler une panne" }} />
+            <Stack.Screen name="work-order/[id]" options={{ title: "Intervention à réaliser" }} />
+            <Stack.Screen name="request/new" options={{ title: "Créer une demande d'intervention" }} />
           </Stack>
         </SyncProvider>
       </SessionProvider>

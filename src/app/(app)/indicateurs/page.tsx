@@ -113,7 +113,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               label="Coût total de maintenance"
               value={formatCurrency(costs?.total)}
               tone="teal"
-              hint="Ordres de travail clôturés techniquement sur la période"
+              hint="Interventions clôturées techniquement sur la période"
             />
             <StatTile label="Main-d'œuvre" value={formatCurrency(costs?.labor)} tone="gray" />
             <StatTile
@@ -194,7 +194,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
           </div>
 
           <Card className="mt-6">
-            <CardHeader title="Pièces les plus consommées" description="Valeur des pièces sorties sur les ordres de travail, retours déduits" />
+            <CardHeader title="Pièces les plus consommées" description="Valeur des pièces sorties sur les interventions, retours déduits" />
             {k.topParts.length === 0 ? (
               <EmptyState title="Aucune consommation sur la période" />
             ) : (

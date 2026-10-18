@@ -26,8 +26,8 @@ export default async function WorkRequestsPage(props: PageProps<"/demandes">) {
     <>
       <PageHeader
         title="Demandes d'intervention"
-        description="Pannes et anomalies signalées, à qualifier puis à transformer en ordre de travail."
-        actions={ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Signaler une panne</ButtonLink> : null}
+        description="Pannes et anomalies signalées, à qualifier puis à transformer en intervention à réaliser."
+        actions={ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Créer une demande d&apos;intervention</ButtonLink> : null}
       />
       <Card>
         <FilterBar resetHref="/demandes">
