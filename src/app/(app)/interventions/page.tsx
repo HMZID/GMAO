@@ -16,7 +16,7 @@ import { listWorkOrders, workOrderFilters } from "@/server/services/work-orders"
 
 export const metadata = { title: "Interventions à réaliser" };
 
-export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travail">) {
+export default async function WorkOrdersPage(props: PageProps<"/interventions">) {
   const ctx = await getAuthContext();
   if (!ctx.can("workorder.read")) return <Forbidden what="les interventions" />;
   const params = cleanFilters(workOrderFilters, queryParams(await props.searchParams));
@@ -27,10 +27,10 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
       <PageHeader
         title="Interventions à réaliser"
         description="Interventions préventives, correctives et réglementaires, de la création à la clôture."
-        actions={ctx.can("workorder.create") ? <ButtonLink href="/ordres-de-travail/nouveau">Nouvelle intervention à réaliser</ButtonLink> : null}
+        actions={ctx.can("workorder.create") ? <ButtonLink href="/interventions/nouveau">Nouvelle intervention à réaliser</ButtonLink> : null}
       />
       <Card>
-        <FilterBar resetHref="/ordres-de-travail">
+        <FilterBar resetHref="/interventions">
           {params.equipmentId ? <input type="hidden" name="equipmentId" value={params.equipmentId} /> : null}
           <FilterField label="Recherche" htmlFor="q" className="w-56">
             <Input id="q" name="q" defaultValue={params.q} placeholder="N° d'intervention, intitulé, équipement" />
@@ -65,7 +65,7 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
         {params.equipmentId ? (
           <p className="border-b border-slate-100 bg-slate-50 px-5 py-2 text-sm text-slate-600">
             Filtré sur un équipement ·{" "}
-            <Link href="/ordres-de-travail" className="text-brand-700 hover:underline">
+            <Link href="/interventions" className="text-brand-700 hover:underline">
               retirer
             </Link>
           </p>
@@ -89,7 +89,7 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
               {page.items.map((w) => (
                 <TR key={w.id}>
                   <TD>
-                    <Link href={`/ordres-de-travail/${w.id}`} className="font-medium whitespace-nowrap text-brand-700 hover:underline">
+                    <Link href={`/interventions/${w.id}`} className="font-medium whitespace-nowrap text-brand-700 hover:underline">
                       {w.number}
                     </Link>
                     <p className="max-w-72 truncate text-xs text-slate-500">{w.title}</p>
@@ -124,7 +124,7 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
             </TBody>
           </Table>
         )}
-        <Pagination path="/ordres-de-travail" params={params} page={page.page} pageSize={page.pageSize} total={page.total} />
+        <Pagination path="/interventions" params={params} page={page.page} pageSize={page.pageSize} total={page.total} />
       </Card>
     </>
   );

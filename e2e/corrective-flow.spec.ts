@@ -26,7 +26,7 @@ test("cycle complet d'une panne : DI → OT → réalisation → remise en servi
   await expect(page.getByText("Demande qualifiée.")).toBeVisible();
   await expect(page.getByText("Immobilisé").first()).toBeVisible();
   await page.getByRole("button", { name: "Transformer en intervention à réaliser" }).click();
-  await expect(page).toHaveURL(/\/ordres-de-travail\/[0-9a-f-]{36}$/);
+  await expect(page).toHaveURL(/\/interventions\/[0-9a-f-]{36}$/);
   const workOrderUrl = page.url();
 
   // 3. Planification : date, durée, intervenant, puis statut « Planifié »

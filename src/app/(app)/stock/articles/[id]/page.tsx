@@ -155,7 +155,7 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                       <TD className="text-right tabular-nums">{signed(m.type, m.quantity)}</TD>
                       <TD className="text-xs text-slate-600">
                         {m.workOrderId ? (
-                          <Link href={`/ordres-de-travail/${m.workOrderId}`} className="text-brand-700 hover:underline">
+                          <Link href={`/interventions/${m.workOrderId}`} className="text-brand-700 hover:underline">
                             {m.workOrderNumber}
                           </Link>
                         ) : (

@@ -37,7 +37,7 @@ export default async function DashboardPage() {
           <>
             {ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Créer une demande d&apos;intervention</ButtonLink> : null}
             {ctx.can("workorder.create") ? (
-              <ButtonLink href="/ordres-de-travail/nouveau" variant="secondary">
+              <ButtonLink href="/interventions/nouveau" variant="secondary">
                 Nouvelle intervention à réaliser
               </ButtonLink>
             ) : null}
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
           label="Interventions à réaliser"
           value={Object.values(wo.byStatus).reduce((a, b) => a + b, 0)}
           tone="violet"
-          href="/ordres-de-travail"
+          href="/interventions"
           hint={`${wo.byPriority.P1 ?? 0} urgence(s) P1 · ${wo.byStatus.ON_HOLD ?? 0} en attente`}
         />
         <StatTile
@@ -108,7 +108,7 @@ export default async function DashboardPage() {
               title="Interventions à réaliser"
               description="Par priorité puis date prévue"
               actions={
-                <Link href="/ordres-de-travail" className="text-sm text-brand-700 hover:underline">
+                <Link href="/interventions" className="text-sm text-brand-700 hover:underline">
                   Tout voir
                 </Link>
               }
@@ -129,7 +129,7 @@ export default async function DashboardPage() {
                   {urgent.items.map((w) => (
                     <TR key={w.id}>
                       <TD>
-                        <Link href={`/ordres-de-travail/${w.id}`} className="font-medium text-brand-700 hover:underline">
+                        <Link href={`/interventions/${w.id}`} className="font-medium text-brand-700 hover:underline">
                           {w.number}
                         </Link>
                         <p className="max-w-56 truncate text-xs text-slate-500">{w.title}</p>

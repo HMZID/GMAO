@@ -30,7 +30,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   },
   {
     kind: "FEATURE",
-    title: "Pannes et ordres de travail",
+    title: "Pannes et interventions",
     body: "Du signalement du conducteur à la clôture : diagnostic, pièces, temps passés, immobilisation et remise en service validée.",
     meta: "Correctif",
     icon: "wrench",
@@ -52,7 +52,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   {
     kind: "FEATURE",
     title: "Pièces, magasins et camions atelier",
-    body: "Stock par magasin, emplacements, points de commande, inventaires tournants et sorties imputées à l'ordre de travail.",
+    body: "Stock par magasin, emplacements, points de commande, inventaires tournants et sorties imputées à l'intervention.",
     meta: "Stock",
     icon: "package",
   },
@@ -66,7 +66,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   {
     kind: "FEATURE",
     title: "Application mobile terrain",
-    body: "Ordres de travail, checklists, photos, relevés et signalements depuis le chantier, même sans réseau : tout se synchronise au retour.",
+    body: "Interventions à réaliser, checklists, photos, relevés et signalements depuis le chantier, même sans réseau : tout se synchronise au retour.",
     meta: "Mobile",
     icon: "smartphone",
   },
@@ -98,7 +98,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   {
     kind: "STEP",
     title: "L'atelier démarre",
-    body: "Plans préventifs appliqués, premières pannes saisies sur mobile, premiers ordres de travail clôturés.",
+    body: "Plans préventifs appliqués, premières pannes saisies sur mobile, premières interventions clôturées.",
   },
   {
     kind: "STEP",
@@ -132,7 +132,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   {
     kind: "FAQ",
     title: "L'application fonctionne-t-elle sans réseau sur les chantiers ?",
-    body: "Oui pour les saisies : ordres de travail, relevés, photos et signalements sont enregistrés sur le téléphone puis envoyés au retour du réseau, sans doublon.",
+    body: "Oui pour les saisies : interventions, relevés, photos et signalements sont enregistrés sur le téléphone puis envoyés au retour du réseau, sans doublon.",
   },
   {
     kind: "FAQ",
@@ -163,7 +163,7 @@ export const DEFAULT_SITE_PLANS: DefaultPlan[] = [
     features: [
       "Équipements, compteurs et documents",
       "Préventif au compteur et au calendrier",
-      "Demandes et ordres de travail",
+      "Demandes et interventions",
       "Application mobile terrain",
       "Utilisateurs illimités",
     ],

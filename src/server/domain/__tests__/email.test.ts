@@ -79,7 +79,7 @@ describe("Courriels : modèles", () => {
   });
 
   it("n'accepte que des liens internes à l'application", () => {
-    expect(absoluteLink(base, "/ordres-de-travail/1")).toBe("https://gmao.example.fr/ordres-de-travail/1");
+    expect(absoluteLink(base, "/interventions/1")).toBe("https://gmao.example.fr/interventions/1");
     expect(absoluteLink(base, "https://pirate.example")).toBeNull();
     expect(absoluteLink(base, "//pirate.example")).toBeNull();
   });

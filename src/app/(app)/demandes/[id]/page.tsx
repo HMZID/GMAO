@@ -59,7 +59,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
               ))}
               {r.openOrders.map((o) => (
                 <li key={o.id}>
-                  <Link href={`/ordres-de-travail/${o.id}`} className="underline">
+                  <Link href={`/interventions/${o.id}`} className="underline">
                     {o.number}
                   </Link>{" "}
                   — {o.title}
@@ -78,7 +78,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
             tone="blue"
             title={r.status === "MERGED" ? "Rattachée à une intervention à réaliser existante" : "Transformée en intervention à réaliser"}
           >
-            <Link href={`/ordres-de-travail/${r.workOrder.id}`} className="font-medium underline">
+            <Link href={`/interventions/${r.workOrder.id}`} className="font-medium underline">
               {r.workOrder.number}
             </Link>{" "}
             <WorkOrderStatusBadge status={r.workOrder.status} />

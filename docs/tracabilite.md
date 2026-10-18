@@ -78,7 +78,7 @@ Vérification : 187 tests unitaires des règles métier (`npm test`), 9 tests de
 | **COR-05** Ordres de travail | Must | oui | Fait | OT depuis une DI, le préventif ou en création directe ; numérotation par société et par année à l'heure de Paris. | `src/server/services/work-orders.ts`, `src/server/domain/numbering.ts` |
 | **COR-06** Statuts et transitions | Must | oui | Fait | Machine à états complète, transitions interdites refusées (API comprise). | `src/server/domain/work-order-status.ts` |
 | **COR-07** État de l'équipement distinct | Must | oui | Fait | État de l'équipement distinct, immobilisations datées. | `src/server/services/equipment-status.ts` |
-| **COR-08** Affectation des intervenants | Must | oui | Fait | Intervenants internes ou prestataire. | `src/app/(app)/ordres-de-travail/[id]` |
+| **COR-08** Affectation des intervenants | Must | oui | Fait | Intervenants internes ou prestataire. | `src/app/(app)/interventions/[id]` |
 | **COR-09** Saisie du temps | Must | oui | Fait | Chronomètre ou durée saisie, un pointage à la fois par technicien. | `src/server/services/work-orders.ts (recordTime)` |
 | **COR-10** Pièces consommées | Must | oui | Fait | Réservation, sortie et retour de pièces sur l'OT. | `src/server/services/stock.ts` |
 | **COR-11** Compte rendu | Must | oui | Fait | Compte rendu et relevé de compteur obligatoires pour terminer les travaux. | `src/server/domain/work-order-status.ts` |

@@ -15,7 +15,7 @@ import { createWorkOrderAction } from "../actions";
 
 export const metadata = { title: "Nouvelle intervention à réaliser" };
 
-export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-travail/nouveau">) {
+export default async function NewWorkOrderPage(props: PageProps<"/interventions/nouveau">) {
   const ctx = await getAuthContext();
   if (!ctx.can("workorder.create")) return <Forbidden what="la création d'interventions" />;
   const sp = await props.searchParams;
@@ -32,7 +32,7 @@ export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-trav
       <PageHeader
         title="Nouvelle intervention à réaliser"
         description="Pour une panne signalée, préférer la transformation de la demande d'intervention. Une intervention corrective « immobilisante » rend l'équipement inapte jusqu'à la remise en service."
-        back={{ href: "/ordres-de-travail", label: "Interventions à réaliser" }}
+        back={{ href: "/interventions", label: "Interventions à réaliser" }}
       />
       <Card className="max-w-4xl">
         <CardBody>
@@ -98,7 +98,7 @@ export default async function NewWorkOrderPage(props: PageProps<"/ordres-de-trav
             </fieldset>
             <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
               <SubmitButton>Créer l&apos;intervention à réaliser</SubmitButton>
-              <ButtonLink href="/ordres-de-travail" variant="ghost">
+              <ButtonLink href="/interventions" variant="ghost">
                 Annuler
               </ButtonLink>
             </div>

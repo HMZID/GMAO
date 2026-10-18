@@ -70,7 +70,7 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
                   {
                     label: "Intervention à réaliser",
                     value: pr.workOrder ? (
-                      <Link href={`/ordres-de-travail/${pr.workOrder.id}`} className="text-brand-700 hover:underline">
+                      <Link href={`/interventions/${pr.workOrder.id}`} className="text-brand-700 hover:underline">
                         {pr.workOrder.number} — {pr.workOrder.title}
                       </Link>
                     ) : null,

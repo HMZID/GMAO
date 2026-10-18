@@ -189,7 +189,7 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 | Échéance préventive | `due_items` |
 | Gamme, checklist | `task_lists`, `task_list_items`, `work_order_tasks` |
 | Demande d'intervention (DI) ; bouton « Créer une demande d'intervention » | `work_requests` |
-| Intervention à réaliser (écrans) ; ordre de travail, OT (CDC, numéros `OT-…`) | `work_orders` |
+| Intervention à réaliser (écrans, numéros `INT-…`, pages `/interventions`) ; ordre de travail, OT (CDC) | `work_orders` |
 | Intervenant, pointage | `work_order_assignees`, `time_entries` |
 | Clôture technique, clôture administrative | `TECH_CLOSED`, `CLOSED` |
 | Remise en service | `release` (`releaseValidatedBy`, `workorder.release`) |

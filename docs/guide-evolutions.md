@@ -35,11 +35,11 @@ Mailpit affiche les courriels envoyés sur http://localhost:8025. Comptes de dé
 Voir `mobile/README.md` pour l'installation. En résumé, pour le technicien :
 
 1. **Connexion** avec son compte GMAO. Les onglets dépendent de ses droits.
-2. **Mes OT** → choisir l'OT → **Démarrer l'intervention**.
+2. **Mes interventions** → choisir l'intervention → **Démarrer l'intervention**.
 3. Remplir la **checklist**, le **diagnostic et compte rendu**, le **temps passé** (raccourcis 15 min, 30 min, 1 h, 2 h), les **pièces consommées** (article, magasin, quantité), le **relevé du compteur**, puis prendre des **photos**.
 4. **Travaux terminés**. Le serveur vérifie toutes les conditions à l'envoi ; une condition manquante apparaît « à revoir » dans l'onglet **Synchro**.
 
-**Scanner** lit le QR code de l'étiquette et ouvre la fiche de l'équipement. Depuis la fiche, on peut **signaler une panne** ou saisir un **relevé de compteur**.
+**Scanner** lit le QR code de l'étiquette et ouvre la fiche de l'équipement. Depuis la fiche, on peut **créer une demande d'intervention** ou saisir un **relevé de compteur**.
 
 **Sans réseau**, tout se saisit normalement. Le bandeau indique « Hors connexion » et le nombre de saisies en attente ; l'envoi part tout seul au retour du réseau, sans doublon.
 
@@ -58,11 +58,11 @@ Menu **Imports** (profils qui peuvent créer des équipements, des articles ou d
 
 ## 4. Documents et photos
 
-Carte **Documents** des fiches équipement et OT.
+Carte **Documents** des fiches équipement et intervention.
 
 - **Ajouter** : choisir le fichier (PDF, photo, vidéo courte, Word, Excel ; 20 Mo par défaut), le type (notice, certificat, facture, photo, rapport, autre), un titre et une date d'expiration facultative (certificat, rapport de contrôle).
 - **Consulter** : le titre ouvre le document dans le navigateur ; « Télécharger » l'enregistre.
-- **Retirer** : réservé au gestionnaire de l'objet, ou à l'auteur d'une photo d'OT tant que l'OT n'est pas clôturé. Le document disparaît de la fiche mais reste conservé pour l'audit.
+- **Retirer** : réservé au gestionnaire de l'objet, ou à l'auteur d'une photo d'intervention tant que l'intervention n'est pas clôturée. Le document disparaît de la fiche mais reste conservé pour l'audit.
 - Les **factures** ne sont visibles que des profils achats et maintenance.
 - Un document arrivant à échéance déclenche un courriel à J-30, J-7 et à l'échéance (gestionnaire de flotte, responsable achats).
 
@@ -88,9 +88,9 @@ Circuits de la démonstration (CDC §2.4) :
 
 ### Utilisation
 
-- **Demandes d'achat** (menu du même nom, ou depuis un OT) : objet, quantité, prix estimé, rattachement obligatoire (OT, équipement ou centre de coût). La demande part dans le circuit ; sans étape applicable, elle est validée d'office.
-- **Dépenses de maintenance** : une dépense ajoutée à un OT au-delà du seuil reste « à valider ». Elle n'entre dans les coûts qu'une fois validée, et l'OT ne peut pas être clôturé administrativement tant qu'elle attend.
-- **DI P1** : la transformation en OT est bloquée tant que le chef d'atelier n'a pas validé ; refusée, la DI est rejetée.
+- **Demandes d'achat** (menu du même nom, ou depuis une intervention à réaliser) : objet, quantité, prix estimé, rattachement obligatoire (intervention, équipement ou centre de coût). La demande part dans le circuit ; sans étape applicable, elle est validée d'office.
+- **Dépenses de maintenance** : une dépense ajoutée à une intervention au-delà du seuil reste « à valider ». Elle n'entre dans les coûts qu'une fois validée, et l'intervention ne peut pas être clôturée administrativement tant qu'elle attend.
+- **DI P1** : la transformation en intervention à réaliser est bloquée tant que le chef d'atelier n'a pas validé ; refusée, la DI est rejetée.
 - **Validations** (menu) :
   - **À valider** : les demandes dont vous êtes valideur, avec **Valider** ou **Refuser** (commentaire obligatoire en cas de refus) ;
   - **Mes demandes soumises** ;
@@ -101,7 +101,7 @@ Circuits de la démonstration (CDC §2.4) :
 
 - **Préférences** : page **Notifications**, carte « Courriels ». Les alertes obligatoires (DI P1, validation en attente) ne se désactivent pas.
 - **Événements** :
-  - affectation à un OT ;
+  - affectation à une intervention ;
   - validation en attente ;
   - décision sur vos demandes ;
   - DI urgente ;

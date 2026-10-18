@@ -120,7 +120,7 @@ export async function enqueueDirectEmail(
 
 const ENTITY_LINKS: Record<string, (id: string) => string> = {
   work_request: (id) => `/demandes/${id}`,
-  work_order: (id) => `/ordres-de-travail/${id}`,
+  work_order: (id) => `/interventions/${id}`,
   equipment: (id) => `/equipements/${id}`,
   purchase_request: (id) => `/demandes-achat/${id}`,
   approval: () => "/validations",
@@ -372,10 +372,10 @@ async function overdueDigest(tenantId: string, now: Date, day: string) {
         ...held.map((w) => ({
           label: `${w.number} — ${w.title}`,
           detail: `en attente depuis plus de ${HOLD_DAYS} jours`,
-          link: `/ordres-de-travail/${w.id}`,
+          link: `/interventions/${w.id}`,
         })),
       ],
-      link: "/ordres-de-travail?status=ON_HOLD",
+      link: "/interventions?status=ON_HOLD",
       linkLabel: "Voir les interventions en attente",
     });
   }

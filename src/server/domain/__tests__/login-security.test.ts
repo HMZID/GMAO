@@ -3,7 +3,7 @@ import { breachCountInRange, captchaRefusals, clientIp, isLoginBlocked, LOGIN_LI
 
 describe("Destination après connexion", () => {
   it("garde un chemin de l'application, avec sa recherche", () => {
-    expect(safeRedirectPath("/ordres-de-travail?status=OPEN")).toBe("/ordres-de-travail?status=OPEN");
+    expect(safeRedirectPath("/interventions?status=OPEN")).toBe("/interventions?status=OPEN");
     expect(safeRedirectPath("/")).toBe("/");
   });
 

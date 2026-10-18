@@ -23,7 +23,7 @@ async function tick() {
   if (now - lastAlerts >= alertsEvery) {
     lastAlerts = now;
     const preventive = await runScheduledPreventive(new Date(now));
-    if (preventive.generated > 0) console.info(`[worker] ${preventive.generated} OT préventif(s) généré(s)`);
+    if (preventive.generated > 0) console.info(`[worker] ${preventive.generated} intervention(s) préventive(s) générée(s)`);
     const alerts = await runScheduledAlerts(new Date(now));
     if (alerts.queued > 0) console.info(`[worker] ${alerts.queued} alerte(s) mise(s) en file`);
   }
