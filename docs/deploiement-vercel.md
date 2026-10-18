@@ -17,8 +17,12 @@ GMAO-NN ──PR, CI verte, fusion automatique──▶ develop ──▶ Pipeli
 0. **PR `GMAO-NN` → `develop`** : le workflow **Fusion automatique vers develop** (`.github/workflows/auto-merge-develop.yml`) active la fusion automatique dès l'ouverture. GitHub fusionne seul quand toutes les vérifications obligatoires sont vertes (formatage, lint, types, tests unitaires, tests de bout en bout, application mobile). Si une vérification échoue, rien n'est fusionné : corriger la branche et pousser, la CI repart. Une PR en brouillon n'est pas fusionnée.
 1. **PR `develop` → `main`** : la CI (vérifications, tests, application mobile) et la garde « Source de la PR (develop uniquement) » doivent réussir ; la protection de `main` refuse toute autre source et toute poussée directe.
 2. **Merge** : la CI repart sur `main` ; si elle réussit, le workflow **Déploiement production** (`.github/workflows/deploy-production.yml`) démarre et **attend une approbation** (environnement GitHub `production-approval`).
-3. **Approbation** : GitHub → **Actions** → l'exécution « Déploiement production » → **Review deployments** → cocher `production-approval` → **Approve and deploy** (ou **Reject**).
-4. **Déploiement** : `vercel deploy --prod` ; la construction a lieu chez Vercel (migrations comprises), puis le workflow vérifie que `/api/health` répond `ok` **avec la version déployée** (`version` : commit court, variable `APP_VERSION`).
+3. **Contrôles avant approbation** : réglages du dépôt et variables Vercel de production (`scripts/ci/production-env.sh`, noms seulement) ; une variable indispensable absente ou partagée avec la recette bloque avant l'approbation.
+4. **Approbation** : GitHub → **Actions** → l'exécution « Déploiement production » → **Review deployments** → cocher `production-approval` → **Approve and deploy** (ou **Reject**).
+5. **Sauvegarde de la base** : branche Neon `sauvegarde-…` prise avant les migrations (`scripts/ci/neon-backup.sh`, 3 conservées).
+6. **Déploiement** : `vercel deploy --prod` ; la construction a lieu chez Vercel (migrations comprises), puis le workflow vérifie que `/api/health` répond `ok` **avec la version déployée** (`version` : commit court, variable `APP_VERSION`) et passe `scripts/ci/smoke-test.sh` (connexion, en-têtes de sécurité, tâche planifiée et API protégées).
+
+Retour arrière (**Actions → Retour arrière production**), restauration de la base, surveillance et liste des réglages de production : `docs/exploitation-production.md`.
 
 Redéployer sans nouveau merge : **Actions → Déploiement production → Run workflow** (branche `main`), avec la même approbation. **Ne pas relancer (« Re-run ») une ancienne exécution** : elle remettrait en ligne une version dépassée ; le workflow la refuse (« Version dépassée ») si son commit n'est plus le dernier de `main`.
 

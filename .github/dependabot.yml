@@ -1,0 +1,54 @@
+# Mises à jour de sécurité et de maintenance des dépendances (bonne pratique de production) : une Pull Request
+# par groupe et par semaine, vers develop (flux habituel : CI, recette, puis mise en production). Les mises à
+# jour majeures restent à faire à la main (changements incompatibles), sauf correctif de sécurité.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    groups:
+      application:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    labels: [dependances]
+    commit-message:
+      prefix: "Dépendances"
+
+  - package-ecosystem: npm
+    directory: /mobile
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Paris
+    open-pull-requests-limit: 3
+    groups:
+      mobile:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    labels: [dependances]
+    commit-message:
+      prefix: "Dépendances mobile"
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: [dependances]
+    commit-message:
+      prefix: "Actions"

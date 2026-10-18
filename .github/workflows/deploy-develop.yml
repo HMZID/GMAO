@@ -69,6 +69,18 @@ jobs:
           DEVELOP_PLATFORM_ADMIN_EMAILS: ${{ secrets.DEVELOP_PLATFORM_ADMIN_EMAILS }}
         run: bash scripts/ci/preview-env.sh
 
+  # Informatif : prépare la prochaine mise en production (variables manquantes signalées, jamais bloquant ici).
+  production-readiness:
+    name: Préparation de la production (informatif)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+      - name: Variables de production (Vercel)
+        env:
+          MODE: report
+        run: bash scripts/ci/production-env.sh
+
   deploy:
     name: Déployer sur Vercel (développement)
     needs: [checks, vercel-config]
