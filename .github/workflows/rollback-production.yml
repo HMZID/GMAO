@@ -1,0 +1,98 @@
+# Retour arrière de la production : remet en ligne un déploiement Vercel de production précédent, sans
+# reconstruction (quelques secondes), après la même approbation que la mise en production.
+#
+# Lancement : Actions → Retour arrière production → Run workflow. Sans adresse indiquée, le déploiement de
+# production qui précède celui en ligne est repris. La base n'est pas modifiée : si une migration de données
+# doit être annulée, restaurer la sauvegarde Neon prise avant le déploiement (docs/exploitation-production.md).
+# `vercel promote` (et non `vercel rollback`) : les mises en production suivantes restent attribuées
+# automatiquement au domaine.
+name: Retour arrière production
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment:
+        description: "Adresse du déploiement à remettre en ligne (https://…vercel.app) ; vide : le précédent"
+        required: false
+        default: ""
+      reason:
+        description: Motif (repris dans le résumé)
+        required: true
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  PRODUCTION_URL: ${{ vars.PRODUCTION_URL || 'https://gmao-eight-alpha.vercel.app' }}
+
+jobs:
+  rollback:
+    name: Remettre en ligne un déploiement précédent
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production-approval
+      url: ${{ vars.PRODUCTION_URL || 'https://gmao-eight-alpha.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Déploiement à remettre en ligne
+        env:
+          REQUESTED: ${{ inputs.deployment }}
+        run: |
+          team=""
+          case "$VERCEL_ORG_ID" in team_*) team="&teamId=$VERCEL_ORG_ID" ;; esac
+          list=$(curl -sS -f -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&target=production&state=READY&limit=10$team")
+          current=$(curl -fsS "$PRODUCTION_URL/api/health" | jq -r '.version // empty' || true)
+          if [ -n "$REQUESTED" ]; then
+            target=${REQUESTED%/}
+            case "$target" in https://*) ;; *) target="https://$target" ;; esac
+          else
+            # Le plus récent est en ligne (sauf retour arrière déjà fait) : on prend le suivant dans la liste.
+            target="https://$(jq -r '.deployments[1].url // empty' <<<"$list")"
+          fi
+          if [ "$target" = "https://" ]; then echo "::error::Aucun déploiement de production précédent trouvé."; exit 1; fi
+          echo "TARGET=$target" >> "$GITHUB_ENV"
+          echo "CURRENT=${current:-inconnue}" >> "$GITHUB_ENV"
+          echo "Version en ligne : ${current:-inconnue} ; remise en ligne de : $target"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: CLI Vercel
+        run: npm install --global vercel@59.26.0
+
+      - name: Remise en ligne
+        run: vercel promote "$TARGET" --yes --token="$VERCEL_TOKEN"
+
+      - name: Vérification
+        run: |
+          for i in $(seq 1 20); do
+            body=$(curl -fsS "$PRODUCTION_URL/api/health" || true)
+            version=$(jq -r '.version // empty' <<<"$body" 2>/dev/null || true)
+            case "$body" in *'"status":"ok"'*) if [ "$version" != "$CURRENT" ]; then echo "$body"; break; fi ;; esac
+            sleep 10
+          done
+          bash scripts/ci/smoke-test.sh "$PRODUCTION_URL"
+
+      - name: Résumé
+        if: always()
+        env:
+          REASON: ${{ inputs.reason }}
+        run: |
+          {
+            echo "### Retour arrière de la production"
+            echo "- Motif : $REASON"
+            echo "- Version remplacée : \`${CURRENT:-?}\`"
+            echo "- Déploiement remis en ligne : ${TARGET:-?}"
+            echo "- Base de données inchangée : restaurer la sauvegarde Neon si une migration doit être annulée."
+          } >> "$GITHUB_STEP_SUMMARY"

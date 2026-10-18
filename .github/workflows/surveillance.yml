@@ -1,0 +1,81 @@
+# Surveillance de la production (et de la recette) : toutes les 15 minutes, sonde de santé et vérifications
+# de base (scripts/ci/smoke-test.sh). En cas de panne de la production, un ticket « incident » est ouvert
+# (une seule fois) : GitHub prévient par courriel les personnes qui suivent le dépôt ; il est commenté puis
+# fermé au retour à la normale. Une panne de la recette n'ouvre pas de ticket (exécution en échec seulement).
+# Les planifications GitHub ne tournent que depuis la branche par défaut (main) et peuvent prendre quelques
+# minutes de retard ; GitHub les suspend après 60 jours sans activité sur le dépôt.
+name: Surveillance
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: surveillance
+  cancel-in-progress: true
+
+jobs:
+  production:
+    name: Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PRODUCTION_URL: ${{ vars.PRODUCTION_URL || 'https://gmao-eight-alpha.vercel.app' }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Santé et vérifications
+        id: probe
+        run: |
+          set +e
+          body=$(curl -sS --max-time 20 "$PRODUCTION_URL/api/health")
+          echo "$body"
+          ok=0
+          case "$body" in *'"status":"ok"'*) ;; *) ok=1; echo "::error::Sonde de santé en échec : $body" ;; esac
+          bash scripts/ci/smoke-test.sh "$PRODUCTION_URL" > smoke.txt 2>&1 || ok=1
+          cat smoke.txt
+          echo "failed=$ok" >> "$GITHUB_OUTPUT"
+          {
+            echo "Sonde : \`$body\`"
+            echo '```'
+            cat smoke.txt
+            echo '```'
+          } > report.md
+
+      - name: Ticket d'incident
+        run: |
+          gh label create incident --color B60205 --description "Panne détectée par la surveillance" >/dev/null 2>&1 || true
+          open=$(gh issue list --label incident --state open --json number -q '.[0].number')
+          if [ "${{ steps.probe.outputs.failed }}" = "1" ]; then
+            if [ -z "$open" ]; then
+              gh issue create --label incident --title "Incident production : $PRODUCTION_URL ne répond pas correctement" \
+                --body-file report.md
+            else
+              echo "Incident déjà ouvert : #$open"
+            fi
+            exit 1
+          elif [ -n "$open" ]; then
+            gh issue comment "$open" --body "Retour à la normale constaté par la surveillance ($(date -u +%FT%TZ))."
+            gh issue close "$open"
+          fi
+
+  recette:
+    name: Recette
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DEVELOP_URL: https://${{ vars.DEVELOP_ALIAS || 'gmao-develop.vercel.app' }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Santé et vérifications
+        run: |
+          curl -fsS --max-time 20 "$DEVELOP_URL/api/health"
+          echo
+          bash scripts/ci/smoke-test.sh "$DEVELOP_URL"
