@@ -12,9 +12,10 @@
 # MODE=report : n'échoue jamais (contrôle informatif du « Pipeline développement ») ; sinon bloquant.
 set -euo pipefail
 
-REQUIRED=(DATABASE_URL BETTER_AUTH_SECRET BETTER_AUTH_URL)
+REQUIRED=(DATABASE_URL BETTER_AUTH_SECRET)
 # Variable recommandée|conséquence si absente.
 ADVISED=(
+  "BETTER_AUTH_URL|adresse publique déduite de Vercel (domaine de production) ; à fixer avec le domaine définitif"
   "CRON_SECRET|la tâche planifiée quotidienne (préventif, alertes, envoi des courriels) est refusée"
   "DATABASE_URL_UNPOOLED|les migrations passent par la connexion mutualisée (moins sûr pour les verrous)"
   "PLATFORM_ADMIN_EMAILS|aucun administrateur de la plateforme n'est désigné par la configuration"
