@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { USERS, login } from "./helpers";
+import { USERS, escapeRegExp, login } from "./helpers";
 
 const PAGES = [
   "/",
@@ -7,8 +7,8 @@ const PAGES = [
   "/equipements/nouveau",
   "/demandes",
   "/demandes/nouvelle",
-  "/ordres-de-travail",
-  "/ordres-de-travail/nouveau",
+  "/interventions",
+  "/interventions/nouveau",
   "/preventif",
   "/preventif/echeances",
   "/preventif/plans/nouveau",
@@ -76,7 +76,7 @@ test("l'administrateur crée un compte, doublon refusé", async ({ page }) => {
   };
   await fill();
   await expect(page.getByText(/Compte créé/)).toBeVisible();
-  await expect(page.getByRole("cell", { name: new RegExp(email.replace(/[.]/g, "\\.")) })).toBeVisible();
+  await expect(page.getByRole("cell", { name: new RegExp(escapeRegExp(email)) })).toBeVisible();
 
   await fill();
   await expect(page.getByText("Un compte existe déjà avec ce courriel.")).toBeVisible();

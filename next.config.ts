@@ -9,7 +9,8 @@ const uploadLimitMb = (Number(process.env.DOCUMENT_MAX_SIZE_MB) || 20) + 1;
  */
 const securityHeaders = [
   // Aucune page dans un cadre d'un autre site (« clickjacking » sur la connexion notamment).
-  { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'" },
+  // form-action : aucun formulaire de l'application n'envoie de données vers un autre site.
+  { key: "Content-Security-Policy", value: "frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -22,6 +23,14 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  // Anciennes adresses des interventions (« ordres de travail ») : liens des courriels et favoris déjà diffusés.
+  async redirects() {
+    return [
+      { source: "/ordres-de-travail", destination: "/interventions", permanent: true },
+      { source: "/ordres-de-travail/:path*", destination: "/interventions/:path*", permanent: true },
+      { source: "/impression/ordre-de-travail/:id", destination: "/impression/intervention/:id", permanent: true },
+    ];
   },
   cacheComponents: true,
   partialPrefetching: true,

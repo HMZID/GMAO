@@ -11,11 +11,11 @@ Ce dépôt contient le **squelette complet du MVP** : modèle de données, règl
 | Organisation et habilitations | Groupe → sociétés → sites, ateliers, magasins, chantiers. Rôles × périmètres (groupe, société, site), délégations datées, journal d'audit en ajout seul. |
 | Équipements | Fiche, anti-doublon, catégories et modèles, criticité, états opérationnels historisés, affectations sans chevauchement, réforme, étiquette QR. |
 | Compteurs | Relevés contrôlés (croissance, plausibilité, horodatage), quarantaine « à vérifier » avec validation ou rejet, remplacement de compteur avec usage cumulé conservé. |
-| Préventif | Plans par catégorie ou modèle, déclencheurs calendaire et compteur au premier seuil atteint, fixe ou glissant, pré-alertes, tolérances, projection par l'usage moyen, génération des OT sans doublon, reports, checklists, contrôles réglementaires bloquants. |
-| Correctif et OT | Demandes d'intervention avec priorité proposée et détection des doublons, qualification et immobilisation, OT et machine à états, conditions manquantes toutes listées, temps, pièces, compte rendu, remise en service validée, clôtures, réouverture et récidive, OT externe. |
+| Préventif | Plans par catégorie ou modèle, déclencheurs calendaire et compteur au premier seuil atteint, fixe ou glissant, pré-alertes, tolérances, projection par l'usage moyen, génération des interventions sans doublon, reports, checklists, contrôles réglementaires bloquants. |
+| Correctif et interventions | Demandes d'intervention avec priorité proposée et détection des doublons, qualification et immobilisation, interventions à réaliser et machine à états, conditions manquantes toutes listées, temps, pièces, compte rendu, remise en service validée, clôtures, réouverture et récidive, OT externe. |
 | Planification | Semaine par technicien, absences bloquantes, chevauchements signalés, capacité nette avec réserve pour les urgences, carnet à planifier. |
-| Stock | Catalogue, stock par magasin, réservations, sorties et retours sur OT, réceptions, transferts, ajustements, rebuts, seuils, coût moyen pondéré, intégrité (verrous, idempotence, pas de stock négatif). |
-| Indicateurs | Disponibilité, MTBF, MTTR, MDT, respect du préventif, coûts complets par OT et par équipement, consommation de pièces, tableau de bord filtré par droits. |
+| Stock | Catalogue, stock par magasin, réservations, sorties et retours sur intervention, réceptions, transferts, ajustements, rebuts, seuils, coût moyen pondéré, intégrité (verrous, idempotence, pas de stock négatif). |
+| Indicateurs | Disponibilité, MTBF, MTTR, MDT, respect du préventif, coûts complets par intervention et par équipement, consommation de pièces, tableau de bord filtré par droits. |
 | API REST v1 | Mêmes services, mêmes règles et mêmes droits que les écrans. Catalogue public avec schémas JSON générés depuis la validation : `GET /api/v1`. |
 | Site commercial | Vitrine publique sur `/` pour les visiteurs non connectés (fonctionnalités, calculateur du coût des pannes, tarifs, questions), demande d'essai, acceptation par l'administrateur de la plateforme avec envoi du lien, de l'identifiant et d'un mot de passe provisoire, contenu modifiable dans Administration → Site commercial. Voir `docs/site-commercial.md`. |
 
@@ -57,13 +57,13 @@ Chaque organisation cliente est gérée par sa **Direction** et son **Responsabl
 
 ### Situations prêtes à dérouler (scénarios de recette du CDC §15)
 
-- **R-01** : l'entretien 250 h de la chargeuse CH-012 est en pré-alerte, son OT est planifié jeudi avec Julien.
+- **R-01** : l'entretien 250 h de la chargeuse CH-012 est en pré-alerte, son intervention est planifiée jeudi avec Julien.
 - **R-02** : le conducteur a signalé une fuite hydraulique sur la pelle PE-007 (criticité A, priorité P1) : DI à qualifier.
-- **R-03** : le chariot CE-031 est immobilisé, son OT est en attente de la pompe hydraulique (une seule en stock, à Marseille).
+- **R-03** : le chariot CE-031 est immobilisé, son intervention est en attente de la pompe hydraulique (une seule en stock, à Marseille).
 - **R-05** : l'horamètre de PE-002 a été remplacé à 6 850 h ; 120 h lues = 6 970 h cumulées, l'entretien des 7 000 h approche.
 - **PRV-12** : la VGP échue du chariot CE-020 bloque l'équipement ; l'organisme de contrôle est planifié.
 - **DON-02** : un relevé télématique invraisemblable de CA-102 attend une validation ou un rejet.
-- TP-004 attend sa remise en service, PE-010 est immobilisé avec un OT planifié demain, PE-007 a un préventif en retard.
+- TP-004 attend sa remise en service, PE-010 est immobilisé avec une intervention planifiée demain, PE-007 a un préventif en retard.
 - **Validations** (HAB-04, menu « Validations ») : la demande d'achat de la pompe de CE-031 attend le responsable achats (`achats@demo.gmao`), celle des pneus de CH-012 (7 400 €) passera ensuite par la direction ; la location d'un chariot sur l'OT de CE-031 (1 450 €) attend le responsable maintenance ; la DI P1 « Frein de service inefficace » sur CH-012 attend le chef d'atelier de Lyon.
 
 ## Commandes
@@ -131,7 +131,7 @@ Le détail est dans `docs/tracabilite.md`. Les manques principaux :
 - **Exports filtrés et autres modèles d'import** (INT-01 : compteurs, plans, fournisseurs, utilisateurs) ; alerte d'échéance des documents joints (EQP-07, §11.1).
 - **Circuits de validation paramétrables** (HAB-04), matrice des droits paramétrable (HAB-01), double facteur obligatoire pour les administrateurs (TEC-04).
 - **Règles de notification paramétrables, courriel et escalade** (NOT-01 à 03) : seules les notifications dans l'application sont en place.
-- **Urgences** avec proposition des OT à décaler (PLA-06), campagnes d'inventaire (STK-07), surcharge locale des plans (PRV-01), correction d'un relevé validé (DON-05), historique des reports d'OT (DON-09).
+- **Urgences** avec proposition des interventions à décaler (PLA-06), campagnes d'inventaire (STK-07), surcharge locale des plans (PRV-01), correction d'un relevé validé (DON-05), historique des reports d'intervention (DON-09).
 - **Exploitation** : tâche planifiée de génération du préventif et de recalcul nocturne, sauvegardes, chiffrement, supervision (TEC-06 à 08).
 
 ## Points de vigilance

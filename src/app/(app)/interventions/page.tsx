@@ -14,26 +14,26 @@ import { cleanFilters, queryParams } from "@/server/pages";
 import { listSites } from "@/server/services/organization";
 import { listWorkOrders, workOrderFilters } from "@/server/services/work-orders";
 
-export const metadata = { title: "Ordres de travail" };
+export const metadata = { title: "Interventions à réaliser" };
 
-export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travail">) {
+export default async function WorkOrdersPage(props: PageProps<"/interventions">) {
   const ctx = await getAuthContext();
-  if (!ctx.can("workorder.read")) return <Forbidden what="les ordres de travail" />;
+  if (!ctx.can("workorder.read")) return <Forbidden what="les interventions" />;
   const params = cleanFilters(workOrderFilters, queryParams(await props.searchParams));
   const [page, sites] = await Promise.all([listWorkOrders(ctx, params), listSites(ctx)]);
 
   return (
     <>
       <PageHeader
-        title="Ordres de travail"
+        title="Interventions à réaliser"
         description="Interventions préventives, correctives et réglementaires, de la création à la clôture."
-        actions={ctx.can("workorder.create") ? <ButtonLink href="/ordres-de-travail/nouveau">Nouvel ordre de travail</ButtonLink> : null}
+        actions={ctx.can("workorder.create") ? <ButtonLink href="/interventions/nouveau">Nouvelle intervention à réaliser</ButtonLink> : null}
       />
       <Card>
-        <FilterBar resetHref="/ordres-de-travail">
+        <FilterBar resetHref="/interventions">
           {params.equipmentId ? <input type="hidden" name="equipmentId" value={params.equipmentId} /> : null}
           <FilterField label="Recherche" htmlFor="q" className="w-56">
-            <Input id="q" name="q" defaultValue={params.q} placeholder="N° d'ordre de travail, intitulé, équipement" />
+            <Input id="q" name="q" defaultValue={params.q} placeholder="N° d'intervention, intitulé, équipement" />
           </FilterField>
           <FilterField label="Statut" htmlFor="status">
             <Select
@@ -59,24 +59,24 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
             />
           </FilterField>
           {ctx.technicianId ? (
-            <Checkbox name="mine" value="1" label="Mes ordres de travail" defaultChecked={params.mine === "1"} className="h-10" />
+            <Checkbox name="mine" value="1" label="Mes interventions à réaliser" defaultChecked={params.mine === "1"} className="h-10" />
           ) : null}
         </FilterBar>
         {params.equipmentId ? (
           <p className="border-b border-slate-100 bg-slate-50 px-5 py-2 text-sm text-slate-600">
             Filtré sur un équipement ·{" "}
-            <Link href="/ordres-de-travail" className="text-brand-700 hover:underline">
+            <Link href="/interventions" className="text-brand-700 hover:underline">
               retirer
             </Link>
           </p>
         ) : null}
         {page.items.length === 0 ? (
-          <EmptyState title="Aucun ordre de travail" description="Aucun ordre de travail ne correspond à ces filtres." />
+          <EmptyState title="Aucune intervention" description="Aucune intervention ne correspond à ces filtres." />
         ) : (
           <Table>
             <THead>
               <tr>
-                <TH>Ordre de travail</TH>
+                <TH>Intervention</TH>
                 <TH>Équipement</TH>
                 <TH>Type</TH>
                 <TH>Priorité</TH>
@@ -89,7 +89,7 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
               {page.items.map((w) => (
                 <TR key={w.id}>
                   <TD>
-                    <Link href={`/ordres-de-travail/${w.id}`} className="font-medium whitespace-nowrap text-brand-700 hover:underline">
+                    <Link href={`/interventions/${w.id}`} className="font-medium whitespace-nowrap text-brand-700 hover:underline">
                       {w.number}
                     </Link>
                     <p className="max-w-72 truncate text-xs text-slate-500">{w.title}</p>
@@ -124,7 +124,7 @@ export default async function WorkOrdersPage(props: PageProps<"/ordres-de-travai
             </TBody>
           </Table>
         )}
-        <Pagination path="/ordres-de-travail" params={params} page={page.page} pageSize={page.pageSize} total={page.total} />
+        <Pagination path="/interventions" params={params} page={page.page} pageSize={page.pageSize} total={page.total} />
       </Card>
     </>
   );

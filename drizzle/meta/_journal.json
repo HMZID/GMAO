@@ -120,6 +120,34 @@
       "when": 1791986262408,
       "tag": "0016_login_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792146695411,
+      "tag": "0017_site_tarifs_dinars",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1792242031336,
+      "tag": "0018_two_factor",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1792243225221,
+      "tag": "0019_fleet_deadlines",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1792323992236,
+      "tag": "0020_intervention_numbers",
+      "breakpoints": true
     }
   ]
 }

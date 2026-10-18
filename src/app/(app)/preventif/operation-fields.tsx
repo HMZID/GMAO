@@ -59,7 +59,7 @@ export function OperationFields() {
         <Checkbox name="isRegulatory" label="Contrôle réglementaire (report au-delà de l'échéance légale interdit)" />
         <Checkbox name="blockWhenOverdue" label="Bloquer l'équipement si échu" />
       </div>
-      <Field label="Checklist" name="checklist" hint="Un point par ligne ; chaque point devient obligatoire sur l'ordre de travail.">
+      <Field label="Checklist" name="checklist" hint="Un point par ligne ; chaque point devient obligatoire sur l'intervention.">
         <Textarea
           id="checklist"
           name="checklist"

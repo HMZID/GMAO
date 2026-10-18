@@ -27,10 +27,10 @@ export async function convertWorkRequestAction(id: string, _: ActionState): Prom
   return runAction(async () => {
     const ctx = await getAuthContext();
     const wo = await convertToWorkOrder(ctx, id);
-    redirect(`/ordres-de-travail/${wo.id}`);
+    redirect(`/interventions/${wo.id}`);
   });
 }
 
 export async function mergeWorkRequestAction(id: string, _: ActionState, formData: FormData): Promise<ActionState> {
-  return act((ctx) => mergeIntoWorkOrder(ctx, id, String(formData.get("workOrderId") ?? "")), "Demande rattachée à l'ordre de travail.");
+  return act((ctx) => mergeIntoWorkOrder(ctx, id, String(formData.get("workOrderId") ?? "")), "Demande rattachée à l'intervention à réaliser.");
 }

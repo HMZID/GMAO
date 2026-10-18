@@ -31,7 +31,7 @@ export default function TabsLayout() {
             tabBarStyle: { minHeight: 60 },
           }}
         >
-          <Tabs.Screen name="index" options={{ title: "Mes OT", tabBarIcon: icon("🛠"), href: can("workorder.read") ? undefined : null }} />
+          <Tabs.Screen name="index" options={{ title: "Mes interventions", tabBarIcon: icon("🛠"), href: can("workorder.read") ? undefined : null }} />
           <Tabs.Screen name="equipment" options={{ title: "Équipements", tabBarIcon: icon("🚜"), href: can("equipment.read") ? undefined : null }} />
           <Tabs.Screen name="due" options={{ title: "Échéances", tabBarIcon: icon("📅"), href: can("plan.read") ? undefined : null }} />
           <Tabs.Screen name="scan" options={{ title: "Scanner", tabBarIcon: icon("▣") }} />

@@ -140,7 +140,7 @@ export const SITE_SETTINGS = [
     label: "Texte d'accroche",
     type: "textarea",
     default:
-      "Préventif au compteur, ordres de travail, pièces et achats, application mobile hors connexion : toute la maintenance de votre parc dans un seul outil, conçu pour l'atelier et le chantier.",
+      "Préventif au compteur, interventions, pièces et achats, application mobile hors connexion : toute la maintenance de votre parc dans un seul outil, conçu pour l'atelier et le chantier.",
   },
   { key: "hero.ctaPrimary", group: "hero", label: "Bouton principal", type: "text", default: "Essayer gratuitement" },
   { key: "hero.ctaSecondary", group: "hero", label: "Bouton secondaire", type: "text", default: "Voir les tarifs" },
@@ -185,13 +185,14 @@ export const SITE_SETTINGS = [
     default: "30",
     hint: "Durée présélectionnée à l'acceptation d'une demande",
   },
-  { key: "pricing.title", group: "offer", label: "Tarifs — titre", type: "text", default: "Un prix par équipement suivi. Rien de caché." },
+  { key: "pricing.title", group: "offer", label: "Tarifs — titre", type: "text", default: "Un devis adapté à la taille de votre parc." },
   {
     key: "pricing.subtitle",
     group: "offer",
     label: "Tarifs — texte",
     type: "textarea",
-    default: "Utilisateurs illimités sur toutes les offres : techniciens, conducteurs, magasiniers et direction travaillent ensemble sans surcoût.",
+    default:
+      "Tarifs en dinars tunisiens (DT), établis sur devis selon le nombre d'équipements suivis. Utilisateurs illimités sur toutes les offres : techniciens, conducteurs, magasiniers et direction travaillent ensemble sans surcoût.",
   },
   {
     key: "pricing.annualMonths",
@@ -200,6 +201,14 @@ export const SITE_SETTINGS = [
     type: "number",
     default: "10",
     hint: "10 = deux mois offerts",
+  },
+  {
+    key: "pricing.currency",
+    group: "offer",
+    label: "Devise affichée",
+    type: "text",
+    default: "DT",
+    hint: "Symbole après les montants (offres, calculateur) : DT = dinar tunisien",
   },
   { key: "pricing.annualLabel", group: "offer", label: "Paiement annuel — libellé de l'avantage", type: "text", default: "2 mois offerts" },
   { key: "roi.enabled", group: "roi", label: "Afficher le calculateur", type: "boolean", default: "true" },
@@ -214,9 +223,10 @@ export const SITE_SETTINGS = [
   {
     key: "roi.pricePerEquipment",
     group: "roi",
-    label: "Prix de référence par équipement et par mois (€ HT)",
+    label: "Prix de référence par équipement et par mois (HT, dans la devise affichée)",
     type: "number",
-    default: "12",
+    default: "",
+    hint: "Vide : le calculateur n'estime pas l'abonnement (tarifs sur devis)",
   },
   { key: "form.title", group: "form", label: "Titre de la page", type: "text", default: "Votre espace de démonstration, prêt en 24 h." },
   {
@@ -226,6 +236,14 @@ export const SITE_SETTINGS = [
     type: "textarea",
     default:
       "Nous ouvrons pour vous une organisation complète : société, site, atelier, magasin. Vous recevez par courriel votre identifiant et un mot de passe provisoire.",
+  },
+  {
+    key: "form.emailNotice",
+    group: "form",
+    label: "Message sous le formulaire (accès par courriel)",
+    type: "textarea",
+    default:
+      "Dès l'acceptation de votre demande, vous recevrez à l'adresse indiquée un courriel avec le lien de connexion, votre identifiant et votre mot de passe provisoire.",
   },
   { key: "form.thanksTitle", group: "form", label: "Confirmation — titre", type: "text", default: "Demande bien reçue." },
   {
@@ -249,7 +267,7 @@ export const SITE_SETTINGS = [
     label: "Description",
     type: "textarea",
     default:
-      "Logiciel de GMAO pour flottes d'engins, véhicules et équipements : préventif au compteur, ordres de travail, stock, achats, mobile hors connexion. Essai gratuit 30 jours.",
+      "Logiciel de GMAO pour flottes d'engins, véhicules et équipements : préventif au compteur, interventions, stock, achats, mobile hors connexion. Essai gratuit 30 jours.",
   },
 ] as const satisfies readonly SettingDefinition[];
 

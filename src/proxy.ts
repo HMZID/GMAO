@@ -26,5 +26,6 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|login|robots.txt|sitemap.xml|_next/static|_next/image|favicon.ico).*)"],
+  // /connexion/verification : deuxième étape de la connexion (code TOTP), avant que la session n'existe.
+  matcher: ["/((?!api|login|connexion|robots.txt|sitemap.xml|_next/static|_next/image|favicon.ico).*)"],
 };

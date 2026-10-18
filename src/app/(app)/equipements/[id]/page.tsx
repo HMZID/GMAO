@@ -2,6 +2,7 @@ import { AlertTriangle, QrCode } from "lucide-react";
 import Link from "next/link";
 import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form";
 import { DocumentsCard } from "@/components/documents/documents-card";
+import { DeadlinesCard } from "@/components/fleet/deadlines-card";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   CriticalityBadge,
@@ -73,10 +74,12 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
         actions={
           retired ? null : (
             <>
-              {ctx.canOn("request.create", e) ? <ButtonLink href={`/demandes/nouvelle?equipmentId=${e.id}`}>Signaler une panne</ButtonLink> : null}
+              {ctx.canOn("request.create", e) ? (
+                <ButtonLink href={`/demandes/nouvelle?equipmentId=${e.id}`}>Créer une demande d&apos;intervention</ButtonLink>
+              ) : null}
               {ctx.canOn("workorder.create", e) ? (
-                <ButtonLink href={`/ordres-de-travail/nouveau?equipmentId=${e.id}`} variant="secondary">
-                  Nouvel ordre de travail
+                <ButtonLink href={`/interventions/nouveau?equipmentId=${e.id}`} variant="secondary">
+                  Nouvelle intervention à réaliser
                 </ButtonLink>
               ) : null}
               {ctx.canOn("equipment.write", e) ? (
@@ -108,6 +111,7 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
         <div className="space-y-6 xl:col-span-2">
           <MetersCard e={e} readings={readings} ctx={ctx} retired={retired} />
           <DueItemsCard e={e} ctx={ctx} retired={retired} />
+          <DeadlinesCard ctx={ctx} equipment={e} retired={retired} now={new Date()} />
           <InterventionsCard e={e} />
           <DocumentsCard ctx={ctx} entityType="EQUIPMENT" entityId={e.id} now={new Date()} />
         </div>
@@ -177,7 +181,7 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
             <Disclosure summary={<span className="text-red-700">Réformer l&apos;équipement</span>}>
               <ActionForm action={retireEquipmentAction.bind(null, e.id)} className="space-y-3">
                 <p className="text-sm text-slate-600">
-                  Impossible tant qu&apos;un ordre de travail est ouvert. Les plans sont désactivés et la fiche passe en lecture seule.
+                  Impossible tant qu&apos;une intervention est ouverte. Les plans sont désactivés et la fiche passe en lecture seule.
                 </p>
                 <Field label="Motif" name="reason" required>
                   <Textarea id="reason" name="reason" required rows={2} />
@@ -375,7 +379,7 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
               <TH>Échéance</TH>
               <TH>Prévision</TH>
               <TH>Statut</TH>
-              <TH>Ordre de travail</TH>
+              <TH>Intervention</TH>
             </tr>
           </THead>
           <TBody>
@@ -399,8 +403,8 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
                 </TD>
                 <TD>
                   {d.workOrderId ? (
-                    <Link href={`/ordres-de-travail/${d.workOrderId}`} className="text-brand-700 hover:underline">
-                      Voir l&apos;ordre de travail
+                    <Link href={`/interventions/${d.workOrderId}`} className="text-brand-700 hover:underline">
+                      Voir l&apos;intervention
                     </Link>
                   ) : (
                     <span className="text-xs text-slate-400">Non généré</span>
@@ -450,10 +454,10 @@ function InterventionsCard({ e }: { e: Equipment }) {
     <Card>
       <CardHeader
         title="Interventions"
-        description="Demandes ouvertes et 15 derniers ordres de travail"
+        description="Demandes ouvertes et 15 dernières interventions"
         actions={
-          <Link href={`/ordres-de-travail?equipmentId=${e.id}&status=ALL`} className="text-sm text-brand-700 hover:underline">
-            Tous les ordres de travail
+          <Link href={`/interventions?equipmentId=${e.id}&status=ALL`} className="text-sm text-brand-700 hover:underline">
+            Toutes les interventions
           </Link>
         }
       />
@@ -475,12 +479,12 @@ function InterventionsCard({ e }: { e: Equipment }) {
         </ul>
       ) : null}
       {e.recentWorkOrders.length === 0 ? (
-        <EmptyState title="Aucun ordre de travail" />
+        <EmptyState title="Aucune intervention" />
       ) : (
         <Table>
           <THead>
             <tr>
-              <TH>Ordre de travail</TH>
+              <TH>Intervention</TH>
               <TH>Type</TH>
               <TH>Priorité</TH>
               <TH>Statut</TH>
@@ -491,7 +495,7 @@ function InterventionsCard({ e }: { e: Equipment }) {
             {e.recentWorkOrders.map((w) => (
               <TR key={w.id}>
                 <TD>
-                  <Link href={`/ordres-de-travail/${w.id}`} className="font-medium text-brand-700 hover:underline">
+                  <Link href={`/interventions/${w.id}`} className="font-medium text-brand-700 hover:underline">
                     {w.number}
                   </Link>
                   <p className="max-w-72 truncate text-xs text-slate-500">{w.title}</p>

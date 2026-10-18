@@ -9,7 +9,7 @@ test("le responsable maintenance compose un indicateur et le retrouve calculé",
   await page.getByRole("link", { name: "Indicateurs personnalisés" }).click();
   await expect(page.getByRole("heading", { name: "Indicateurs personnalisés", level: 1 })).toBeVisible();
   // Exemples de la démonstration
-  await expect(page.getByRole("heading", { name: "Ordres de travail par statut" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Interventions à réaliser par statut" })).toBeVisible();
 
   await page.getByText("Nouvel indicateur").click();
   const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Ajouter l'indicateur" }) });

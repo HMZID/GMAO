@@ -79,7 +79,7 @@ test("dépense de maintenance : à valider, puis comptée dans les coûts de l'O
   await login(page, USERS.maintenanceManager);
   const { data } = await (await page.request.get("/api/v1/work-orders?q=CE-031&pageSize=10")).json();
   const workOrder = data.items.find((w: { title: string }) => w.title.startsWith("Pompe hydraulique défaillante"));
-  await page.goto(`/ordres-de-travail/${workOrder.id}`);
+  await page.goto(`/interventions/${workOrder.id}`);
 
   const card = page.locator("section", { has: page.getByRole("heading", { name: "Validation des dépenses" }) });
   await expect(card.getByText("Location d'un chariot de remplacement (2 semaines)")).toBeVisible();
@@ -100,11 +100,11 @@ test("DI P1 : transformation en OT bloquée tant que le chef d'atelier n'a pas v
 
   await page.getByRole("button", { name: "Qualifier" }).click();
   await expect(page.getByText("Demande qualifiée.")).toBeVisible();
-  await page.getByRole("button", { name: "Transformer en ordre de travail" }).click();
+  await page.getByRole("button", { name: "Transformer en intervention à réaliser" }).click();
   await expect(page.getByText(/La demande est en attente de validation \(Chef d'atelier du site\)/)).toBeVisible();
 
   await page.getByRole("button", { name: "Valider" }).click();
   await expect(page.getByText("Validation enregistrée.")).toBeVisible();
-  await page.getByRole("button", { name: "Transformer en ordre de travail" }).click();
-  await expect(page).toHaveURL(/\/ordres-de-travail\/[0-9a-f-]{36}$/);
+  await page.getByRole("button", { name: "Transformer en intervention à réaliser" }).click();
+  await expect(page).toHaveURL(/\/interventions\/[0-9a-f-]{36}$/);
 });

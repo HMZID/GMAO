@@ -69,7 +69,7 @@ export default function EquipmentScreen() {
         </Text>
         {can("request.create") && e.status !== "RETIRED" ? (
           <Button
-            title="Signaler une panne"
+            title="Créer une demande d'intervention"
             variant="danger"
             onPress={() => router.push({ pathname: "/request/new", params: { equipmentId: e.id, code: e.code } })}
           />

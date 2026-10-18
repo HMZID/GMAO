@@ -18,9 +18,9 @@ import { getWorkOrder, listTechnicianOptions } from "@/server/services/work-orde
 import { recurrenceAction } from "../actions";
 import { ChecklistCard, CostsCard, HistoryCard, PartsCard, PlanningCard, ReportCard, TimeCard, TransitionsCard } from "./sections";
 
-export const metadata = { title: "Ordre de travail" };
+export const metadata = { title: "Intervention à réaliser" };
 
-export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail/[id]">) {
+export default async function WorkOrderPage(props: PageProps<"/interventions/[id]">) {
   const { id } = await props.params;
   const ctx = await getAuthContext();
   const wo = await loadOr404(id, (x) => getWorkOrder(ctx, x));
@@ -47,7 +47,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
   return (
     <>
       <PageHeader
-        back={{ href: "/ordres-de-travail", label: "Ordres de travail" }}
+        back={{ href: "/interventions", label: "Interventions à réaliser" }}
         title={
           <span className="flex flex-wrap items-baseline gap-3">
             {wo.number}
@@ -67,13 +67,13 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
         }
         actions={
           <>
-            <Link href={`/impression/ordre-de-travail/${wo.id}`} className={buttonClass("secondary")}>
+            <Link href={`/impression/intervention/${wo.id}`} className={buttonClass("secondary")}>
               <Printer className="h-4 w-4" aria-hidden />
               Fiche à signer
             </Link>
             {wo.canManage && (status === "TECH_CLOSED" || status === "CLOSED") ? (
               <ActionForm action={recurrenceAction.bind(null, wo.id)} showMessage>
-                <SubmitButton variant="secondary">Créer un ordre de travail de récidive</SubmitButton>
+                <SubmitButton variant="secondary">Créer une intervention de récidive</SubmitButton>
               </ActionForm>
             ) : null}
           </>
@@ -83,7 +83,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
       <div className="mb-6 space-y-3">
         {status === "ON_HOLD" ? (
           <Alert tone="amber" title={`En attente${reasonOfHold ? ` : ${reasonOfHold}` : ""}`}>
-            {wo.holdComment ?? "Reprendre l'ordre de travail dès que la cause de l'attente est levée."}
+            {wo.holdComment ?? "Reprendre l'intervention dès que la cause de l'attente est levée."}
           </Alert>
         ) : null}
         {wo.requiresRelease && isOpen ? (
@@ -134,7 +134,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
             <Card>
               <CardHeader
                 title="Demandes d'achat"
-                description="Pièces et prestations demandées pour cet ordre de travail"
+                description="Pièces et prestations demandées pour cette intervention"
                 actions={
                   ctx.canOn("purchase.create", wo) && isOpen ? (
                     <Link href={`/demandes-achat/nouvelle?workOrderId=${wo.id}`} className="text-sm text-brand-700 hover:underline">
@@ -232,8 +232,8 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
                         ))}
                       </span>
                     ) : wo.parentWorkOrderId ? (
-                      <Link href={`/ordres-de-travail/${wo.parentWorkOrderId}`} className="text-brand-700 hover:underline">
-                        Récidive d&apos;un ordre de travail précédent
+                      <Link href={`/interventions/${wo.parentWorkOrderId}`} className="text-brand-700 hover:underline">
+                        Récidive d&apos;une intervention précédente
                       </Link>
                     ) : null,
                   },

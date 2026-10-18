@@ -10,7 +10,7 @@ type DefaultItem = { kind: SiteItemKind; title: string; body?: string; meta?: st
 
 export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   { kind: "HIGHLIGHT", title: "30", meta: "jours", body: "d'essai sur votre propre espace, sans carte bancaire" },
-  { kind: "HIGHLIGHT", title: "0", meta: "€", body: "par utilisateur : toutes les offres sont en utilisateurs illimités" },
+  { kind: "HIGHLIGHT", title: "0", meta: "DT", body: "par utilisateur : toutes les offres sont en utilisateurs illimités" },
   { kind: "HIGHLIGHT", title: "100", meta: "%", body: "des saisies terrain possibles hors connexion sur mobile" },
   { kind: "HIGHLIGHT", title: "1", meta: "semaine", body: "pour importer votre parc depuis vos fichiers Excel" },
 
@@ -30,7 +30,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   },
   {
     kind: "FEATURE",
-    title: "Pannes et ordres de travail",
+    title: "Pannes et interventions",
     body: "Du signalement du conducteur à la clôture : diagnostic, pièces, temps passés, immobilisation et remise en service validée.",
     meta: "Correctif",
     icon: "wrench",
@@ -52,7 +52,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   {
     kind: "FEATURE",
     title: "Pièces, magasins et camions atelier",
-    body: "Stock par magasin, emplacements, points de commande, inventaires tournants et sorties imputées à l'ordre de travail.",
+    body: "Stock par magasin, emplacements, points de commande, inventaires tournants et sorties imputées à l'intervention.",
     meta: "Stock",
     icon: "package",
   },
@@ -66,7 +66,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   {
     kind: "FEATURE",
     title: "Application mobile terrain",
-    body: "Ordres de travail, checklists, photos, relevés et signalements depuis le chantier, même sans réseau : tout se synchronise au retour.",
+    body: "Interventions à réaliser, checklists, photos, relevés et signalements depuis le chantier, même sans réseau : tout se synchronise au retour.",
     meta: "Mobile",
     icon: "smartphone",
   },
@@ -98,7 +98,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   {
     kind: "STEP",
     title: "L'atelier démarre",
-    body: "Plans préventifs appliqués, premières pannes saisies sur mobile, premiers ordres de travail clôturés.",
+    body: "Plans préventifs appliqués, premières pannes saisies sur mobile, premières interventions clôturées.",
   },
   {
     kind: "STEP",
@@ -132,7 +132,7 @@ export const DEFAULT_SITE_ITEMS: DefaultItem[] = [
   {
     kind: "FAQ",
     title: "L'application fonctionne-t-elle sans réseau sur les chantiers ?",
-    body: "Oui pour les saisies : ordres de travail, relevés, photos et signalements sont enregistrés sur le téléphone puis envoyés au retour du réseau, sans doublon.",
+    body: "Oui pour les saisies : interventions, relevés, photos et signalements sont enregistrés sur le téléphone puis envoyés au retour du réseau, sans doublon.",
   },
   {
     kind: "FAQ",
@@ -157,24 +157,24 @@ export const DEFAULT_SITE_PLANS: DefaultPlan[] = [
   {
     name: "Atelier",
     tagline: "Un site, un atelier, l'essentiel bien fait.",
-    priceMonthly: 7,
-    priceUnit: "€ HT / équipement / mois",
-    priceNote: "À partir de 10 équipements",
+    priceMonthly: null,
+    priceUnit: "Sur devis",
+    priceNote: "En dinars tunisiens, selon la taille du parc · dès 10 équipements",
     features: [
       "Équipements, compteurs et documents",
       "Préventif au compteur et au calendrier",
-      "Demandes et ordres de travail",
+      "Demandes et interventions",
       "Application mobile terrain",
       "Utilisateurs illimités",
     ],
-    ctaLabel: "Essayer l'offre Atelier",
+    ctaLabel: "Demander un devis Atelier",
   },
   {
     name: "Flotte",
     tagline: "Plusieurs sites, le stock et les achats sous contrôle.",
-    priceMonthly: 12,
-    priceUnit: "€ HT / équipement / mois",
-    priceNote: "À partir de 20 équipements",
+    priceMonthly: null,
+    priceUnit: "Sur devis",
+    priceNote: "En dinars tunisiens, selon la taille du parc · dès 20 équipements",
     features: [
       "Tout Atelier, plus :",
       "Multi-sites et planning d'atelier",
@@ -183,7 +183,7 @@ export const DEFAULT_SITE_PLANS: DefaultPlan[] = [
       "Indicateurs : disponibilité, MTBF, MTTR, coûts",
       "Imports Excel accompagnés",
     ],
-    ctaLabel: "Essayer l'offre Flotte",
+    ctaLabel: "Demander un devis Flotte",
     badge: "Le plus choisi",
     highlighted: true,
   },
@@ -192,7 +192,7 @@ export const DEFAULT_SITE_PLANS: DefaultPlan[] = [
     tagline: "Multi-sociétés, intégrations et accompagnement dédié.",
     priceMonthly: null,
     priceUnit: "Sur devis",
-    priceNote: "Au-delà de 200 équipements ou plusieurs sociétés",
+    priceNote: "En dinars tunisiens · au-delà de 200 équipements ou plusieurs sociétés",
     features: [
       "Tout Flotte, plus :",
       "Multi-sociétés et périmètres fins",

@@ -31,7 +31,7 @@ export const purchaseRequestInput = z
     neededBy: optionalDate,
   })
   .refine((v) => !!(v.workOrderId || v.equipmentId || v.costCenterId), {
-    message: "Rattacher la demande à un ordre de travail, un équipement ou un centre de coût",
+    message: "Rattacher la demande à une intervention, un équipement ou un centre de coût",
     path: ["workOrderId"],
   });
 
@@ -42,7 +42,7 @@ async function resolveTarget(ctx: AuthContext, input: z.output<typeof purchaseRe
       .select({ companyId: workOrders.companyId, siteId: workOrders.siteId, equipmentId: workOrders.equipmentId, number: workOrders.number })
       .from(workOrders)
       .where(and(eq(workOrders.id, input.workOrderId), eq(workOrders.tenantId, ctx.tenantId)));
-    if (!wo) throw new NotFoundError("Ordre de travail");
+    if (!wo) throw new NotFoundError("Intervention");
     // L'équipement d'une demande liée à un OT est celui de l'OT (jamais un autre, encore moins d'une autre organisation).
     await assertSameTenant(db, ctx, costCenters, input.costCenterId, "Centre de coût");
     return { companyId: wo.companyId, siteId: wo.siteId, equipmentId: wo.equipmentId };

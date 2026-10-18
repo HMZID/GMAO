@@ -15,7 +15,7 @@ export const metadata = { title: "Fiche d'intervention" };
  * Fiche d'intervention imprimable (A4) : identification, travaux, temps, pièces, compte rendu et
  * cadres de signature (intervenant, prestataire, responsable). Avec ?couts=1, la synthèse des coûts est jointe.
  */
-export default async function WorkOrderPrintPage(props: PageProps<"/impression/ordre-de-travail/[id]">) {
+export default async function WorkOrderPrintPage(props: PageProps<"/impression/intervention/[id]">) {
   const [{ id }, query] = await Promise.all([props.params, props.searchParams]);
   const ctx = await getAuthContext();
   const [wo, branding] = await Promise.all([loadOr404(id, (x) => getWorkOrder(ctx, x)), getBranding(ctx)]);
@@ -30,8 +30,8 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/o
   return (
     <>
       <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-2 px-4 print:hidden">
-        <Link href={`/ordres-de-travail/${wo.id}`} className={buttonClass("ghost")}>
-          ← Retour à l&apos;ordre de travail
+        <Link href={`/interventions/${wo.id}`} className={buttonClass("ghost")}>
+          ← Retour à l&apos;intervention
         </Link>
         <div className="flex flex-wrap gap-2">
           <Link href={withCosts ? `?` : `?couts=1`} className={buttonClass("secondary")} replace>
@@ -180,7 +180,7 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/o
         </section>
 
         <footer className="mt-6 border-t border-slate-300 pt-2 text-[10px] text-slate-500">
-          {branding.label} · Ordre de travail {wo.number} · Statut au {formatDate(printedAt)} : {WORK_ORDER_STATUS[wo.status]?.label ?? wo.status} ·
+          {branding.label} · Intervention {wo.number} · Statut au {formatDate(printedAt)} : {WORK_ORDER_STATUS[wo.status]?.label ?? wo.status} ·
           Document édité par GMAO
         </footer>
       </article>

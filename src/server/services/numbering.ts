@@ -4,10 +4,10 @@ import type { DbOrTx } from "@/server/db";
 import { companies, sequences } from "@/server/db/schema";
 import { numberingYear } from "@/server/domain/numbering";
 
-export type SequenceKind = "OT" | "DI" | "DA";
+export type SequenceKind = "INT" | "DI" | "DA";
 
 /**
- * Numéro unique par société et par année (heure de Paris), jamais réutilisé (COR-05) : OT-SBTP-2026-00012.
+ * Numéro unique par société et par année (heure de Paris), jamais réutilisé (COR-05) : INT-SBTP-2026-00012 (intervention à réaliser).
  * L'incrément est atomique (INSERT … ON CONFLICT DO UPDATE), sûr en cas de créations simultanées.
  */
 export async function nextNumber(tx: DbOrTx, input: { tenantId: string; companyId: string; kind: SequenceKind; date?: Date }) {

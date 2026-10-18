@@ -11,7 +11,7 @@ import { tenantAccess } from "@/server/domain/tenants";
 import { UnauthorizedError } from "@/server/errors";
 import { apiKeyFromHeaders } from "@/server/domain/api-keys";
 import { IMPERSONATION_COOKIE, verifyImpersonation } from "@/server/domain/impersonation";
-import { isPlatformAdmin } from "@/server/services/platform";
+import { isPlatformAdmin, needsAdminTwoFactorSetup } from "@/server/services/platform";
 import { authenticateApiKey } from "./api-key";
 import { auth } from "./auth";
 
@@ -25,6 +25,7 @@ export async function loadAuthContext(userId: string, channel: Channel, options:
       email: user.email,
       isActive: user.isActive,
       mustChangePassword: user.mustChangePassword,
+      twoFactorEnabled: user.twoFactorEnabled,
       tenantStatus: tenants.status,
       demoEndsAt: tenants.demoEndsAt,
     })
@@ -60,7 +61,7 @@ export async function loadAuthContext(userId: string, channel: Channel, options:
     assignments.map((a) => ({ ...a, role: a.role as Role })),
     { channel },
   );
-  return row.mustChangePassword ? { ...ctx, mustChangePassword: true } : ctx;
+  return { ...ctx, twoFactorEnabled: row.twoFactorEnabled, ...(row.mustChangePassword ? { mustChangePassword: true } : {}) };
 }
 
 /**
@@ -104,6 +105,8 @@ export const getAuthContext = cache(async (): Promise<AuthContext> => {
   const own = await getOwnAuthContext();
   // Mot de passe provisoire (compte ouvert depuis le site) : à remplacer avant toute autre page ou action.
   if (own.mustChangePassword) redirect("/premiere-connexion");
+  // Administrateur de la plateforme sans double authentification : à configurer avant tout (TEC-04).
+  if (needsAdminTwoFactorSetup(own)) redirect("/compte/securite?obligatoire=1");
   return withImpersonation(own, (await cookies()).get(IMPERSONATION_COOKIE)?.value);
 });
 

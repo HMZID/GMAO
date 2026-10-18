@@ -57,8 +57,8 @@ test("téléphone : planning jour par jour, navigation du bas, listes en cartes"
   await expect(page.getByRole("tab").first()).toHaveAttribute("aria-selected", "true");
   await expect(page.getByText("Julien Moreau").locator("visible=true").first()).toBeVisible();
   // Navigation du bas, puis liste affichée en cartes sans défilement horizontal.
-  await page.getByRole("navigation", { name: "Rubriques principales" }).getByRole("link", { name: "Travaux" }).click();
-  await expect(page.getByRole("heading", { name: "Ordres de travail" })).toBeVisible();
+  await page.getByRole("navigation", { name: "Rubriques principales" }).getByRole("link", { name: "Interventions" }).click();
+  await expect(page.getByRole("heading", { name: "Interventions à réaliser" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
 });
 
@@ -81,5 +81,5 @@ test("achats : nombre d'OT par prestataire (sous-requête corrélée)", async ({
   await page.goto("/achats");
   const row = page.getByRole("row", { name: /Engins Services Rhône/ });
   await expect(row).toBeVisible();
-  await expect(row.getByRole("cell").last()).toHaveText("3");
+  await expect(row.getByRole("cell").last()).toHaveText("4");
 });

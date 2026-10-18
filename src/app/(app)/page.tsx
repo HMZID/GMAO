@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { DueStatusBadge, PriorityBadge, WorkOrderStatusBadge } from "@/components/status-badges";
 import { PageHeader } from "@/components/layout/page-header";
 import { ButtonLink } from "@/components/ui/button";
-import { Card, CardHeader, EmptyState, StatTile, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
+import { Alert, Card, CardHeader, EmptyState, StatTile, Table, TBody, TD, TH, THead, TR } from "@/components/ui/primitives";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import { getAuthContext } from "@/server/auth/session";
+import { countDeadlineAlerts } from "@/server/services/fleet-deadlines";
 import { getDashboard } from "@/server/services/kpi";
 import { listDueItems } from "@/server/services/preventive";
 import { listWorkOrders } from "@/server/services/work-orders";
@@ -16,10 +17,11 @@ export default async function DashboardPage() {
   const ctx = await getAuthContext();
   // Administrateur de la plateforme : pas de maintenance, il arrive sur les organisations clientes.
   if (!ctx.can("equipment.read")) redirect(ctx.can("platform.manage") ? "/administration/plateforme" : "/notifications");
-  const [dashboard, urgent, dues] = await Promise.all([
+  const [dashboard, urgent, dues, deadlines] = await Promise.all([
     getDashboard(ctx),
     ctx.can("workorder.read") ? listWorkOrders(ctx, { status: "OPEN", pageSize: 8 }) : null,
     ctx.can("plan.read") ? listDueItems(ctx, { status: "OPEN" }) : null,
+    countDeadlineAlerts(ctx),
   ]);
   const eq = dashboard.equipmentByStatus;
   const wo = dashboard.workOrders;
@@ -33,10 +35,10 @@ export default async function DashboardPage() {
         description="Situation du parc et de la maintenance dans votre périmètre."
         actions={
           <>
-            {ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Signaler une panne</ButtonLink> : null}
+            {ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Créer une demande d&apos;intervention</ButtonLink> : null}
             {ctx.can("workorder.create") ? (
-              <ButtonLink href="/ordres-de-travail/nouveau" variant="secondary">
-                Nouvel ordre de travail
+              <ButtonLink href="/interventions/nouveau" variant="secondary">
+                Nouvelle intervention à réaliser
               </ButtonLink>
             ) : null}
           </>
@@ -55,10 +57,10 @@ export default async function DashboardPage() {
         <StatTile label="Disponibles ou en service" value={(eq.AVAILABLE ?? 0) + (eq.IN_SERVICE ?? 0)} tone="green" href="/equipements" />
         <StatTile label="Demandes à qualifier" value={dashboard.requestsToQualify} tone="blue" href="/demandes?status=NEW" />
         <StatTile
-          label="Ordres de travail ouverts"
+          label="Interventions à réaliser"
           value={Object.values(wo.byStatus).reduce((a, b) => a + b, 0)}
           tone="violet"
-          href="/ordres-de-travail"
+          href="/interventions"
           hint={`${wo.byPriority.P1 ?? 0} urgence(s) P1 · ${wo.byStatus.ON_HOLD ?? 0} en attente`}
         />
         <StatTile
@@ -82,25 +84,42 @@ export default async function DashboardPage() {
         />
       </div>
 
+      {deadlines.overdue + deadlines.soon > 0 ? (
+        <div className="mt-6">
+          <Alert tone={deadlines.overdue > 0 ? "red" : "amber"} title="Assurances, visites techniques et vignettes">
+            {[
+              deadlines.overdue > 0 ? `${deadlines.overdue} échéance(s) dépassée(s)` : null,
+              deadlines.soon > 0 ? `${deadlines.soon} à renouveler dans les 30 jours` : null,
+            ]
+              .filter(Boolean)
+              .join(", ")}
+            .{" "}
+            <Link href="/equipements/echeances?horizon=30" className="font-medium underline">
+              Voir les échéances du parc
+            </Link>
+          </Alert>
+        </div>
+      ) : null}
+
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         {urgent ? (
           <Card>
             <CardHeader
-              title="Ordres de travail ouverts"
+              title="Interventions à réaliser"
               description="Par priorité puis date prévue"
               actions={
-                <Link href="/ordres-de-travail" className="text-sm text-brand-700 hover:underline">
+                <Link href="/interventions" className="text-sm text-brand-700 hover:underline">
                   Tout voir
                 </Link>
               }
             />
             {urgent.items.length === 0 ? (
-              <EmptyState title="Aucun ordre de travail ouvert" />
+              <EmptyState title="Aucune intervention à réaliser" />
             ) : (
               <Table>
                 <THead>
                   <tr>
-                    <TH>Ordre de travail</TH>
+                    <TH>Intervention</TH>
                     <TH>Équipement</TH>
                     <TH>Priorité</TH>
                     <TH>Statut</TH>
@@ -110,7 +129,7 @@ export default async function DashboardPage() {
                   {urgent.items.map((w) => (
                     <TR key={w.id}>
                       <TD>
-                        <Link href={`/ordres-de-travail/${w.id}`} className="font-medium text-brand-700 hover:underline">
+                        <Link href={`/interventions/${w.id}`} className="font-medium text-brand-700 hover:underline">
                           {w.number}
                         </Link>
                         <p className="max-w-56 truncate text-xs text-slate-500">{w.title}</p>

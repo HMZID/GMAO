@@ -167,7 +167,7 @@ async function loadWorkOrder(tx: DbOrTx, ctx: AuthContext, id: string) {
     .select()
     .from(workOrders)
     .where(and(eq(workOrders.id, id), eq(workOrders.tenantId, ctx.tenantId)));
-  if (!wo) throw new NotFoundError("Ordre de travail");
+  if (!wo) throw new NotFoundError("Intervention");
   return wo;
 }
 
@@ -277,8 +277,8 @@ export async function getWorkOrder(ctx: AuthContext, id: string) {
       costs: true,
     },
   });
-  if (!wo) throw new NotFoundError("Ordre de travail");
-  assertVisible(ctx, "workorder.read", wo, "Ordre de travail");
+  if (!wo) throw new NotFoundError("Intervention");
+  assertVisible(ctx, "workorder.read", wo, "Intervention");
 
   const [partLines, reservations, meterRows, costs, snapshot, requests] = await Promise.all([
     db
@@ -428,8 +428,8 @@ export async function createWorkOrder(ctx: AuthContext, raw: unknown) {
     .where(and(eq(equipment.id, input.equipmentId), eq(equipment.tenantId, ctx.tenantId)));
   if (!eqRow) throw new NotFoundError("Équipement");
   assertCanOn(ctx, "workorder.create", eqRow);
-  if (eqRow.status === "RETIRED") throw new BusinessRuleError(["Aucun ordre de travail sur un équipement réformé."]);
-  if (input.isExternal && !input.supplierId) throw new BusinessRuleError(["Un ordre de travail externe nécessite un prestataire."]);
+  if (eqRow.status === "RETIRED") throw new BusinessRuleError(["Aucune intervention sur un équipement réformé."]);
+  if (input.isExternal && !input.supplierId) throw new BusinessRuleError(["Une intervention externe nécessite un prestataire."]);
   await assertWorkOrderReferences(ctx, "workorder.create", input);
 
   return db.transaction(async (tx) => {
@@ -441,7 +441,7 @@ export async function createWorkOrder(ctx: AuthContext, raw: unknown) {
     });
     await notifyAssignedTechnicians(tx, ctx.tenantId, wo, [...new Set(input.assigneeIds ?? [])], { excludeUserId: ctx.userId });
     if (input.isImmobilizing && input.type !== "PREVENTIVE" && input.type !== "REGULATORY") {
-      await setEquipmentStatus(tx, ctx, eqRow.id, "IMMOBILIZED", { reason: `Ordre de travail ${wo.number}`, workOrderId: wo.id });
+      await setEquipmentStatus(tx, ctx, eqRow.id, "IMMOBILIZED", { reason: `Intervention ${wo.number}`, workOrderId: wo.id });
       await openDowntime(tx, ctx, { equipmentId: eqRow.id, reason: input.isSafetyRelated ? "SAFETY" : "BREAKDOWN", workOrderId: wo.id });
     }
     return wo;
@@ -468,7 +468,7 @@ export async function updatePlanning(ctx: AuthContext, id: string, raw: unknown)
   const input = parseInput(planningInput, raw);
   const wo = await loadWorkOrder(db, ctx, id);
   assertCanOn(ctx, "workorder.manage", wo);
-  if (!(OPEN_STATUSES as readonly string[]).includes(wo.status)) throw new BusinessRuleError(["Cet ordre de travail n'est plus planifiable."]);
+  if (!(OPEN_STATUSES as readonly string[]).includes(wo.status)) throw new BusinessRuleError(["Cette intervention n'est plus planifiable."]);
   await assertWorkOrderReferences(ctx, "workorder.manage", input);
 
   const plannedStart = input.plannedStart ?? wo.plannedStart;
@@ -555,8 +555,8 @@ export async function transitionWorkOrder(ctx: AuthContext, id: string, raw: unk
       .from(workOrders)
       .where(and(eq(workOrders.id, id), eq(workOrders.tenantId, ctx.tenantId)))
       .for("update");
-    if (!wo) throw new NotFoundError("Ordre de travail");
-    assertVisible(ctx, "workorder.read", wo, "Ordre de travail");
+    if (!wo) throw new NotFoundError("Intervention");
+    assertVisible(ctx, "workorder.read", wo, "Intervention");
 
     const snapshot = await buildSnapshot(tx, wo);
     const check = checkTransition(snapshot, { ...input, actor: actorFor(ctx, wo) }, now);
@@ -649,7 +649,7 @@ async function applyEquipmentEffects(tx: DbOrTx, ctx: AuthContext, wo: WorkOrder
 
   if (to === "IN_PROGRESS" && wo.isImmobilizing && eqRow.status !== "IMMOBILIZED") {
     // Maintenance programmée en cours : En maintenance (CDC §3.2)
-    await setEquipmentStatus(tx, ctx, wo.equipmentId, "IN_MAINTENANCE", { reason: `Ordre de travail ${wo.number}`, workOrderId: wo.id });
+    await setEquipmentStatus(tx, ctx, wo.equipmentId, "IN_MAINTENANCE", { reason: `Intervention ${wo.number}`, workOrderId: wo.id });
     await openDowntime(tx, ctx, { equipmentId: wo.equipmentId, reason: "PLANNED_MAINTENANCE", workOrderId: wo.id, startedAt: now });
   }
 
@@ -676,7 +676,7 @@ async function applyEquipmentEffects(tx: DbOrTx, ctx: AuthContext, wo: WorkOrder
   // DI qualifiée « immobilisante », contrôle réglementaire bloquant échu (CDC §5.5, PRV-12).
   if ((to === "TECH_CLOSED" || to === "CANCELLED") && wo.isImmobilizing) {
     await releaseEquipmentIfFree(tx, ctx, wo.equipmentId, {
-      reason: to === "TECH_CLOSED" ? `Remise en service — ordre de travail ${wo.number}` : `Ordre de travail ${wo.number} annulé`,
+      reason: to === "TECH_CLOSED" ? `Remise en service — intervention ${wo.number}` : `Intervention ${wo.number} annulée`,
       workOrderId: wo.id,
       excludeWorkOrderId: wo.id,
       at: now,
@@ -685,7 +685,7 @@ async function applyEquipmentEffects(tx: DbOrTx, ctx: AuthContext, wo: WorkOrder
 
   if (from === "TECH_CLOSED" && to === "IN_PROGRESS" && wo.isImmobilizing) {
     await setEquipmentStatus(tx, ctx, wo.equipmentId, "IMMOBILIZED", {
-      reason: `Réouverture de l'ordre de travail ${wo.number}`,
+      reason: `Réouverture de l'intervention ${wo.number}`,
       workOrderId: wo.id,
     });
     await openDowntime(tx, ctx, { equipmentId: wo.equipmentId, reason: "BREAKDOWN", workOrderId: wo.id, startedAt: now });
@@ -704,7 +704,7 @@ export async function createRecurrence(ctx: AuthContext, id: string) {
       type: wo.type === "PREVENTIVE" ? "CORRECTIVE" : wo.type,
       priority: wo.priority,
       title: `Récidive — ${wo.title}`,
-      description: `Récidive de l'ordre de travail ${wo.number}.`,
+      description: `Récidive de l'intervention ${wo.number}.`,
       isImmobilizing: wo.isImmobilizing,
       isSafetyRelated: wo.isSafetyRelated,
       parentWorkOrderId: wo.id,
@@ -719,7 +719,7 @@ export async function createRecurrence(ctx: AuthContext, id: string) {
 async function assertExecutable(ctx: AuthContext, wo: WorkOrderRow, allowed: WorkOrderStatus[]) {
   assertCanOn(ctx, "workorder.execute", wo);
   if (!allowed.includes(wo.status)) {
-    throw new BusinessRuleError([`Action impossible au statut actuel de l'ordre de travail.`]);
+    throw new BusinessRuleError([`Action impossible au statut actuel de l'intervention.`]);
   }
 }
 
@@ -811,7 +811,7 @@ export async function recordTime(ctx: AuthContext, id: string, raw: unknown, now
         .select()
         .from(timeEntries)
         .where(and(eq(timeEntries.workOrderId, id), eq(timeEntries.technicianId, technicianId), isNull(timeEntries.endedAt)));
-      if (!open) throw new BusinessRuleError(["Aucun pointage en cours sur cet ordre de travail."]);
+      if (!open) throw new BusinessRuleError(["Aucun pointage en cours sur cette intervention."]);
       const [row] = await tx
         .update(timeEntries)
         .set({ endedAt: now, minutes: Math.max(Math.round((now.getTime() - open.startedAt.getTime()) / 60_000), 1) })
@@ -981,7 +981,7 @@ export async function setExternalCost(ctx: AuthContext, id: string, raw: unknown
     const wo = await loadWorkOrder(tx, ctx, id);
     assertCanOn(ctx, "workorder.manage", wo);
     if (wo.status === "CLOSED" || wo.status === "CANCELLED")
-      throw new BusinessRuleError(["Les coûts d'un ordre de travail clôturé ne sont plus modifiables."]);
+      throw new BusinessRuleError(["Les coûts d'une intervention clôturée ne sont plus modifiables."]);
     if (input.supplierId) {
       const [s] = await tx
         .select({ id: suppliers.id })
@@ -1020,7 +1020,7 @@ export async function addOtherCost(ctx: AuthContext, id: string, raw: unknown) {
     const wo = await loadWorkOrder(tx, ctx, id);
     assertCanOn(ctx, "workorder.manage", wo);
     if (wo.status === "CLOSED" || wo.status === "CANCELLED")
-      throw new BusinessRuleError(["Les coûts d'un ordre de travail clôturé ne sont plus modifiables."]);
+      throw new BusinessRuleError(["Les coûts d'une intervention clôturée ne sont plus modifiables."]);
     const [row] = await tx
       .insert(workOrderCosts)
       .values({ workOrderId: id, ...input, createdById: ctx.userId })

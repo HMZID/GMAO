@@ -47,7 +47,7 @@ export function IndicatorForm({ sources }: { sources: SourceOption[] }) {
   return (
     <ActionForm action={createIndicatorAction} resetOnSuccess className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Field label="Nom de l'indicateur" name="name" required className="sm:col-span-2 lg:col-span-3">
-        <Input name="name" required maxLength={80} placeholder="Ex. : Ordres de travail correctifs par site" />
+        <Input name="name" required maxLength={80} placeholder="Ex. : Interventions correctives par site" />
       </Field>
       <Field label="Données" name="source" required>
         <Select

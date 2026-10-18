@@ -69,7 +69,9 @@ export default function WorkOrderScreen() {
   return (
     <Screen refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} />}>
       <Stack.Screen options={{ title: wo.number }} />
-      {stale ? <Message tone="amber">Hors connexion : OT du {formatDateTime(stale)}. Les saisies partiront au retour du réseau.</Message> : null}
+      {stale ? (
+        <Message tone="amber">Hors connexion : intervention du {formatDateTime(stale)}. Les saisies partiront au retour du réseau.</Message>
+      ) : null}
 
       <Card title={wo.title} right={<Badge label={WORK_ORDER_STATUS[wo.status]?.label ?? wo.status} tone={WORK_ORDER_STATUS[wo.status]?.tone} />}>
         <Row
@@ -124,7 +126,7 @@ export default function WorkOrderScreen() {
           <Button
             title="Travaux terminés"
             onPress={() =>
-              Alert.alert("Travaux terminés ?", "L'OT passera à « Travaux terminés » après envoi des saisies.", [
+              Alert.alert("Travaux terminés ?", "L'intervention passera à « Travaux terminés » après envoi des saisies.", [
                 { text: "Annuler", style: "cancel" },
                 { text: "Confirmer", onPress: () => void enqueue({ kind: "transition", workOrderId: wo.id, to: "WORK_DONE" }) },
               ])

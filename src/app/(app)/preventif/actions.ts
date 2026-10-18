@@ -67,8 +67,8 @@ export async function generateAction(_: ActionState): Promise<ActionState> {
       status: "success",
       message:
         created === 0
-          ? "Aucun ordre de travail à générer : toutes les échéances proches ont déjà le leur."
-          : `${created} ordre(s) de travail préventif(s) généré(s).`,
+          ? "Aucune intervention à générer : toutes les échéances proches ont déjà la leur."
+          : `${created} intervention(s) préventive(s) générée(s).`,
     } satisfies ActionState;
   });
 }

@@ -19,7 +19,7 @@ test("l'administrateur exporte les données : classeur complet, CSV et JSON pagi
   expect(workbook.worksheets.map((w) => w.name)).toEqual([
     "Informations",
     "Équipements",
-    "Ordres de travail",
+    "Interventions à réaliser",
     "Demandes",
     "Relevés",
     "Fournisseurs",

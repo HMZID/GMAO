@@ -35,7 +35,7 @@ export default function DueItems() {
             subtitle={[
               d.dueDate ? `le ${formatDate(d.dueDate)}` : null,
               d.dueMeterValue != null ? `à ${formatNumber(d.dueMeterValue)} ${d.meterUnit ?? ""}` : null,
-              d.workOrderNumber ? `OT ${d.workOrderNumber}` : null,
+              d.workOrderNumber ? `Intervention ${d.workOrderNumber}` : null,
             ]
               .filter(Boolean)
               .join(" · ")}

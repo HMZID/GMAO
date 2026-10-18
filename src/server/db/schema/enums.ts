@@ -75,7 +75,12 @@ export const emailEventEnum = pgEnum("email_event", [
   "DEMO_REQUEST",
   "DEMO_ACCESS",
   "DEMO_DECISION",
+  "FLEET_DEADLINE",
 ]);
+
+/** Échéances administratives du parc (assurance, visite technique, vignette…). */
+export const deadlineKindEnum = pgEnum("deadline_kind", ["INSURANCE", "TECHNICAL_INSPECTION", "VIGNETTE", "OTHER"]);
+export const deadlineStatusEnum = pgEnum("deadline_status", ["OPEN", "DONE", "CANCELLED"]);
 
 export const emailStatusEnum = pgEnum("email_status", ["PENDING", "SENT", "FAILED", "CANCELLED"]);
 

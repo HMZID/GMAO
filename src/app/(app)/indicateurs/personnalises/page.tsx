@@ -54,7 +54,7 @@ export default async function CustomIndicatorsPage() {
             title="Aucun indicateur personnalisé"
             description={
               canManage
-                ? "Composer un premier indicateur : par exemple le nombre d'ordres de travail par statut, ou les heures de main-d'œuvre par technicien."
+                ? "Composer un premier indicateur : par exemple le nombre d'interventions par statut, ou les heures de main-d'œuvre par technicien."
                 : "Votre organisation n'a pas encore composé d'indicateur."
             }
           />

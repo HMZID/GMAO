@@ -78,7 +78,7 @@ test("photo d'intervention : ajoutée puis retirée par le technicien", async ({
   const { data } = await (await page.request.get("/api/v1/work-orders?mine=true&pageSize=50")).json();
   const workOrder = data.items.find((w: { status: string }) => ["PLANNED", "IN_PROGRESS", "ON_HOLD", "CREATED"].includes(w.status));
   expect(workOrder, "un OT ouvert affecté au technicien de Lyon").toBeTruthy();
-  await page.goto(`/ordres-de-travail/${workOrder.id}`);
+  await page.goto(`/interventions/${workOrder.id}`);
 
   const card = await addDocument(page, { name: "fuite.png", mimeType: "image/png", buffer: PNG(stamp) }, "Photo", `Fuite raccord ${stamp}`);
   const row = card.getByRole("row", { name: new RegExp(`Fuite raccord ${stamp}`) });

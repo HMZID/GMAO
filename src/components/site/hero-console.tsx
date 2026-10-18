@@ -11,7 +11,7 @@ const ROWS = [
     meter: "5 190 h",
     status: "Atelier",
     tone: "warn",
-    next: "Freins (OT en cours)",
+    next: "Freins (intervention en cours)",
     left: "J+1",
     fill: 0.6,
   },
@@ -80,7 +80,7 @@ export function HeroConsole() {
         <div className="grid grid-cols-3 border-t border-white/10 text-center">
           {[
             ["Disponibilité", "94,2 %"],
-            ["OT ouverts", "7"],
+            ["Interventions", "7"],
             ["Préventifs échus", "0"],
           ].map(([label, value]) => (
             <div key={label} className="border-r border-white/10 px-2 py-3 last:border-r-0">
@@ -92,8 +92,8 @@ export function HeroConsole() {
       </div>
       {/* Bon de travail clôturé, posé de travers sur le tableau. */}
       <div className="absolute -bottom-10 -left-6 hidden w-56 rotate-[-4deg] border-2 border-asphalt bg-paper p-3 text-asphalt shadow-[6px_6px_0_var(--color-asphalt)] sm:block">
-        <p className="site-label text-[10px] text-asphalt-500">Ordre de travail</p>
-        <p className="font-plate text-sm font-bold">OT-2026-0142</p>
+        <p className="site-label text-[10px] text-asphalt-500">Intervention à réaliser</p>
+        <p className="font-plate text-sm font-bold">INT-2026-0142</p>
         <p className="mt-1 text-xs">Remplacement flexible hydraulique · PL-021</p>
         <p className="site-label mt-2 inline-block bg-ok px-1.5 py-0.5 text-[10px] text-white">Clôturé · 2 h 40</p>
       </div>

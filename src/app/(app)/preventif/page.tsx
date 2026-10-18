@@ -24,7 +24,7 @@ export default async function PreventivePage() {
           <>
             {ctx.can("workorder.manage") ? (
               <ActionForm action={generateAction} showMessage>
-                <SubmitButton variant="secondary">Générer les ordres de travail préventifs</SubmitButton>
+                <SubmitButton variant="secondary">Générer les interventions préventives</SubmitButton>
               </ActionForm>
             ) : null}
             {ctx.can("plan.write") ? <ButtonLink href="/preventif/plans/nouveau">Nouveau plan</ButtonLink> : null}

@@ -49,7 +49,7 @@ async function loadParent(ctx: AuthContext, entityType: DocumentEntity, entityId
     .select({ id: workOrders.id, companyId: workOrders.companyId, siteId: workOrders.siteId, status: workOrders.status })
     .from(workOrders)
     .where(and(eq(workOrders.id, entityId), eq(workOrders.tenantId, ctx.tenantId)));
-  if (!row) throw new NotFoundError("Ordre de travail");
+  if (!row) throw new NotFoundError("Intervention");
   return { entityType, ...row };
 }
 
@@ -66,7 +66,7 @@ function isManager(ctx: AuthContext, parent: Parent) {
 }
 
 function assertCanUpload(ctx: AuthContext, parent: Parent, kind: string) {
-  if (!canRead(ctx, parent)) throw new NotFoundError(parent.entityType === "EQUIPMENT" ? "Équipement" : "Ordre de travail");
+  if (!canRead(ctx, parent)) throw new NotFoundError(parent.entityType === "EQUIPMENT" ? "Équipement" : "Intervention");
   if (kind === "INVOICE" && !ctx.canOn("supplier.read", parent)) throw new ForbiddenError("Ajout de facture non autorisé sur ce périmètre.");
   if (parent.entityType === "EQUIPMENT") {
     assertCanOn(ctx, "equipment.write", parent);
@@ -76,7 +76,7 @@ function assertCanUpload(ctx: AuthContext, parent: Parent, kind: string) {
   if (isManager(ctx, parent)) return;
   assertCanOn(ctx, "workorder.execute", parent);
   if (["CLOSED", "CANCELLED"].includes(parent.status)) {
-    throw new BusinessRuleError(["Ordre de travail clôturé ou annulé : seul un gestionnaire peut encore y joindre un document."]);
+    throw new BusinessRuleError(["Intervention clôturée ou annulée : seul un gestionnaire peut encore y joindre un document."]);
   }
 }
 
@@ -96,7 +96,7 @@ export const documentListInput = z.object({
 export async function listDocuments(ctx: AuthContext, raw: unknown) {
   const input = parseInput(documentListInput, raw);
   const parent = await loadParent(ctx, input.entityType, input.entityId);
-  if (!canRead(ctx, parent)) throw new NotFoundError(parent.entityType === "EQUIPMENT" ? "Équipement" : "Ordre de travail");
+  if (!canRead(ctx, parent)) throw new NotFoundError(parent.entityType === "EQUIPMENT" ? "Équipement" : "Intervention");
 
   const rows = await db
     .select({

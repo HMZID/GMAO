@@ -83,14 +83,14 @@ export const MCP_TOOLS: McpTool<AuthContext>[] = [
   }),
   tool({
     name: "list_work_orders",
-    title: "Ordres de travail",
-    description: "Ordres de travail (préventifs, correctifs, réglementaires) filtrés par statut, type, priorité ou équipement.",
+    title: "Interventions à réaliser",
+    description: "Interventions à réaliser (préventives, correctives, réglementaires) filtrées par statut, type, priorité ou équipement.",
     annotations: READ_ONLY,
     input: z.object({
       status: z
         .enum(["OPEN", "ALL", "CREATED", "PLANNED", "ON_HOLD", "IN_PROGRESS", "WORK_DONE", "TECH_CLOSED", "CLOSED", "CANCELLED"])
         .default("OPEN")
-        .describe("OPEN = tous les ordres de travail non clôturés"),
+        .describe("OPEN = toutes les interventions non clôturées"),
       type: z.enum(["PREVENTIVE", "CORRECTIVE", "REGULATORY", "IMPROVEMENT", "ACCIDENT"]).optional(),
       priority: z.enum(["P1", "P2", "P3", "P4"]).optional().describe("P1 urgente … P4 planifiable"),
       equipmentId: z.uuid().optional(),
@@ -102,10 +102,10 @@ export const MCP_TOOLS: McpTool<AuthContext>[] = [
   }),
   tool({
     name: "get_work_order",
-    title: "Détail d'un ordre de travail",
-    description: "Détail d'un ordre de travail : équipement, planification, intervenants, temps, pièces, points de contrôle, compte rendu et coûts.",
+    title: "Détail d'une intervention",
+    description: "Détail d'une intervention : équipement, planification, intervenants, temps, pièces, points de contrôle, compte rendu et coûts.",
     annotations: READ_ONLY,
-    input: z.object({ id: z.uuid().describe("Identifiant de l'ordre de travail") }),
+    input: z.object({ id: z.uuid().describe("Identifiant de l'intervention") }),
     run: async (ctx, a) => {
       // Les éléments propres à l'écran (transitions possibles, état interne) ne sont pas utiles à un assistant.
       const { snapshot: _snapshot, transitions: _transitions, canExecute: _e, canManage: _m, ...wo } = await getWorkOrder(ctx, a.id);
@@ -126,7 +126,7 @@ export const MCP_TOOLS: McpTool<AuthContext>[] = [
   }),
   tool({
     name: "create_work_request",
-    title: "Signaler une panne",
+    title: "Créer une demande d'intervention",
     description:
       "Crée une demande d'intervention (signalement de panne ou d'anomalie) sur un équipement. Elle sera qualifiée par le chef d'atelier. Demander confirmation à l'utilisateur avant de l'appeler.",
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
@@ -173,7 +173,7 @@ export const MCP_TOOLS: McpTool<AuthContext>[] = [
     name: "export_dataset",
     title: "Extraire des données",
     description:
-      "Lignes d'un jeu de données (équipements, ordres de travail, demandes, relevés, fournisseurs, ouvriers, articles, stocks, mouvements), paginées, éventuellement depuis une date de modification.",
+      "Lignes d'un jeu de données (équipements, interventions, demandes, relevés, fournisseurs, ouvriers, articles, stocks, mouvements), paginées, éventuellement depuis une date de modification.",
     annotations: READ_ONLY,
     input: z.object({
       dataset: z.enum(EXPORT_DATASETS),

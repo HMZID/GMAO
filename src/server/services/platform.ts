@@ -1,4 +1,5 @@
 import "server-only";
+import { assertPasswordNotBreached } from "@/server/auth/breached-password";
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
@@ -9,6 +10,7 @@ import { account, companies, equipmentCategories, roleAssignments, sites, tenant
 import { ROLES } from "@/server/authz/permissions";
 import { IMPERSONATION_TTL_MS, impersonationRefusals, signImpersonation } from "@/server/domain/impersonation";
 import { companyCodeFrom, DEMO_DURATIONS, demoEndsAt, platformAdmins, tenantAccess, type TenantStatus } from "@/server/domain/tenants";
+import { adminTwoFactorEnforced, needsTwoFactorSetup } from "@/server/domain/two-factor";
 import { BusinessRuleError, ConflictError, ForbiddenError, NotFoundError } from "@/server/errors";
 import { text } from "@/server/validation";
 import { audit, parseInput } from "./_shared";
@@ -21,10 +23,24 @@ import { audit, parseInput } from "./_shared";
  * Administrateur de la plateforme : rôle « Administrateur » (droit platform.manage), connecté en personne
  * (jamais par une clé d'API). Si PLATFORM_ADMIN_EMAILS est renseignée, son courriel doit aussi y figurer.
  */
-export function isPlatformAdmin(ctx: AuthContext) {
+function hasPlatformRole(ctx: AuthContext) {
   if (ctx.apiKeyId || !ctx.can("platform.manage")) return false;
   const allowed = platformAdmins(process.env.PLATFORM_ADMIN_EMAILS);
   return allowed.size === 0 || allowed.has(ctx.email.toLowerCase());
+}
+
+/** Rôle de plateforme sans double authentification alors qu'elle est obligatoire (TEC-04). */
+export function needsAdminTwoFactorSetup(ctx: AuthContext) {
+  return needsTwoFactorSetup({
+    platformAdmin: hasPlatformRole(ctx),
+    enabled: ctx.twoFactorEnabled === true,
+    enforced: adminTwoFactorEnforced({ flag: process.env.ADMIN_TWO_FACTOR_REQUIRED, vercelEnv: process.env.VERCEL_ENV }),
+  });
+}
+
+/** Droits de plateforme : rôle, courriel autorisé et, si elle est obligatoire, double authentification active. */
+export function isPlatformAdmin(ctx: AuthContext) {
+  return hasPlatformRole(ctx) && !needsAdminTwoFactorSetup(ctx);
 }
 
 export function assertPlatformAdmin(ctx: AuthContext) {
@@ -80,6 +96,7 @@ export async function createDemoTenant(ctx: AuthContext, raw: unknown, now = new
   if (!(DEMO_DURATIONS as readonly number[]).includes(input.durationDays)) throw new BusinessRuleError(["Durée de démonstration inconnue."]);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.adminEmail));
   if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  await assertPasswordNotBreached(input.adminPassword);
   const passwordHash = await hashPassword(input.adminPassword);
   const endsAt = demoEndsAt(now, input.durationDays);
 
@@ -274,6 +291,7 @@ export async function createTenantUser(ctx: AuthContext, tenantId: string, raw: 
   } else if (input.scopeType !== "TENANT") throw new BusinessRuleError(["Périmètre inconnu."]);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, input.email));
   if (existing) throw new ConflictError("Un compte existe déjà avec ce courriel.");
+  await assertPasswordNotBreached(input.password);
   const passwordHash = await hashPassword(input.password);
   return db.transaction(async (tx) => {
     const id = randomUUID();

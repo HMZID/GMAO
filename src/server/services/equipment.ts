@@ -449,7 +449,7 @@ export async function retireEquipment(ctx: AuthContext, id: string, raw: unknown
     .select({ open: count() })
     .from(workOrders)
     .where(and(eq(workOrders.equipmentId, id), inArray(workOrders.status, [...OPEN_STATUSES])));
-  if (open > 0) throw new BusinessRuleError([`Réforme impossible : ${open} ordre(s) de travail ouvert(s) sur cet équipement.`]);
+  if (open > 0) throw new BusinessRuleError([`Réforme impossible : ${open} intervention(s) ouverte(s) sur cet équipement.`]);
   return db.transaction(async (tx) => {
     await setEquipmentStatus(tx, ctx, id, "RETIRED", { reason: input.reason });
     await tx

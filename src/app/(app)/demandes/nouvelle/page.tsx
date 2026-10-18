@@ -9,7 +9,7 @@ import { isUuid } from "@/server/pages";
 import { listEquipmentOptions } from "@/server/services/equipment";
 import { createWorkRequestAction } from "../actions";
 
-export const metadata = { title: "Signaler une panne" };
+export const metadata = { title: "Créer une demande d'intervention" };
 
 export default async function NewWorkRequestPage(props: PageProps<"/demandes/nouvelle">) {
   const ctx = await getAuthContext();
@@ -21,7 +21,7 @@ export default async function NewWorkRequestPage(props: PageProps<"/demandes/nou
   return (
     <>
       <PageHeader
-        title="Signaler une panne"
+        title="Créer une demande d'intervention"
         description="Décrire ce qui est constaté. La priorité est proposée automatiquement (machine arrêtée, risque sécurité, criticité) puis confirmée par le chef d'atelier."
         back={{ href: "/demandes", label: "Demandes d'intervention" }}
       />

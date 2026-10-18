@@ -47,7 +47,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
         ) : null}
         {open && duplicates > 0 ? (
           <Alert tone="amber" title="Doublon possible">
-            <p>D&apos;autres demandes ou ordres de travail sont ouverts sur cet équipement :</p>
+            <p>D&apos;autres demandes ou interventions sont ouvertes sur cet équipement :</p>
             <ul className="mt-1 list-disc pl-5">
               {r.otherOpenRequests.map((o) => (
                 <li key={o.id}>
@@ -59,7 +59,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
               ))}
               {r.openOrders.map((o) => (
                 <li key={o.id}>
-                  <Link href={`/ordres-de-travail/${o.id}`} className="underline">
+                  <Link href={`/interventions/${o.id}`} className="underline">
                     {o.number}
                   </Link>{" "}
                   — {o.title}
@@ -74,8 +74,11 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
           </Alert>
         ) : null}
         {r.workOrder ? (
-          <Alert tone="blue" title={r.status === "MERGED" ? "Rattachée à un ordre de travail existant" : "Transformée en ordre de travail"}>
-            <Link href={`/ordres-de-travail/${r.workOrder.id}`} className="font-medium underline">
+          <Alert
+            tone="blue"
+            title={r.status === "MERGED" ? "Rattachée à une intervention à réaliser existante" : "Transformée en intervention à réaliser"}
+          >
+            <Link href={`/interventions/${r.workOrder.id}`} className="font-medium underline">
               {r.workOrder.number}
             </Link>{" "}
             <WorkOrderStatusBadge status={r.workOrder.status} />
@@ -159,12 +162,12 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
           {canConvert ? (
             <Card>
               <CardHeader
-                title="Créer l'ordre de travail"
-                description="L'ordre de travail correctif reprend la priorité, le type et l'immobilisation"
+                title="Créer l'intervention à réaliser"
+                description="L'intervention corrective reprend la priorité, le type et l'immobilisation"
               />
               <CardBody>
                 <ActionForm action={convertWorkRequestAction.bind(null, r.id)}>
-                  <SubmitButton>Transformer en ordre de travail</SubmitButton>
+                  <SubmitButton>Transformer en intervention à réaliser</SubmitButton>
                 </ActionForm>
               </CardBody>
             </Card>
@@ -172,10 +175,10 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
 
           {canQualify && r.openOrders.length > 0 ? (
             <Card>
-              <CardHeader title="Rattacher à un ordre de travail ouvert" description="Doublon d'une panne déjà prise en charge" />
+              <CardHeader title="Rattacher à une intervention à réaliser existante" description="Doublon d'une panne déjà prise en charge" />
               <CardBody>
                 <ActionForm action={mergeWorkRequestAction.bind(null, r.id)} className="space-y-3">
-                  <Field label="Ordre de travail" name="workOrderId" required>
+                  <Field label="Intervention à réaliser" name="workOrderId" required>
                     <Select
                       id="workOrderId"
                       name="workOrderId"

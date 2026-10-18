@@ -33,7 +33,7 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
         actions={
           canManage ? (
             <ActionForm action={generateAction} showMessage>
-              <SubmitButton>Générer les ordres de travail préventifs</SubmitButton>
+              <SubmitButton>Générer les interventions préventives</SubmitButton>
             </ActionForm>
           ) : null
         }
@@ -74,7 +74,7 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                 <TH>Compteur actuel</TH>
                 <TH>Prévue le</TH>
                 <TH>Statut</TH>
-                <TH>Ordre de travail</TH>
+                <TH>Intervention</TH>
               </tr>
             </THead>
             <TBody>
@@ -115,7 +115,7 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                   </TD>
                   <TD className="min-w-48">
                     {d.workOrderId ? (
-                      <Link href={`/ordres-de-travail/${d.workOrderId}`} className="text-brand-700 hover:underline">
+                      <Link href={`/interventions/${d.workOrderId}`} className="text-brand-700 hover:underline">
                         {d.workOrderNumber}
                       </Link>
                     ) : (

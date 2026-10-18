@@ -169,7 +169,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                                 {orders.map((o) => (
                                   <Link
                                     key={o.id}
-                                    href={`/ordres-de-travail/${o.id}`}
+                                    href={`/interventions/${o.id}`}
                                     className={cn(
                                       "block rounded border px-2 py-1 text-xs hover:shadow-sm",
                                       o.priority === "P1"
@@ -222,7 +222,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
       <Card>
         <CardHeader
           title="À planifier"
-          description={`Ordres de travail créés ou en attente, par priorité — ${formatNumber(plan.backlogHours)} h estimées`}
+          description={`Interventions créées ou en attente, par priorité — ${formatNumber(plan.backlogHours)} h estimées`}
         />
         {plan.backlog.length === 0 ? (
           <EmptyState title="Rien à planifier" />
@@ -230,7 +230,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
           <Table>
             <THead>
               <tr>
-                <TH>Ordre de travail</TH>
+                <TH>Intervention</TH>
                 <TH>Équipement</TH>
                 <TH>Priorité</TH>
                 <TH>Durée estimée</TH>
@@ -241,7 +241,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
               {plan.backlog.map((b) => (
                 <TR key={b.id}>
                   <TD>
-                    <Link href={`/ordres-de-travail/${b.id}`} className="font-medium text-brand-700 hover:underline">
+                    <Link href={`/interventions/${b.id}`} className="font-medium text-brand-700 hover:underline">
                       {b.number}
                     </Link>
                     <p className="max-w-80 truncate text-xs text-slate-500">{b.title}</p>

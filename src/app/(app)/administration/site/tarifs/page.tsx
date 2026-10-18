@@ -29,10 +29,10 @@ function PlanFields({ plan }: { plan?: Plan }) {
       <Field label="Accroche" name="tagline" className="md:col-span-2">
         <Input name="tagline" maxLength={200} defaultValue={plan?.tagline ?? ""} />
       </Field>
-      <Field label="Prix mensuel (€ HT)" name="priceMonthly" hint="Vide : « sur devis » (le libellé du prix s'affiche à la place)">
+      <Field label="Prix mensuel (HT, devise du site)" name="priceMonthly" hint="Vide : « sur devis » (le libellé du prix s'affiche à la place)">
         <Input name="priceMonthly" inputMode="decimal" defaultValue={plan?.priceMonthly ?? ""} />
       </Field>
-      <Field label="Libellé du prix" name="priceUnit" hint="Ex. : € HT / équipement / mois">
+      <Field label="Libellé du prix" name="priceUnit" hint="Ex. : DT HT / équipement / mois, ou « Sur devis »">
         <Input name="priceUnit" maxLength={80} defaultValue={plan?.priceUnit ?? ""} />
       </Field>
       <Field label="Condition" name="priceNote" hint="Ex. : À partir de 10 équipements">
@@ -94,7 +94,7 @@ export default async function SitePlansPage() {
                     <p className="font-medium text-slate-900">
                       {plan.name}
                       <span className="ml-2 text-sm font-normal text-slate-500">
-                        {plan.priceMonthly === null ? plan.priceUnit || "Sur devis" : `${formatNumber(plan.priceMonthly)} ${plan.priceUnit ?? "€"}`}
+                        {plan.priceMonthly === null ? plan.priceUnit || "Sur devis" : `${formatNumber(plan.priceMonthly)} ${plan.priceUnit ?? ""}`}
                       </span>
                       {plan.highlighted ? (
                         <Badge tone="amber" className="ml-2">

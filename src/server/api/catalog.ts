@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import type { Permission } from "@/server/authz/permissions";
 import { documentDeleteInput, documentInput, documentListInput } from "@/server/services/documents";
+import { cancelInput as deadlineCancelInput, deadlineFilters, deadlineInput, renewalInput } from "@/server/services/fleet-deadlines";
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
 import { decisionInput } from "@/server/services/approvals";
 import { preferencesInput } from "@/server/services/email";
@@ -112,7 +113,7 @@ export const ENDPOINTS: Endpoint[] = [
   {
     method: "POST",
     path: "/api/v1/equipment/{id}/retire",
-    summary: "Réforme (refusée si un OT est ouvert)",
+    summary: "Réforme (refusée si une intervention est ouverte)",
     permission: "equipment.write",
     body: retireInput,
   },
@@ -169,14 +170,31 @@ export const ENDPOINTS: Endpoint[] = [
     permission: "request.qualify",
     body: rejectInput,
   },
-  { method: "POST", path: "/api/v1/work-requests/{id}/convert", summary: "Transformation en OT correctif", permission: "workorder.manage" },
+  {
+    method: "POST",
+    path: "/api/v1/work-requests/{id}/convert",
+    summary: "Transformation en intervention corrective",
+    permission: "workorder.manage",
+  },
 
-  { method: "GET", path: "/api/v1/work-orders", summary: "Liste paginée des OT", permission: "workorder.read", query: workOrderFilters },
-  { method: "POST", path: "/api/v1/work-orders", summary: "Création d'un OT", permission: "workorder.create", body: workOrderInput },
+  {
+    method: "GET",
+    path: "/api/v1/work-orders",
+    summary: "Liste paginée des interventions à réaliser",
+    permission: "workorder.read",
+    query: workOrderFilters,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/work-orders",
+    summary: "Création d'une intervention à réaliser",
+    permission: "workorder.create",
+    body: workOrderInput,
+  },
   {
     method: "GET",
     path: "/api/v1/work-orders/{id}",
-    summary: "Fiche OT : coûts, transitions possibles et conditions manquantes",
+    summary: "Fiche de l'intervention : coûts, transitions possibles et conditions manquantes",
     permission: "workorder.read",
   },
   {
@@ -232,7 +250,40 @@ export const ENDPOINTS: Endpoint[] = [
   },
   { method: "GET", path: "/api/v1/maintenance-plans/{id}", summary: "Plan, opérations, déclencheurs et checklists", permission: "plan.read" },
   { method: "GET", path: "/api/v1/due-items", summary: "Échéances préventives ouvertes", permission: "plan.read", query: dueFilters },
-  { method: "POST", path: "/api/v1/preventive/generate", summary: "Génération des OT préventifs (idempotente)", permission: "workorder.manage" },
+  {
+    method: "GET",
+    path: "/api/v1/equipment-deadlines",
+    summary: "Échéances administratives du parc (assurance, visite technique, vignette), de la plus proche à la plus lointaine",
+    permission: "equipment.read",
+    query: deadlineFilters,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines",
+    summary: "Nouvelle échéance administrative d'un équipement",
+    permission: "equipment.write",
+    body: deadlineInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines/{id}/renew",
+    summary: "Renouvellement : l'échéance est soldée et la suivante créée",
+    permission: "equipment.write",
+    body: renewalInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/equipment-deadlines/{id}/cancel",
+    summary: "Annulation, motif obligatoire",
+    permission: "equipment.write",
+    body: deadlineCancelInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/preventive/generate",
+    summary: "Génération des interventions préventives (idempotente)",
+    permission: "workorder.manage",
+  },
 
   { method: "GET", path: "/api/v1/parts", summary: "Catalogue des pièces et quantités", permission: "part.read", query: partFilters },
   { method: "POST", path: "/api/v1/parts", summary: "Création d'un article", permission: "part.write", body: partInput },
@@ -280,7 +331,7 @@ export const ENDPOINTS: Endpoint[] = [
   {
     method: "GET",
     path: "/api/v1/documents",
-    summary: "Documents actifs d'un équipement ou d'un OT (factures réservées aux profils achats)",
+    summary: "Documents actifs d'un équipement ou d'une intervention (factures réservées aux profils achats)",
     permission: "equipment.read",
     query: documentListInput,
   },
@@ -288,7 +339,7 @@ export const ENDPOINTS: Endpoint[] = [
     method: "POST",
     path: "/api/v1/documents",
     summary:
-      "Ajout d'un document (multipart/form-data, champ « file ») : equipment.write sur un équipement, workorder.execute ou workorder.manage sur un OT (EQP-07, MOB-05)",
+      "Ajout d'un document (multipart/form-data, champ « file ») : equipment.write sur un équipement, workorder.execute ou workorder.manage sur une intervention (EQP-07, MOB-05)",
     permission: "equipment.write",
     body: documentInput,
     multipart: true,
@@ -303,7 +354,7 @@ export const ENDPOINTS: Endpoint[] = [
   {
     method: "DELETE",
     path: "/api/v1/documents/{id}",
-    summary: "Retrait logique (gestionnaire, ou auteur tant que l'OT n'est pas clôturé)",
+    summary: "Retrait logique (gestionnaire, ou auteur tant que l'intervention n'est pas clôturée)",
     body: documentDeleteInput,
   },
   {
