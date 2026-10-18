@@ -63,6 +63,9 @@
   "overrides": {
     "deepmerge-ts": "^8.0.2",
     "mysql2": "^3.24.6",
-    "uuid": "^11.1.1"
+    "uuid": "^11.1.1",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.0"
+    }
   }
 }
