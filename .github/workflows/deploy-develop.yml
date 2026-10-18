@@ -148,7 +148,7 @@ jobs:
               echo "::error::Protection des prévisualisations Vercel active (HTTP $code) : la désactiver (Settings → Deployment Protection) ou déclarer le secret VERCEL_AUTOMATION_BYPASS_SECRET."
               exit 1
             fi
-            case "$body" in *'"status":"ok"'*'"version":"'"$APP_VERSION"'"'*'"environment":"development"'*) echo "$body"; exit 0;; esac
+            case "$body" in *'"status":"ok"'*'"version":"'"$APP_VERSION"'"'*'"environment":"development"'*) echo "$body"; bash scripts/ci/smoke-test.sh "https://$DEVELOP_ALIAS" --deploiement; exit $?;; esac
             sleep 15
           done
           echo "::error::https://$DEVELOP_ALIAS/api/health ne répond pas « ok » en version $APP_VERSION (environnement development) : $body"

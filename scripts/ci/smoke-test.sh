@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Vérifications d'un environnement en ligne (après déploiement, et par la surveillance) : page de connexion,
-# en-têtes de sécurité, tâche planifiée protégée, API fermée sans session, anciennes adresses redirigées.
-# Usage : bash scripts/ci/smoke-test.sh https://adresse ; code de sortie 1 au premier écart (tous listés).
+# Vérifications d'un environnement en ligne : page de connexion, en-têtes de sécurité, tâche planifiée protégée,
+# API fermée sans session. Ces points restent vrais d'une version à l'autre : la surveillance les contrôle.
+# Avec --deploiement (juste après une mise en ligne), s'y ajoutent les points propres à la version déployée
+# (anciennes adresses redirigées…), que la surveillance ne doit pas exiger d'une version précédente encore en ligne.
+# Usage : bash scripts/ci/smoke-test.sh https://adresse [--deploiement] ; code de sortie 1 si un écart (tous listés).
 set -uo pipefail
 
 BASE=${1:?adresse attendue}
+DEPLOYMENT=${2:-}
 fail=0
 check() {
   if [ "$2" = "$3" ]; then
@@ -23,5 +26,7 @@ check "Pages hors cadre (CSP frame-ancestors)" "$(grep -c "^content-security-pol
 check "Type de contenu non deviné (nosniff)" "$(grep -c '^x-content-type-options: nosniff' <<<"$headers")" "1"
 check "Tâche planifiée protégée" "$(code /api/cron/notifications)" "401"
 check "API fermée sans session" "$(code /api/v1/me)" "401"
-check "Ancienne adresse redirigée" "$(code /ordres-de-travail)" "308"
+if [ "$DEPLOYMENT" = "--deploiement" ]; then
+  check "Ancienne adresse redirigée" "$(code /ordres-de-travail)" "308"
+fi
 exit $fail

@@ -134,7 +134,7 @@ jobs:
 
       # Parcours de base après mise en ligne ; en cas d'échec : « Retour arrière production ».
       - name: Vérifications après mise en ligne
-        run: bash scripts/ci/smoke-test.sh "$PRODUCTION_URL"
+        run: bash scripts/ci/smoke-test.sh "$PRODUCTION_URL" --deploiement
 
       - name: Résumé
         if: always()
