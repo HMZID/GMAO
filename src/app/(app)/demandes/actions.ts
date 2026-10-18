@@ -27,7 +27,7 @@ export async function convertWorkRequestAction(id: string, _: ActionState): Prom
   return runAction(async () => {
     const ctx = await getAuthContext();
     const wo = await convertToWorkOrder(ctx, id);
-    redirect(`/ordres-de-travail/${wo.id}`);
+    redirect(`/interventions/${wo.id}`);
   });
 }
 

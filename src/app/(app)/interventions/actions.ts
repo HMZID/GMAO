@@ -26,7 +26,7 @@ export async function createWorkOrderAction(_: ActionState, formData: FormData):
   return runAction(async () => {
     const ctx = await getAuthContext();
     const wo = await createWorkOrder(ctx, formToObject(formData));
-    redirect(`/ordres-de-travail/${wo.id}`);
+    redirect(`/interventions/${wo.id}`);
   });
 }
 
@@ -109,6 +109,6 @@ export async function recurrenceAction(id: string, _: ActionState): Promise<Acti
   return runAction(async () => {
     const ctx = await getAuthContext();
     const wo = await createRecurrence(ctx, id);
-    redirect(`/ordres-de-travail/${wo.id}`);
+    redirect(`/interventions/${wo.id}`);
   });
 }

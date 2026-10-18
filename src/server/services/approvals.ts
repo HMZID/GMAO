@@ -426,7 +426,7 @@ export async function listMyApprovalRequests(ctx: AuthContext, limit = 30) {
 export function objectLink(objectType: ApprovalObject, objectId: string, workOrderId?: string | null) {
   if (objectType === "WORK_REQUEST") return `/demandes/${objectId}`;
   if (objectType === "PURCHASE_REQUEST") return `/demandes-achat/${objectId}`;
-  return workOrderId ? `/ordres-de-travail/${workOrderId}` : "/validations";
+  return workOrderId ? `/interventions/${workOrderId}` : "/validations";
 }
 
 /**

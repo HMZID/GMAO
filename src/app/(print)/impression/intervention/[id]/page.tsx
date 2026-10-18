@@ -15,7 +15,7 @@ export const metadata = { title: "Fiche d'intervention" };
  * Fiche d'intervention imprimable (A4) : identification, travaux, temps, pièces, compte rendu et
  * cadres de signature (intervenant, prestataire, responsable). Avec ?couts=1, la synthèse des coûts est jointe.
  */
-export default async function WorkOrderPrintPage(props: PageProps<"/impression/ordre-de-travail/[id]">) {
+export default async function WorkOrderPrintPage(props: PageProps<"/impression/intervention/[id]">) {
   const [{ id }, query] = await Promise.all([props.params, props.searchParams]);
   const ctx = await getAuthContext();
   const [wo, branding] = await Promise.all([loadOr404(id, (x) => getWorkOrder(ctx, x)), getBranding(ctx)]);
@@ -30,7 +30,7 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/o
   return (
     <>
       <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-2 px-4 print:hidden">
-        <Link href={`/ordres-de-travail/${wo.id}`} className={buttonClass("ghost")}>
+        <Link href={`/interventions/${wo.id}`} className={buttonClass("ghost")}>
           ← Retour à l&apos;intervention
         </Link>
         <div className="flex flex-wrap gap-2">

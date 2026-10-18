@@ -169,7 +169,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                                 {orders.map((o) => (
                                   <Link
                                     key={o.id}
-                                    href={`/ordres-de-travail/${o.id}`}
+                                    href={`/interventions/${o.id}`}
                                     className={cn(
                                       "block rounded border px-2 py-1 text-xs hover:shadow-sm",
                                       o.priority === "P1"
@@ -241,7 +241,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
               {plan.backlog.map((b) => (
                 <TR key={b.id}>
                   <TD>
-                    <Link href={`/ordres-de-travail/${b.id}`} className="font-medium text-brand-700 hover:underline">
+                    <Link href={`/interventions/${b.id}`} className="font-medium text-brand-700 hover:underline">
                       {b.number}
                     </Link>
                     <p className="max-w-80 truncate text-xs text-slate-500">{b.title}</p>

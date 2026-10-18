@@ -12,12 +12,12 @@ import { NAV_ICONS, isActive } from "./sidebar-nav";
 type Item = Pick<NavItem, "href" | "label" | "icon">;
 
 /** Rubriques de la barre du bas, dans cet ordre, parmi celles autorisées (les autres sont dans « Menu »). */
-const BOTTOM_PRIORITY = ["/", "/ordres-de-travail", "/demandes", "/equipements", "/planning", "/validations", "/stock"];
+const BOTTOM_PRIORITY = ["/", "/interventions", "/demandes", "/equipements", "/planning", "/validations", "/stock"];
 
 /** Libellés courts de la barre du bas (écran étroit). */
 const SHORT_LABEL: Record<string, string> = {
   "/": "Accueil",
-  "/ordres-de-travail": "Travaux",
+  "/interventions": "Interventions",
   "/demandes": "Demandes",
   "/equipements": "Engins",
   "/planning": "Planning",

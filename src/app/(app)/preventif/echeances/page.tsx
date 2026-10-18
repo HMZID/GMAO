@@ -115,7 +115,7 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                   </TD>
                   <TD className="min-w-48">
                     {d.workOrderId ? (
-                      <Link href={`/ordres-de-travail/${d.workOrderId}`} className="text-brand-700 hover:underline">
+                      <Link href={`/interventions/${d.workOrderId}`} className="text-brand-700 hover:underline">
                         {d.workOrderNumber}
                       </Link>
                     ) : (

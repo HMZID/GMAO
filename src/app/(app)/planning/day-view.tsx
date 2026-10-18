@@ -108,7 +108,7 @@ export function PlanningDayView({ days, rows, initialDay }: { days: DayViewDay[]
                   {orders.map((o) => (
                     <li key={o.id}>
                       <Link
-                        href={`/ordres-de-travail/${o.id}`}
+                        href={`/interventions/${o.id}`}
                         className={cn(
                           "block rounded-lg border-l-4 bg-slate-50 px-3 py-2.5 hover:bg-slate-100",
                           o.priority === "P1" ? "border-l-red-500" : o.status === "IN_PROGRESS" ? "border-l-violet-500" : "border-l-sky-500",

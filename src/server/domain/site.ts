@@ -140,7 +140,7 @@ export const SITE_SETTINGS = [
     label: "Texte d'accroche",
     type: "textarea",
     default:
-      "Préventif au compteur, ordres de travail, pièces et achats, application mobile hors connexion : toute la maintenance de votre parc dans un seul outil, conçu pour l'atelier et le chantier.",
+      "Préventif au compteur, interventions, pièces et achats, application mobile hors connexion : toute la maintenance de votre parc dans un seul outil, conçu pour l'atelier et le chantier.",
   },
   { key: "hero.ctaPrimary", group: "hero", label: "Bouton principal", type: "text", default: "Essayer gratuitement" },
   { key: "hero.ctaSecondary", group: "hero", label: "Bouton secondaire", type: "text", default: "Voir les tarifs" },
@@ -267,7 +267,7 @@ export const SITE_SETTINGS = [
     label: "Description",
     type: "textarea",
     default:
-      "Logiciel de GMAO pour flottes d'engins, véhicules et équipements : préventif au compteur, ordres de travail, stock, achats, mobile hors connexion. Essai gratuit 30 jours.",
+      "Logiciel de GMAO pour flottes d'engins, véhicules et équipements : préventif au compteur, interventions, stock, achats, mobile hors connexion. Essai gratuit 30 jours.",
   },
 ] as const satisfies readonly SettingDefinition[];
 

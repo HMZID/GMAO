@@ -46,7 +46,7 @@ export type NewWorkOrder = {
  * sont faits par l'appelant.
  */
 export async function insertWorkOrder(tx: DbOrTx, ctx: AuthContext, input: NewWorkOrder) {
-  const number = await nextNumber(tx, { tenantId: ctx.tenantId, companyId: input.companyId, kind: "OT" });
+  const number = await nextNumber(tx, { tenantId: ctx.tenantId, companyId: input.companyId, kind: "INT" });
   const [wo] = await tx
     .insert(workOrders)
     .values({

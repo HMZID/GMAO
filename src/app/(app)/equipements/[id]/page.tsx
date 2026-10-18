@@ -78,7 +78,7 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
                 <ButtonLink href={`/demandes/nouvelle?equipmentId=${e.id}`}>Créer une demande d&apos;intervention</ButtonLink>
               ) : null}
               {ctx.canOn("workorder.create", e) ? (
-                <ButtonLink href={`/ordres-de-travail/nouveau?equipmentId=${e.id}`} variant="secondary">
+                <ButtonLink href={`/interventions/nouveau?equipmentId=${e.id}`} variant="secondary">
                   Nouvelle intervention à réaliser
                 </ButtonLink>
               ) : null}
@@ -403,7 +403,7 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
                 </TD>
                 <TD>
                   {d.workOrderId ? (
-                    <Link href={`/ordres-de-travail/${d.workOrderId}`} className="text-brand-700 hover:underline">
+                    <Link href={`/interventions/${d.workOrderId}`} className="text-brand-700 hover:underline">
                       Voir l&apos;intervention
                     </Link>
                   ) : (
@@ -456,7 +456,7 @@ function InterventionsCard({ e }: { e: Equipment }) {
         title="Interventions"
         description="Demandes ouvertes et 15 dernières interventions"
         actions={
-          <Link href={`/ordres-de-travail?equipmentId=${e.id}&status=ALL`} className="text-sm text-brand-700 hover:underline">
+          <Link href={`/interventions?equipmentId=${e.id}&status=ALL`} className="text-sm text-brand-700 hover:underline">
             Toutes les interventions
           </Link>
         }
@@ -495,7 +495,7 @@ function InterventionsCard({ e }: { e: Equipment }) {
             {e.recentWorkOrders.map((w) => (
               <TR key={w.id}>
                 <TD>
-                  <Link href={`/ordres-de-travail/${w.id}`} className="font-medium text-brand-700 hover:underline">
+                  <Link href={`/interventions/${w.id}`} className="font-medium text-brand-700 hover:underline">
                     {w.number}
                   </Link>
                   <p className="max-w-72 truncate text-xs text-slate-500">{w.title}</p>

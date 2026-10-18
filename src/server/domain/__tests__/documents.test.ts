@@ -71,7 +71,7 @@ describe("Documents : droit de retrait", () => {
     expect(canDeleteDocument({ isManager: true, isUploader: false, entityType: "EQUIPMENT" })).toBe(true);
   });
 
-  it("autorise l'auteur d'une pièce jointe d'OT tant que l'OT n'est pas clôturé", () => {
+  it("autorise l'auteur d'une pièce jointe d'intervention tant que celle-ci n'est pas clôturée", () => {
     expect(canDeleteDocument({ isManager: false, isUploader: true, entityType: "WORK_ORDER", workOrderStatus: "IN_PROGRESS" })).toBe(true);
     expect(canDeleteDocument({ isManager: false, isUploader: true, entityType: "WORK_ORDER", workOrderStatus: "TECH_CLOSED" })).toBe(false);
   });

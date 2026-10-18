@@ -1757,7 +1757,7 @@ async function main() {
     const waiting = h.waitingHours ?? 0;
     const workDone = new Date(started.getTime() + (h.repairHours + waiting) * 3_600_000);
     const techClosed = new Date(workDone.getTime() + 3_600_000);
-    const number = await nextNumber(db, { tenantId: T, companyId: f.company.id, kind: "OT", date: failureStart });
+    const number = await nextNumber(db, { tenantId: T, companyId: f.company.id, kind: "INT", date: failureStart });
     const [wo] = await db
       .insert(s.workOrders)
       .values({

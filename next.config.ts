@@ -24,6 +24,14 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // Anciennes adresses des interventions (« ordres de travail ») : liens des courriels et favoris déjà diffusés.
+  async redirects() {
+    return [
+      { source: "/ordres-de-travail", destination: "/interventions", permanent: true },
+      { source: "/ordres-de-travail/:path*", destination: "/interventions/:path*", permanent: true },
+      { source: "/impression/ordre-de-travail/:id", destination: "/impression/intervention/:id", permanent: true },
+    ];
+  },
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {

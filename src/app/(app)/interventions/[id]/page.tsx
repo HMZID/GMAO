@@ -20,7 +20,7 @@ import { ChecklistCard, CostsCard, HistoryCard, PartsCard, PlanningCard, ReportC
 
 export const metadata = { title: "Intervention à réaliser" };
 
-export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail/[id]">) {
+export default async function WorkOrderPage(props: PageProps<"/interventions/[id]">) {
   const { id } = await props.params;
   const ctx = await getAuthContext();
   const wo = await loadOr404(id, (x) => getWorkOrder(ctx, x));
@@ -47,7 +47,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
   return (
     <>
       <PageHeader
-        back={{ href: "/ordres-de-travail", label: "Interventions à réaliser" }}
+        back={{ href: "/interventions", label: "Interventions à réaliser" }}
         title={
           <span className="flex flex-wrap items-baseline gap-3">
             {wo.number}
@@ -67,7 +67,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
         }
         actions={
           <>
-            <Link href={`/impression/ordre-de-travail/${wo.id}`} className={buttonClass("secondary")}>
+            <Link href={`/impression/intervention/${wo.id}`} className={buttonClass("secondary")}>
               <Printer className="h-4 w-4" aria-hidden />
               Fiche à signer
             </Link>
@@ -232,7 +232,7 @@ export default async function WorkOrderPage(props: PageProps<"/ordres-de-travail
                         ))}
                       </span>
                     ) : wo.parentWorkOrderId ? (
-                      <Link href={`/ordres-de-travail/${wo.parentWorkOrderId}`} className="text-brand-700 hover:underline">
+                      <Link href={`/interventions/${wo.parentWorkOrderId}`} className="text-brand-700 hover:underline">
                         Récidive d&apos;une intervention précédente
                       </Link>
                     ) : null,
