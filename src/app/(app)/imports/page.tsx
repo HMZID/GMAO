@@ -68,9 +68,9 @@ export default async function ImportsPage() {
                 <TH>Fichier</TH>
                 <TH>Type</TH>
                 <TH>Statut</TH>
-                <TH className="text-right">Lignes</TH>
-                <TH className="text-right">Importées</TH>
-                <TH className="text-right">Erreurs</TH>
+                <TH className="text-end">Lignes</TH>
+                <TH className="text-end">Importées</TH>
+                <TH className="text-end">Erreurs</TH>
                 <TH>Par</TH>
               </tr>
             </THead>
@@ -88,9 +88,9 @@ export default async function ImportsPage() {
                     <Badge tone={IMPORT_STATUS[j.status]?.tone}>{IMPORT_STATUS[j.status]?.label ?? j.status}</Badge>
                     {j.mode ? <p className="mt-0.5 text-xs text-slate-500">{IMPORT_MODE[j.mode]}</p> : null}
                   </TD>
-                  <TD className="text-right tabular-nums">{j.totalRows}</TD>
-                  <TD className="text-right tabular-nums">{j.status === "DONE" ? j.importedRows : "—"}</TD>
-                  <TD className={`text-right tabular-nums ${j.errorRows ? "font-medium text-red-700" : ""}`}>{j.errorRows}</TD>
+                  <TD className="text-end tabular-nums">{j.totalRows}</TD>
+                  <TD className="text-end tabular-nums">{j.status === "DONE" ? j.importedRows : "—"}</TD>
+                  <TD className={`text-end tabular-nums ${j.errorRows ? "font-medium text-red-700" : ""}`}>{j.errorRows}</TD>
                   <TD>{j.author}</TD>
                 </TR>
               ))}

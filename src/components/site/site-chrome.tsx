@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { settingEnabled, type SiteSettings } from "@/server/domain/site";
 import type { SiteData } from "./site-data";
+import { T } from "@/i18n/client";
 
 const NAV = [
   { href: "/decouvrir#fonctionnalites", label: "Fonctionnalités" },
@@ -29,12 +30,12 @@ function Announcement({ settings }: { settings: SiteSettings }) {
   return (
     <div className="bg-signal text-asphalt">
       <p className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2 text-center text-sm font-semibold">
-        <span className="site-label rounded-sm bg-asphalt px-1.5 py-0.5 text-[10px] text-signal">Offre</span>
+        <span className="site-label rounded-sm bg-asphalt px-1.5 py-0.5 text-[10px] text-signal"><T>Offre</T></span>
         <span>{settings["announcement.text"]}</span>
         {href && settings["announcement.linkLabel"] ? (
           <Link href={href} className="inline-flex items-center gap-1 underline decoration-2 underline-offset-4 hover:no-underline">
             {settings["announcement.linkLabel"]}
-            <ArrowRight className="h-4 w-4" aria-hidden />
+            <ArrowRight className="rtl-flip h-4 w-4" aria-hidden />
           </Link>
         ) : null}
       </p>
@@ -57,20 +58,20 @@ function Header({ settings }: { settings: SiteSettings }) {
         <div className="flex items-center gap-2">
           <Link href="/login" className="hidden items-center gap-1.5 px-3 py-2 text-sm font-semibold hover:underline sm:inline-flex">
             <LogIn className="h-4 w-4" aria-hidden />
-            Se connecter
+            <T>Se connecter</T>
           </Link>
           <Link href="/essai-gratuit" className="site-btn site-btn-signal min-h-10 px-4 text-sm">
-            Essai gratuit
+            <T>Essai gratuit</T>
           </Link>
           {/* Menu des téléphones : sans JavaScript (élément details). */}
           <details className="group relative lg:hidden">
             <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center border-2 border-asphalt [&::-webkit-details-marker]:hidden">
               <Menu className="h-5 w-5" aria-hidden />
-              <span className="sr-only">Menu</span>
+              <span className="sr-only"><T>Menu</T></span>
             </summary>
             <nav
               aria-label="Navigation du site (mobile)"
-              className="absolute right-0 top-12 w-64 border-2 border-asphalt bg-paper p-2 shadow-[6px_6px_0_var(--color-asphalt)]"
+              className="absolute end-0 top-12 w-64 border-2 border-asphalt bg-paper p-2 shadow-[6px_6px_0_var(--color-asphalt)]"
             >
               {[...NAV, { href: "/login", label: "Se connecter" }].map((n) => (
                 <Link key={n.href} href={n.href} className="block px-3 py-3 font-semibold hover:bg-paper-deep">
@@ -97,11 +98,11 @@ function Footer({ site }: { site: SiteData }) {
             <p className="mt-4 max-w-md text-white/70">{settings["brand.baseline"]}</p>
             <Link href="/essai-gratuit" className="site-btn site-btn-signal mt-6">
               {settings["hero.ctaPrimary"]}
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <ArrowRight className="rtl-flip h-4 w-4" aria-hidden />
             </Link>
           </div>
           <div>
-            <h2 className="site-label text-signal">Produit</h2>
+            <h2 className="site-label text-signal"><T>Produit</T></h2>
             <ul className="mt-4 space-y-2 text-white/80">
               {NAV.map((n) => (
                 <li key={n.href}>
@@ -112,13 +113,13 @@ function Footer({ site }: { site: SiteData }) {
               ))}
               <li>
                 <Link href="/login" className="hover:text-signal">
-                  Se connecter
+                  <T>Se connecter</T>
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h2 className="site-label text-signal">Contact</h2>
+            <h2 className="site-label text-signal"><T>Contact</T></h2>
             <ul className="mt-4 space-y-2 text-white/80">
               {settings["contact.email"] ? (
                 <li>

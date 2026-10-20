@@ -60,7 +60,7 @@ export function FinalCta({ title, text, cta }: { title: string; text: string; ct
           </div>
           <Link href="/essai-gratuit" className="site-btn site-btn-signal shrink-0 text-lg">
             {cta}
-            <ArrowRight className="h-5 w-5" aria-hidden />
+            <ArrowRight className="rtl-flip h-5 w-5" aria-hidden />
           </Link>
         </div>
       </div>
@@ -107,7 +107,7 @@ export function RichText({ source }: { source: string }) {
             );
           case "ul":
             return (
-              <ul key={i} className="space-y-2 pl-1">
+              <ul key={i} className="space-y-2 ps-1">
                 {b.items.map((item, j) => (
                   <li key={j} className="flex gap-3">
                     <span className="mt-2.5 h-2 w-2 shrink-0 bg-signal ring-1 ring-asphalt" aria-hidden />

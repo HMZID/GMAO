@@ -32,7 +32,7 @@ export default async function ReferentialPage() {
                 <TH>Catégorie</TH>
                 <TH>Criticité par défaut</TH>
                 <TH>Attributs</TH>
-                <TH className="text-right">Équipements</TH>
+                <TH className="text-end">Équipements</TH>
               </tr>
             </THead>
             <TBody>
@@ -46,7 +46,7 @@ export default async function ReferentialPage() {
                   <TD className="text-xs text-slate-600">
                     {c.attributeDefinitions?.map((a) => `${a.label}${a.unit ? ` (${a.unit})` : ""}`).join(", ") || "—"}
                   </TD>
-                  <TD className="text-right tabular-nums">{c.equipmentCount}</TD>
+                  <TD className="text-end tabular-nums">{c.equipmentCount}</TD>
                 </TR>
               ))}
             </TBody>

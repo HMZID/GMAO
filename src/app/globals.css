@@ -270,3 +270,17 @@ body {
     animation: none !important;
   }
 }
+
+/*
+ * Arabe (droite à gauche) : police dédiée à la place de celles de l'application et du site commercial.
+ * Les marges et positions sont écrites en propriétés logiques (ms-, me-, ps-, pe-, start-, end-), qui suivent `dir`.
+ */
+html[dir="rtl"] body,
+html[dir="rtl"] .site-focus {
+  font-family: var(--font-arabic), var(--font-sans) !important;
+}
+
+/* Les icônes fléchées indiquant une direction sont retournées en droite à gauche. */
+html[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}

@@ -67,7 +67,7 @@ export default async function SitePageEditor(props: PageProps<"/administration/s
         </Card>
         <div className="space-y-6">
           <Alert tone="blue" title="Mise en forme">
-            <ul className="mt-1 list-disc space-y-1 pl-5">
+            <ul className="mt-1 list-disc space-y-1 ps-5">
               <li>« ## Titre » ou « ### Sous-titre » en début de ligne</li>
               <li>« - élément » pour une liste</li>
               <li>une ligne vide entre deux paragraphes</li>

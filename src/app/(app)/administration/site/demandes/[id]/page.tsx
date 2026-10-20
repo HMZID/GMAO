@@ -63,7 +63,7 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
               ]}
             />
             {r.message ? (
-              <blockquote className="mt-5 whitespace-pre-line rounded-md border-l-4 border-brand-500 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <blockquote className="mt-5 whitespace-pre-line rounded-md border-s-4 border-brand-500 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                 {r.message}
               </blockquote>
             ) : null}

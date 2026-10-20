@@ -89,10 +89,10 @@ export function DeadlinesTable({
                     {d.provider ?? "—"}
                     {d.amount !== null ? <p className="text-xs text-slate-500">{formatCurrency(d.amount)}</p> : null}
                   </TD>
-                  <TD className="text-right">
+                  <TD className="text-end">
                     {canWrite ? (
                       <div className="flex flex-col items-end gap-2">
-                        <Disclosure summary="Renouveler" className="text-left">
+                        <Disclosure summary="Renouveler" className="text-start">
                           <PanelForm className="grid gap-3 sm:min-w-72">
                             <input type="hidden" name="deadlineId" value={d.id} />
                             <input type="hidden" name="intent" value="renew" />
@@ -108,7 +108,7 @@ export function DeadlinesTable({
                             <SubmitButton size="sm">Enregistrer le renouvellement</SubmitButton>
                           </PanelForm>
                         </Disclosure>
-                        <Disclosure summary="Annuler" className="text-left">
+                        <Disclosure summary="Annuler" className="text-start">
                           <PanelForm className="grid gap-3 sm:min-w-72">
                             <input type="hidden" name="deadlineId" value={d.id} />
                             <input type="hidden" name="intent" value="cancel" />

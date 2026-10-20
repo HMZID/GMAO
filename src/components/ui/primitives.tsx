@@ -83,7 +83,7 @@ export function Table({ className, children, cards = true }: { className?: strin
 }
 
 export function THead({ children }: { children: ReactNode }) {
-  return <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{children}</thead>;
+  return <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">{children}</thead>;
 }
 
 export function TBody({ children }: { children: ReactNode }) {
@@ -151,13 +151,13 @@ export function StatTile({
   href?: string;
 }) {
   const accent: Record<Tone, string> = {
-    gray: "border-l-slate-300",
-    green: "border-l-emerald-500",
-    blue: "border-l-sky-500",
-    amber: "border-l-amber-500",
-    red: "border-l-red-500",
-    violet: "border-l-violet-500",
-    teal: "border-l-brand-600",
+    gray: "border-s-slate-300",
+    green: "border-s-emerald-500",
+    blue: "border-s-sky-500",
+    amber: "border-s-amber-500",
+    red: "border-s-red-500",
+    violet: "border-s-violet-500",
+    teal: "border-s-brand-600",
   };
   const content = (
     <>
@@ -167,7 +167,7 @@ export function StatTile({
     </>
   );
   const className = cn(
-    "block min-w-0 rounded-lg border border-slate-200 border-l-4 bg-white px-3 py-3 shadow-xs sm:px-4",
+    "block min-w-0 rounded-lg border border-slate-200 border-s-4 bg-white px-3 py-3 shadow-xs sm:px-4",
     accent[tone],
     href && "hover:bg-slate-50",
   );

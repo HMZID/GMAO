@@ -103,8 +103,8 @@ export default async function TechniciansPage() {
               <TH>Technicien</TH>
               <TH>Site</TH>
               <TH>Qualification</TH>
-              <TH className="text-right">Heures / jour</TH>
-              <TH className="text-right">Taux horaire</TH>
+              <TH className="text-end">Heures / jour</TH>
+              <TH className="text-end">Taux horaire</TH>
               <TH>Habilitations</TH>
               <TH>Compte</TH>
             </tr>
@@ -114,13 +114,13 @@ export default async function TechniciansPage() {
               <TR key={t.id}>
                 <TD className="font-medium text-slate-900">
                   {t.firstName} {t.lastName}
-                  {!t.active ? <Badge className="ml-2">Inactif</Badge> : null}
+                  {!t.active ? <Badge className="ms-2">Inactif</Badge> : null}
                   {t.employeeNumber ? <p className="font-mono text-xs font-normal text-slate-500">{t.employeeNumber}</p> : null}
                 </TD>
                 <TD>{t.site.name}</TD>
                 <TD>{t.qualification ?? "—"}</TD>
-                <TD className="text-right tabular-nums">{t.dailyHours}</TD>
-                <TD className="text-right tabular-nums">{t.laborRates[0] ? formatCurrency(t.laborRates[0].hourlyRate) : "—"}</TD>
+                <TD className="text-end tabular-nums">{t.dailyHours}</TD>
+                <TD className="text-end tabular-nums">{t.laborRates[0] ? formatCurrency(t.laborRates[0].hourlyRate) : "—"}</TD>
                 <TD>
                   <ul className="space-y-1">
                     {t.certifications.map((c) => {

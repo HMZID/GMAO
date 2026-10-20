@@ -54,7 +54,7 @@ async function Home() {
             <div className="mt-9 flex flex-wrap gap-4">
               <Link href="/essai-gratuit" className="site-btn site-btn-signal text-base">
                 {s["hero.ctaPrimary"]}
-                <ArrowRight className="h-5 w-5" aria-hidden />
+                <ArrowRight className="rtl-flip h-5 w-5" aria-hidden />
               </Link>
               <Link href="/tarifs" className="site-btn site-btn-ghost border-white/40 text-base">
                 {s["hero.ctaSecondary"]}
@@ -84,12 +84,12 @@ async function Home() {
         <section className="border-b-2 border-asphalt bg-paper">
           <dl className="mx-auto grid max-w-7xl grid-cols-2 lg:grid-cols-4">
             {items.HIGHLIGHT.map((h) => (
-              <div key={h.id} className="border-asphalt px-4 py-10 odd:border-r-2 sm:px-8 lg:border-r-2 lg:last:border-r-0">
+              <div key={h.id} className="border-asphalt px-4 py-10 odd:border-e-2 sm:px-8 lg:border-e-2 lg:last:border-e-0">
                 <dt className="sr-only">{h.body}</dt>
                 <dd>
                   <p className="site-display text-6xl sm:text-7xl">
                     {h.title}
-                    {h.meta ? <span className="ml-1 text-3xl text-asphalt-500">{h.meta}</span> : null}
+                    {h.meta ? <span className="ms-1 text-3xl text-asphalt-500">{h.meta}</span> : null}
                   </p>
                   {h.body ? <p className="mt-3 max-w-56 text-sm text-asphalt-500">{h.body}</p> : null}
                 </dd>

@@ -114,14 +114,14 @@ export function FormMessage({ className }: { className?: string }) {
         </div>
       ) : null}
       {state.errors?.length ? (
-        <ul className="mt-1 list-disc space-y-0.5 pl-5">
+        <ul className="mt-1 list-disc space-y-0.5 ps-5">
           {state.errors.map((e) => (
             <li key={e}>{e}</li>
           ))}
         </ul>
       ) : null}
       {state.warnings?.length ? (
-        <ul className="mt-1 list-disc space-y-0.5 pl-5 text-amber-900">
+        <ul className="mt-1 list-disc space-y-0.5 ps-5 text-amber-900">
           {state.warnings.map((w) => (
             <li key={w}>{w}</li>
           ))}

@@ -64,7 +64,7 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
       {job.fileErrors.length > 0 ? (
         <div className="mb-6">
           <Alert tone="red" title="Fichier refusé">
-            <ul className="list-disc pl-5">
+            <ul className="list-disc ps-5">
               {job.fileErrors.map((e) => (
                 <li key={e}>{e}</li>
               ))}
@@ -162,7 +162,7 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
                   ))}
                   <TD className="min-w-72">
                     {r.messages.length > 0 ? (
-                      <ul className={`list-disc space-y-0.5 pl-4 text-xs ${r.status === "ERROR" ? "text-red-800" : "text-slate-600"}`}>
+                      <ul className={`list-disc space-y-0.5 ps-4 text-xs ${r.status === "ERROR" ? "text-red-800" : "text-slate-600"}`}>
                         {r.messages.map((m) => (
                           <li key={m}>{m}</li>
                         ))}

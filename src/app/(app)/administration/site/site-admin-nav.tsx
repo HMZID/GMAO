@@ -52,7 +52,7 @@ export function SiteAdminNav({ active, pending }: { active: string; pending?: nu
         href="/decouvrir"
         target="_blank"
         rel="noreferrer"
-        className="ml-auto flex shrink-0 items-center gap-1 px-3 py-2 text-sm font-medium text-brand-700 hover:underline"
+        className="ms-auto flex shrink-0 items-center gap-1 px-3 py-2 text-sm font-medium text-brand-700 hover:underline"
       >
         Voir le site
         <ExternalLink className="h-3.5 w-3.5" aria-hidden />

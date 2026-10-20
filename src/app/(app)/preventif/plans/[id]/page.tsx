@@ -76,7 +76,7 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                   · Tolérance : {op.tolerancePercent ?? 10} % · Durée estimée : {op.estimatedMinutes ? formatMinutes(op.estimatedMinutes) : "—"}
                 </p>
                 {op.taskList?.items.length ? (
-                  <ol className="list-decimal space-y-0.5 pl-5 text-slate-800">
+                  <ol className="list-decimal space-y-0.5 ps-5 text-slate-800">
                     {op.taskList.items.map((item) => (
                       <li key={item.id}>
                         {item.label} {item.required ? <span className="text-red-600">*</span> : null}
@@ -119,7 +119,7 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                       {e.code}
                     </Link>{" "}
                     <span className="text-slate-600">{e.name}</span>
-                    {!e.active ? <Badge className="ml-2">Suspendu</Badge> : null}
+                    {!e.active ? <Badge className="ms-2">Suspendu</Badge> : null}
                   </span>
                   <EquipmentStatusBadge status={e.status} />
                 </li>

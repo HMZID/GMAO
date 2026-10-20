@@ -307,7 +307,7 @@ function ReadingsTable({ readings, unit, canReview }: { readings: Awaited<Return
       <THead>
         <tr>
           <TH>Date</TH>
-          <TH className="text-right">Relevé</TH>
+          <TH className="text-end">Relevé</TH>
           <TH>Source</TH>
           <TH>Statut</TH>
           <TH className="w-full">Commentaire</TH>
@@ -317,7 +317,7 @@ function ReadingsTable({ readings, unit, canReview }: { readings: Awaited<Return
         {readings.map((r) => (
           <TR key={r.id}>
             <TD className="whitespace-nowrap">{formatDateTime(r.readAt)}</TD>
-            <TD className="whitespace-nowrap text-right tabular-nums">
+            <TD className="whitespace-nowrap text-end tabular-nums">
               {formatNumber(r.value, unit)}
               {r.cumulativeValue !== r.value ? <p className="text-xs text-slate-500">cumulé {formatNumber(r.cumulativeValue, unit)}</p> : null}
             </TD>

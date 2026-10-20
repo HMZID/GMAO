@@ -83,12 +83,12 @@ export async function DocumentsCard({
                       {formatDateTime(d.createdAt)}
                       <p className="text-xs text-slate-500">{d.uploadedBy ?? "—"}</p>
                     </TD>
-                    <TD className="text-right">
+                    <TD className="text-end">
                       <a href={`${d.url}?download=1`} className="text-sm text-slate-600 hover:underline">
                         Télécharger
                       </a>
                       {d.canDelete ? (
-                        <Disclosure summary="Retirer" className="mt-2 text-left">
+                        <Disclosure summary="Retirer" className="mt-2 text-start">
                           <PanelForm className="space-y-3">
                             <input type="hidden" name="documentId" value={d.id} />
                             <Field label="Motif" name="reason">

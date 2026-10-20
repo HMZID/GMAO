@@ -57,7 +57,7 @@ export default async function SuppliersPage() {
                 <TH>Identifiant fiscal</TH>
                 <TH>Contact</TH>
                 <TH>Rôle</TH>
-                <TH className="text-right">Interventions à réaliser</TH>
+                <TH className="text-end">Interventions à réaliser</TH>
               </tr>
             </THead>
             <TBody>
@@ -65,7 +65,7 @@ export default async function SuppliersPage() {
                 <TR key={s.id}>
                   <TD className="font-medium text-slate-900">
                     {s.name}
-                    {!s.active ? <Badge className="ml-2">Inactif</Badge> : null}
+                    {!s.active ? <Badge className="ms-2">Inactif</Badge> : null}
                   </TD>
                   <TD className="font-mono text-xs">{s.taxId ?? "—"}</TD>
                   <TD className="text-xs">
@@ -77,7 +77,7 @@ export default async function SuppliersPage() {
                     {s.phone ? <p className="text-slate-500">{s.phone}</p> : null}
                   </TD>
                   <TD>{s.isContractor ? <Badge tone="violet">Prestataire</Badge> : <Badge>Fournisseur</Badge>}</TD>
-                  <TD className="text-right tabular-nums">{s.workOrderCount}</TD>
+                  <TD className="text-end tabular-nums">{s.workOrderCount}</TD>
                 </TR>
               ))}
             </TBody>

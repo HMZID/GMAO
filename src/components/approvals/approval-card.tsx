@@ -57,7 +57,7 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
                     {" "}
                     · {step.approverRole ? (ROLE[step.approverRole] ?? step.approverRole) : "valideur nommé"}
                   </span>
-                  {current ? <span className="ml-2 text-xs font-normal text-amber-700">étape en cours</span> : null}
+                  {current ? <span className="ms-2 text-xs font-normal text-amber-700">étape en cours</span> : null}
                 </p>
                 {d ? (
                   <p className="text-slate-600">

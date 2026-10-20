@@ -27,7 +27,7 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
         title="Courriels"
         description="File d'envoi des notifications par courriel : chaque envoi est tenté par le processus d'envoi (npm run worker), repris en cas d'erreur passagère, puis mis en échec après 5 tentatives."
         actions={
-          <ActionForm action={runEmailJobsAction} className="max-w-md text-right">
+          <ActionForm action={runEmailJobsAction} className="max-w-md text-end">
             <SubmitButton variant="secondary">Traiter la file maintenant</SubmitButton>
           </ActionForm>
         }
@@ -82,7 +82,7 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                       ) : null}
                     </TD>
                     <TD className="tabular-nums">{m.attempts}</TD>
-                    <TD className="text-right">
+                    <TD className="text-end">
                       {m.status === "FAILED" || m.status === "CANCELLED" ? (
                         <PanelForm>
                           <input type="hidden" name="id" value={m.id} />

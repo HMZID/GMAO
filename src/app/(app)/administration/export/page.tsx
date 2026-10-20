@@ -71,7 +71,7 @@ export default async function ExportPage(props: PageProps<"/administration/expor
               <Card key={d.dataset} className="flex flex-col">
                 <CardHeader title={d.label} description={d.description} />
                 <CardBody className="mt-auto flex flex-wrap items-center gap-2">
-                  <span className="mr-auto text-sm font-medium tabular-nums text-slate-700">{formatNumber(d.rows)} ligne(s)</span>
+                  <span className="me-auto text-sm font-medium tabular-nums text-slate-700">{formatNumber(d.rows)} ligne(s)</span>
                   <a
                     href={withCompany(`/api/v1/exports/${d.dataset}?format=xlsx`)}
                     className={buttonClass("secondary", "sm")}

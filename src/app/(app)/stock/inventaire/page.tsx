@@ -137,9 +137,9 @@ export default async function InventoryPage() {
                 <TH>Article</TH>
                 <TH>Magasin</TH>
                 <TH>Compté le</TH>
-                <TH className="text-right">Compté</TH>
-                <TH className="text-right">Attendu</TH>
-                <TH className="text-right">Écart</TH>
+                <TH className="text-end">Compté</TH>
+                <TH className="text-end">Attendu</TH>
+                <TH className="text-end">Écart</TH>
                 <TH>Statut</TH>
               </tr>
             </THead>
@@ -155,9 +155,9 @@ export default async function InventoryPage() {
                     {formatDateTime(c.countedAt)}
                     <p className="text-xs text-slate-500">{c.countedByName ?? "—"}</p>
                   </TD>
-                  <TD className="text-right tabular-nums">{formatNumber(c.countedQuantity)}</TD>
-                  <TD className="text-right tabular-nums">{formatNumber(c.expectedQuantity)}</TD>
-                  <TD className="text-right tabular-nums">
+                  <TD className="text-end tabular-nums">{formatNumber(c.countedQuantity)}</TD>
+                  <TD className="text-end tabular-nums">{formatNumber(c.expectedQuantity)}</TD>
+                  <TD className="text-end tabular-nums">
                     {c.difference > 0 ? "+" : ""}
                     {formatNumber(c.difference)}
                   </TD>

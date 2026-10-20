@@ -62,8 +62,8 @@ export default async function PlatformPage() {
             <tr>
               <TH>Organisation</TH>
               <TH>Accès</TH>
-              <TH className="text-right">Utilisateurs</TH>
-              <TH className="text-right">Équipements</TH>
+              <TH className="text-end">Utilisateurs</TH>
+              <TH className="text-end">Équipements</TH>
               <TH>Créée le</TH>
               <TH className="sr-only">Actions</TH>
             </tr>
@@ -76,15 +76,15 @@ export default async function PlatformPage() {
                     <Link href={`/administration/plateforme/${t.id}`} className="text-brand-700 hover:underline">
                       {t.displayName || t.name}
                     </Link>
-                    {t.own ? <Badge className="ml-2">Votre organisation</Badge> : null}
+                    {t.own ? <Badge className="ms-2">Votre organisation</Badge> : null}
                   </p>
                   {t.contactEmail ? <p className="text-xs text-slate-500">{t.contactEmail}</p> : null}
                 </TD>
                 <TD>
                   <AccessBadge status={t.status as TenantStatus} access={t.access} demoEndsAt={t.demoEndsAt} />
                 </TD>
-                <TD className="text-right tabular-nums">{t.users}</TD>
-                <TD className="text-right tabular-nums">{t.equipment}</TD>
+                <TD className="text-end tabular-nums">{t.users}</TD>
+                <TD className="text-end tabular-nums">{t.equipment}</TD>
                 <TD className="text-xs">{formatDate(t.createdAt)}</TD>
                 <TD>
                   <div className="flex flex-wrap items-end gap-2">

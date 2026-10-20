@@ -51,9 +51,9 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                 <THead>
                   <tr>
                     <TH>Magasin</TH>
-                    <TH className="text-right">En stock</TH>
-                    <TH className="text-right">Réservé</TH>
-                    <TH className="text-right">Disponible</TH>
+                    <TH className="text-end">En stock</TH>
+                    <TH className="text-end">Réservé</TH>
+                    <TH className="text-end">Disponible</TH>
                     <TH>Seuils (mini · point de commande · maxi)</TH>
                   </tr>
                 </THead>
@@ -67,12 +67,12 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                           {l.warehouseName}
                           <p className="text-xs text-slate-500">{l.siteName}</p>
                         </TD>
-                        <TD className="text-right tabular-nums">{formatNumber(l.onHand)}</TD>
-                        <TD className="text-right tabular-nums text-slate-500">{formatNumber(l.reserved)}</TD>
-                        <TD className="text-right tabular-nums">
+                        <TD className="text-end tabular-nums">{formatNumber(l.onHand)}</TD>
+                        <TD className="text-end tabular-nums text-slate-500">{formatNumber(l.reserved)}</TD>
+                        <TD className="text-end tabular-nums">
                           {formatNumber(free)}
                           {below ? (
-                            <Badge tone="amber" className="ml-2">
+                            <Badge tone="amber" className="ms-2">
                               À commander
                             </Badge>
                           ) : null}
@@ -142,7 +142,7 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                     <TH>Date</TH>
                     <TH>Mouvement</TH>
                     <TH>Magasin</TH>
-                    <TH className="text-right">Quantité</TH>
+                    <TH className="text-end">Quantité</TH>
                     <TH>Référence</TH>
                   </tr>
                 </THead>
@@ -152,7 +152,7 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                       <TD className="whitespace-nowrap">{formatDateTime(m.createdAt)}</TD>
                       <TD>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</TD>
                       <TD>{m.warehouseName}</TD>
-                      <TD className="text-right tabular-nums">{signed(m.type, m.quantity)}</TD>
+                      <TD className="text-end tabular-nums">{signed(m.type, m.quantity)}</TD>
                       <TD className="text-xs text-slate-600">
                         {m.workOrderId ? (
                           <Link href={`/interventions/${m.workOrderId}`} className="text-brand-700 hover:underline">

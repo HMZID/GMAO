@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { displayedPrice, planFeatures, type Billing } from "@/server/domain/site";
+import { T } from "@/i18n/client";
 
 export type PlanView = {
   id: string;
@@ -56,7 +57,7 @@ export function PricingPlans({
                 {label}
                 {value === "yearly" && annualLabel ? (
                   <span
-                    className={`site-label ml-2 px-1.5 py-0.5 text-[10px] ${billing === value ? "bg-signal text-asphalt" : "bg-asphalt text-signal"}`}
+                    className={`site-label ms-2 px-1.5 py-0.5 text-[10px] ${billing === value ? "bg-signal text-asphalt" : "bg-asphalt text-signal"}`}
                   >
                     {annualLabel}
                   </span>
@@ -76,7 +77,7 @@ export function PricingPlans({
               className={`relative flex flex-col border-2 border-asphalt p-7 ${dark ? "bg-asphalt text-white shadow-[8px_8px_0_var(--color-signal)] lg:-translate-y-3" : "site-plate bg-paper"}`}
             >
               {plan.badge ? (
-                <p className="site-label absolute -top-3.5 left-6 border-2 border-asphalt bg-signal px-2 py-1 text-[10px] text-asphalt">
+                <p className="site-label absolute -top-3.5 start-6 border-2 border-asphalt bg-signal px-2 py-1 text-[10px] text-asphalt">
                   {plan.badge}
                 </p>
               ) : null}
@@ -91,8 +92,8 @@ export function PricingPlans({
                       <span className="site-display text-6xl">{price.format(amount)}</span>
                       <span className="site-display mt-1 text-2xl">{currency}</span>
                       {plan.priceMonthly !== null && amount < plan.priceMonthly ? (
-                        <s className={`site-display ml-3 mt-1 text-2xl ${dark ? "text-white/40" : "text-asphalt-500/60"}`}>
-                          <span className="sr-only">au lieu de </span>
+                        <s className={`site-display ms-3 mt-1 text-2xl ${dark ? "text-white/40" : "text-asphalt-500/60"}`}>
+                          <span className="sr-only"><T>au lieu de</T> </span>
                           {price.format(plan.priceMonthly)} {currency}
                         </s>
                       ) : null}

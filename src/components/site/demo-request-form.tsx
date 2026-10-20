@@ -6,6 +6,7 @@ import type { ComponentProps } from "react";
 import { ActionForm, Field, useActionFormState } from "@/components/forms/action-form";
 import { FLEET_SIZES, SECTORS } from "@/server/domain/site";
 import { submitDemoRequestAction } from "@/app/(site)/essai-gratuit/actions";
+import { T } from "@/i18n/client";
 
 const control =
   "block w-full border-2 border-asphalt bg-white px-3 text-base text-asphalt placeholder:text-asphalt-500/60 focus:outline-none focus:ring-4 focus:ring-signal/60";
@@ -17,7 +18,7 @@ function TextInput(props: ComponentProps<"input">) {
 function SelectInput({ options, ...props }: ComponentProps<"select"> & { options: { value: string; label: string }[] }) {
   return (
     <select {...props} className={`${control} h-12`}>
-      <option value="">Choisir…</option>
+      <option value=""><T>Choisir…</T></option>
       {options.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
@@ -46,9 +47,9 @@ export function DemoRequestForm({
   return (
     <ActionForm action={submitDemoRequestAction} className="grid gap-5 sm:grid-cols-2">
       <input type="hidden" name="startedAt" value={startedAt} />
-      <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden>
+      <div className="absolute -start-[9999px] h-px w-px overflow-hidden" aria-hidden>
         <label>
-          Site web (ne pas remplir)
+          <T>Site web (ne pas remplir)</T>
           <input type="text" name="website" tabIndex={-1} autoComplete="off" />
         </label>
       </div>
@@ -113,9 +114,9 @@ function Consent() {
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="consent" required aria-invalid={error ? true : undefined} className="mt-0.5 h-5 w-5 shrink-0 accent-asphalt" />
         <span>
-          J&apos;accepte que mes informations soient utilisées pour traiter ma demande et ouvrir mon espace de démonstration (
+          <T>J&apos;accepte que mes informations soient utilisées pour traiter ma demande et ouvrir mon espace de démonstration (</T>
           <Link href="/infos/confidentialite" className="underline">
-            confidentialité
+            <T>confidentialité</T>
           </Link>
           ).
         </span>
@@ -134,7 +135,7 @@ function Submit() {
   return (
     <button type="submit" disabled={pending} className="site-btn site-btn-signal w-full text-base disabled:opacity-60">
       {pending ? "Envoi…" : "Demander mon espace de démonstration"}
-      {pending ? null : <ArrowRight className="h-5 w-5" aria-hidden />}
+      {pending ? null : <ArrowRight className="rtl-flip h-5 w-5" aria-hidden />}
     </button>
   );
 }

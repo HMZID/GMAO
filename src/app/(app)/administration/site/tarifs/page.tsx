@@ -93,16 +93,16 @@ export default async function SitePlansPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-900">
                       {plan.name}
-                      <span className="ml-2 text-sm font-normal text-slate-500">
+                      <span className="ms-2 text-sm font-normal text-slate-500">
                         {plan.priceMonthly === null ? plan.priceUnit || "Sur devis" : `${formatNumber(plan.priceMonthly)} ${plan.priceUnit ?? ""}`}
                       </span>
                       {plan.highlighted ? (
-                        <Badge tone="amber" className="ml-2">
+                        <Badge tone="amber" className="ms-2">
                           Mise en avant
                         </Badge>
                       ) : null}
                       {!plan.published ? (
-                        <Badge tone="gray" className="ml-2">
+                        <Badge tone="gray" className="ms-2">
                           Non publiée
                         </Badge>
                       ) : null}

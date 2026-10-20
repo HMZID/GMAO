@@ -77,7 +77,7 @@ export function PlanningDayView({ days, rows, initialDay }: { days: DayViewDay[]
                   <p className="font-semibold text-slate-900">{r.name}</p>
                   <p className="text-xs text-slate-500">{r.siteName}</p>
                 </div>
-                <div className="w-28 shrink-0 text-right">
+                <div className="w-28 shrink-0 text-end">
                   <p
                     className={cn(
                       "text-sm font-semibold tabular-nums",
@@ -110,15 +110,15 @@ export function PlanningDayView({ days, rows, initialDay }: { days: DayViewDay[]
                       <Link
                         href={`/interventions/${o.id}`}
                         className={cn(
-                          "block rounded-lg border-l-4 bg-slate-50 px-3 py-2.5 hover:bg-slate-100",
-                          o.priority === "P1" ? "border-l-red-500" : o.status === "IN_PROGRESS" ? "border-l-violet-500" : "border-l-sky-500",
+                          "block rounded-lg border-s-4 bg-slate-50 px-3 py-2.5 hover:bg-slate-100",
+                          o.priority === "P1" ? "border-s-red-500" : o.status === "IN_PROGRESS" ? "border-s-violet-500" : "border-s-sky-500",
                         )}
                       >
                         <span className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                           <Clock className="h-3.5 w-3.5 text-slate-500" aria-hidden />
                           {o.time}
                           <span className="font-medium text-slate-700">· {o.equipmentCode}</span>
-                          <span className="ml-auto text-xs font-normal text-slate-500">{o.duration}</span>
+                          <span className="ms-auto text-xs font-normal text-slate-500">{o.duration}</span>
                         </span>
                         <span className="mt-0.5 block text-sm text-slate-700">{o.title}</span>
                       </Link>

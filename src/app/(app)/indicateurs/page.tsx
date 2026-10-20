@@ -22,7 +22,7 @@ function MagnitudeBar({ value, max, label }: { value: number; max: number; label
   const width = max > 0 ? Math.max((value / max) * 100, value > 0 ? 2 : 0) : 0;
   return (
     <div className="h-2.5 w-16 shrink-0 rounded-sm bg-slate-100 sm:w-24" title={label} role="img" aria-label={label}>
-      <div className="h-full rounded-r bg-brand-600" style={{ width: `${width}%` }} />
+      <div className="h-full rounded-e bg-brand-600" style={{ width: `${width}%` }} />
     </div>
   );
 }
@@ -131,19 +131,19 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                 <THead>
                   <tr>
                     <TH>Catégorie</TH>
-                    <TH className="text-right">Équip.</TH>
-                    <TH className="text-right">Dispo.</TH>
-                    <TH className="text-right">Immob.</TH>
-                    <TH className="text-right">Coût</TH>
+                    <TH className="text-end">Équip.</TH>
+                    <TH className="text-end">Dispo.</TH>
+                    <TH className="text-end">Immob.</TH>
+                    <TH className="text-end">Coût</TH>
                   </tr>
                 </THead>
                 <TBody>
                   {k.byCategory.map((c) => (
                     <TR key={c.categoryId}>
                       <TD>{c.categoryName}</TD>
-                      <TD className="text-right tabular-nums">{c.count}</TD>
-                      <TD className="whitespace-nowrap text-right tabular-nums">{formatPercent(c.availability)}</TD>
-                      <TD className="whitespace-nowrap text-right tabular-nums">{formatNumber(c.downtime, "h")}</TD>
+                      <TD className="text-end tabular-nums">{c.count}</TD>
+                      <TD className="whitespace-nowrap text-end tabular-nums">{formatPercent(c.availability)}</TD>
+                      <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(c.downtime, "h")}</TD>
                       <TD>
                         <div className="flex items-center justify-end gap-3 whitespace-nowrap">
                           <span className="tabular-nums text-slate-700">{formatCurrency(c.cost)}</span>
@@ -165,8 +165,8 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                   <THead>
                     <tr>
                       <TH>Équipement</TH>
-                      <TH className="text-right">Immob.</TH>
-                      <TH className="text-right">Coût</TH>
+                      <TH className="text-end">Immob.</TH>
+                      <TH className="text-end">Coût</TH>
                     </tr>
                   </THead>
                   <TBody>
@@ -178,7 +178,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                           </Link>
                           <p className="text-xs text-slate-500">{e.categoryName}</p>
                         </TD>
-                        <TD className="whitespace-nowrap text-right tabular-nums">{formatNumber(e.downtime, "h")}</TD>
+                        <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(e.downtime, "h")}</TD>
                         <TD>
                           <div className="flex items-center justify-end gap-3 whitespace-nowrap">
                             <span className="tabular-nums text-slate-700">{formatCurrency(e.cost)}</span>
@@ -202,8 +202,8 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                 <THead>
                   <tr>
                     <TH>Article</TH>
-                    <TH className="text-right">Quantité</TH>
-                    <TH className="text-right">Valeur</TH>
+                    <TH className="text-end">Quantité</TH>
+                    <TH className="text-end">Valeur</TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -215,7 +215,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                         </Link>{" "}
                         <span className="text-slate-600">{p.name}</span>
                       </TD>
-                      <TD className="whitespace-nowrap text-right tabular-nums">{formatNumber(p.quantity, p.unit)}</TD>
+                      <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(p.quantity, p.unit)}</TD>
                       <TD>
                         <div className="flex items-center justify-end gap-3 whitespace-nowrap">
                           <span className="tabular-nums text-slate-700">{formatCurrency(p.value)}</span>

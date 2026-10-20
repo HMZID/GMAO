@@ -101,7 +101,7 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                       .filter(Boolean)
                       .join(" ou ")}
                     {d.postponedTo ? (
-                      <Badge tone="amber" className="ml-1">
+                      <Badge tone="amber" className="ms-1">
                         reportée au {formatDate(d.postponedTo)}
                       </Badge>
                     ) : null}

@@ -84,7 +84,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
         actions={
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <ButtonLink href={withParams("/planning", { week: prev, siteId: params.siteId })} variant="secondary" aria-label="Semaine précédente">
-              <ChevronLeft className="h-4 w-4" aria-hidden />
+              <ChevronLeft className="rtl-flip h-4 w-4" aria-hidden />
               <span className="hidden sm:inline">Semaine précédente</span>
             </ButtonLink>
             <ButtonLink href={withParams("/planning", { siteId: params.siteId })} variant="ghost" className="flex-1 sm:flex-none">
@@ -92,7 +92,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
             </ButtonLink>
             <ButtonLink href={withParams("/planning", { week: next, siteId: params.siteId })} variant="secondary" aria-label="Semaine suivante">
               <span className="hidden sm:inline">Semaine suivante</span>
-              <ChevronRight className="h-4 w-4" aria-hidden />
+              <ChevronRight className="rtl-flip h-4 w-4" aria-hidden />
             </ButtonLink>
           </div>
         }
@@ -112,7 +112,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
           <button type="submit" className="h-10 rounded-md px-4 text-sm font-medium ring-1 ring-slate-300 hover:bg-slate-50">
             Afficher
           </button>
-          <p className="ml-auto hidden text-sm text-slate-600 xl:block">
+          <p className="ms-auto hidden text-sm text-slate-600 xl:block">
             Semaine du {formatDay(plan.weekStart)} au {formatDay(lastDay)}
           </p>
         </form>
@@ -127,9 +127,9 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
             {/* Grand écran : grille de la semaine. */}
             <div className="hidden overflow-x-auto xl:block">
               <table className="w-full min-w-[1100px] table-fixed border-t border-slate-200 text-sm">
-                <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="sticky left-0 z-10 w-44 bg-slate-50 px-4 py-2.5">Technicien</th>
+                    <th className="sticky start-0 z-10 w-44 bg-slate-50 px-4 py-2.5">Technicien</th>
                     {plan.days.map((d) => (
                       <th
                         key={iso(d)}
@@ -138,7 +138,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                         {formatDay(d)}
                       </th>
                     ))}
-                    <th className="w-32 px-4 py-2.5 text-right">Charge</th>
+                    <th className="w-32 px-4 py-2.5 text-end">Charge</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -146,7 +146,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                     const load = row.load ?? 0;
                     return (
                       <tr key={row.id} className="align-top">
-                        <td className="sticky left-0 z-10 bg-white px-4 py-3">
+                        <td className="sticky start-0 z-10 bg-white px-4 py-3">
                           <p className="font-medium text-slate-900">
                             {row.firstName} {row.lastName}
                           </p>
@@ -190,7 +190,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                             </td>
                           );
                         })}
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-end">
                           <p
                             className={cn(
                               "font-semibold tabular-nums",

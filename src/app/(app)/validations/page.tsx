@@ -98,7 +98,7 @@ export default async function ValidationsPage() {
                 <tr>
                   <TH>Objet</TH>
                   <TH>Statut</TH>
-                  <TH className="text-right">Montant</TH>
+                  <TH className="text-end">Montant</TH>
                 </tr>
               </THead>
               <TBody>
@@ -116,7 +116,7 @@ export default async function ValidationsPage() {
                     <TD>
                       <Badge tone={APPROVAL_STATUS[r.status]?.tone}>{APPROVAL_STATUS[r.status]?.label}</Badge>
                     </TD>
-                    <TD className="text-right tabular-nums">{r.amount != null ? formatCurrency(r.amount) : "—"}</TD>
+                    <TD className="text-end tabular-nums">{r.amount != null ? formatCurrency(r.amount) : "—"}</TD>
                   </TR>
                 ))}
               </TBody>
@@ -140,7 +140,7 @@ export default async function ValidationsPage() {
                           {s.given ? `${s.substituteName} vous remplace` : `Vous remplacez ${s.userName}`} du {formatDate(s.validFrom)} au{" "}
                           {formatDate(s.validTo)}
                           {active ? (
-                            <Badge tone="green" className="ml-2">
+                            <Badge tone="green" className="ms-2">
                               En cours
                             </Badge>
                           ) : null}

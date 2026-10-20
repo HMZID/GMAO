@@ -58,7 +58,7 @@ export function TwoFactorEnrollment() {
   if (started.qrSvg) {
     return (
       <div className="space-y-4">
-        <ol className="list-decimal space-y-1 pl-5 text-sm text-slate-600">
+        <ol className="list-decimal space-y-1 ps-5 text-sm text-slate-600">
           <li>Scannez ce QR code avec une application d&apos;authentification (Google Authenticator, Microsoft Authenticator…).</li>
           <li>Saisissez le code à 6 chiffres qu&apos;elle affiche.</li>
         </ol>

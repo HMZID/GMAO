@@ -1,3 +1,4 @@
+import { T } from "@/i18n/client";
 /**
  * Illustration de l'accroche : un tableau de parc tel que l'atelier le voit (données fictives), construit en
  * HTML et CSS pour rester net à toutes les tailles et léger à charger.
@@ -48,10 +49,10 @@ export function HeroConsole() {
     <div className="relative" aria-hidden>
       <div className="border-2 border-white/15 bg-asphalt-800 shadow-[10px_10px_0_var(--color-signal)]">
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <p className="site-label text-[11px] text-white/60">Parc · Site de Lyon</p>
+          <p className="site-label text-[11px] text-white/60"><T>Parc · Site de Lyon</T></p>
           <p className="site-label flex items-center gap-2 text-[11px] text-ok">
             <span className="animate-site-blink motion-safe-only inline-block h-2 w-2 rounded-full bg-ok" />
-            En direct
+            <T>En direct</T>
           </p>
         </div>
         <ul className="divide-y divide-white/10">
@@ -70,7 +71,7 @@ export function HeroConsole() {
                     style={{ width: `${r.fill * 100}%`, animationDelay: `${0.2 + i * 0.15}s` }}
                   />
                 </span>
-                <span className="w-44 shrink-0 truncate text-right text-[11px] text-white/60 sm:w-52">
+                <span className="w-44 shrink-0 truncate text-end text-[11px] text-white/60 sm:w-52">
                   {r.next} · <span className="text-white/90">{r.left}</span>
                 </span>
               </span>
@@ -83,7 +84,7 @@ export function HeroConsole() {
             ["Interventions", "7"],
             ["Préventifs échus", "0"],
           ].map(([label, value]) => (
-            <div key={label} className="border-r border-white/10 px-2 py-3 last:border-r-0">
+            <div key={label} className="border-e border-white/10 px-2 py-3 last:border-e-0">
               <p className="site-display text-2xl text-white">{value}</p>
               <p className="site-label mt-1 text-[9px] text-white/50">{label}</p>
             </div>
@@ -91,11 +92,11 @@ export function HeroConsole() {
         </div>
       </div>
       {/* Bon de travail clôturé, posé de travers sur le tableau. */}
-      <div className="absolute -bottom-10 -left-6 hidden w-56 rotate-[-4deg] border-2 border-asphalt bg-paper p-3 text-asphalt shadow-[6px_6px_0_var(--color-asphalt)] sm:block">
-        <p className="site-label text-[10px] text-asphalt-500">Intervention à réaliser</p>
-        <p className="font-plate text-sm font-bold">INT-2026-0142</p>
-        <p className="mt-1 text-xs">Remplacement flexible hydraulique · PL-021</p>
-        <p className="site-label mt-2 inline-block bg-ok px-1.5 py-0.5 text-[10px] text-white">Clôturé · 2 h 40</p>
+      <div className="absolute -bottom-10 -start-6 hidden w-56 rotate-[-4deg] border-2 border-asphalt bg-paper p-3 text-asphalt shadow-[6px_6px_0_var(--color-asphalt)] sm:block">
+        <p className="site-label text-[10px] text-asphalt-500"><T>Intervention à réaliser</T></p>
+        <p className="font-plate text-sm font-bold"><T>INT-2026-0142</T></p>
+        <p className="mt-1 text-xs"><T>Remplacement flexible hydraulique · PL-021</T></p>
+        <p className="site-label mt-2 inline-block bg-ok px-1.5 py-0.5 text-[10px] text-white"><T>Clôturé · 2 h 40</T></p>
       </div>
     </div>
   );

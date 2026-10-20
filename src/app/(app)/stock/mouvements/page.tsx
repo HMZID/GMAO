@@ -85,8 +85,8 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
                 <TH>Mouvement</TH>
                 <TH>Article</TH>
                 <TH>Magasin</TH>
-                <TH className="text-right">Quantité</TH>
-                <TH className="text-right">Coût unitaire</TH>
+                <TH className="text-end">Quantité</TH>
+                <TH className="text-end">Coût unitaire</TH>
                 <TH>Référence / intervention</TH>
               </tr>
             </THead>
@@ -102,8 +102,8 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
                     <p className="text-xs text-slate-500">{m.partName}</p>
                   </TD>
                   <TD>{m.warehouseName}</TD>
-                  <TD className="text-right tabular-nums">{formatNumber(m.quantity, m.unit)}</TD>
-                  <TD className="text-right tabular-nums">{formatCurrency(m.unitCost)}</TD>
+                  <TD className="text-end tabular-nums">{formatNumber(m.quantity, m.unit)}</TD>
+                  <TD className="text-end tabular-nums">{formatCurrency(m.unitCost)}</TD>
                   <TD className="text-xs text-slate-600">
                     {m.workOrderId ? (
                       <Link href={`/interventions/${m.workOrderId}`} className="text-brand-700 hover:underline">

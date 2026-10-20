@@ -50,8 +50,8 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
               <tr>
                 <TH>Demande</TH>
                 <TH>Objet</TH>
-                <TH className="text-right">Quantité</TH>
-                <TH className="text-right">Montant estimé</TH>
+                <TH className="text-end">Quantité</TH>
+                <TH className="text-end">Montant estimé</TH>
                 <TH>Besoin</TH>
                 <TH>Statut</TH>
               </tr>
@@ -71,8 +71,8 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
                     <p className="max-w-80 text-slate-900">{r.description}</p>
                     <p className="text-xs text-slate-500">{r.companyName}</p>
                   </TD>
-                  <TD className="text-right tabular-nums">{formatNumber(r.quantity)}</TD>
-                  <TD className="text-right tabular-nums">{formatCurrency(r.amount)}</TD>
+                  <TD className="text-end tabular-nums">{formatNumber(r.quantity)}</TD>
+                  <TD className="text-end tabular-nums">{formatCurrency(r.amount)}</TD>
                   <TD className="whitespace-nowrap">{r.neededBy ? formatDate(r.neededBy) : "—"}</TD>
                   <TD>
                     <Badge tone={PURCHASE_REQUEST_STATUS[r.status]?.tone}>{PURCHASE_REQUEST_STATUS[r.status]?.label}</Badge>

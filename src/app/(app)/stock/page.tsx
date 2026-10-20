@@ -72,10 +72,10 @@ export default async function PartsPage(props: PageProps<"/stock">) {
                 <TH>Référence</TH>
                 <TH>Désignation</TH>
                 <TH>Famille</TH>
-                <TH className="text-right">En stock</TH>
-                <TH className="text-right">Réservé</TH>
-                <TH className="text-right">Disponible</TH>
-                <TH className="text-right">Coût moyen</TH>
+                <TH className="text-end">En stock</TH>
+                <TH className="text-end">Réservé</TH>
+                <TH className="text-end">Disponible</TH>
+                <TH className="text-end">Coût moyen</TH>
                 <TH>Criticité</TH>
               </tr>
             </THead>
@@ -95,17 +95,17 @@ export default async function PartsPage(props: PageProps<"/stock">) {
                       <p className="text-xs text-slate-500">{[p.manufacturer, p.manufacturerRef].filter(Boolean).join(" · ")}</p>
                     </TD>
                     <TD>{p.family ?? "—"}</TD>
-                    <TD className="text-right tabular-nums">{formatNumber(onHand, p.unit)}</TD>
-                    <TD className="text-right tabular-nums text-slate-500">{formatNumber(reserved)}</TD>
-                    <TD className="text-right tabular-nums">
+                    <TD className="text-end tabular-nums">{formatNumber(onHand, p.unit)}</TD>
+                    <TD className="text-end tabular-nums text-slate-500">{formatNumber(reserved)}</TD>
+                    <TD className="text-end tabular-nums">
                       {formatNumber(onHand - reserved)}
                       {p.belowReorder ? (
-                        <Badge tone="amber" className="ml-2">
+                        <Badge tone="amber" className="ms-2">
                           À commander
                         </Badge>
                       ) : null}
                     </TD>
-                    <TD className="text-right tabular-nums">{formatCurrency(p.averageCost)}</TD>
+                    <TD className="text-end tabular-nums">{formatCurrency(p.averageCost)}</TD>
                     <TD>
                       <CriticalityBadge value={p.criticality} />
                     </TD>

@@ -81,7 +81,7 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
         ? createPortal(
             <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu" id="menu-mobile">
               <button type="button" className="absolute inset-0 bg-slate-900/50" aria-label="Fermer le menu" onClick={() => setOpen(false)} />
-              <div className="absolute inset-y-0 left-0 flex w-[min(20rem,85vw)] flex-col bg-ink-900 text-white shadow-xl">
+              <div className="absolute inset-y-0 start-0 flex w-[min(20rem,85vw)] flex-col bg-ink-900 text-white shadow-xl">
                 <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
                   <span className="text-lg font-semibold">GMAO</span>
                   <button

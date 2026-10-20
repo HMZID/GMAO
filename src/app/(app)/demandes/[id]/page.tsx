@@ -48,7 +48,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
         {open && duplicates > 0 ? (
           <Alert tone="amber" title="Doublon possible">
             <p>D&apos;autres demandes ou interventions sont ouvertes sur cet équipement :</p>
-            <ul className="mt-1 list-disc pl-5">
+            <ul className="mt-1 list-disc ps-5">
               {r.otherOpenRequests.map((o) => (
                 <li key={o.id}>
                   <Link href={`/demandes/${o.id}`} className="underline">

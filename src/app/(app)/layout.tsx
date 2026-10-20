@@ -185,7 +185,7 @@ async function UserMenu() {
       >
         <Bell className="h-5 w-5" aria-hidden />
         {unread > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white">
+          <span className="absolute -end-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-semibold text-white">
             {unread > 99 ? "99+" : unread}
           </span>
         ) : null}
@@ -198,7 +198,7 @@ async function UserMenu() {
       >
         <ShieldCheck className="h-5 w-5" aria-hidden />
       </Link>
-      <div className="hidden text-right sm:block">
+      <div className="hidden text-end sm:block">
         <p className="text-sm font-medium text-slate-900">{ctx.name}</p>
         <p className="max-w-64 truncate text-xs text-slate-500">{roles || "Aucun rôle"}</p>
       </div>

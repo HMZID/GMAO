@@ -55,21 +55,21 @@ async function Trial({ searchParams }: { searchParams: PageProps<"/essai-gratuit
                 </li>
               ))}
             </ul>
-            <ol className="mt-10 border-l-4 border-asphalt pl-5 text-sm">
+            <ol className="mt-10 border-s-4 border-asphalt ps-5 text-sm">
               {[
                 "Vous envoyez la demande",
                 "Nous l'examinons et ouvrons votre espace",
                 "Vous recevez le lien, l'identifiant et le mot de passe provisoire",
               ].map((step, i) => (
                 <li key={step} className="py-1.5">
-                  <span className="font-plate mr-2 font-bold">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="font-plate me-2 font-bold">{String(i + 1).padStart(2, "0")}</span>
                   {step}
                 </li>
               ))}
             </ol>
           </div>
           <div className="relative border-2 border-asphalt bg-paper p-6 shadow-[10px_10px_0_var(--color-asphalt)] sm:p-8">
-            <p className="site-label absolute -top-3.5 right-6 border-2 border-asphalt bg-signal px-2 py-1 text-[10px]">Sans carte bancaire</p>
+            <p className="site-label absolute -top-3.5 end-6 border-2 border-asphalt bg-signal px-2 py-1 text-[10px]">Sans carte bancaire</p>
             <DemoRequestForm
               startedAt={site.renderedAt}
               plans={plans.map((p) => p.name)}

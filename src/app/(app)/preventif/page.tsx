@@ -61,8 +61,8 @@ export default async function PreventivePage() {
               <tr>
                 <TH>Plan</TH>
                 <TH>S&apos;applique à</TH>
-                <TH className="text-right">Opérations</TH>
-                <TH className="text-right">Équipements</TH>
+                <TH className="text-end">Opérations</TH>
+                <TH className="text-end">Équipements</TH>
                 <TH>Version</TH>
               </tr>
             </THead>
@@ -73,12 +73,12 @@ export default async function PreventivePage() {
                     <Link href={`/preventif/plans/${p.id}`} className="font-medium text-brand-700 hover:underline">
                       {p.name}
                     </Link>
-                    {!p.active ? <Badge className="ml-2">Inactif</Badge> : null}
+                    {!p.active ? <Badge className="ms-2">Inactif</Badge> : null}
                     {p.description ? <p className="max-w-xl text-xs text-slate-500">{p.description}</p> : null}
                   </TD>
                   <TD>{[p.categoryName, p.modelName].filter(Boolean).join(" · ") || "—"}</TD>
-                  <TD className="text-right tabular-nums">{p.operations}</TD>
-                  <TD className="text-right tabular-nums">{p.equipmentCount}</TD>
+                  <TD className="text-end tabular-nums">{p.operations}</TD>
+                  <TD className="text-end tabular-nums">{p.equipmentCount}</TD>
                   <TD>v{p.version}</TD>
                 </TR>
               ))}

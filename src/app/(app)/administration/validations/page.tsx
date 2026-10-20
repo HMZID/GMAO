@@ -91,7 +91,7 @@ export default async function ApprovalWorkflowsPage() {
                           <TD>{s.approverRole ? `${ROLE[s.approverRole] ?? s.approverRole} (périmètre de l'objet)` : (s.approverName ?? "—")}</TD>
                           <TD className="tabular-nums">{s.minAmount != null ? formatCurrency(s.minAmount) : "Toujours"}</TD>
                           <TD>{s.priorities.length > 0 ? s.priorities.join(", ") : "Toutes"}</TD>
-                          <TD className="text-right">
+                          <TD className="text-end">
                             <PanelForm>
                               <input type="hidden" name="stepId" value={s.id} />
                               <SubmitButton variant="ghost" size="sm">

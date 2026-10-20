@@ -61,7 +61,7 @@ export function TransitionsCard({ wo }: { wo: WorkOrder }) {
                   <Button disabled variant="secondary" size="sm">
                     {label}
                   </Button>
-                  <ul className="mt-2 list-disc space-y-0.5 pl-5 text-xs text-slate-600">
+                  <ul className="mt-2 list-disc space-y-0.5 ps-5 text-xs text-slate-600">
                     {t.errors.map((e) => (
                       <li key={e}>{e}</li>
                     ))}
@@ -310,7 +310,7 @@ export function TimeCard({
             <tr>
               <TH>Technicien</TH>
               <TH>Début</TH>
-              <TH className="text-right">Durée</TH>
+              <TH className="text-end">Durée</TH>
               <TH>Commentaire</TH>
             </tr>
           </THead>
@@ -321,7 +321,7 @@ export function TimeCard({
                   {t.technician.firstName} {t.technician.lastName}
                 </TD>
                 <TD className="whitespace-nowrap">{formatDateTime(t.startedAt)}</TD>
-                <TD className="text-right tabular-nums">{t.endedAt ? formatMinutes(t.minutes) : <Badge tone="violet">en cours</Badge>}</TD>
+                <TD className="text-end tabular-nums">{t.endedAt ? formatMinutes(t.minutes) : <Badge tone="violet">en cours</Badge>}</TD>
                 <TD className="text-xs text-slate-500">{t.comment}</TD>
               </TR>
             ))}
@@ -466,7 +466,7 @@ export function PartsCard({
             <tr>
               <TH>Réservation</TH>
               <TH>Magasin</TH>
-              <TH className="text-right">Quantité</TH>
+              <TH className="text-end">Quantité</TH>
               <TH>Statut</TH>
             </tr>
           </THead>
@@ -477,7 +477,7 @@ export function PartsCard({
                   {r.sku} — {r.partName}
                 </TD>
                 <TD>{r.warehouseName}</TD>
-                <TD className="text-right tabular-nums">
+                <TD className="text-end tabular-nums">
                   {formatNumber(r.consumedQuantity)} / {formatNumber(r.quantity)}
                 </TD>
                 <TD>
@@ -495,8 +495,8 @@ export function PartsCard({
               <TH>Mouvement</TH>
               <TH>Article</TH>
               <TH>Magasin</TH>
-              <TH className="text-right">Quantité</TH>
-              <TH className="text-right">Valeur</TH>
+              <TH className="text-end">Quantité</TH>
+              <TH className="text-end">Valeur</TH>
             </tr>
           </THead>
           <TBody>
@@ -510,8 +510,8 @@ export function PartsCard({
                   {l.sku} — {l.partName}
                 </TD>
                 <TD>{l.warehouseName}</TD>
-                <TD className="text-right tabular-nums">{formatNumber(l.quantity, l.unit)}</TD>
-                <TD className="text-right tabular-nums">{formatCurrency(l.quantity * l.unitCost * (l.type === "RETURN" ? -1 : 1))}</TD>
+                <TD className="text-end tabular-nums">{formatNumber(l.quantity, l.unit)}</TD>
+                <TD className="text-end tabular-nums">{formatCurrency(l.quantity * l.unitCost * (l.type === "RETURN" ? -1 : 1))}</TD>
               </TR>
             ))}
           </TBody>

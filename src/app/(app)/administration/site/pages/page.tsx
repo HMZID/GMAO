@@ -67,7 +67,7 @@ export default async function SitePagesPage() {
                   <TD className="font-mono text-xs">/infos/{p.slug}</TD>
                   <TD>
                     <Badge tone={p.published ? "green" : "gray"}>{p.published ? "Publiée" : "Brouillon"}</Badge>
-                    {p.published && p.showInFooter ? <span className="ml-2 text-xs text-slate-500">pied de page</span> : null}
+                    {p.published && p.showInFooter ? <span className="ms-2 text-xs text-slate-500">pied de page</span> : null}
                   </TD>
                   <TD className="text-xs">{formatDateTime(p.updatedAt)}</TD>
                 </TR>

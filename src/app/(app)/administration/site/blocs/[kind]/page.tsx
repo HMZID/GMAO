@@ -94,9 +94,9 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-900">
                       {item.title}
-                      {item.meta ? <span className="ml-2 text-sm font-normal text-slate-500">{item.meta}</span> : null}
+                      {item.meta ? <span className="ms-2 text-sm font-normal text-slate-500">{item.meta}</span> : null}
                       {!item.published ? (
-                        <Badge tone="gray" className="ml-2">
+                        <Badge tone="gray" className="ms-2">
                           Non publié
                         </Badge>
                       ) : null}

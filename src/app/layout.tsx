@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { Noto_Sans_Arabic } from "next/font/google";
+import { Suspense } from "react";
 import { EnvironmentBanner } from "@/components/layout/environment-banner";
+import { LOCALE_BOOTSTRAP_SCRIPT } from "@/i18n/config";
+import { LocaleProvider } from "@/i18n/provider";
 import "./globals.css";
+
+/** Police de l'arabe, appliquée seulement en mode droite à gauche (voir globals.css). */
+const arabic = Noto_Sans_Arabic({ subsets: ["arabic"], variable: "--font-arabic", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "GMAO", template: "%s · GMAO" },
@@ -16,10 +23,19 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className="h-full">
-      <body className="min-h-full">
-        <EnvironmentBanner />
-        {children}
+    // `lang` et `dir` sont ajustés avant l'affichage selon le cookie de langue (script de <head>) : d'où suppressHydrationWarning.
+    <html lang="fr" dir="ltr" className="h-full" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: LOCALE_BOOTSTRAP_SCRIPT }} />
+      </head>
+      <body className={`min-h-full ${arabic.variable}`}>
+        {/* La langue vient d'un cookie (donnée de requête) : lue sous <Suspense>, sans bloquer la coquille statique. */}
+        <Suspense fallback={null}>
+          <LocaleProvider>
+            <EnvironmentBanner />
+            {children}
+          </LocaleProvider>
+        </Suspense>
       </body>
     </html>
   );

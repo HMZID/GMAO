@@ -19,7 +19,7 @@ export function PageHeader({
     <div className="mb-5 sm:mb-6">
       {back ? (
         <Link href={back.href} className="mb-2 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
-          <ChevronLeft className="h-4 w-4" aria-hidden />
+          <ChevronLeft className="rtl-flip h-4 w-4" aria-hidden />
           {back.label}
         </Link>
       ) : null}

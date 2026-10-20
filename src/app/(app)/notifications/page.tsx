@@ -43,7 +43,7 @@ export default async function NotificationsPage() {
                   <div className="min-w-0">
                     <p className={cn("text-sm", n.readAt ? "text-slate-700" : "font-medium text-slate-900")}>
                       {urgent ? (
-                        <Badge tone="red" className="mr-2">
+                        <Badge tone="red" className="me-2">
                           Urgent
                         </Badge>
                       ) : null}
@@ -81,7 +81,7 @@ export default async function NotificationsPage() {
                   ) : (
                     <Checkbox name="enabled[]" value={p.event} label={p.label} defaultChecked={p.enabled} />
                   )}
-                  <p className="mt-1 pl-6 text-xs text-slate-500">{p.description}</p>
+                  <p className="mt-1 ps-6 text-xs text-slate-500">{p.description}</p>
                 </li>
               ))}
             </ul>

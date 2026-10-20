@@ -18,7 +18,7 @@ export type Option = { value: string; label: string };
 
 export function Select({ options, placeholder, className, ...props }: ComponentProps<"select"> & { options: Option[]; placeholder?: string }) {
   return (
-    <select className={cn(field, "h-10 pr-8", className)} {...props}>
+    <select className={cn(field, "h-10 pe-8", className)} {...props}>
       {placeholder !== undefined ? <option value="">{placeholder}</option> : null}
       {options.map((o) => (
         <option key={o.value} value={o.value}>

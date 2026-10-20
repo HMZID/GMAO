@@ -102,15 +102,15 @@ function IndicatorView({ chart, result }: { chart: string; result: IndicatorResu
         <tbody className="divide-y divide-slate-100">
           {result.groups.map((g) => (
             <tr key={g.key ?? "vide"}>
-              <td className="py-1.5 pr-3 text-slate-700">{g.label}</td>
-              <td className="py-1.5 text-right font-medium tabular-nums">{value(g.value)}</td>
+              <td className="py-1.5 pe-3 text-slate-700">{g.label}</td>
+              <td className="py-1.5 text-end font-medium tabular-nums">{value(g.value)}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr className="border-t border-slate-200 font-semibold">
             <td className="py-1.5">Ensemble</td>
-            <td className="py-1.5 text-right tabular-nums">{value(result.value)}</td>
+            <td className="py-1.5 text-end tabular-nums">{value(result.value)}</td>
           </tr>
         </tfoot>
       </table>
@@ -126,7 +126,7 @@ function IndicatorView({ chart, result }: { chart: string; result: IndicatorResu
           </span>
           <span className="h-3 rounded-sm bg-slate-100" aria-hidden>
             <span
-              className="block h-full rounded-r bg-brand-600"
+              className="block h-full rounded-e bg-brand-600"
               style={{ width: `${max > 0 ? Math.max((g.value / max) * 100, g.value > 0 ? 2 : 0) : 0}%` }}
             />
           </span>

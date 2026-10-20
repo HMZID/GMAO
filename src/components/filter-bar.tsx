@@ -18,8 +18,8 @@ export function FilterBar({ children, resetHref }: { children: ReactNode; resetH
         <span data-active-filters className="hidden rounded-full bg-brand-100 px-2 py-0.5 text-xs text-brand-800">
           actifs
         </span>
-        <span className="ml-auto text-xs text-slate-500 group-open:hidden">Afficher</span>
-        <span className="ml-auto hidden text-xs text-slate-500 group-open:inline">Masquer</span>
+        <span className="ms-auto text-xs text-slate-500 group-open:hidden">Afficher</span>
+        <span className="ms-auto hidden text-xs text-slate-500 group-open:inline">Masquer</span>
       </summary>
       <CollapseOnMobile />
       <form method="get" className="flex flex-wrap items-end gap-3 px-4 pb-4 pt-1 max-md:*:w-full md:px-5 md:pt-4">

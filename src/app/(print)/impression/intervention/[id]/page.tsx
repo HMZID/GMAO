@@ -53,7 +53,7 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
               <p className="text-slate-600">{wo.site.name}</p>
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-end">
             <h1 className="text-lg font-bold uppercase tracking-wide">Fiche d&apos;intervention</h1>
             <p className="font-mono text-base font-semibold">{wo.number}</p>
             <p className="text-slate-600">Éditée le {formatDateTime(printedAt)}</p>
@@ -212,7 +212,7 @@ function Item({ label, children, wide }: { label: string; children: ReactNode; w
 
 /** Tableau simple pour l'impression (sans la présentation en cartes des petits écrans). */
 function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNode[][]; foot?: ReactNode[]; align?: ("left" | "right")[] }) {
-  const cls = (i: number) => (align?.[i] === "right" ? "text-right tabular-nums" : "text-left");
+  const cls = (i: number) => (align?.[i] === "right" ? "text-end tabular-nums" : "text-start");
   return (
     <table className="mt-2 w-full border-collapse text-[11px]">
       <thead>

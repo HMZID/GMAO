@@ -30,7 +30,7 @@ async function Thanks() {
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link href="/decouvrir#fonctionnalites" className="site-btn site-btn-signal">
               Revoir les fonctionnalités
-              <ArrowRight className="h-4 w-4" aria-hidden />
+              <ArrowRight className="rtl-flip h-4 w-4" aria-hidden />
             </Link>
             <Link href="/login" className="site-btn site-btn-ghost border-white/40">
               Déjà reçu vos accès ? Se connecter
