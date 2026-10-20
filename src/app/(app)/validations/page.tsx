@@ -63,7 +63,7 @@ export default async function ValidationsPage() {
                       {p.amount != null ? <span className="font-semibold tabular-nums text-slate-900">{formatCurrency(p.amount)}</span> : null}
                     </div>
                     <Link href={p.link} className="block font-medium text-brand-700 hover:underline">
-                      {p.label}
+                      <Tr>{p.label}</Tr>
                     </Link>
                     <p className="text-slate-600">
                       <T
@@ -124,7 +124,7 @@ export default async function ValidationsPage() {
                   <TR key={r.id}>
                     <TD>
                       <Link href={objectLink(r.objectType, r.objectId)} className="font-medium text-brand-700 hover:underline">
-                        {r.label}
+                        <Tr>{r.label}</Tr>
                       </Link>
                       <p className="text-xs text-slate-500">
                         <Tr>{APPROVAL_OBJECT[r.objectType]}</Tr> · {formatDateTime(r.createdAt)}

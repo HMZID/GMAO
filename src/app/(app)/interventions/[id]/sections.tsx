@@ -61,11 +61,13 @@ export function TransitionsCard({ wo }: { wo: WorkOrder }) {
               return (
                 <div key={t.to} className="rounded-md border border-slate-200 p-3">
                   <Button disabled variant="secondary" size="sm">
-                    {label}
+                    <Tr>{label}</Tr>
                   </Button>
                   <ul className="mt-2 list-disc space-y-0.5 ps-5 text-xs text-slate-600">
                     {t.errors.map((e) => (
-                      <li key={e}>{e}</li>
+                      <li key={e}>
+                        <Tr>{e}</Tr>
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -101,7 +103,7 @@ export function TransitionsCard({ wo }: { wo: WorkOrder }) {
                   </p>
                 ) : null}
                 <SubmitButton variant={variant} size="sm">
-                  {label}
+                  <Tr>{label}</Tr>
                 </SubmitButton>
               </PanelForm>
             );
@@ -200,7 +202,7 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm text-slate-900">
-                    {task.position}. {task.label}{" "}
+                    <Tr>{task.position}</Tr>. <Tr>{task.label}</Tr>{" "}
                     {task.required ? (
                       <span className="text-red-600" title="Obligatoire">
                         *
@@ -344,7 +346,7 @@ export function TimeCard({
             {wo.timeEntries.map((t) => (
               <TR key={t.id}>
                 <TD>
-                  {t.technician.firstName} {t.technician.lastName}
+                  <Tr>{t.technician.firstName}</Tr> <Tr>{t.technician.lastName}</Tr>
                 </TD>
                 <TD className="whitespace-nowrap">{formatDateTime(t.startedAt)}</TD>
                 <TD className="text-end tabular-nums">
@@ -356,7 +358,9 @@ export function TimeCard({
                     </Badge>
                   )}
                 </TD>
-                <TD className="text-xs text-slate-500">{t.comment}</TD>
+                <TD className="text-xs text-slate-500">
+                  <Tr>{t.comment}</Tr>
+                </TD>
               </TR>
             ))}
           </TBody>
@@ -413,7 +417,7 @@ export function ReportCard({ wo, canReport, canRead }: { wo: WorkOrder; canRepor
         {meter ? (
           <div className="rounded-md bg-slate-50 p-3 text-sm">
             <p className="text-slate-700">
-              {meter.label} : <span className="font-semibold tabular-nums">{formatNumber(meter.lastValue, meter.unit)}</span>
+              <Tr>{meter.label}</Tr> : <span className="font-semibold tabular-nums">{formatNumber(meter.lastValue, meter.unit)}</span>
               <span className="text-xs text-slate-500">
                 <T params={{ date: formatDateTime(meter.lastReadAt) }}>{" (relevé du {date})"}</T>
               </span>
@@ -530,9 +534,11 @@ export function PartsCard({
             {wo.reservations.map((r) => (
               <TR key={r.id}>
                 <TD>
-                  {r.sku} — {r.partName}
+                  <Tr>{r.sku}</Tr> — <Tr>{r.partName}</Tr>
                 </TD>
-                <TD>{r.warehouseName}</TD>
+                <TD>
+                  <Tr>{r.warehouseName}</Tr>
+                </TD>
                 <TD className="text-end tabular-nums">
                   {formatNumber(r.consumedQuantity)} / {formatNumber(r.quantity)}
                 </TD>
@@ -575,9 +581,11 @@ export function PartsCard({
                   <p className="text-xs text-slate-400">{formatDateTime(l.createdAt)}</p>
                 </TD>
                 <TD>
-                  {l.sku} — {l.partName}
+                  <Tr>{l.sku}</Tr> — <Tr>{l.partName}</Tr>
                 </TD>
-                <TD>{l.warehouseName}</TD>
+                <TD>
+                  <Tr>{l.warehouseName}</Tr>
+                </TD>
                 <TD className="text-end tabular-nums">{formatNumber(l.quantity, l.unit)}</TD>
                 <TD className="text-end tabular-nums">{formatCurrency(l.quantity * l.unitCost * (l.type === "RETURN" ? -1 : 1))}</TD>
               </TR>
@@ -644,7 +652,9 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
             ["Autres", c.other],
           ].map(([label, value]) => (
             <div key={label as string} className="flex justify-between">
-              <dt className="text-slate-500">{label}</dt>
+              <dt className="text-slate-500">
+                <Tr>{label}</Tr>
+              </dt>
               <dd className="tabular-nums">{formatCurrency(value as number)}</dd>
             </div>
           ))}
@@ -659,7 +669,7 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
           <ul className="text-xs text-slate-500">
             {wo.costRows.map((x) => (
               <li key={x.id} className="flex flex-wrap items-center gap-1.5">
-                {x.label} : {formatCurrency(x.amount)}
+                <Tr>{x.label}</Tr> : {formatCurrency(x.amount)}
                 {x.approvalStatus !== "APPROVED" ? (
                   <Badge tone={EXPENSE_APPROVAL[x.approvalStatus]?.tone}>
                     <Tr>{EXPENSE_APPROVAL[x.approvalStatus]?.label}</Tr>
@@ -738,7 +748,11 @@ export function HistoryCard({ wo }: { wo: WorkOrder }) {
                 <Tr>{HOLD_REASON[h.reason] ?? h.reason}</Tr>
               </p>
             ) : null}
-            {h.changedBy ? <p className="text-xs text-slate-400">{h.changedBy.name}</p> : null}
+            {h.changedBy ? (
+              <p className="text-xs text-slate-400">
+                <Tr>{h.changedBy.name}</Tr>
+              </p>
+            ) : null}
           </li>
         ))}
       </ul>

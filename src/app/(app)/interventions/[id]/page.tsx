@@ -52,8 +52,10 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
         back={{ href: "/interventions", label: "Interventions à réaliser" }}
         title={
           <span className="flex flex-wrap items-baseline gap-3">
-            {wo.number}
-            <span className="text-lg font-normal text-slate-600">{wo.title}</span>
+            <Tr>{wo.number}</Tr>
+            <span className="text-lg font-normal text-slate-600">
+              <Tr>{wo.title}</Tr>
+            </span>
           </span>
         }
         meta={
@@ -137,7 +139,7 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
         ) : null}
         {status === "CANCELLED" ? (
           <Alert tone="amber" title={tpl`Annulé le ${formatDate(wo.cancelledAt)}`}>
-            {wo.cancelReason}
+            <Tr>{wo.cancelReason}</Tr>
           </Alert>
         ) : null}
         {status === "TECH_CLOSED" || status === "CLOSED" ? (
@@ -205,9 +207,11 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                     {wo.purchaseRequests.map((p) => (
                       <li key={p.id} className="flex flex-wrap items-center gap-2">
                         <Link href={`/demandes-achat/${p.id}`} className="font-medium text-brand-700 hover:underline">
-                          {p.number}
+                          <Tr>{p.number}</Tr>
                         </Link>
-                        <span className="text-slate-700">{p.description}</span>
+                        <span className="text-slate-700">
+                          <Tr>{p.description}</Tr>
+                        </span>
                         <span className="tabular-nums text-slate-500">{formatCurrency(p.amount)}</span>
                         <Badge tone={PURCHASE_REQUEST_STATUS[p.status]?.tone}>
                           <Tr>{PURCHASE_REQUEST_STATUS[p.status]?.label}</Tr>
@@ -240,9 +244,9 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                     value: (
                       <span className="flex flex-wrap items-center gap-2">
                         <Link href={`/equipements/${wo.equipment.id}`} className="font-medium text-brand-700 hover:underline">
-                          {wo.equipment.code}
+                          <Tr>{wo.equipment.code}</Tr>
                         </Link>
-                        {wo.equipment.name}
+                        <Tr>{wo.equipment.name}</Tr>
                         <EquipmentStatusBadge status={wo.equipment.status} />
                         <CriticalityBadge value={wo.equipment.criticality} />
                       </span>
@@ -283,7 +287,7 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                         {wo.requests.map((r) => (
                           <span key={r.id} className="flex items-center gap-2">
                             <Link href={`/demandes/${r.id}`} className="text-brand-700 hover:underline">
-                              {r.number}
+                              <Tr>{r.number}</Tr>
                             </Link>
                             <RequestStatusBadge status={r.status} />
                           </span>
@@ -298,7 +302,9 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                 ]}
               />
               {wo.description ? (
-                <p className="mt-4 whitespace-pre-line border-t border-slate-100 pt-3 text-sm text-slate-700">{wo.description}</p>
+                <p className="mt-4 whitespace-pre-line border-t border-slate-100 pt-3 text-sm text-slate-700">
+                  <Tr>{wo.description}</Tr>
+                </p>
               ) : null}
             </CardBody>
           </Card>

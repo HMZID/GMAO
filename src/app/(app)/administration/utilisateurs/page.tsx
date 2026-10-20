@@ -87,8 +87,12 @@ export default async function UsersPage() {
             {users.map((u) => (
               <TR key={u.id}>
                 <TD>
-                  <p className="font-medium text-slate-900">{u.name}</p>
-                  <p className="text-xs text-slate-500">{u.email}</p>
+                  <p className="font-medium text-slate-900">
+                    <Tr>{u.name}</Tr>
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    <Tr>{u.email}</Tr>
+                  </p>
                 </TD>
                 <TD className="min-w-96">
                   <ul className="space-y-1.5">
@@ -100,7 +104,9 @@ export default async function UsersPage() {
                           <Badge tone={a.role === "ADMIN" ? "red" : "blue"}>
                             <Tr>{ROLE[a.role] ?? a.role}</Tr>
                           </Badge>
-                          <span className="text-sm text-slate-700">{a.scopeLabel}</span>
+                          <span className="text-sm text-slate-700">
+                            <Tr>{a.scopeLabel}</Tr>
+                          </span>
                           {a.validFrom || a.validTo ? (
                             <Badge tone={expired ? "gray" : future ? "amber" : "violet"}>
                               <T params={{ from: a.validFrom ? formatDate(a.validFrom) : "", to: a.validTo ? formatDate(a.validTo) : "" }}>

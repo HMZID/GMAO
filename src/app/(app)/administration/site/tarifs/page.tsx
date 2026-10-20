@@ -98,7 +98,7 @@ export default async function SitePlansPage() {
                 <div className="flex flex-wrap items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-900">
-                      {plan.name}
+                      <Tr>{plan.name}</Tr>
                       <span className="ms-2 text-sm font-normal text-slate-500">
                         <Tr>
                           {plan.priceMonthly === null ? plan.priceUnit || "Sur devis" : `${formatNumber(plan.priceMonthly)} ${plan.priceUnit ?? ""}`}

@@ -58,7 +58,10 @@ export default async function TenantPage(props: PageProps<"/administration/plate
               {companies.map((c) => (
                 <li key={c.id} className="rounded-md border border-slate-200 p-3">
                   <p className="font-medium text-slate-900">
-                    {c.name} <span className="font-mono text-xs text-slate-500">{c.code}</span>
+                    <Tr>{c.name}</Tr>{" "}
+                    <span className="font-mono text-xs text-slate-500">
+                      <Tr>{c.code}</Tr>
+                    </span>
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
                     <Tr>{c.sites.length > 0 ? c.sites.map((s) => s.name).join(" · ") : "Aucun site"}</Tr>
@@ -72,7 +75,10 @@ export default async function TenantPage(props: PageProps<"/administration/plate
 
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-900">
-          <T>Comptes</T> <span className="text-sm font-normal text-slate-500">({users.length})</span>
+          <T>Comptes</T>{" "}
+          <span className="text-sm font-normal text-slate-500">
+            (<Tr>{users.length}</Tr>)
+          </span>
         </h2>
         <Disclosure summary="Nouveau compte">
           <ActionForm action={createTenantUserAction.bind(null, tenant.id)} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
@@ -122,8 +128,12 @@ export default async function TenantPage(props: PageProps<"/administration/plate
               {users.map((u) => (
                 <TR key={u.id}>
                   <TD>
-                    <p className="font-medium text-slate-900">{u.name}</p>
-                    <p className="text-xs text-slate-500">{u.email}</p>
+                    <p className="font-medium text-slate-900">
+                      <Tr>{u.name}</Tr>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{u.email}</Tr>
+                    </p>
                   </TD>
                   <TD>
                     <ul className="space-y-1">
@@ -132,7 +142,7 @@ export default async function TenantPage(props: PageProps<"/administration/plate
                           <Badge tone={r.role === "ADMIN" ? "red" : "blue"}>
                             <Tr>{ROLE[r.role] ?? r.role}</Tr>
                           </Badge>
-                          {r.scope}
+                          <Tr>{r.scope}</Tr>
                         </li>
                       ))}
                     </ul>

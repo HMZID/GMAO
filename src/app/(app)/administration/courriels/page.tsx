@@ -83,7 +83,9 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                 {items.map((m) => (
                   <TR key={m.id}>
                     <TD>
-                      <p className="font-medium text-slate-900">{m.subject}</p>
+                      <p className="font-medium text-slate-900">
+                        <Tr>{m.subject}</Tr>
+                      </p>
                       <p className="text-xs text-slate-500">
                         <T
                           params={{
@@ -105,7 +107,9 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                         </p>
                       ) : null}
                     </TD>
-                    <TD>{m.toAddress}</TD>
+                    <TD>
+                      <Tr>{m.toAddress}</Tr>
+                    </TD>
                     <TD>
                       <Badge tone={EMAIL_STATUS[m.status]?.tone}>
                         <Tr>{EMAIL_STATUS[m.status]?.label}</Tr>
@@ -116,7 +120,9 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                         </p>
                       ) : null}
                     </TD>
-                    <TD className="tabular-nums">{m.attempts}</TD>
+                    <TD className="tabular-nums">
+                      <Tr>{m.attempts}</Tr>
+                    </TD>
                     <TD className="text-end">
                       {m.status === "FAILED" || m.status === "CANCELLED" ? (
                         <PanelForm>

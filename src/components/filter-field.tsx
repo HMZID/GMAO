@@ -19,7 +19,7 @@ export function FilterField({ label, htmlFor, children, className }: { label: st
           <label htmlFor={id} className="mb-1 block text-xs font-medium text-slate-500">
             <Tr>{label}</Tr>
           </label>
-          {control}
+          <Tr>{control}</Tr>
         </>
       ) : (
         // Champ qui ne peut pas recevoir d'identifiant : le libellé l'englobe pour garder l'association.
@@ -27,7 +27,7 @@ export function FilterField({ label, htmlFor, children, className }: { label: st
           <span className="mb-1 block text-xs font-medium text-slate-500">
             <Tr>{label}</Tr>
           </span>
-          {control}
+          <Tr>{control}</Tr>
         </label>
       )}
     </div>

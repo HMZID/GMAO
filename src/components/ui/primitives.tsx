@@ -63,7 +63,11 @@ export function CardHeader({
           </p>
         ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Tr>{actions}</Tr>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -83,18 +87,28 @@ export function CardBody({ className, ...props }: ComponentProps<"div">) {
 export function Table({ className, children, cards = true }: { className?: string; children: ReactNode; cards?: boolean }) {
   return (
     <div className={cn("overflow-x-auto", cards && "max-lg:overflow-visible", className)}>
-      <table className={cn("min-w-full divide-y divide-slate-200 text-sm", cards && "table-cards")}>{children}</table>
+      <table className={cn("min-w-full divide-y divide-slate-200 text-sm", cards && "table-cards")}>
+        <Tr>{children}</Tr>
+      </table>
       {cards ? <TableCardLabels /> : null}
     </div>
   );
 }
 
 export function THead({ children }: { children: ReactNode }) {
-  return <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">{children}</thead>;
+  return (
+    <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <Tr>{children}</Tr>
+    </thead>
+  );
 }
 
 export function TBody({ children }: { children: ReactNode }) {
-  return <tbody className="divide-y divide-slate-100 bg-white">{children}</tbody>;
+  return (
+    <tbody className="divide-y divide-slate-100 bg-white">
+      <Tr>{children}</Tr>
+    </tbody>
+  );
 }
 
 export function TH({ className, ...props }: ComponentProps<"th">) {
@@ -129,7 +143,11 @@ export function EmptyState({ title, description, action }: { title: string; desc
           <Tr>{description}</Tr>
         </p>
       ) : null}
-      {action ? <div className="mt-2">{action}</div> : null}
+      {action ? (
+        <div className="mt-2">
+          <Tr>{action}</Tr>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -182,7 +200,9 @@ export function StatTile({
       <p className="text-xs font-medium uppercase tracking-wide text-pretty text-slate-500">
         <Tr>{label}</Tr>
       </p>
-      <p className="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">{value}</p>
+      <p className="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
+        <Tr>{value}</Tr>
+      </p>
       {hint ? (
         <p className="mt-1 text-xs text-slate-500">
           <Tr>{hint}</Tr>
@@ -197,10 +217,12 @@ export function StatTile({
   );
   return href ? (
     <a href={href} className={className}>
-      {content}
+      <Tr>{content}</Tr>
     </a>
   ) : (
-    <div className={className}>{content}</div>
+    <div className={className}>
+      <Tr>{content}</Tr>
+    </div>
   );
 }
 

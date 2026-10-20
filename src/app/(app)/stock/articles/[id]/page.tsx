@@ -32,7 +32,11 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
         meta={
           <>
             <CriticalityBadge value={part.criticality} />
-            {part.family ? <Badge>{part.family}</Badge> : null}
+            {part.family ? (
+              <Badge>
+                <Tr>{part.family}</Tr>
+              </Badge>
+            ) : null}
             {part.isRepairable ? (
               <Badge tone="violet">
                 <T>Réparable</T>
@@ -90,8 +94,10 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                     return (
                       <TR key={l.id}>
                         <TD>
-                          {l.warehouseName}
-                          <p className="text-xs text-slate-500">{l.siteName}</p>
+                          <Tr>{l.warehouseName}</Tr>
+                          <p className="text-xs text-slate-500">
+                            <Tr>{l.siteName}</Tr>
+                          </p>
                         </TD>
                         <TD className="text-end tabular-nums">{formatNumber(l.onHand)}</TD>
                         <TD className="text-end tabular-nums text-slate-500">{formatNumber(l.reserved)}</TD>
@@ -189,12 +195,14 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                       <TD>
                         <Tr>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</Tr>
                       </TD>
-                      <TD>{m.warehouseName}</TD>
+                      <TD>
+                        <Tr>{m.warehouseName}</Tr>
+                      </TD>
                       <TD className="text-end tabular-nums">{signed(m.type, m.quantity)}</TD>
                       <TD className="text-xs text-slate-600">
                         {m.workOrderId ? (
                           <Link href={`/interventions/${m.workOrderId}`} className="text-brand-700 hover:underline">
-                            {m.workOrderNumber}
+                            <Tr>{m.workOrderNumber}</Tr>
                           </Link>
                         ) : (
                           [m.reference, m.reason].filter(Boolean).join(" — ")

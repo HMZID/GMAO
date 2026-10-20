@@ -32,7 +32,9 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
   const decided = new Map(a.decisions.map((d) => [d.stepPosition, d]));
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-slate-900">{a.label}</p>
+      <p className="text-sm font-medium text-slate-900">
+        <Tr>{a.label}</Tr>
+      </p>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Badge tone={APPROVAL_STATUS[a.status]?.tone}>
           <Tr>{APPROVAL_STATUS[a.status]?.label ?? a.status}</Tr>
@@ -56,7 +58,7 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
               />
               <div>
                 <p className="font-medium text-slate-800">
-                  {step.name}
+                  <Tr>{step.name}</Tr>
                   <span className="font-normal text-slate-500">
                     {" "}
                     · <Tr>{step.approverRole ? (ROLE[step.approverRole] ?? step.approverRole) : "valideur nommé"}</Tr>
@@ -78,7 +80,11 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
                           ? "Refusée par {by} (suppléant de {onBehalfOf}) le {date}"
                           : "Refusée par {by} le {date}"}
                     </T>
-                    {d.comment ? <span className="block italic text-slate-700">« {d.comment} »</span> : null}
+                    {d.comment ? (
+                      <span className="block italic text-slate-700">
+                        « <Tr>{d.comment}</Tr> »
+                      </span>
+                    ) : null}
                   </p>
                 ) : null}
               </div>

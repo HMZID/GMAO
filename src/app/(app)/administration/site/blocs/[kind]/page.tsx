@@ -13,7 +13,7 @@ import { isPlatformAdmin } from "@/server/services/platform";
 import { listSiteItems } from "@/server/services/site";
 import { createSiteItemAction, deleteSiteItemAction, moveSiteItemAction, updateSiteItemAction } from "../../actions";
 import { KIND_SLUGS, SiteAdminNav, kindFromSlug } from "../../site-admin-nav";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Blocs du site" };
@@ -97,15 +97,23 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                   ) : null}
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-900">
-                      {item.title}
-                      {item.meta ? <span className="ms-2 text-sm font-normal text-slate-500">{item.meta}</span> : null}
+                      <Tr>{item.title}</Tr>
+                      {item.meta ? (
+                        <span className="ms-2 text-sm font-normal text-slate-500">
+                          <Tr>{item.meta}</Tr>
+                        </span>
+                      ) : null}
                       {!item.published ? (
                         <Badge tone="gray" className="ms-2">
                           <T>Non publié</T>
                         </Badge>
                       ) : null}
                     </p>
-                    {item.body ? <p className="mt-1 line-clamp-2 text-sm text-slate-600">{item.body}</p> : null}
+                    {item.body ? (
+                      <p className="mt-1 line-clamp-2 text-sm text-slate-600">
+                        <Tr>{item.body}</Tr>
+                      </p>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-1">
                     <ActionForm action={moveSiteItemAction.bind(null, item.id, "up")} showMessage={false}>

@@ -14,7 +14,7 @@ import { defaultTrialDays, getDemoRequest } from "@/server/services/demo-request
 import { isPlatformAdmin } from "@/server/services/platform";
 import { deleteDemoRequestAction, demoRequestDecisionAction } from "../../actions";
 import { SiteAdminNav } from "../../site-admin-nav";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Demande de démonstration" };
@@ -53,11 +53,20 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
                   label: "Courriel (identifiant)",
                   value: (
                     <a href={`mailto:${r.email}`} className="text-brand-700 hover:underline">
-                      {r.email}
+                      <Tr>{r.email}</Tr>
                     </a>
                   ),
                 },
-                { label: "Téléphone", value: r.phone ? <a href={`tel:${r.phone.replace(/\s/g, "")}`}>{r.phone}</a> : "—" },
+                {
+                  label: "Téléphone",
+                  value: r.phone ? (
+                    <a href={`tel:${r.phone.replace(/\s/g, "")}`}>
+                      <Tr>{r.phone}</Tr>
+                    </a>
+                  ) : (
+                    "—"
+                  ),
+                },
                 { label: "Taille du parc", value: r.fleetSize ? FLEET[r.fleetSize] : "—" },
                 { label: "Secteur", value: r.sector ?? "—" },
                 { label: "Offre consultée", value: r.planInterest ?? "—" },
@@ -66,7 +75,7 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
             />
             {r.message ? (
               <blockquote className="mt-5 whitespace-pre-line rounded-md border-s-4 border-brand-500 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                {r.message}
+                <Tr>{r.message}</Tr>
               </blockquote>
             ) : null}
           </CardBody>
@@ -139,7 +148,7 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
                             label: "Organisation",
                             value: (
                               <Link href={`/administration/plateforme/${tenant.id}`} className="text-brand-700 hover:underline">
-                                {tenant.name}
+                                <Tr>{tenant.name}</Tr>
                               </Link>
                             ),
                           },

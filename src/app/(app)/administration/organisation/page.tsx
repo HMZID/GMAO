@@ -49,7 +49,10 @@ export default async function OrganisationPage() {
 
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-900">
-          <T>Sociétés</T> <span className="text-sm font-normal text-slate-500">({companies.length})</span>
+          <T>Sociétés</T>{" "}
+          <span className="text-sm font-normal text-slate-500">
+            (<Tr>{companies.length}</Tr>)
+          </span>
         </h2>
         <Disclosure summary="Nouvelle société">
           <ActionForm action={createCompanyAction} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
@@ -87,8 +90,10 @@ export default async function OrganisationPage() {
                   title={
                     <span className="flex flex-wrap items-center gap-2">
                       <Building2 className="h-5 w-5 text-brand-700" aria-hidden />
-                      {company.name}
-                      <span className="font-mono text-xs font-normal text-slate-500">{company.code}</span>
+                      <Tr>{company.name}</Tr>
+                      <span className="font-mono text-xs font-normal text-slate-500">
+                        <Tr>{company.code}</Tr>
+                      </span>
                     </span>
                   }
                   description={tpl`${companySites.length} site(s) · ${companyJobsites.length} chantier(s) · ${company.country} · ${company.currency}`}
@@ -107,8 +112,10 @@ export default async function OrganisationPage() {
                         <section key={site.id} aria-label={tpl`Site ${site.name}`} className="rounded-lg border border-slate-200 p-4">
                           <h3 className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
                             <MapPin className="h-4 w-4 text-slate-500" aria-hidden />
-                            {site.name}
-                            <span className="font-mono text-xs font-normal text-slate-500">{site.code}</span>
+                            <Tr>{site.name}</Tr>
+                            <span className="font-mono text-xs font-normal text-slate-500">
+                              <Tr>{site.code}</Tr>
+                            </span>
                             {!site.active ? (
                               <Badge>
                                 <T>Inactif</T>
@@ -129,7 +136,7 @@ export default async function OrganisationPage() {
                                   {siteWorkshops.map((w) => (
                                     <li key={w.id} className="flex flex-wrap items-center gap-2">
                                       <Wrench className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-                                      {w.name}
+                                      <Tr>{w.name}</Tr>
                                       <span className="text-xs text-slate-500">
                                         <T params={{ code: w.code, bays: w.bays }}>{"{code} · {bays} poste(s)"}</T>
                                       </span>
@@ -151,8 +158,10 @@ export default async function OrganisationPage() {
                                   {siteWarehouses.map((w) => (
                                     <li key={w.id} className="flex flex-wrap items-center gap-2">
                                       <Warehouse className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-                                      {w.name}
-                                      <span className="text-xs text-slate-500">{w.code}</span>
+                                      <Tr>{w.name}</Tr>
+                                      <span className="text-xs text-slate-500">
+                                        <Tr>{w.code}</Tr>
+                                      </span>
                                       {w.isMobile ? (
                                         <Badge tone="violet">
                                           <T>Mobile</T>
@@ -212,9 +221,9 @@ export default async function OrganisationPage() {
                         {companyJobsites.map((j) => (
                           <li key={j.id} className="flex flex-wrap items-center gap-2">
                             <HardHat className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-                            {j.name}
+                            <Tr>{j.name}</Tr>
                             <span className="text-xs text-slate-500">
-                              {j.code} · {formatDate(j.startDate)} → {j.endDate ? formatDate(j.endDate) : "en cours"}
+                              <Tr>{j.code}</Tr> · {formatDate(j.startDate)} → {j.endDate ? formatDate(j.endDate) : "en cours"}
                             </span>
                             {!j.active ? (
                               <Badge>

@@ -59,17 +59,21 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
         back={{ href: "/equipements", label: "Équipements" }}
         title={
           <span className="flex flex-wrap items-center gap-3">
-            {e.code}
-            <span className="text-lg font-normal text-slate-500">{e.name}</span>
+            <Tr>{e.code}</Tr>
+            <span className="text-lg font-normal text-slate-500">
+              <Tr>{e.name}</Tr>
+            </span>
           </span>
         }
         meta={
           <>
             <EquipmentStatusBadge status={e.status} />
             <CriticalityBadge value={e.criticality} />
-            <Badge>{e.category.name}</Badge>
+            <Badge>
+              <Tr>{e.category.name}</Tr>
+            </Badge>
             <span className="text-sm text-slate-500">
-              {e.site.name} · {e.company.name}
+              <Tr>{e.site.name}</Tr> · <Tr>{e.company.name}</Tr>
             </span>
           </>
         }
@@ -178,8 +182,16 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
                       </span>
                       <span className="text-xs text-slate-500">{formatDateTime(h.changedAt)}</span>
                     </div>
-                    {h.reason ? <p className="mt-1 text-xs text-slate-600">{h.reason}</p> : null}
-                    {h.changedBy ? <p className="text-xs text-slate-400">{h.changedBy.name}</p> : null}
+                    {h.reason ? (
+                      <p className="mt-1 text-xs text-slate-600">
+                        <Tr>{h.reason}</Tr>
+                      </p>
+                    ) : null}
+                    {h.changedBy ? (
+                      <p className="text-xs text-slate-400">
+                        <Tr>{h.changedBy.name}</Tr>
+                      </p>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -244,7 +256,7 @@ function MetersCard({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-slate-900">
-                    {m.label}{" "}
+                    <Tr>{m.label}</Tr>{" "}
                     {m.isPrimary ? (
                       <Badge tone="teal">
                         <T>Principal</T>
@@ -388,7 +400,11 @@ function ReadingsTable({ readings, unit, canReview }: { readings: Awaited<Return
                   {r.statusReasons.join(" ")}
                 </p>
               ) : null}
-              {r.comment ? <p className="text-xs text-slate-500">{r.comment}</p> : null}
+              {r.comment ? (
+                <p className="text-xs text-slate-500">
+                  <Tr>{r.comment}</Tr>
+                </p>
+              ) : null}
               {r.status === "TO_CHECK" && canReview ? (
                 <ActionForm action={reviewReadingAction.bind(null, r.id)} className="mt-2 flex flex-wrap items-center gap-2" showMessage>
                   <Input name="comment" placeholder="Commentaire" className="h-8 w-40" aria-label="Commentaire de vérification" />
@@ -452,9 +468,11 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
             {e.dueItems.map((d) => (
               <TR key={d.id}>
                 <TD>
-                  <p className="text-slate-900">{d.operationName}</p>
+                  <p className="text-slate-900">
+                    <Tr>{d.operationName}</Tr>
+                  </p>
                   <p className="text-xs text-slate-500">
-                    {d.operationCode}
+                    <Tr>{d.operationCode}</Tr>
                     <Tr>{d.isRegulatory ? " · réglementaire" : ""}</Tr>
                   </p>
                 </TD>
@@ -537,9 +555,9 @@ function InterventionsCard({ e }: { e: Equipment }) {
             <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5">
               <span>
                 <Link href={`/demandes/${r.id}`} className="font-medium text-brand-700 hover:underline">
-                  {r.number}
+                  <Tr>{r.number}</Tr>
                 </Link>{" "}
-                {r.symptom}
+                <Tr>{r.symptom}</Tr>
               </span>
               <span className="flex items-center gap-2 text-xs text-slate-500">
                 {formatDateTime(r.reportedAt)} <RequestStatusBadge status={r.status} />
@@ -576,9 +594,11 @@ function InterventionsCard({ e }: { e: Equipment }) {
               <TR key={w.id}>
                 <TD>
                   <Link href={`/interventions/${w.id}`} className="font-medium text-brand-700 hover:underline">
-                    {w.number}
+                    <Tr>{w.number}</Tr>
                   </Link>
-                  <p className="max-w-72 truncate text-xs text-slate-500">{w.title}</p>
+                  <p className="max-w-72 truncate text-xs text-slate-500">
+                    <Tr>{w.title}</Tr>
+                  </p>
                 </TD>
                 <TD>
                   <Tr>{WORK_ORDER_TYPE[w.type] ?? w.type}</Tr>

@@ -13,9 +13,10 @@ export function TitleTranslator() {
 
   useEffect(() => {
     if (locale === "fr") return;
-    const title = document.querySelector("title");
-    if (!title) return;
     const apply = () => {
+      // Next remplace parfois l'élément <title> lors d'une navigation : on le relit à chaque changement.
+      const title = document.querySelector("title");
+      if (!title) return;
       const text = title.textContent ?? "";
       const [page, ...rest] = text.split(" · ");
       const translated = t(page.trim());
@@ -25,7 +26,7 @@ export function TitleTranslator() {
     };
     apply();
     const observer = new MutationObserver(apply);
-    observer.observe(title, { childList: true, characterData: true, subtree: true });
+    observer.observe(document.head, { childList: true, characterData: true, subtree: true });
     return () => observer.disconnect();
     // `t` est recréée à chaque rendu : la langue suffit comme dépendance.
     // eslint-disable-next-line react-hooks/exhaustive-deps

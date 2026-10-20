@@ -72,7 +72,7 @@ export default async function SitePagesPage() {
                 <TR key={p.id}>
                   <TD>
                     <Link href={`/administration/site/pages/${p.id}`} className="font-medium text-brand-700 hover:underline">
-                      {p.title}
+                      <Tr>{p.title}</Tr>
                     </Link>
                   </TD>
                   <TD className="font-mono text-xs">

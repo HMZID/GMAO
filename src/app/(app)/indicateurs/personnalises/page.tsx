@@ -9,7 +9,7 @@ import { INDICATOR_DEFINITIONS, INDICATOR_SOURCES } from "@/server/domain/indica
 import { listIndicators, type IndicatorResult } from "@/server/services/indicators";
 import { deleteIndicatorAction } from "../actions";
 import { IndicatorForm, type SourceOption } from "./indicator-form";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Indicateurs personnalisés" };
 
@@ -105,7 +105,9 @@ function IndicatorView({ chart, result }: { chart: string; result: IndicatorResu
         <tbody className="divide-y divide-slate-100">
           {result.groups.map((g) => (
             <tr key={g.key ?? "vide"}>
-              <td className="py-1.5 pe-3 text-slate-700">{g.label}</td>
+              <td className="py-1.5 pe-3 text-slate-700">
+                <Tr>{g.label}</Tr>
+              </td>
               <td className="py-1.5 text-end font-medium tabular-nums">{value(g.value)}</td>
             </tr>
           ))}
@@ -127,7 +129,7 @@ function IndicatorView({ chart, result }: { chart: string; result: IndicatorResu
       {result.groups.map((g) => (
         <li key={g.key ?? "vide"} className="grid grid-cols-[minmax(0,10rem)_1fr_auto] items-center gap-3 text-sm">
           <span className="truncate text-slate-700" title={g.label}>
-            {g.label}
+            <Tr>{g.label}</Tr>
           </span>
           <span className="h-3 rounded-sm bg-slate-100" aria-hidden>
             <span

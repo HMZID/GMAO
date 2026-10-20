@@ -9,7 +9,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { getMyEmailPreferences, linkOf } from "@/server/services/email";
 import { listMyNotifications } from "@/server/services/notifications";
 import { markAllReadAction, updateEmailPreferencesAction } from "./actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Notifications" };
 
@@ -52,13 +52,17 @@ export default async function NotificationsPage() {
                       ) : null}
                       {href ? (
                         <Link href={href} className="hover:underline">
-                          {n.title}
+                          <Tr>{n.title}</Tr>
                         </Link>
                       ) : (
                         n.title
                       )}
                     </p>
-                    {n.body ? <p className="mt-0.5 text-sm text-slate-500">{n.body}</p> : null}
+                    {n.body ? (
+                      <p className="mt-0.5 text-sm text-slate-500">
+                        <Tr>{n.body}</Tr>
+                      </p>
+                    ) : null}
                   </div>
                   <span className="whitespace-nowrap text-xs text-slate-500">{formatDateTime(n.createdAt)}</span>
                 </li>
@@ -84,7 +88,9 @@ export default async function NotificationsPage() {
                   ) : (
                     <Checkbox name="enabled[]" value={p.event} label={p.label} defaultChecked={p.enabled} />
                   )}
-                  <p className="mt-1 ps-6 text-xs text-slate-500">{p.description}</p>
+                  <p className="mt-1 ps-6 text-xs text-slate-500">
+                    <Tr>{p.description}</Tr>
+                  </p>
                 </li>
               ))}
             </ul>

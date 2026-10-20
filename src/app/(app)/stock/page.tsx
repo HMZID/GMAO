@@ -11,7 +11,7 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listPartFamilies, listParts, partFilters } from "@/server/services/stock";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Pièces et stocks" };
 
@@ -108,11 +108,11 @@ export default async function PartsPage(props: PageProps<"/stock">) {
                   <TR key={p.id}>
                     <TD className="whitespace-nowrap">
                       <Link href={`/stock/articles/${p.id}`} className="font-medium text-brand-700 hover:underline">
-                        {p.sku}
+                        <Tr>{p.sku}</Tr>
                       </Link>
                     </TD>
                     <TD>
-                      {p.name}
+                      <Tr>{p.name}</Tr>
                       <p className="text-xs text-slate-500">{[p.manufacturer, p.manufacturerRef].filter(Boolean).join(" · ")}</p>
                     </TD>
                     <TD>{p.family ?? "—"}</TD>

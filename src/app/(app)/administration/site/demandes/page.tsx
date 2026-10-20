@@ -79,13 +79,21 @@ export default async function DemoRequestsPage(props: PageProps<"/administration
                 <TR key={r.id}>
                   <TD>
                     <Link href={`/administration/site/demandes/${r.id}`} className="font-medium text-brand-700 hover:underline">
-                      {r.company}
+                      <Tr>{r.company}</Tr>
                     </Link>
-                    {r.sector ? <p className="text-xs text-slate-500">{r.sector}</p> : null}
+                    {r.sector ? (
+                      <p className="text-xs text-slate-500">
+                        <Tr>{r.sector}</Tr>
+                      </p>
+                    ) : null}
                   </TD>
                   <TD>
-                    <p>{r.contactName}</p>
-                    <p className="text-xs text-slate-500">{r.email}</p>
+                    <p>
+                      <Tr>{r.contactName}</Tr>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{r.email}</Tr>
+                    </p>
                     {r.existingAccount && r.status === "PENDING" ? (
                       <Badge tone="red" className="mt-1">
                         <T>Compte existant</T>

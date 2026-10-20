@@ -132,17 +132,25 @@ export default async function TechniciansPage() {
             {technicians.map((t) => (
               <TR key={t.id}>
                 <TD className="font-medium text-slate-900">
-                  {t.firstName} {t.lastName}
+                  <Tr>{t.firstName}</Tr> <Tr>{t.lastName}</Tr>
                   {!t.active ? (
                     <Badge className="ms-2">
                       <T>Inactif</T>
                     </Badge>
                   ) : null}
-                  {t.employeeNumber ? <p className="font-mono text-xs font-normal text-slate-500">{t.employeeNumber}</p> : null}
+                  {t.employeeNumber ? (
+                    <p className="font-mono text-xs font-normal text-slate-500">
+                      <Tr>{t.employeeNumber}</Tr>
+                    </p>
+                  ) : null}
                 </TD>
-                <TD>{t.site.name}</TD>
+                <TD>
+                  <Tr>{t.site.name}</Tr>
+                </TD>
                 <TD>{t.qualification ?? "—"}</TD>
-                <TD className="text-end tabular-nums">{t.dailyHours}</TD>
+                <TD className="text-end tabular-nums">
+                  <Tr>{t.dailyHours}</Tr>
+                </TD>
                 <TD className="text-end tabular-nums">{t.laborRates[0] ? formatCurrency(t.laborRates[0].hourlyRate) : "—"}</TD>
                 <TD>
                   <ul className="space-y-1">
@@ -151,7 +159,7 @@ export default async function TechniciansPage() {
                       const expiring = c.validUntil && !expired && c.validUntil < soon;
                       return (
                         <li key={c.id} className="text-xs">
-                          {c.name}{" "}
+                          <Tr>{c.name}</Tr>{" "}
                           {c.validUntil ? (
                             <Badge tone={expired ? "red" : expiring ? "amber" : "gray"}>
                               <Tr>{expired ? "expirée le" : "jusqu'au"}</Tr> {formatDate(c.validUntil)}

@@ -10,7 +10,7 @@ import { countDeadlineAlerts } from "@/server/services/fleet-deadlines";
 import { getDashboard } from "@/server/services/kpi";
 import { listDueItems } from "@/server/services/preventive";
 import { listWorkOrders } from "@/server/services/work-orders";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Tableau de bord" };
@@ -146,11 +146,15 @@ export default async function DashboardPage() {
                     <TR key={w.id}>
                       <TD>
                         <Link href={`/interventions/${w.id}`} className="font-medium text-brand-700 hover:underline">
-                          {w.number}
+                          <Tr>{w.number}</Tr>
                         </Link>
-                        <p className="max-w-56 truncate text-xs text-slate-500">{w.title}</p>
+                        <p className="max-w-56 truncate text-xs text-slate-500">
+                          <Tr>{w.title}</Tr>
+                        </p>
                       </TD>
-                      <TD>{w.equipmentCode}</TD>
+                      <TD>
+                        <Tr>{w.equipmentCode}</Tr>
+                      </TD>
                       <TD>
                         <PriorityBadge value={w.priority} short />
                       </TD>
@@ -201,10 +205,12 @@ export default async function DashboardPage() {
                     <TR key={d.id}>
                       <TD>
                         <Link href={`/equipements/${d.equipmentId}`} className="font-medium text-brand-700 hover:underline">
-                          {d.equipmentCode}
+                          <Tr>{d.equipmentCode}</Tr>
                         </Link>
                       </TD>
-                      <TD>{d.operationName}</TD>
+                      <TD>
+                        <Tr>{d.operationName}</Tr>
+                      </TD>
                       <TD className="whitespace-nowrap">
                         {d.dueMeterValue !== null ? `${formatNumber(d.dueMeterValue, d.meterUnit ?? "")}` : null}
                         {d.dueMeterValue !== null && d.dueDate ? " ou " : null}

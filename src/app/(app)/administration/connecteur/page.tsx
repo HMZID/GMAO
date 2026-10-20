@@ -109,8 +109,12 @@ export default async function ConnectorPage() {
               {keys.map((k) => (
                 <TR key={k.id}>
                   <TD>
-                    <p className="font-medium text-slate-900">{k.name}</p>
-                    <p className="font-mono text-xs text-slate-500">{k.prefix}…</p>
+                    <p className="font-medium text-slate-900">
+                      <Tr>{k.name}</Tr>
+                    </p>
+                    <p className="font-mono text-xs text-slate-500">
+                      <Tr>{k.prefix}</Tr>…
+                    </p>
                   </TD>
                   <TD>
                     <Tr>{API_KEY_ACCESS_LABEL[k.access as ApiKeyAccess] ?? k.access}</Tr>
@@ -212,8 +216,10 @@ export default async function ConnectorPage() {
 function Step({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <p className="mb-1 font-medium text-slate-900">{title}</p>
-      {children}
+      <p className="mb-1 font-medium text-slate-900">
+        <Tr>{title}</Tr>
+      </p>
+      <Tr>{children}</Tr>
     </div>
   );
 }

@@ -77,10 +77,10 @@ export function DeadlinesTable({
                   {showEquipment ? (
                     <TD>
                       <Link href={`/equipements/${d.equipmentId}`} className="font-medium text-brand-700 hover:underline">
-                        {d.equipmentCode}
+                        <Tr>{d.equipmentCode}</Tr>
                       </Link>
                       <p className="text-xs text-slate-500">
-                        {d.equipmentName} · {d.siteName}
+                        <Tr>{d.equipmentName}</Tr> · <Tr>{d.siteName}</Tr>
                       </p>
                     </TD>
                   ) : null}
@@ -88,7 +88,11 @@ export function DeadlinesTable({
                     <Badge tone={DEADLINE_KIND[d.kind]?.tone}>
                       <Tr>{DEADLINE_KIND[d.kind]?.label ?? d.kind}</Tr>
                     </Badge>
-                    {d.label ? <p className="mt-1 text-sm text-slate-900">{d.label}</p> : null}
+                    {d.label ? (
+                      <p className="mt-1 text-sm text-slate-900">
+                        <Tr>{d.label}</Tr>
+                      </p>
+                    ) : null}
                     {d.reference ? (
                       <p className="text-xs text-slate-500">
                         <T params={{ reference: d.reference }}>{"Réf. {reference}"}</T>

@@ -7,7 +7,7 @@ import { Card, CardBody, CardHeader, Table, TBody, TD, TH, THead, TR } from "@/c
 import { getAuthContext } from "@/server/auth/session";
 import { listCategories, listModels } from "@/server/services/equipment";
 import { createCategoryAction, createModelAction } from "../actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Référentiel équipements" };
 
@@ -49,15 +49,21 @@ export default async function ReferentialPage() {
             <TBody>
               {categories.map((c) => (
                 <TR key={c.id}>
-                  <TD className="font-mono text-xs">{c.code}</TD>
-                  <TD>{c.name}</TD>
+                  <TD className="font-mono text-xs">
+                    <Tr>{c.code}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{c.name}</Tr>
+                  </TD>
                   <TD>
                     <CriticalityBadge value={c.defaultCriticality} />
                   </TD>
                   <TD className="text-xs text-slate-600">
                     {c.attributeDefinitions?.map((a) => `${a.label}${a.unit ? ` (${a.unit})` : ""}`).join(", ") || "—"}
                   </TD>
-                  <TD className="text-end tabular-nums">{c.equipmentCount}</TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{c.equipmentCount}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>
@@ -98,9 +104,15 @@ export default async function ReferentialPage() {
             <TBody>
               {models.map((m) => (
                 <TR key={m.id}>
-                  <TD>{m.manufacturer}</TD>
-                  <TD>{m.name}</TD>
-                  <TD>{m.categoryName}</TD>
+                  <TD>
+                    <Tr>{m.manufacturer}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{m.name}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{m.categoryName}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>

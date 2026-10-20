@@ -50,15 +50,21 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
               <img src={logo} alt="" className="h-14 w-14 object-contain" />
             ) : null}
             <div>
-              <p className="text-base font-semibold">{branding.label}</p>
-              <p className="text-slate-600">{wo.site.name}</p>
+              <p className="text-base font-semibold">
+                <Tr>{branding.label}</Tr>
+              </p>
+              <p className="text-slate-600">
+                <Tr>{wo.site.name}</Tr>
+              </p>
             </div>
           </div>
           <div className="text-end">
             <h1 className="text-lg font-bold uppercase tracking-wide">
               <T>Fiche d&apos;intervention</T>
             </h1>
-            <p className="font-mono text-base font-semibold">{wo.number}</p>
+            <p className="font-mono text-base font-semibold">
+              <Tr>{wo.number}</Tr>
+            </p>
             <p className="text-slate-600">
               <T params={{ date: formatDateTime(printedAt) }}>{"Éditée le {date}"}</T>
             </p>
@@ -68,7 +74,7 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
         <Section title="Intervention">
           <Grid>
             <Item label="Intitulé" wide>
-              {wo.title}
+              <Tr>{wo.title}</Tr>
             </Item>
             <Item label="Type">
               <Tr>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Tr>
@@ -87,7 +93,11 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
               <Tr>{wo.isExternal ? (wo.supplier?.name ?? "À désigner") : "Interne"}</Tr>
             </Item>
           </Grid>
-          {wo.description ? <p className="mt-2 whitespace-pre-line">{wo.description}</p> : null}
+          {wo.description ? (
+            <p className="mt-2 whitespace-pre-line">
+              <Tr>{wo.description}</Tr>
+            </p>
+          ) : null}
           {wo.requests.length > 0 ? (
             <p className="mt-2 text-slate-600">
               <T params={{ v: wo.requests.map((r) => `${r.number} — ${r.symptom}`).join(" ; ") }}>{"Demande(s) d'origine : {v}"}</T>
@@ -97,11 +107,15 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
 
         <Section title="Équipement">
           <Grid>
-            <Item label="Code parc">{wo.equipment.code}</Item>
-            <Item label="Désignation" wide>
-              {wo.equipment.name}
+            <Item label="Code parc">
+              <Tr>{wo.equipment.code}</Tr>
             </Item>
-            <Item label="Marque">{wo.equipment.manufacturer}</Item>
+            <Item label="Désignation" wide>
+              <Tr>{wo.equipment.name}</Tr>
+            </Item>
+            <Item label="Marque">
+              <Tr>{wo.equipment.manufacturer}</Tr>
+            </Item>
             <Item label="Compteur à la clôture">{wo.meterValueAtClose != null ? `${formatNumber(wo.meterValueAtClose)} ${meterUnit}` : "—"}</Item>
           </Grid>
         </Section>
@@ -217,21 +231,31 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-4 break-inside-avoid">
-      <h2 className="mb-2 border-b border-slate-300 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">{title}</h2>
-      {children}
+      <h2 className="mb-2 border-b border-slate-300 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+        <Tr>{title}</Tr>
+      </h2>
+      <Tr>{children}</Tr>
     </section>
   );
 }
 
 function Grid({ children }: { children: ReactNode }) {
-  return <dl className="grid grid-cols-4 gap-x-4 gap-y-1.5">{children}</dl>;
+  return (
+    <dl className="grid grid-cols-4 gap-x-4 gap-y-1.5">
+      <Tr>{children}</Tr>
+    </dl>
+  );
 }
 
 function Item({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
   return (
     <div className={wide ? "col-span-2" : undefined}>
-      <dt className="text-[10px] uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="font-medium">{children}</dd>
+      <dt className="text-[10px] uppercase tracking-wide text-slate-500">
+        <Tr>{label}</Tr>
+      </dt>
+      <dd className="font-medium">
+        <Tr>{children}</Tr>
+      </dd>
     </div>
   );
 }
@@ -245,7 +269,7 @@ function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNo
         <tr className="border-b border-slate-400">
           {head.map((h, i) => (
             <th key={h} className={`px-1 py-1 font-semibold ${cls(i)}`}>
-              {h}
+              <Tr>{h}</Tr>
             </th>
           ))}
         </tr>
@@ -255,7 +279,7 @@ function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNo
           <tr key={r} className="border-b border-slate-200 align-top">
             {row.map((cell, i) => (
               <td key={i} className={`px-1 py-1 ${cls(i)}`}>
-                {cell}
+                <Tr>{cell}</Tr>
               </td>
             ))}
           </tr>
@@ -266,7 +290,7 @@ function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNo
           <tr className="font-semibold">
             {foot.map((cell, i) => (
               <td key={i} className={`px-1 py-1 ${cls(i)}`}>
-                {cell}
+                <Tr>{cell}</Tr>
               </td>
             ))}
           </tr>
@@ -279,7 +303,9 @@ function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNo
 function SignatureBox({ title, name }: { title: string; name?: string | null }) {
   return (
     <div className="flex h-[38mm] flex-col rounded border border-slate-400 p-2">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">{title}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
+        <Tr>{title}</Tr>
+      </p>
       <p className="mt-1 text-[11px]">
         <T params={{ v: name || "………………………………" }}>{"Nom : {v}"}</T>
       </p>

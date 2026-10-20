@@ -11,7 +11,7 @@ import { cleanFilters, queryParams } from "@/server/pages";
 import { getEquipmentFormOptions } from "@/server/services/equipment";
 import { getIndicators, indicatorFilters } from "@/server/services/kpi";
 import { listSites } from "@/server/services/organization";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Indicateurs" };
@@ -152,8 +152,12 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                 <TBody>
                   {k.byCategory.map((c) => (
                     <TR key={c.categoryId}>
-                      <TD>{c.categoryName}</TD>
-                      <TD className="text-end tabular-nums">{c.count}</TD>
+                      <TD>
+                        <Tr>{c.categoryName}</Tr>
+                      </TD>
+                      <TD className="text-end tabular-nums">
+                        <Tr>{c.count}</Tr>
+                      </TD>
                       <TD className="whitespace-nowrap text-end tabular-nums">{formatPercent(c.availability)}</TD>
                       <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(c.downtime, "h")}</TD>
                       <TD>
@@ -192,9 +196,11 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                       <TR key={e.id}>
                         <TD>
                           <Link href={`/equipements/${e.id}`} className="font-medium text-brand-700 hover:underline">
-                            {e.code}
+                            <Tr>{e.code}</Tr>
                           </Link>
-                          <p className="text-xs text-slate-500">{e.categoryName}</p>
+                          <p className="text-xs text-slate-500">
+                            <Tr>{e.categoryName}</Tr>
+                          </p>
                         </TD>
                         <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(e.downtime, "h")}</TD>
                         <TD>
@@ -235,9 +241,11 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                     <TR key={p.partId}>
                       <TD>
                         <Link href={`/stock/articles/${p.partId}`} className="text-brand-700 hover:underline">
-                          {p.sku}
+                          <Tr>{p.sku}</Tr>
                         </Link>{" "}
-                        <span className="text-slate-600">{p.name}</span>
+                        <span className="text-slate-600">
+                          <Tr>{p.name}</Tr>
+                        </span>
                       </TD>
                       <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(p.quantity, p.unit)}</TD>
                       <TD>

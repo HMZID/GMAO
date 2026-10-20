@@ -63,17 +63,17 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
               {r.otherOpenRequests.map((o) => (
                 <li key={o.id}>
                   <Link href={`/demandes/${o.id}`} className="underline">
-                    {o.number}
+                    <Tr>{o.number}</Tr>
                   </Link>{" "}
-                  — {o.symptom} ({formatDateTime(o.reportedAt)})
+                  — <Tr>{o.symptom}</Tr> ({formatDateTime(o.reportedAt)})
                 </li>
               ))}
               {r.openOrders.map((o) => (
                 <li key={o.id}>
                   <Link href={`/interventions/${o.id}`} className="underline">
-                    {o.number}
+                    <Tr>{o.number}</Tr>
                   </Link>{" "}
-                  — {o.title}
+                  — <Tr>{o.title}</Tr>
                 </li>
               ))}
             </ul>
@@ -81,7 +81,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
         ) : null}
         {r.status === "REJECTED" ? (
           <Alert tone="amber" title="Demande rejetée">
-            {r.rejectionReason}
+            <Tr>{r.rejectionReason}</Tr>
           </Alert>
         ) : null}
         {r.workOrder ? (
@@ -90,7 +90,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
             title={r.status === "MERGED" ? "Rattachée à une intervention à réaliser existante" : "Transformée en intervention à réaliser"}
           >
             <Link href={`/interventions/${r.workOrder.id}`} className="font-medium underline">
-              {r.workOrder.number}
+              <Tr>{r.workOrder.number}</Tr>
             </Link>{" "}
             <WorkOrderStatusBadge status={r.workOrder.status} />
           </Alert>
@@ -108,9 +108,9 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
                   value: (
                     <span className="flex flex-wrap items-center gap-2">
                       <Link href={`/equipements/${r.equipment.id}`} className="font-medium text-brand-700 hover:underline">
-                        {r.equipment.code}
+                        <Tr>{r.equipment.code}</Tr>
                       </Link>
-                      {r.equipment.name}
+                      <Tr>{r.equipment.name}</Tr>
                       <EquipmentStatusBadge status={r.equipment.status} />
                       <CriticalityBadge value={r.equipment.criticality} />
                     </span>

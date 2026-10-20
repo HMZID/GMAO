@@ -111,15 +111,19 @@ export default async function WorkOrdersPage(props: PageProps<"/interventions">)
                 <TR key={w.id}>
                   <TD>
                     <Link href={`/interventions/${w.id}`} className="font-medium whitespace-nowrap text-brand-700 hover:underline">
-                      {w.number}
+                      <Tr>{w.number}</Tr>
                     </Link>
-                    <p className="max-w-72 truncate text-xs text-slate-500">{w.title}</p>
+                    <p className="max-w-72 truncate text-xs text-slate-500">
+                      <Tr>{w.title}</Tr>
+                    </p>
                   </TD>
                   <TD>
                     <Link href={`/equipements/${w.equipmentId}`} className="hover:underline">
-                      {w.equipmentCode}
+                      <Tr>{w.equipmentCode}</Tr>
                     </Link>
-                    <p className="text-xs text-slate-500">{w.siteName}</p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{w.siteName}</Tr>
+                    </p>
                   </TD>
                   <TD>
                     <Tr>{WORK_ORDER_TYPE[w.type] ?? w.type}</Tr>

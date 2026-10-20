@@ -158,9 +158,11 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                       <tr key={row.id} className="align-top">
                         <td className="sticky start-0 z-10 bg-white px-4 py-3">
                           <p className="font-medium text-slate-900">
-                            {row.firstName} {row.lastName}
+                            <Tr>{row.firstName}</Tr> <Tr>{row.lastName}</Tr>
                           </p>
-                          <p className="text-xs text-slate-500">{row.siteName}</p>
+                          <p className="text-xs text-slate-500">
+                            <Tr>{row.siteName}</Tr>
+                          </p>
                         </td>
                         {plan.days.map((d) => {
                           const key = iso(d);
@@ -190,9 +192,11 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                                     )}
                                   >
                                     <span className="font-medium">
-                                      {o.plannedStart ? timeFmt.format(o.plannedStart) : ""} {o.equipmentCode}
+                                      {o.plannedStart ? timeFmt.format(o.plannedStart) : ""} <Tr>{o.equipmentCode}</Tr>
                                     </span>
-                                    <span className="block truncate text-slate-600">{o.title}</span>
+                                    <span className="block truncate text-slate-600">
+                                      <Tr>{o.title}</Tr>
+                                    </span>
                                     <span className="text-slate-500">{formatMinutes(o.estimatedMinutes ?? 120)}</span>
                                   </Link>
                                 ))}
@@ -262,11 +266,15 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                 <TR key={b.id}>
                   <TD>
                     <Link href={`/interventions/${b.id}`} className="font-medium text-brand-700 hover:underline">
-                      {b.number}
+                      <Tr>{b.number}</Tr>
                     </Link>
-                    <p className="max-w-80 truncate text-xs text-slate-500">{b.title}</p>
+                    <p className="max-w-80 truncate text-xs text-slate-500">
+                      <Tr>{b.title}</Tr>
+                    </p>
                   </TD>
-                  <TD>{b.equipmentCode}</TD>
+                  <TD>
+                    <Tr>{b.equipmentCode}</Tr>
+                  </TD>
                   <TD>
                     <PriorityBadge value={b.priority} />
                   </TD>

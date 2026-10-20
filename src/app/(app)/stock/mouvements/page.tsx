@@ -114,17 +114,21 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
                   </TD>
                   <TD>
                     <Link href={`/stock/articles/${m.partId}`} className="text-brand-700 hover:underline">
-                      {m.sku}
+                      <Tr>{m.sku}</Tr>
                     </Link>
-                    <p className="text-xs text-slate-500">{m.partName}</p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{m.partName}</Tr>
+                    </p>
                   </TD>
-                  <TD>{m.warehouseName}</TD>
+                  <TD>
+                    <Tr>{m.warehouseName}</Tr>
+                  </TD>
                   <TD className="text-end tabular-nums">{formatNumber(m.quantity, m.unit)}</TD>
                   <TD className="text-end tabular-nums">{formatCurrency(m.unitCost)}</TD>
                   <TD className="text-xs text-slate-600">
                     {m.workOrderId ? (
                       <Link href={`/interventions/${m.workOrderId}`} className="text-brand-700 hover:underline">
-                        {m.workOrderNumber}
+                        <Tr>{m.workOrderNumber}</Tr>
                       </Link>
                     ) : (
                       [m.reference, m.reason].filter(Boolean).join(" — ")

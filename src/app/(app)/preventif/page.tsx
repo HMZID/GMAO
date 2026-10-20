@@ -7,7 +7,7 @@ import { Badge, Card, CardHeader, EmptyState, StatTile, Table, TBody, TD, TH, TH
 import { getAuthContext } from "@/server/auth/session";
 import { countDueItemsByStatus, listPlans } from "@/server/services/preventive";
 import { generateAction } from "./actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Préventif" };
 
@@ -88,19 +88,29 @@ export default async function PreventivePage() {
                 <TR key={p.id}>
                   <TD>
                     <Link href={`/preventif/plans/${p.id}`} className="font-medium text-brand-700 hover:underline">
-                      {p.name}
+                      <Tr>{p.name}</Tr>
                     </Link>
                     {!p.active ? (
                       <Badge className="ms-2">
                         <T>Inactif</T>
                       </Badge>
                     ) : null}
-                    {p.description ? <p className="max-w-xl text-xs text-slate-500">{p.description}</p> : null}
+                    {p.description ? (
+                      <p className="max-w-xl text-xs text-slate-500">
+                        <Tr>{p.description}</Tr>
+                      </p>
+                    ) : null}
                   </TD>
                   <TD>{[p.categoryName, p.modelName].filter(Boolean).join(" · ") || "—"}</TD>
-                  <TD className="text-end tabular-nums">{p.operations}</TD>
-                  <TD className="text-end tabular-nums">{p.equipmentCount}</TD>
-                  <TD>v{p.version}</TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{p.operations}</Tr>
+                  </TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{p.equipmentCount}</Tr>
+                  </TD>
+                  <TD>
+                    v<Tr>{p.version}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>

@@ -67,7 +67,10 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
               <CardHeader
                 title={
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm text-slate-500">{op.code}</span> {op.name}
+                    <span className="font-mono text-sm text-slate-500">
+                      <Tr>{op.code}</Tr>
+                    </span>{" "}
+                    <Tr>{op.name}</Tr>
                   </span>
                 }
                 description={tpl`Tous les ${op.triggers.map(triggerLabel).join(" ou ")} — au premier seuil atteint`}
@@ -108,7 +111,7 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                   <ol className="list-decimal space-y-0.5 ps-5 text-slate-800">
                     {op.taskList.items.map((item) => (
                       <li key={item.id}>
-                        {item.label} {item.required ? <span className="text-red-600">*</span> : null}
+                        <Tr>{item.label}</Tr> {item.required ? <span className="text-red-600">*</span> : null}
                       </li>
                     ))}
                   </ol>
@@ -149,9 +152,11 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                 <li key={e.id} className="flex items-center justify-between gap-2 px-5 py-2.5">
                   <span>
                     <Link href={`/equipements/${e.id}`} className="font-medium text-brand-700 hover:underline">
-                      {e.code}
+                      <Tr>{e.code}</Tr>
                     </Link>{" "}
-                    <span className="text-slate-600">{e.name}</span>
+                    <span className="text-slate-600">
+                      <Tr>{e.name}</Tr>
+                    </span>
                     {!e.active ? (
                       <Badge className="ms-2">
                         <T>Suspendu</T>

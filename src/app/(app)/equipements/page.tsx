@@ -13,7 +13,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { equipmentFilters, getEquipmentFormOptions, listEquipment } from "@/server/services/equipment";
 import { listSites } from "@/server/services/organization";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Équipements" };
 
@@ -117,20 +117,26 @@ export default async function EquipmentListPage(props: PageProps<"/equipements">
                 <TR key={e.id}>
                   <TD>
                     <Link href={`/equipements/${e.id}`} className="font-medium text-brand-700 hover:underline">
-                      {e.code}
+                      <Tr>{e.code}</Tr>
                     </Link>
                   </TD>
                   <TD>
-                    <p className="text-slate-900">{e.name}</p>
+                    <p className="text-slate-900">
+                      <Tr>{e.name}</Tr>
+                    </p>
                     <p className="text-xs text-slate-500">
                       {[e.manufacturer, e.modelName].filter(Boolean).join(" ")}
                       {e.registration ? ` · ${e.registration}` : ""}
                     </p>
                   </TD>
-                  <TD>{e.categoryName}</TD>
                   <TD>
-                    {e.siteName}
-                    <p className="text-xs text-slate-500">{e.companyName}</p>
+                    <Tr>{e.categoryName}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{e.siteName}</Tr>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{e.companyName}</Tr>
+                    </p>
                   </TD>
                   <TD className="whitespace-nowrap tabular-nums">{formatNumber(e.primaryMeterValue, e.primaryMeterUnit ?? undefined)}</TD>
                   <TD>

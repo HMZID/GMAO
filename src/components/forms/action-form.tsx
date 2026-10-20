@@ -76,7 +76,7 @@ export function ActionForm({
         }}
       >
         {showMessage ? <FormMessage /> : null}
-        {children}
+        <Tr>{children}</Tr>
       </form>
     </FormStateContext>
   );
@@ -190,16 +190,18 @@ export function Field({
       {child ? (
         <>
           <label htmlFor={controlId} className="block text-sm font-medium text-slate-700">
-            {labelContent}
+            <Tr>{labelContent}</Tr>
           </label>
-          {control}
+          <Tr>{control}</Tr>
         </>
       ) : (
         // Champ reçu sous une forme qui ne peut pas recevoir d'identifiant (élément différé du flux serveur) :
         // le libellé l'englobe, ce qui garde l'association.
         <label className="block space-y-1">
-          <span className="block text-sm font-medium text-slate-700">{labelContent}</span>
-          {control}
+          <span className="block text-sm font-medium text-slate-700">
+            <Tr>{labelContent}</Tr>
+          </span>
+          <Tr>{control}</Tr>
         </label>
       )}
       {error ? (
@@ -259,7 +261,7 @@ export function ActionPanel({ action, children, className }: { action: Action; c
       <PanelContext value={formAction}>
         <div className={className}>
           <FormMessage />
-          {children}
+          <Tr>{children}</Tr>
         </div>
       </PanelContext>
     </FormStateContext>
@@ -281,7 +283,7 @@ export function PanelForm({ children, className }: { children: ReactNode; classN
         startTransition(() => dispatch(formData));
       }}
     >
-      {children}
+      <Tr>{children}</Tr>
     </form>
   );
 }

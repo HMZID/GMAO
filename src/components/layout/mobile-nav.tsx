@@ -102,8 +102,12 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
                 </div>
                 <LanguageSwitcher tone="dark" className="border-b border-white/10 px-4 py-3" />
                 <div className="border-b border-white/10 px-4 py-3">
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-xs text-slate-300">{user.roles}</p>
+                  <p className="font-medium">
+                    <Tr>{user.name}</Tr>
+                  </p>
+                  <p className="text-xs text-slate-300">
+                    <Tr>{user.roles}</Tr>
+                  </p>
                 </div>
                 <nav aria-label={t("Navigation principale")} className="flex-1 space-y-1 overflow-y-auto p-3">
                   {items.map((item) => {

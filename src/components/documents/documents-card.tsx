@@ -71,12 +71,16 @@ export async function DocumentsCard({
                         className="inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline"
                       >
                         <FileText className="h-4 w-4 shrink-0" aria-hidden />
-                        {d.title}
+                        <Tr>{d.title}</Tr>
                       </a>
                       <p className="text-xs text-slate-500">
-                        {d.fileName} · {formatSize(d.sizeBytes)}
+                        <Tr>{d.fileName}</Tr> · {formatSize(d.sizeBytes)}
                       </p>
-                      {d.description ? <p className="mt-0.5 text-xs text-slate-600">{d.description}</p> : null}
+                      {d.description ? (
+                        <p className="mt-0.5 text-xs text-slate-600">
+                          <Tr>{d.description}</Tr>
+                        </p>
+                      ) : null}
                     </TD>
                     <TD>
                       <Badge tone={DOCUMENT_KIND[d.kind]?.tone}>

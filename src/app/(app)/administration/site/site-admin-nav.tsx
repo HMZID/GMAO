@@ -1,7 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { SITE_ITEM_KIND_DEFINITIONS, type SiteItemKind } from "@/server/domain/site";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 /** Adresse des listes de blocs dans l'administration (type de bloc → segment d'URL). */
 export const KIND_SLUGS: Record<SiteItemKind, string> = {
@@ -43,9 +43,11 @@ export function SiteAdminNav({ active, pending }: { active: string; pending?: nu
             t.key === active ? "border-brand-600 text-brand-800" : "border-transparent text-slate-600 hover:text-slate-900"
           }`}
         >
-          {t.label}
+          <Tr>{t.label}</Tr>
           {t.key === "demandes" && pending ? (
-            <span className="rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-white">{pending}</span>
+            <span className="rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-white">
+              <Tr>{pending}</Tr>
+            </span>
           ) : null}
         </Link>
       ))}

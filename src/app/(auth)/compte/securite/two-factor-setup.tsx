@@ -17,9 +17,11 @@ function Message({ state }: { state: EnrollmentState }) {
       role={error ? "alert" : "status"}
       className={`rounded-md px-3 py-2 text-sm ${error ? "bg-red-50 text-red-800" : "bg-green-50 text-green-800"}`}
     >
-      {state.message}
+      <Tr>{state.message}</Tr>
       {state.errors?.map((e) => (
-        <p key={e}>{e}</p>
+        <p key={e}>
+          <Tr>{e}</Tr>
+        </p>
       ))}
     </div>
   );
@@ -45,7 +47,9 @@ function BackupCodes({ codes }: { codes: string[] }) {
       </p>
       <ul className="mt-2 grid grid-cols-2 gap-1 font-mono text-sm" aria-label="Codes de secours">
         {codes.map((c) => (
-          <li key={c}>{c}</li>
+          <li key={c}>
+            <Tr>{c}</Tr>
+          </li>
         ))}
       </ul>
     </div>
@@ -74,7 +78,7 @@ export function TwoFactorEnrollment() {
         <p className="text-center text-xs text-slate-500">
           <T>Saisie manuelle :</T>{" "}
           <span className="select-all font-mono text-slate-800" data-totp-secret>
-            {started.secret}
+            <Tr>{started.secret}</Tr>
           </span>
         </p>
         {started.backupCodes ? <BackupCodes codes={started.backupCodes} /> : null}

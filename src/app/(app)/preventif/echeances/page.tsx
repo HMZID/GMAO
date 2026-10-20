@@ -99,14 +99,16 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                 <TR key={d.id}>
                   <TD>
                     <Link href={`/equipements/${d.equipmentId}`} className="font-medium text-brand-700 hover:underline">
-                      {d.equipmentCode}
+                      <Tr>{d.equipmentCode}</Tr>
                     </Link>
-                    <p className="text-xs text-slate-500">{d.equipmentName}</p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{d.equipmentName}</Tr>
+                    </p>
                   </TD>
                   <TD>
-                    {d.operationName}
+                    <Tr>{d.operationName}</Tr>
                     <p className="text-xs text-slate-500">
-                      {d.operationCode}
+                      <Tr>{d.operationCode}</Tr>
                       <Tr>{d.isRegulatory ? " · réglementaire" : ""}</Tr>
                     </p>
                   </TD>
@@ -133,7 +135,7 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                   <TD className="min-w-48">
                     {d.workOrderId ? (
                       <Link href={`/interventions/${d.workOrderId}`} className="text-brand-700 hover:underline">
-                        {d.workOrderNumber}
+                        <Tr>{d.workOrderNumber}</Tr>
                       </Link>
                     ) : (
                       <span className="text-xs text-slate-400">

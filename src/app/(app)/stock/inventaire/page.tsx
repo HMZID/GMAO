@@ -93,7 +93,7 @@ export default async function InventoryPage() {
                 <li key={c.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_22rem]">
                   <div className="space-y-1 text-sm">
                     <p className="font-medium text-slate-900">
-                      {c.sku} — {c.partName} · {c.warehouseName}
+                      <Tr>{c.sku}</Tr> — <Tr>{c.partName}</Tr> · <Tr>{c.warehouseName}</Tr>
                     </p>
                     <p className="text-slate-600">
                       <T
@@ -120,7 +120,11 @@ export default async function InventoryPage() {
                         {"Écart {sign}{n} {unit} · {amount}"}
                       </T>
                     </p>
-                    {c.comment ? <p className="text-slate-500">{c.comment}</p> : null}
+                    {c.comment ? (
+                      <p className="text-slate-500">
+                        <Tr>{c.comment}</Tr>
+                      </p>
+                    ) : null}
                   </div>
                   {decidable(c) ? (
                     <PanelForm className="space-y-2">
@@ -184,10 +188,16 @@ export default async function InventoryPage() {
               {counts.map((c) => (
                 <TR key={c.id}>
                   <TD>
-                    <p className="font-medium text-slate-900">{c.sku}</p>
-                    <p className="text-xs text-slate-500">{c.partName}</p>
+                    <p className="font-medium text-slate-900">
+                      <Tr>{c.sku}</Tr>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{c.partName}</Tr>
+                    </p>
                   </TD>
-                  <TD>{c.warehouseName}</TD>
+                  <TD>
+                    <Tr>{c.warehouseName}</Tr>
+                  </TD>
                   <TD>
                     {formatDateTime(c.countedAt)}
                     <p className="text-xs text-slate-500">{c.countedByName ?? "—"}</p>
@@ -202,8 +212,16 @@ export default async function InventoryPage() {
                     <Badge tone={INVENTORY_COUNT_STATUS[c.status]?.tone}>
                       <Tr>{INVENTORY_COUNT_STATUS[c.status]?.label ?? c.status}</Tr>
                     </Badge>
-                    {c.decidedByName && c.status !== "PENDING" ? <p className="text-xs text-slate-500">{c.decidedByName}</p> : null}
-                    {c.decisionComment ? <p className="text-xs text-slate-500">{c.decisionComment}</p> : null}
+                    {c.decidedByName && c.status !== "PENDING" ? (
+                      <p className="text-xs text-slate-500">
+                        <Tr>{c.decidedByName}</Tr>
+                      </p>
+                    ) : null}
+                    {c.decisionComment ? (
+                      <p className="text-xs text-slate-500">
+                        <Tr>{c.decisionComment}</Tr>
+                      </p>
+                    ) : null}
                   </TD>
                 </TR>
               ))}

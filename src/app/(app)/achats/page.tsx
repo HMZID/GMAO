@@ -7,7 +7,7 @@ import { Badge, Card, EmptyState, Table, TBody, TD, TH, THead, TR } from "@/comp
 import { getAuthContext } from "@/server/auth/session";
 import { listSuppliers } from "@/server/services/stock";
 import { createSupplierAction } from "./actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Fournisseurs et prestataires" };
 
@@ -77,7 +77,7 @@ export default async function SuppliersPage() {
               {suppliers.map((s) => (
                 <TR key={s.id}>
                   <TD className="font-medium text-slate-900">
-                    {s.name}
+                    <Tr>{s.name}</Tr>
                     {!s.active ? (
                       <Badge className="ms-2">
                         <T>Inactif</T>
@@ -88,10 +88,14 @@ export default async function SuppliersPage() {
                   <TD className="text-xs">
                     {s.email ? (
                       <a href={`mailto:${s.email}`} className="text-brand-700 hover:underline">
-                        {s.email}
+                        <Tr>{s.email}</Tr>
                       </a>
                     ) : null}
-                    {s.phone ? <p className="text-slate-500">{s.phone}</p> : null}
+                    {s.phone ? (
+                      <p className="text-slate-500">
+                        <Tr>{s.phone}</Tr>
+                      </p>
+                    ) : null}
                   </TD>
                   <TD>
                     {s.isContractor ? (
@@ -104,7 +108,9 @@ export default async function SuppliersPage() {
                       </Badge>
                     )}
                   </TD>
-                  <TD className="text-end tabular-nums">{s.workOrderCount}</TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{s.workOrderCount}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>

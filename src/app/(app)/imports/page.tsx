@@ -97,7 +97,7 @@ export default async function ImportsPage() {
                 <TR key={j.id}>
                   <TD>
                     <Link href={`/imports/${j.id}`} className="font-medium text-brand-700 hover:underline">
-                      {j.fileName}
+                      <Tr>{j.fileName}</Tr>
                     </Link>
                     <p className="text-xs text-slate-500">{formatDateTime(j.executedAt ?? j.createdAt)}</p>
                   </TD>
@@ -114,10 +114,16 @@ export default async function ImportsPage() {
                       </p>
                     ) : null}
                   </TD>
-                  <TD className="text-end tabular-nums">{j.totalRows}</TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{j.totalRows}</Tr>
+                  </TD>
                   <TD className="text-end tabular-nums">{j.status === "DONE" ? j.importedRows : "—"}</TD>
-                  <TD className={`text-end tabular-nums ${j.errorRows ? "font-medium text-red-700" : ""}`}>{j.errorRows}</TD>
-                  <TD>{j.author}</TD>
+                  <TD className={`text-end tabular-nums ${j.errorRows ? "font-medium text-red-700" : ""}`}>
+                    <Tr>{j.errorRows}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{j.author}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>

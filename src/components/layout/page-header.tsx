@@ -34,10 +34,18 @@ export function PageHeader({
               <Tr>{description}</Tr>
             </p>
           ) : null}
-          {meta ? <div className="mt-2 flex flex-wrap items-center gap-2">{meta}</div> : null}
+          {meta ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Tr>{meta}</Tr>
+            </div>
+          ) : null}
         </div>
         {/* Téléphone : boutons d'action pleine largeur, faciles à toucher. */}
-        {actions ? <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:*:flex-1">{actions}</div> : null}
+        {actions ? (
+          <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:*:flex-1">
+            <Tr>{actions}</Tr>
+          </div>
+        ) : null}
       </div>
     </div>
   );

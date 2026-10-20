@@ -80,7 +80,9 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
           <Alert tone="red" title="Fichier refusé">
             <ul className="list-disc ps-5">
               {job.fileErrors.map((e) => (
-                <li key={e}>{e}</li>
+                <li key={e}>
+                  <Tr>{e}</Tr>
+                </li>
               ))}
             </ul>
           </Alert>
@@ -174,7 +176,9 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
                   <T>Statut</T>
                 </TH>
                 {preview.map((c) => (
-                  <TH key={c.key}>{c.label}</TH>
+                  <TH key={c.key}>
+                    <Tr>{c.label}</Tr>
+                  </TH>
                 ))}
                 <TH>
                   <T>Anomalies</T>
@@ -184,7 +188,9 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
             <TBody>
               {rows.slice(0, DISPLAY_LIMIT).map((r) => (
                 <TR key={r.line}>
-                  <TD className="tabular-nums">{r.line}</TD>
+                  <TD className="tabular-nums">
+                    <Tr>{r.line}</Tr>
+                  </TD>
                   <TD>
                     <Badge tone={IMPORT_ROW_STATUS[r.status]?.tone}>
                       <Tr>{IMPORT_ROW_STATUS[r.status]?.label ?? r.status}</Tr>
@@ -199,7 +205,9 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
                     {r.messages.length > 0 ? (
                       <ul className={`list-disc space-y-0.5 ps-4 text-xs ${r.status === "ERROR" ? "text-red-800" : "text-slate-600"}`}>
                         {r.messages.map((m) => (
-                          <li key={m}>{m}</li>
+                          <li key={m}>
+                            <Tr>{m}</Tr>
+                          </li>
                         ))}
                       </ul>
                     ) : null}

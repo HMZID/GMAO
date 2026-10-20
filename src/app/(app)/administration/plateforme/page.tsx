@@ -97,13 +97,21 @@ export default async function PlatformPage() {
                       </Badge>
                     ) : null}
                   </p>
-                  {t.contactEmail ? <p className="text-xs text-slate-500">{t.contactEmail}</p> : null}
+                  {t.contactEmail ? (
+                    <p className="text-xs text-slate-500">
+                      <Tr>{t.contactEmail}</Tr>
+                    </p>
+                  ) : null}
                 </TD>
                 <TD>
                   <AccessBadge status={t.status as TenantStatus} access={t.access} demoEndsAt={t.demoEndsAt} />
                 </TD>
-                <TD className="text-end tabular-nums">{t.users}</TD>
-                <TD className="text-end tabular-nums">{t.equipment}</TD>
+                <TD className="text-end tabular-nums">
+                  <Tr>{t.users}</Tr>
+                </TD>
+                <TD className="text-end tabular-nums">
+                  <Tr>{t.equipment}</Tr>
+                </TD>
                 <TD className="text-xs">{formatDate(t.createdAt)}</TD>
                 <TD>
                   <div className="flex flex-wrap items-end gap-2">

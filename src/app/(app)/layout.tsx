@@ -14,7 +14,7 @@ import { getBranding, logoUrl } from "@/server/services/branding";
 import { getOwnTenantAccess } from "@/server/services/platform";
 import { countUnread } from "@/server/services/notifications";
 import { signOutAction, stopImpersonationAction } from "../(auth)/actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 /**
  * Coquille de l'application : la structure est statique, les éléments qui dépendent de la session
@@ -58,7 +58,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Suspense fallback={null}>
               <DemoBanner />
             </Suspense>
-            {children}
+            <Tr>{children}</Tr>
           </div>
         </main>
       </div>
@@ -73,7 +73,11 @@ function Brand({ label, logo }: { label?: string; logo?: string | null }) {
       <BrandMark logo={logo} className="h-8 w-8" />
       <span className="min-w-0 leading-tight">
         <span className="block text-lg font-semibold">GMAO</span>
-        {label ? <span className="block truncate text-xs text-slate-300">{label}</span> : null}
+        {label ? (
+          <span className="block truncate text-xs text-slate-300">
+            <Tr>{label}</Tr>
+          </span>
+        ) : null}
       </span>
     </Link>
   );
@@ -85,7 +89,11 @@ function MobileBrand({ label, logo }: { label?: string; logo?: string | null }) 
       <BrandMark logo={logo} className="h-7 w-7" />
       <span className="min-w-0 leading-tight">
         <span className="block font-semibold">GMAO</span>
-        {label ? <span className="block max-w-40 truncate text-[11px] text-slate-500">{label}</span> : null}
+        {label ? (
+          <span className="block max-w-40 truncate text-[11px] text-slate-500">
+            <Tr>{label}</Tr>
+          </span>
+        ) : null}
       </span>
     </Link>
   );
@@ -214,7 +222,9 @@ async function UserMenu() {
         <ShieldCheck className="h-5 w-5" aria-hidden />
       </Link>
       <div className="hidden text-end sm:block">
-        <p className="text-sm font-medium text-slate-900">{ctx.name}</p>
+        <p className="text-sm font-medium text-slate-900">
+          <Tr>{ctx.name}</Tr>
+        </p>
         <p className="max-w-64 truncate text-xs text-slate-500">{roles || t("Aucun rôle")}</p>
       </div>
       <form action={signOutAction}>

@@ -155,8 +155,12 @@ export default async function ApprovalWorkflowsPage() {
                     <TBody>
                       {w.steps.map((s) => (
                         <TR key={s.id}>
-                          <TD className="tabular-nums">{s.position}</TD>
-                          <TD className="font-medium text-slate-900">{s.name}</TD>
+                          <TD className="tabular-nums">
+                            <Tr>{s.position}</Tr>
+                          </TD>
+                          <TD className="font-medium text-slate-900">
+                            <Tr>{s.name}</Tr>
+                          </TD>
                           <TD>
                             <Tr>
                               {s.approverRole ? tpl`${ROLE[s.approverRole] ?? s.approverRole} (périmètre de l'objet)` : (s.approverName ?? "—")}

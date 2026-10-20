@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { CollapseOnMobile } from "./collapse-on-mobile";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 /**
  * Barre de filtres d'une liste : formulaire GET (l'URL porte les filtres, partageable et sans JavaScript).
@@ -28,7 +28,7 @@ export function FilterBar({ children, resetHref }: { children: ReactNode; resetH
       </summary>
       <CollapseOnMobile />
       <form method="get" className="flex flex-wrap items-end gap-3 px-4 pb-4 pt-1 max-md:*:w-full md:px-5 md:pt-4">
-        {children}
+        <Tr>{children}</Tr>
         <div className="flex items-center gap-3">
           <Button type="submit" variant="secondary" className="max-md:flex-1">
             <T>Filtrer</T>

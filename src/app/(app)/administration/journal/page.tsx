@@ -104,7 +104,9 @@ export default async function AuditPage(props: PageProps<"/administration/journa
                       </Link>
                     </p>
                   </TD>
-                  <TD className="font-mono text-xs">{r.action}</TD>
+                  <TD className="font-mono text-xs">
+                    <Tr>{r.action}</Tr>
+                  </TD>
                   <TD className="max-w-md">
                     {r.before || r.after ? (
                       <details>
