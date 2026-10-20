@@ -3,6 +3,7 @@
 import type { ActionState } from "@/lib/action-state";
 import { act } from "@/server/actions";
 import { cancelEmail, retryEmail, runEmailJobsNow } from "@/server/services/email";
+import { tpl } from "@/i18n/translate";
 
 export async function emailActionAction(_: ActionState, formData: FormData): Promise<ActionState> {
   const id = String(formData.get("id") ?? "");
@@ -18,7 +19,7 @@ export async function runEmailJobsAction(): Promise<ActionState> {
     const r = await runEmailJobsNow(ctx);
     return {
       status: "success" as const,
-      message: `Traitement effectué : ${r.queued} alerte(s) mise(s) en file, ${r.sent} envoyé(s), ${r.retried} à retenter, ${r.failed} en échec.`,
+      message: tpl`Traitement effectué : ${r.queued} alerte(s) mise(s) en file, ${r.sent} envoyé(s), ${r.retried} à retenter, ${r.failed} en échec.`,
     };
   });
 }

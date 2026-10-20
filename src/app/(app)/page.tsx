@@ -10,6 +10,8 @@ import { countDeadlineAlerts } from "@/server/services/fleet-deadlines";
 import { getDashboard } from "@/server/services/kpi";
 import { listDueItems } from "@/server/services/preventive";
 import { listWorkOrders } from "@/server/services/work-orders";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Tableau de bord" };
 
@@ -31,14 +33,18 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`Bonjour ${ctx.name.split(" ")[0]}`}
+        title={tpl`Bonjour ${ctx.name.split(" ")[0]}`}
         description="Situation du parc et de la maintenance dans votre périmètre."
         actions={
           <>
-            {ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Créer une demande d&apos;intervention</ButtonLink> : null}
+            {ctx.can("request.create") ? (
+              <ButtonLink href="/demandes/nouvelle">
+                <T>Créer une demande d&apos;intervention</T>
+              </ButtonLink>
+            ) : null}
             {ctx.can("workorder.create") ? (
               <ButtonLink href="/interventions/nouveau" variant="secondary">
-                Nouvelle intervention à réaliser
+                <T>Nouvelle intervention à réaliser</T>
               </ButtonLink>
             ) : null}
           </>
@@ -61,14 +67,14 @@ export default async function DashboardPage() {
           value={Object.values(wo.byStatus).reduce((a, b) => a + b, 0)}
           tone="violet"
           href="/interventions"
-          hint={`${wo.byPriority.P1 ?? 0} urgence(s) P1 · ${wo.byStatus.ON_HOLD ?? 0} en attente`}
+          hint={tpl`${wo.byPriority.P1 ?? 0} urgence(s) P1 · ${wo.byStatus.ON_HOLD ?? 0} en attente`}
         />
         <StatTile
           label="Échéances en retard"
           value={due.OVERDUE ?? 0}
           tone="red"
           href="/preventif/echeances?status=OVERDUE"
-          hint={`${due.DUE ?? 0} échue(s), ${due.PRE_ALERT ?? 0} en pré-alerte`}
+          hint={tpl`${due.DUE ?? 0} échue(s), ${due.PRE_ALERT ?? 0} en pré-alerte`}
         />
         <StatTile label="Articles sous le seuil" value={dashboard.belowReorder} tone="amber" href="/stock?belowReorder=1" />
         <StatTile
@@ -78,7 +84,7 @@ export default async function DashboardPage() {
           href={ctx.can("kpi.read") ? "/indicateurs" : undefined}
           hint={
             dashboard.monthCosts
-              ? `Main-d'œuvre ${formatCurrency(dashboard.monthCosts.labor)} · pièces ${formatCurrency(dashboard.monthCosts.parts)}`
+              ? tpl`Main-d'œuvre ${formatCurrency(dashboard.monthCosts.labor)} · pièces ${formatCurrency(dashboard.monthCosts.parts)}`
               : undefined
           }
         />
@@ -87,15 +93,17 @@ export default async function DashboardPage() {
       {deadlines.overdue + deadlines.soon > 0 ? (
         <div className="mt-6">
           <Alert tone={deadlines.overdue > 0 ? "red" : "amber"} title="Assurances, visites techniques et vignettes">
-            {[
-              deadlines.overdue > 0 ? `${deadlines.overdue} échéance(s) dépassée(s)` : null,
-              deadlines.soon > 0 ? `${deadlines.soon} à renouveler dans les 30 jours` : null,
-            ]
-              .filter(Boolean)
-              .join(", ")}
-            .{" "}
+            {deadlines.overdue > 0 && deadlines.soon > 0 ? (
+              <T params={{ overdue: deadlines.overdue, soon: deadlines.soon }}>
+                {"{overdue} échéance(s) dépassée(s), {soon} à renouveler dans les 30 jours."}
+              </T>
+            ) : deadlines.overdue > 0 ? (
+              <T params={{ overdue: deadlines.overdue }}>{"{overdue} échéance(s) dépassée(s)."}</T>
+            ) : (
+              <T params={{ soon: deadlines.soon }}>{"{soon} à renouveler dans les 30 jours."}</T>
+            )}{" "}
             <Link href="/equipements/echeances?horizon=30" className="font-medium underline">
-              Voir les échéances du parc
+              <T>Voir les échéances du parc</T>
             </Link>
           </Alert>
         </div>
@@ -109,7 +117,7 @@ export default async function DashboardPage() {
               description="Par priorité puis date prévue"
               actions={
                 <Link href="/interventions" className="text-sm text-brand-700 hover:underline">
-                  Tout voir
+                  <T>Tout voir</T>
                 </Link>
               }
             />
@@ -119,10 +127,18 @@ export default async function DashboardPage() {
               <Table>
                 <THead>
                   <tr>
-                    <TH>Intervention</TH>
-                    <TH>Équipement</TH>
-                    <TH>Priorité</TH>
-                    <TH>Statut</TH>
+                    <TH>
+                      <T>Intervention</T>
+                    </TH>
+                    <TH>
+                      <T>Équipement</T>
+                    </TH>
+                    <TH>
+                      <T>Priorité</T>
+                    </TH>
+                    <TH>
+                      <T>Statut</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -130,11 +146,15 @@ export default async function DashboardPage() {
                     <TR key={w.id}>
                       <TD>
                         <Link href={`/interventions/${w.id}`} className="font-medium text-brand-700 hover:underline">
-                          {w.number}
+                          <Tr>{w.number}</Tr>
                         </Link>
-                        <p className="max-w-56 truncate text-xs text-slate-500">{w.title}</p>
+                        <p className="max-w-56 truncate text-xs text-slate-500">
+                          <Tr>{w.title}</Tr>
+                        </p>
                       </TD>
-                      <TD>{w.equipmentCode}</TD>
+                      <TD>
+                        <Tr>{w.equipmentCode}</Tr>
+                      </TD>
                       <TD>
                         <PriorityBadge value={w.priority} short />
                       </TD>
@@ -156,7 +176,7 @@ export default async function DashboardPage() {
               description="En retard, échues ou en pré-alerte"
               actions={
                 <Link href="/preventif/echeances" className="text-sm text-brand-700 hover:underline">
-                  Tout voir
+                  <T>Tout voir</T>
                 </Link>
               }
             />
@@ -166,10 +186,18 @@ export default async function DashboardPage() {
               <Table>
                 <THead>
                   <tr>
-                    <TH>Équipement</TH>
-                    <TH>Opération</TH>
-                    <TH>Échéance</TH>
-                    <TH>Statut</TH>
+                    <TH>
+                      <T>Équipement</T>
+                    </TH>
+                    <TH>
+                      <T>Opération</T>
+                    </TH>
+                    <TH>
+                      <T>Échéance</T>
+                    </TH>
+                    <TH>
+                      <T>Statut</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -177,10 +205,12 @@ export default async function DashboardPage() {
                     <TR key={d.id}>
                       <TD>
                         <Link href={`/equipements/${d.equipmentId}`} className="font-medium text-brand-700 hover:underline">
-                          {d.equipmentCode}
+                          <Tr>{d.equipmentCode}</Tr>
                         </Link>
                       </TD>
-                      <TD>{d.operationName}</TD>
+                      <TD>
+                        <Tr>{d.operationName}</Tr>
+                      </TD>
                       <TD className="whitespace-nowrap">
                         {d.dueMeterValue !== null ? `${formatNumber(d.dueMeterValue, d.meterUnit ?? "")}` : null}
                         {d.dueMeterValue !== null && d.dueDate ? " ou " : null}

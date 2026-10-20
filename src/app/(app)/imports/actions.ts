@@ -5,6 +5,7 @@ import type { ActionState } from "@/lib/action-state";
 import { act, runAction } from "@/server/actions";
 import { getAuthContext } from "@/server/auth/session";
 import { executeImport, simulateImport } from "@/server/services/imports";
+import { tpl } from "@/i18n/translate";
 
 /** Simulation : le fichier est contrôlé ligne par ligne, puis l'aperçu s'affiche (§11.2). */
 export async function simulateImportAction(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -25,7 +26,14 @@ export async function executeImportAction(id: string, _: ActionState, formData: 
     const { summary } = await executeImport(ctx, id, { mode: formData.get("mode") });
     return {
       status: "success" as const,
-      message: `Import exécuté : ${summary.imported} ligne(s) créée(s)${summary.errors ? `, ${summary.errors} en erreur` : ""}${summary.exists ? `, ${summary.exists} déjà présente(s)` : ""}.`,
+      message:
+        summary.errors && summary.exists
+          ? tpl`Import exécuté : ${summary.imported} ligne(s) créée(s), ${summary.errors} en erreur, ${summary.exists} déjà présente(s).`
+          : summary.errors
+            ? tpl`Import exécuté : ${summary.imported} ligne(s) créée(s), ${summary.errors} en erreur.`
+            : summary.exists
+              ? tpl`Import exécuté : ${summary.imported} ligne(s) créée(s), ${summary.exists} déjà présente(s).`
+              : tpl`Import exécuté : ${summary.imported} ligne(s) créée(s).`,
     };
   });
 }

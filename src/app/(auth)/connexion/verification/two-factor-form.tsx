@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form";
 import { Input } from "@/components/ui/inputs";
 import { verifyTwoFactorAction } from "../../actions";
+import { T, Tr } from "@/i18n/client";
 
 /** Code TOTP, ou code de secours si le téléphone n'est pas disponible. */
 export function TwoFactorForm({ next }: { next: string }) {
@@ -23,11 +24,11 @@ export function TwoFactorForm({ next }: { next: string }) {
           </Field>
         )}
         <SubmitButton className="w-full" pendingLabel="Vérification…">
-          Vérifier et continuer
+          <T>Vérifier et continuer</T>
         </SubmitButton>
       </ActionForm>
       <button type="button" onClick={() => setBackup((b) => !b)} className="w-full text-center text-sm text-brand-700 hover:underline">
-        {backup ? "Utiliser l'application d'authentification" : "Utiliser un code de secours"}
+        <Tr>{backup ? "Utiliser l'application d'authentification" : "Utiliser un code de secours"}</Tr>
       </button>
     </div>
   );

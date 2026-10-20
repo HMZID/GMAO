@@ -9,6 +9,7 @@ import { INDICATOR_DEFINITIONS, INDICATOR_SOURCES } from "@/server/domain/indica
 import { listIndicators, type IndicatorResult } from "@/server/services/indicators";
 import { deleteIndicatorAction } from "../actions";
 import { IndicatorForm, type SourceOption } from "./indicator-form";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Indicateurs personnalisés" };
 
@@ -70,7 +71,7 @@ export default async function CustomIndicatorsPage() {
                   canManage ? (
                     <ActionForm action={deleteIndicatorAction.bind(null, indicator.id)} showMessage={false}>
                       <SubmitButton size="sm" variant="ghost">
-                        Supprimer
+                        <T>Supprimer</T>
                       </SubmitButton>
                     </ActionForm>
                   ) : null
@@ -80,7 +81,9 @@ export default async function CustomIndicatorsPage() {
                 {indicator.result ? (
                   <IndicatorView chart={indicator.chart} result={indicator.result} />
                 ) : (
-                  <p className="text-sm text-slate-500">Données non accessibles avec votre profil.</p>
+                  <p className="text-sm text-slate-500">
+                    <T>Données non accessibles avec votre profil.</T>
+                  </p>
                 )}
               </CardBody>
             </Card>
@@ -102,15 +105,19 @@ function IndicatorView({ chart, result }: { chart: string; result: IndicatorResu
         <tbody className="divide-y divide-slate-100">
           {result.groups.map((g) => (
             <tr key={g.key ?? "vide"}>
-              <td className="py-1.5 pr-3 text-slate-700">{g.label}</td>
-              <td className="py-1.5 text-right font-medium tabular-nums">{value(g.value)}</td>
+              <td className="py-1.5 pe-3 text-slate-700">
+                <Tr>{g.label}</Tr>
+              </td>
+              <td className="py-1.5 text-end font-medium tabular-nums">{value(g.value)}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr className="border-t border-slate-200 font-semibold">
-            <td className="py-1.5">Ensemble</td>
-            <td className="py-1.5 text-right tabular-nums">{value(result.value)}</td>
+            <td className="py-1.5">
+              <T>Ensemble</T>
+            </td>
+            <td className="py-1.5 text-end tabular-nums">{value(result.value)}</td>
           </tr>
         </tfoot>
       </table>
@@ -122,11 +129,11 @@ function IndicatorView({ chart, result }: { chart: string; result: IndicatorResu
       {result.groups.map((g) => (
         <li key={g.key ?? "vide"} className="grid grid-cols-[minmax(0,10rem)_1fr_auto] items-center gap-3 text-sm">
           <span className="truncate text-slate-700" title={g.label}>
-            {g.label}
+            <Tr>{g.label}</Tr>
           </span>
           <span className="h-3 rounded-sm bg-slate-100" aria-hidden>
             <span
-              className="block h-full rounded-r bg-brand-600"
+              className="block h-full rounded-e bg-brand-600"
               style={{ width: `${max > 0 ? Math.max((g.value / max) * 100, g.value > 0 ? 2 : 0) : 0}%` }}
             />
           </span>

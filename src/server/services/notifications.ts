@@ -5,6 +5,8 @@ import { roleHas, type Permission, type Role } from "@/server/authz/permissions"
 import { db, type DbOrTx } from "@/server/db";
 import { notifications, roleAssignments, technicians, user } from "@/server/db/schema";
 import { enqueueForNotification } from "./email";
+import { formatDateTime } from "@/lib/format";
+import { tpl } from "@/i18n/translate";
 
 export type NotificationInput = {
   type: string;
@@ -95,10 +97,10 @@ export async function notifyAssignedTechnicians(
   const userIds = rows.map((r) => r.userId!).filter((id) => id !== options.excludeUserId);
   return notifyUsers(tx, tenantId, userIds, {
     type: "work_order.assigned",
-    title: `Affectation : ${workOrder.number} — ${workOrder.title}`,
+    title: tpl`Affectation : ${workOrder.number} — ${workOrder.title}`,
     body: workOrder.plannedStart
-      ? `Vous intervenez sur ${workOrder.number}, prévu le ${workOrder.plannedStart.toLocaleString("fr-FR", { timeZone: "Europe/Paris", dateStyle: "short", timeStyle: "short" })}.`
-      : `Vous êtes affecté à ${workOrder.number}.`,
+      ? tpl`Vous intervenez sur ${workOrder.number}, prévu le ${formatDateTime(workOrder.plannedStart)}.`
+      : tpl`Vous êtes affecté à ${workOrder.number}.`,
     entityType: "work_order",
     entityId: workOrder.id,
     dedupKey: `assigned:${workOrder.id}`,

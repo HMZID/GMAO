@@ -49,21 +49,22 @@ export const OPERATION_LABEL: Record<OperationPayload["kind"], string> = {
   request: "Demande d'intervention",
 };
 
-/** Libellé d'une saisie dans la file d'attente. */
-export function describeOperation(op: OperationPayload) {
+/** Libellé d'une saisie dans la file d'attente ; `t` : traducteur de l'affichage (français sans lui). */
+export function describeOperation(op: OperationPayload, t: (text: string) => string = (text) => text) {
+  const label = t(OPERATION_LABEL[op.kind]);
   switch (op.kind) {
     case "time":
-      return `${OPERATION_LABEL.time} : ${op.minutes} min`;
+      return `${label} : ${op.minutes} min`;
     case "part":
-      return `${OPERATION_LABEL.part} : ${op.quantity} × ${op.label}`;
+      return `${label} : ${op.quantity} × ${op.label}`;
     case "transition":
-      return `${OPERATION_LABEL.transition} : ${op.to === "IN_PROGRESS" ? "démarrage" : op.to === "WORK_DONE" ? "travaux terminés" : "mise en attente"}`;
+      return `${label} : ${t(op.to === "IN_PROGRESS" ? "démarrage" : op.to === "WORK_DONE" ? "travaux terminés" : "mise en attente")}`;
     case "reading":
-      return `${OPERATION_LABEL.reading} : ${op.value}`;
+      return `${label} : ${op.value}`;
     case "request":
-      return `${OPERATION_LABEL.request} : ${op.symptom}`;
+      return `${label} : ${op.symptom}`;
     default:
-      return OPERATION_LABEL[op.kind];
+      return label;
   }
 }
 

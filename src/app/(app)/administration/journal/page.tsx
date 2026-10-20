@@ -10,6 +10,7 @@ import { withParams } from "@/lib/utils";
 import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { auditFilters, listAuditLogs } from "@/server/services/users";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Journal d'audit" };
 
@@ -57,12 +58,24 @@ export default async function AuditPage(props: PageProps<"/administration/journa
           <Table>
             <THead>
               <tr>
-                <TH>Date</TH>
-                <TH>Utilisateur</TH>
-                <TH>Canal</TH>
-                <TH>Objet</TH>
-                <TH>Action</TH>
-                <TH>Détail</TH>
+                <TH>
+                  <T>Date</T>
+                </TH>
+                <TH>
+                  <T>Utilisateur</T>
+                </TH>
+                <TH>
+                  <T>Canal</T>
+                </TH>
+                <TH>
+                  <T>Objet</T>
+                </TH>
+                <TH>
+                  <T>Action</T>
+                </TH>
+                <TH>
+                  <T>Détail</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -70,12 +83,18 @@ export default async function AuditPage(props: PageProps<"/administration/journa
                 <TR key={r.id}>
                   <TD className="whitespace-nowrap">{formatDateTime(r.createdAt)}</TD>
                   <TD>
-                    {r.userName ?? "Système"}
-                    {r.impersonatedBy ? <p className="text-xs text-red-700">via l&apos;administrateur de la plateforme</p> : null}
+                    <Tr>{r.userName ?? "Système"}</Tr>
+                    {r.impersonatedBy ? (
+                      <p className="text-xs text-red-700">
+                        <T>via l&apos;administrateur de la plateforme</T>
+                      </p>
+                    ) : null}
                   </TD>
-                  <TD>{AUDIT_CHANNEL[r.channel] ?? r.channel}</TD>
                   <TD>
-                    {ENTITY_TYPE[r.entityType] ?? r.entityType}
+                    <Tr>{AUDIT_CHANNEL[r.channel] ?? r.channel}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{ENTITY_TYPE[r.entityType] ?? r.entityType}</Tr>
                     <p>
                       <Link
                         href={withParams("/administration/journal", { entityId: r.entityId })}
@@ -85,11 +104,15 @@ export default async function AuditPage(props: PageProps<"/administration/journa
                       </Link>
                     </p>
                   </TD>
-                  <TD className="font-mono text-xs">{r.action}</TD>
+                  <TD className="font-mono text-xs">
+                    <Tr>{r.action}</Tr>
+                  </TD>
                   <TD className="max-w-md">
                     {r.before || r.after ? (
                       <details>
-                        <summary className="cursor-pointer text-xs text-brand-700">Avant / après</summary>
+                        <summary className="cursor-pointer text-xs text-brand-700">
+                          <T>Avant / après</T>
+                        </summary>
                         <div className="mt-2 grid gap-2">
                           {r.before ? <pre className="max-h-64 overflow-auto rounded bg-slate-50 p-2 text-[11px]">{preview(r.before)}</pre> : null}
                           {r.after ? <pre className="max-h-64 overflow-auto rounded bg-emerald-50 p-2 text-[11px]">{preview(r.after)}</pre> : null}
@@ -105,14 +128,14 @@ export default async function AuditPage(props: PageProps<"/administration/journa
         <div className="flex justify-between border-t border-slate-100 px-5 py-3 text-sm">
           {page > 1 ? (
             <Link href={withParams("/administration/journal", { ...params, page: page - 1 })} className="text-brand-700 hover:underline">
-              ← Plus récentes
+              <T>← Plus récentes</T>
             </Link>
           ) : (
             <span />
           )}
           {rows.length === PAGE_SIZE ? (
             <Link href={withParams("/administration/journal", { ...params, page: page + 1 })} className="text-brand-700 hover:underline">
-              Plus anciennes →
+              <T>Plus anciennes →</T>
             </Link>
           ) : null}
         </div>

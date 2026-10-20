@@ -31,6 +31,8 @@ import {
   transitionAction,
   workOrderReadingAction,
 } from "../actions";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export type WorkOrder = Awaited<ReturnType<typeof getWorkOrder>>;
 type Opt = { id: string; label: string };
@@ -59,11 +61,13 @@ export function TransitionsCard({ wo }: { wo: WorkOrder }) {
               return (
                 <div key={t.to} className="rounded-md border border-slate-200 p-3">
                   <Button disabled variant="secondary" size="sm">
-                    {label}
+                    <Tr>{label}</Tr>
                   </Button>
-                  <ul className="mt-2 list-disc space-y-0.5 pl-5 text-xs text-slate-600">
+                  <ul className="mt-2 list-disc space-y-0.5 ps-5 text-xs text-slate-600">
                     {t.errors.map((e) => (
-                      <li key={e}>{e}</li>
+                      <li key={e}>
+                        <Tr>{e}</Tr>
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -95,11 +99,11 @@ export function TransitionsCard({ wo }: { wo: WorkOrder }) {
                 {t.to === "TECH_CLOSED" ? <Checkbox name="testsPassed" required label="Essais de remise en service conformes" /> : null}
                 {t.to === "TECH_CLOSED" && wo.requiresRelease ? (
                   <p className="text-xs text-amber-800">
-                    Équipement critique ou intervention de sécurité : validation par une personne habilitée, différente de l&apos;exécutant.
+                    <T>Équipement critique ou intervention de sécurité : validation par une personne habilitée, différente de l&apos;exécutant.</T>
                   </p>
                 ) : null}
                 <SubmitButton variant={variant} size="sm">
-                  {label}
+                  <Tr>{label}</Tr>
                 </SubmitButton>
               </PanelForm>
             );
@@ -153,7 +157,9 @@ export function PlanningCard({
             />
           </Field>
           <fieldset>
-            <legend className="mb-1 text-sm font-medium text-slate-700">Intervenants</legend>
+            <legend className="mb-1 text-sm font-medium text-slate-700">
+              <T>Intervenants</T>
+            </legend>
             <div className="grid gap-1.5">
               {sorted.map((t) => (
                 <Checkbox key={t.id} name="assigneeIds[]" value={t.id} label={t.label} defaultChecked={assigned.has(t.id)} />
@@ -170,7 +176,9 @@ export function PlanningCard({
               options={suppliers.map((s) => ({ value: s.id, label: s.label }))}
             />
           </Field>
-          <SubmitButton variant="secondary">Enregistrer la planification</SubmitButton>
+          <SubmitButton variant="secondary">
+            <T>Enregistrer la planification</T>
+          </SubmitButton>
         </ActionForm>
       </CardBody>
     </Card>
@@ -194,7 +202,7 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm text-slate-900">
-                    {task.position}. {task.label}{" "}
+                    <Tr>{task.position}</Tr>. <Tr>{task.label}</Tr>{" "}
                     {task.required ? (
                       <span className="text-red-600" title="Obligatoire">
                         *
@@ -202,11 +210,19 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
                     ) : null}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {TASK_KIND[task.kind]}
-                    {task.kind === "MEASURE" && (task.minValue !== null || task.maxValue !== null)
-                      ? ` · attendu ${task.minValue ?? "−∞"} à ${task.maxValue ?? "+∞"} ${task.unit ?? ""}`
-                      : ""}
-                    {task.measuredValue !== null ? ` · mesuré ${formatNumber(task.measuredValue, task.unit ?? undefined)}` : ""}
+                    <Tr>{TASK_KIND[task.kind]}</Tr>
+                    {task.kind === "MEASURE" && (task.minValue !== null || task.maxValue !== null) ? (
+                      <>
+                        {" "}
+                        {" · "} <Tr>{tpl`attendu ${task.minValue ?? "−∞"} à ${task.maxValue ?? "+∞"} ${task.unit ?? ""}`}</Tr>{" "}
+                      </>
+                    ) : null}{" "}
+                    {task.measuredValue !== null ? (
+                      <>
+                        {" "}
+                        {" · "} <Tr>{tpl`mesuré ${formatNumber(task.measuredValue, task.unit ?? undefined)}`}</Tr>{" "}
+                      </>
+                    ) : null}
                     {task.comment ? ` · ${task.comment}` : ""}
                   </p>
                 </div>
@@ -219,7 +235,7 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
                       name="measuredValue"
                       type="number"
                       step="any"
-                      placeholder={`Mesure${task.unit ? ` (${task.unit})` : ""}`}
+                      placeholder={tpl`Mesure${task.unit ? ` (${task.unit})` : ""}`}
                       className="h-8 w-36"
                       defaultValue={task.measuredValue ?? ""}
                       aria-label="Valeur mesurée"
@@ -233,13 +249,13 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
                     aria-label="Commentaire"
                   />
                   <SubmitButton size="sm" variant="secondary" name="result" value="OK">
-                    Conforme
+                    <T>Conforme</T>
                   </SubmitButton>
                   <SubmitButton size="sm" variant="secondary" name="result" value="NOK">
-                    Non conforme
+                    <T>Non conforme</T>
                   </SubmitButton>
                   <SubmitButton size="sm" variant="ghost" name="result" value="NA">
-                    Sans objet
+                    <T>Sans objet</T>
                   </SubmitButton>
                   <FormMessage className="mb-0 w-full" />
                 </ActionForm>
@@ -255,7 +271,9 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
               <Input id="task-label" name="label" required maxLength={300} />
             </Field>
             <Checkbox name="required" label="Obligatoire" className="h-10" />
-            <SubmitButton variant="secondary">Ajouter</SubmitButton>
+            <SubmitButton variant="secondary">
+              <T>Ajouter</T>
+            </SubmitButton>
           </ActionForm>
         </CardBody>
       ) : null}
@@ -283,20 +301,22 @@ export function TimeCard({
   const running = myTechnicianId ? wo.timeEntries.find((t) => !t.endedAt && t.technicianId === myTechnicianId) : undefined;
   return (
     <Card>
-      <CardHeader title="Temps passés" description={`Total : ${formatMinutes(wo.costs.minutes)} — ${formatCurrency(wo.costs.labor)}`} />
+      <CardHeader title="Temps passés" description={tpl`Total : ${formatMinutes(wo.costs.minutes)} — ${formatCurrency(wo.costs.labor)}`} />
       {canTimer && myTechnicianId ? (
         <CardBody className="border-b border-slate-100">
           <ActionForm action={timeAction.bind(null, wo.id)} className="flex flex-wrap items-center gap-3">
             {running ? (
               <>
-                <Badge tone="violet">Pointage en cours depuis {formatDateTime(running.startedAt)}</Badge>
+                <Badge tone="violet">
+                  <T params={{ date: formatDateTime(running.startedAt) }}>{"Pointage en cours depuis {date}"}</T>
+                </Badge>
                 <SubmitButton name="action" value="stop" variant="secondary" size="sm">
-                  Arrêter le pointage
+                  <T>Arrêter le pointage</T>
                 </SubmitButton>
               </>
             ) : (
               <SubmitButton name="action" value="start" size="sm">
-                Démarrer le pointage
+                <T>Démarrer le pointage</T>
               </SubmitButton>
             )}
           </ActionForm>
@@ -308,21 +328,39 @@ export function TimeCard({
         <Table>
           <THead>
             <tr>
-              <TH>Technicien</TH>
-              <TH>Début</TH>
-              <TH className="text-right">Durée</TH>
-              <TH>Commentaire</TH>
+              <TH>
+                <T>Technicien</T>
+              </TH>
+              <TH>
+                <T>Début</T>
+              </TH>
+              <TH className="text-end">
+                <T>Durée</T>
+              </TH>
+              <TH>
+                <T>Commentaire</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
             {wo.timeEntries.map((t) => (
               <TR key={t.id}>
                 <TD>
-                  {t.technician.firstName} {t.technician.lastName}
+                  <Tr>{t.technician.firstName}</Tr> <Tr>{t.technician.lastName}</Tr>
                 </TD>
                 <TD className="whitespace-nowrap">{formatDateTime(t.startedAt)}</TD>
-                <TD className="text-right tabular-nums">{t.endedAt ? formatMinutes(t.minutes) : <Badge tone="violet">en cours</Badge>}</TD>
-                <TD className="text-xs text-slate-500">{t.comment}</TD>
+                <TD className="text-end tabular-nums">
+                  {t.endedAt ? (
+                    formatMinutes(t.minutes)
+                  ) : (
+                    <Badge tone="violet">
+                      <T>en cours</T>
+                    </Badge>
+                  )}
+                </TD>
+                <TD className="text-xs text-slate-500">
+                  <Tr>{t.comment}</Tr>
+                </TD>
               </TR>
             ))}
           </TBody>
@@ -354,7 +392,9 @@ export function TimeCard({
                 <Input id="time-comment" name="comment" maxLength={500} />
               </Field>
               <div>
-                <SubmitButton variant="secondary">Enregistrer</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Enregistrer</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </Disclosure>
@@ -377,20 +417,24 @@ export function ReportCard({ wo, canReport, canRead }: { wo: WorkOrder; canRepor
         {meter ? (
           <div className="rounded-md bg-slate-50 p-3 text-sm">
             <p className="text-slate-700">
-              {meter.label} : <span className="font-semibold tabular-nums">{formatNumber(meter.lastValue, meter.unit)}</span>
-              <span className="text-xs text-slate-500"> (relevé du {formatDateTime(meter.lastReadAt)})</span>
+              <Tr>{meter.label}</Tr> : <span className="font-semibold tabular-nums">{formatNumber(meter.lastValue, meter.unit)}</span>
+              <span className="text-xs text-slate-500">
+                <T params={{ date: formatDateTime(meter.lastReadAt) }}>{" (relevé du {date})"}</T>
+              </span>
             </p>
             {wo.snapshot.hasMeterReadingSinceStart ? (
               <p className="mt-1 flex items-center gap-1 text-xs text-emerald-700">
-                <ReadingStatusBadge status="VALID" /> Relevé saisi pendant l&apos;intervention
+                <ReadingStatusBadge status="VALID" /> <T>Relevé saisi pendant l&apos;intervention</T>
               </p>
             ) : null}
             {canRead ? (
               <ActionForm action={workOrderReadingAction.bind(null, wo.id, meter.id)} resetOnSuccess className="mt-3 flex flex-wrap items-end gap-2">
-                <Field label={`Relevé (${meter.unit})`} name="value" required className="w-40">
+                <Field label={tpl`Relevé (${meter.unit})`} name="value" required className="w-40">
                   <Input id="wo-reading" name="value" type="number" min={0} step="0.1" required />
                 </Field>
-                <SubmitButton variant="secondary">Enregistrer le relevé</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Enregistrer le relevé</T>
+                </SubmitButton>
               </ActionForm>
             ) : null}
           </div>
@@ -411,16 +455,24 @@ export function ReportCard({ wo, canReport, canRead }: { wo: WorkOrder; canRepor
                 <Input id="remedyCode" name="remedyCode" defaultValue={wo.remedyCode ?? ""} maxLength={40} />
               </Field>
             </div>
-            <SubmitButton variant="secondary">Enregistrer le compte rendu</SubmitButton>
+            <SubmitButton variant="secondary">
+              <T>Enregistrer le compte rendu</T>
+            </SubmitButton>
           </ActionForm>
         ) : (
           <div className="space-y-2 text-sm">
             <p className="whitespace-pre-line text-slate-800">
-              {wo.workSummary || <span className="text-slate-400">Pas encore de compte rendu.</span>}
+              {wo.workSummary || (
+                <span className="text-slate-400">
+                  <T>Pas encore de compte rendu.</T>
+                </span>
+              )}
             </p>
             {wo.symptomCode || wo.causeCode || wo.remedyCode ? (
               <p className="text-xs text-slate-500">
-                Symptôme : {wo.symptomCode ?? "—"} · Cause : {wo.causeCode ?? "—"} · Remède : {wo.remedyCode ?? "—"}
+                <T params={{ v: wo.symptomCode ?? "—", v2: wo.causeCode ?? "—", v3: wo.remedyCode ?? "—" }}>
+                  {"Symptôme : {v} · Cause : {v2} · Remède : {v3}"}
+                </T>
               </p>
             ) : null}
           </div>
@@ -459,29 +511,41 @@ export function PartsCard({
   ];
   return (
     <Card>
-      <CardHeader title="Pièces" description={`Coût des pièces consommées : ${formatCurrency(wo.costs.parts)}`} />
+      <CardHeader title="Pièces" description={tpl`Coût des pièces consommées : ${formatCurrency(wo.costs.parts)}`} />
       {wo.reservations.length > 0 ? (
         <Table>
           <THead>
             <tr>
-              <TH>Réservation</TH>
-              <TH>Magasin</TH>
-              <TH className="text-right">Quantité</TH>
-              <TH>Statut</TH>
+              <TH>
+                <T>Réservation</T>
+              </TH>
+              <TH>
+                <T>Magasin</T>
+              </TH>
+              <TH className="text-end">
+                <T>Quantité</T>
+              </TH>
+              <TH>
+                <T>Statut</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
             {wo.reservations.map((r) => (
               <TR key={r.id}>
                 <TD>
-                  {r.sku} — {r.partName}
+                  <Tr>{r.sku}</Tr> — <Tr>{r.partName}</Tr>
                 </TD>
-                <TD>{r.warehouseName}</TD>
-                <TD className="text-right tabular-nums">
+                <TD>
+                  <Tr>{r.warehouseName}</Tr>
+                </TD>
+                <TD className="text-end tabular-nums">
                   {formatNumber(r.consumedQuantity)} / {formatNumber(r.quantity)}
                 </TD>
                 <TD>
-                  <Badge tone={RESERVATION_STATUS[r.status]?.tone}>{RESERVATION_STATUS[r.status]?.label ?? r.status}</Badge>
+                  <Badge tone={RESERVATION_STATUS[r.status]?.tone}>
+                    <Tr>{RESERVATION_STATUS[r.status]?.label ?? r.status}</Tr>
+                  </Badge>
                 </TD>
               </TR>
             ))}
@@ -492,26 +556,38 @@ export function PartsCard({
         <Table className="border-t border-slate-100">
           <THead>
             <tr>
-              <TH>Mouvement</TH>
-              <TH>Article</TH>
-              <TH>Magasin</TH>
-              <TH className="text-right">Quantité</TH>
-              <TH className="text-right">Valeur</TH>
+              <TH>
+                <T>Mouvement</T>
+              </TH>
+              <TH>
+                <T>Article</T>
+              </TH>
+              <TH>
+                <T>Magasin</T>
+              </TH>
+              <TH className="text-end">
+                <T>Quantité</T>
+              </TH>
+              <TH className="text-end">
+                <T>Valeur</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
             {wo.partLines.map((l) => (
               <TR key={l.id}>
                 <TD className="whitespace-nowrap">
-                  {MOVEMENT_TYPE[l.type]?.label ?? l.type}
+                  <Tr>{MOVEMENT_TYPE[l.type]?.label ?? l.type}</Tr>
                   <p className="text-xs text-slate-400">{formatDateTime(l.createdAt)}</p>
                 </TD>
                 <TD>
-                  {l.sku} — {l.partName}
+                  <Tr>{l.sku}</Tr> — <Tr>{l.partName}</Tr>
                 </TD>
-                <TD>{l.warehouseName}</TD>
-                <TD className="text-right tabular-nums">{formatNumber(l.quantity, l.unit)}</TD>
-                <TD className="text-right tabular-nums">{formatCurrency(l.quantity * l.unitCost * (l.type === "RETURN" ? -1 : 1))}</TD>
+                <TD>
+                  <Tr>{l.warehouseName}</Tr>
+                </TD>
+                <TD className="text-end tabular-nums">{formatNumber(l.quantity, l.unit)}</TD>
+                <TD className="text-end tabular-nums">{formatCurrency(l.quantity * l.unitCost * (l.type === "RETURN" ? -1 : 1))}</TD>
               </TR>
             ))}
           </TBody>
@@ -540,13 +616,15 @@ export function PartsCard({
               <Input id="part-qty" name="quantity" type="number" min={0} step="any" required />
             </Field>
             <div className="flex items-end">
-              <SubmitButton variant="secondary">Valider</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Valider</T>
+              </SubmitButton>
             </div>
           </ActionForm>
           {active.length > 0 && canIssue ? (
             <ActionForm action={releaseReservationsAction.bind(null, wo.id)}>
               <SubmitButton variant="ghost" size="sm">
-                Libérer les réservations non consommées
+                <T>Libérer les réservations non consommées</T>
               </SubmitButton>
             </ActionForm>
           ) : null}
@@ -570,16 +648,20 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
           {[
             ["Main-d'œuvre", c.labor],
             ["Pièces", c.parts],
-            [`Prestataire${wo.isExternal ? (wo.externalCostIsFinal ? " (facturé)" : " (provision)") : ""}`, c.external],
+            [wo.isExternal ? (wo.externalCostIsFinal ? "Prestataire (facturé)" : "Prestataire (provision)") : "Prestataire", c.external],
             ["Autres", c.other],
           ].map(([label, value]) => (
             <div key={label as string} className="flex justify-between">
-              <dt className="text-slate-500">{label}</dt>
+              <dt className="text-slate-500">
+                <Tr>{label}</Tr>
+              </dt>
               <dd className="tabular-nums">{formatCurrency(value as number)}</dd>
             </div>
           ))}
           <div className="flex justify-between border-t border-slate-200 pt-1 font-semibold">
-            <dt>Total</dt>
+            <dt>
+              <T>Total</T>
+            </dt>
             <dd className="tabular-nums">{formatCurrency(c.total)}</dd>
           </div>
         </dl>
@@ -587,9 +669,11 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
           <ul className="text-xs text-slate-500">
             {wo.costRows.map((x) => (
               <li key={x.id} className="flex flex-wrap items-center gap-1.5">
-                {x.label} : {formatCurrency(x.amount)}
+                <Tr>{x.label}</Tr> : {formatCurrency(x.amount)}
                 {x.approvalStatus !== "APPROVED" ? (
-                  <Badge tone={EXPENSE_APPROVAL[x.approvalStatus]?.tone}>{EXPENSE_APPROVAL[x.approvalStatus]?.label}</Badge>
+                  <Badge tone={EXPENSE_APPROVAL[x.approvalStatus]?.tone}>
+                    <Tr>{EXPENSE_APPROVAL[x.approvalStatus]?.label}</Tr>
+                  </Badge>
                 ) : null}
               </li>
             ))}
@@ -612,7 +696,9 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
                   <Input id="ext-amount" name="externalCost" type="number" min={0} step="0.01" required defaultValue={wo.externalCost ?? ""} />
                 </Field>
                 <Checkbox name="externalCostIsFinal" label="Montant facturé (sinon provision)" defaultChecked={wo.externalCostIsFinal} />
-                <SubmitButton variant="secondary">Enregistrer</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Enregistrer</T>
+                </SubmitButton>
               </ActionForm>
             </Disclosure>
             <Disclosure summary="Autre coût (location, transport…)">
@@ -623,7 +709,9 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
                 <Field label="Montant HT (€)" name="amount" required>
                   <Input id="other-amount" name="amount" type="number" min={0} step="0.01" required />
                 </Field>
-                <SubmitButton variant="secondary">Ajouter</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Ajouter</T>
+                </SubmitButton>
               </ActionForm>
             </Disclosure>
           </>
@@ -646,13 +734,25 @@ export function HistoryCard({ wo }: { wo: WorkOrder }) {
           <li key={h.id} className="px-5 py-2.5">
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5">
-                {h.fromStatus ? <span className="text-xs text-slate-500">{WORK_ORDER_STATUS[h.fromStatus]?.label} →</span> : null}
+                {h.fromStatus ? (
+                  <span className="text-xs text-slate-500">
+                    <Tr>{WORK_ORDER_STATUS[h.fromStatus]?.label}</Tr> →
+                  </span>
+                ) : null}
                 <WorkOrderStatusBadge status={h.toStatus} />
               </span>
               <span className="text-xs text-slate-500">{formatDateTime(h.changedAt)}</span>
             </div>
-            {h.reason ? <p className="mt-1 text-xs text-slate-600">{HOLD_REASON[h.reason] ?? h.reason}</p> : null}
-            {h.changedBy ? <p className="text-xs text-slate-400">{h.changedBy.name}</p> : null}
+            {h.reason ? (
+              <p className="mt-1 text-xs text-slate-600">
+                <Tr>{HOLD_REASON[h.reason] ?? h.reason}</Tr>
+              </p>
+            ) : null}
+            {h.changedBy ? (
+              <p className="text-xs text-slate-400">
+                <Tr>{h.changedBy.name}</Tr>
+              </p>
+            ) : null}
           </li>
         ))}
       </ul>

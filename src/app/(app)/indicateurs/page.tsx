@@ -11,6 +11,8 @@ import { cleanFilters, queryParams } from "@/server/pages";
 import { getEquipmentFormOptions } from "@/server/services/equipment";
 import { getIndicators, indicatorFilters } from "@/server/services/kpi";
 import { listSites } from "@/server/services/organization";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Indicateurs" };
 
@@ -22,7 +24,7 @@ function MagnitudeBar({ value, max, label }: { value: number; max: number; label
   const width = max > 0 ? Math.max((value / max) * 100, value > 0 ? 2 : 0) : 0;
   return (
     <div className="h-2.5 w-16 shrink-0 rounded-sm bg-slate-100 sm:w-24" title={label} role="img" aria-label={label}>
-      <div className="h-full rounded-r bg-brand-600" style={{ width: `${width}%` }} />
+      <div className="h-full rounded-e bg-brand-600" style={{ width: `${width}%` }} />
     </div>
   );
 }
@@ -41,10 +43,10 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
     <>
       <PageHeader
         title="Indicateurs de maintenance"
-        description={`Période du ${formatDate(k.from)} au ${formatDate(k.to)} — ${k.fleetSize} équipement(s). Les indicateurs calculés sur moins de 3 événements sont « non significatifs ».`}
+        description={tpl`Période du ${formatDate(k.from)} au ${formatDate(k.to)} — ${k.fleetSize} équipement(s). Les indicateurs calculés sur moins de 3 événements sont « non significatifs ».`}
         actions={
           <ButtonLink href="/indicateurs/personnalises" variant="secondary">
-            Indicateurs personnalisés
+            <T>Indicateurs personnalisés</T>
           </ButtonLink>
         }
       />
@@ -88,13 +90,13 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               label="Disponibilité"
               value={formatPercent(k.availability)}
               tone="teal"
-              hint={`${formatNumber(k.downtimeHours)} h d'immobilisation sur la période`}
+              hint={tpl`${formatNumber(k.downtimeHours)} h d'immobilisation sur la période`}
             />
             <StatTile
               label="Temps moyen entre pannes (MTBF)"
               value={formatHours(k.mtbf)}
               tone="teal"
-              hint={`${k.failures} panne(s), ${formatNumber(k.operatingHours)} h de fonctionnement`}
+              hint={tpl`${k.failures} panne(s), ${formatNumber(k.operatingHours)} h de fonctionnement`}
             />
             <StatTile
               label="Durée moyenne de réparation (MTTR)"
@@ -107,7 +109,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               label="Respect du préventif"
               value={formatPercent(k.preventive?.compliance)}
               tone="teal"
-              hint={k.preventive ? `${k.preventive.doneOnTime} réalisée(s) à temps sur ${k.preventive.dueInPeriod} échue(s)` : undefined}
+              hint={k.preventive ? tpl`${k.preventive.doneOnTime} réalisée(s) à temps sur ${k.preventive.dueInPeriod} échue(s)` : undefined}
             />
             <StatTile
               label="Coût total de maintenance"
@@ -130,20 +132,34 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               <Table>
                 <THead>
                   <tr>
-                    <TH>Catégorie</TH>
-                    <TH className="text-right">Équip.</TH>
-                    <TH className="text-right">Dispo.</TH>
-                    <TH className="text-right">Immob.</TH>
-                    <TH className="text-right">Coût</TH>
+                    <TH>
+                      <T>Catégorie</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Équip.</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Dispo.</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Immob.</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Coût</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
                   {k.byCategory.map((c) => (
                     <TR key={c.categoryId}>
-                      <TD>{c.categoryName}</TD>
-                      <TD className="text-right tabular-nums">{c.count}</TD>
-                      <TD className="whitespace-nowrap text-right tabular-nums">{formatPercent(c.availability)}</TD>
-                      <TD className="whitespace-nowrap text-right tabular-nums">{formatNumber(c.downtime, "h")}</TD>
+                      <TD>
+                        <Tr>{c.categoryName}</Tr>
+                      </TD>
+                      <TD className="text-end tabular-nums">
+                        <Tr>{c.count}</Tr>
+                      </TD>
+                      <TD className="whitespace-nowrap text-end tabular-nums">{formatPercent(c.availability)}</TD>
+                      <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(c.downtime, "h")}</TD>
                       <TD>
                         <div className="flex items-center justify-end gap-3 whitespace-nowrap">
                           <span className="tabular-nums text-slate-700">{formatCurrency(c.cost)}</span>
@@ -164,9 +180,15 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                 <Table>
                   <THead>
                     <tr>
-                      <TH>Équipement</TH>
-                      <TH className="text-right">Immob.</TH>
-                      <TH className="text-right">Coût</TH>
+                      <TH>
+                        <T>Équipement</T>
+                      </TH>
+                      <TH className="text-end">
+                        <T>Immob.</T>
+                      </TH>
+                      <TH className="text-end">
+                        <T>Coût</T>
+                      </TH>
                     </tr>
                   </THead>
                   <TBody>
@@ -174,11 +196,13 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                       <TR key={e.id}>
                         <TD>
                           <Link href={`/equipements/${e.id}`} className="font-medium text-brand-700 hover:underline">
-                            {e.code}
+                            <Tr>{e.code}</Tr>
                           </Link>
-                          <p className="text-xs text-slate-500">{e.categoryName}</p>
+                          <p className="text-xs text-slate-500">
+                            <Tr>{e.categoryName}</Tr>
+                          </p>
                         </TD>
-                        <TD className="whitespace-nowrap text-right tabular-nums">{formatNumber(e.downtime, "h")}</TD>
+                        <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(e.downtime, "h")}</TD>
                         <TD>
                           <div className="flex items-center justify-end gap-3 whitespace-nowrap">
                             <span className="tabular-nums text-slate-700">{formatCurrency(e.cost)}</span>
@@ -201,9 +225,15 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               <Table>
                 <THead>
                   <tr>
-                    <TH>Article</TH>
-                    <TH className="text-right">Quantité</TH>
-                    <TH className="text-right">Valeur</TH>
+                    <TH>
+                      <T>Article</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Quantité</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Valeur</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -211,11 +241,13 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                     <TR key={p.partId}>
                       <TD>
                         <Link href={`/stock/articles/${p.partId}`} className="text-brand-700 hover:underline">
-                          {p.sku}
+                          <Tr>{p.sku}</Tr>
                         </Link>{" "}
-                        <span className="text-slate-600">{p.name}</span>
+                        <span className="text-slate-600">
+                          <Tr>{p.name}</Tr>
+                        </span>
                       </TD>
-                      <TD className="whitespace-nowrap text-right tabular-nums">{formatNumber(p.quantity, p.unit)}</TD>
+                      <TD className="whitespace-nowrap text-end tabular-nums">{formatNumber(p.quantity, p.unit)}</TD>
                       <TD>
                         <div className="flex items-center justify-end gap-3 whitespace-nowrap">
                           <span className="tabular-nums text-slate-700">{formatCurrency(p.value)}</span>
@@ -228,8 +260,10 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               </Table>
             )}
             <CardBody className="border-t border-slate-100 text-xs text-slate-500">
-              Méthode de calcul : disponibilité sur 24 h × jours de la période ; temps moyen entre pannes (MTBF) = heures de fonctionnement ÷ nombre
-              de pannes ; durée moyenne de réparation (MTTR) hors attentes de pièces ou de prestataire.
+              <T>
+                Méthode de calcul : disponibilité sur 24 h × jours de la période ; temps moyen entre pannes (MTBF) = heures de fonctionnement ÷ nombre
+                de pannes ; durée moyenne de réparation (MTTR) hors attentes de pièces ou de prestataire.
+              </T>
             </CardBody>
           </Card>
         </>

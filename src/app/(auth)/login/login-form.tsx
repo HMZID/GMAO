@@ -4,6 +4,7 @@ import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form"
 import { Input } from "@/components/ui/inputs";
 import { signInAction } from "../actions";
 import { Turnstile } from "./turnstile";
+import { T } from "@/i18n/client";
 
 export function LoginForm({ next, captchaSiteKey }: { next?: string; captchaSiteKey?: string | null }) {
   return (
@@ -17,7 +18,7 @@ export function LoginForm({ next, captchaSiteKey }: { next?: string; captchaSite
       </Field>
       {captchaSiteKey ? <Turnstile siteKey={captchaSiteKey} action="login" /> : null}
       <SubmitButton className="w-full" pendingLabel="Connexion…">
-        Se connecter
+        <T>Se connecter</T>
       </SubmitButton>
     </ActionForm>
   );

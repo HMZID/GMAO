@@ -1,3 +1,4 @@
+import { tpl } from "@/i18n/translate";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -107,5 +108,27 @@ describe("tâche planifiée Vercel et récapitulatifs quotidiens", () => {
   ])("envoie le récapitulatif en %s", (_label, day) => {
     const run = new Date(`${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00Z`);
     expect(isDigestTime(run, 7)).toBe(true);
+  });
+
+  it("le courriel est rédigé dans la langue du destinataire, valeurs comprises", () => {
+    const base = "https://gmao.example";
+    const content = {
+      title: tpl`${3} retard(s) à traiter`,
+      intro: "Préventifs en retard au-delà de la tolérance et interventions en attente depuis plus de 5 jours :",
+      linkLabel: "Voir le stock",
+      link: "/stock",
+    };
+    const fr = renderEmail("OVERDUE", content, { baseUrl: base, recipientName: "Sami" });
+    expect(fr.subject).toBe("[GMAO] 3 retard(s) à traiter");
+    expect(fr.text).toContain("Bonjour Sami,");
+    expect(fr.html).toContain('lang="fr" dir="ltr"');
+    const en = renderEmail("OVERDUE", content, { baseUrl: base, recipientName: "Sami", locale: "en" });
+    expect(en.subject).toBe("[GMAO] 3 overdue item(s) to handle");
+    expect(en.text).toContain("Hello Sami,");
+    expect(en.text).toContain("See the stock");
+    const ar = renderEmail("OVERDUE", content, { baseUrl: base, locale: "ar" });
+    expect(ar.html).toContain('lang="ar" dir="rtl"');
+    expect(ar.subject).toContain("3");
+    expect(ar.subject).not.toContain("retard");
   });
 });

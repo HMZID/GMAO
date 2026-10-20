@@ -10,6 +10,8 @@ import { isPlatformAdmin } from "@/server/services/platform";
 import { getSitePage } from "@/server/services/site";
 import { deleteSitePageAction, updateSitePageAction } from "../../actions";
 import { SiteAdminNav } from "../../site-admin-nav";
+import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Page du site" };
 
@@ -32,7 +34,7 @@ export default async function SitePageEditor(props: PageProps<"/administration/s
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
             >
-              Voir la page
+              <T>Voir la page</T>
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             </a>
           ) : null
@@ -46,7 +48,7 @@ export default async function SitePageEditor(props: PageProps<"/administration/s
               <Field label="Titre" name="title" required>
                 <Input name="title" required maxLength={120} defaultValue={page.title} />
               </Field>
-              <Field label="Adresse" name="slug" hint={`Servie sous /infos/${page.slug}`}>
+              <Field label="Adresse" name="slug" hint={tpl`Servie sous /infos/${page.slug}`}>
                 <Input name="slug" maxLength={80} defaultValue={page.slug} pattern="[a-z0-9]+(-[a-z0-9]+)*" />
               </Field>
               <Field label="Résumé" name="summary" hint="Chapeau de la page et description pour les moteurs de recherche" className="md:col-span-2">
@@ -60,25 +62,35 @@ export default async function SitePageEditor(props: PageProps<"/administration/s
                 <Checkbox name="showInFooter" label="Lien dans le pied de page" defaultChecked={page.showInFooter} />
               </div>
               <div className="md:col-span-2">
-                <SubmitButton>Enregistrer</SubmitButton>
+                <SubmitButton>
+                  <T>Enregistrer</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </CardBody>
         </Card>
         <div className="space-y-6">
           <Alert tone="blue" title="Mise en forme">
-            <ul className="mt-1 list-disc space-y-1 pl-5">
-              <li>« ## Titre » ou « ### Sous-titre » en début de ligne</li>
-              <li>« - élément » pour une liste</li>
-              <li>une ligne vide entre deux paragraphes</li>
-              <li>**gras** et [texte du lien](https://…)</li>
+            <ul className="mt-1 list-disc space-y-1 ps-5">
+              <li>
+                <T>« ## Titre » ou « ### Sous-titre » en début de ligne</T>
+              </li>
+              <li>
+                <T>« - élément » pour une liste</T>
+              </li>
+              <li>
+                <T>une ligne vide entre deux paragraphes</T>
+              </li>
+              <li>
+                <T>**gras** et [texte du lien](https://…)</T>
+              </li>
             </ul>
           </Alert>
           <Card>
             <CardBody>
               <ActionForm action={deleteSitePageAction.bind(null, page.id)}>
                 <SubmitButton variant="danger" pendingLabel="Suppression…">
-                  Supprimer la page
+                  <T>Supprimer la page</T>
                 </SubmitButton>
               </ActionForm>
             </CardBody>

@@ -10,6 +10,8 @@ import { cleanFilters, queryParams } from "@/server/pages";
 import { demoRequestFilters, listDemoRequests } from "@/server/services/demo-requests";
 import { isPlatformAdmin } from "@/server/services/platform";
 import { SiteAdminNav } from "../site-admin-nav";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Demandes de démonstration" };
 
@@ -40,10 +42,12 @@ export default async function DemoRequestsPage(props: PageProps<"/administration
 
       <Card>
         <div className="flex items-center justify-between px-5 py-3 text-sm">
-          <span className="text-slate-600">{params.status ? `Filtre : ${DEMO_REQUEST_STATUS[params.status]?.label}` : "Toutes les demandes"}</span>
+          <span className="text-slate-600">
+            <Tr>{params.status ? tpl`Filtre : ${DEMO_REQUEST_STATUS[params.status]?.label}` : "Toutes les demandes"}</Tr>
+          </span>
           {params.status ? (
             <Link href={filter()} className="text-brand-700 hover:underline">
-              Tous les statuts
+              <T>Tous les statuts</T>
             </Link>
           ) : null}
         </div>
@@ -53,11 +57,21 @@ export default async function DemoRequestsPage(props: PageProps<"/administration
           <Table>
             <THead>
               <tr>
-                <TH>Société</TH>
-                <TH>Contact</TH>
-                <TH>Parc</TH>
-                <TH>Reçue le</TH>
-                <TH>Statut</TH>
+                <TH>
+                  <T>Société</T>
+                </TH>
+                <TH>
+                  <T>Contact</T>
+                </TH>
+                <TH>
+                  <T>Parc</T>
+                </TH>
+                <TH>
+                  <T>Reçue le</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -65,23 +79,33 @@ export default async function DemoRequestsPage(props: PageProps<"/administration
                 <TR key={r.id}>
                   <TD>
                     <Link href={`/administration/site/demandes/${r.id}`} className="font-medium text-brand-700 hover:underline">
-                      {r.company}
+                      <Tr>{r.company}</Tr>
                     </Link>
-                    {r.sector ? <p className="text-xs text-slate-500">{r.sector}</p> : null}
+                    {r.sector ? (
+                      <p className="text-xs text-slate-500">
+                        <Tr>{r.sector}</Tr>
+                      </p>
+                    ) : null}
                   </TD>
                   <TD>
-                    <p>{r.contactName}</p>
-                    <p className="text-xs text-slate-500">{r.email}</p>
+                    <p>
+                      <Tr>{r.contactName}</Tr>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{r.email}</Tr>
+                    </p>
                     {r.existingAccount && r.status === "PENDING" ? (
                       <Badge tone="red" className="mt-1">
-                        Compte existant
+                        <T>Compte existant</T>
                       </Badge>
                     ) : null}
                   </TD>
                   <TD className="text-sm">{r.fleetSize ? FLEET[r.fleetSize] : "—"}</TD>
                   <TD className="text-xs">{formatDateTime(r.createdAt)}</TD>
                   <TD>
-                    <Badge tone={DEMO_REQUEST_STATUS[r.status]?.tone ?? "gray"}>{DEMO_REQUEST_STATUS[r.status]?.label ?? r.status}</Badge>
+                    <Badge tone={DEMO_REQUEST_STATUS[r.status]?.tone ?? "gray"}>
+                      <Tr>{DEMO_REQUEST_STATUS[r.status]?.label ?? r.status}</Tr>
+                    </Badge>
                   </TD>
                 </TR>
               ))}

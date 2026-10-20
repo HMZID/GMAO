@@ -48,6 +48,7 @@ import { issueToWorkOrder, releaseReservations, reserveForWorkOrder, returnFromW
 import { approvalTimeline, cancelPendingApproval, startApproval, submitWorkOrderForValidation } from "./approvals";
 import { listPurchaseRequestsForWorkOrder } from "./purchase-requests";
 import { insertWorkOrder } from "./work-order-factory";
+import { tpl } from "@/i18n/translate";
 
 type WorkOrderRow = typeof workOrders.$inferSelect;
 
@@ -643,7 +644,7 @@ export async function transitionWorkOrder(ctx: AuthContext, id: string, raw: unk
           type: "work_order.release_requested",
           // Une nouvelle demande de remise en service après réouverture repart par courriel.
           dedupKey: `release:${wo.id}:${now.toISOString()}`,
-          title: `Remise en service à valider : ${wo.number}`,
+          title: tpl`Remise en service à valider : ${wo.number}`,
           body: wo.title,
           entityType: "work_order",
           entityId: wo.id,

@@ -16,6 +16,8 @@ import { APPROVAL_OBJECT, ROLE, options } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { getWorkOrderValidationSetting, listUserOptions, listWorkflows } from "@/server/services/approvals";
 import { listCompanies } from "@/server/services/organization";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Circuits de validation" };
 
@@ -43,7 +45,11 @@ export default async function ApprovalWorkflowsPage() {
         <CardHeader
           title="Validation des interventions"
           description="Le responsable maintenance valide toutes les interventions dont le coût estimé est inférieur au seuil ; à partir du seuil, la direction valide. La direction crée sans validation et peut tout valider."
-          actions={<Badge tone={setting.enabled ? "green" : "gray"}>{setting.enabled ? "Actif" : "Inactif"}</Badge>}
+          actions={
+            <Badge tone={setting.enabled ? "green" : "gray"}>
+              <Tr>{setting.enabled ? "Actif" : "Inactif"}</Tr>
+            </Badge>
+          }
         />
         <CardBody>
           {canSetThreshold ? (
@@ -55,17 +61,20 @@ export default async function ApprovalWorkflowsPage() {
                 <Input name="threshold" type="number" min="0" step="0.01" defaultValue={setting.threshold ?? ""} />
               </Field>
               <div className="flex items-end">
-                <SubmitButton>Enregistrer</SubmitButton>
+                <SubmitButton>
+                  <T>Enregistrer</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           ) : (
             <p className="text-sm text-slate-700">
-              {setting.enabled
-                ? setting.threshold !== null
-                  ? `Interventions validées par le responsable maintenance sous ${formatCurrency(setting.threshold)}, par la direction à partir de ce montant.`
-                  : "Interventions validées par le responsable maintenance, sans seuil."
-                : "Les interventions ne sont pas soumises à validation."}{" "}
-              Le seuil est fixé par la direction.
+              <T params={{ threshold: setting.threshold !== null ? formatCurrency(setting.threshold) : "" }}>
+                {setting.enabled
+                  ? setting.threshold !== null
+                    ? "Interventions validées par le responsable maintenance sous {threshold}, par la direction à partir de ce montant. Le seuil est fixé par la direction."
+                    : "Interventions validées par le responsable maintenance, sans seuil. Le seuil est fixé par la direction."
+                  : "Les interventions ne sont pas soumises à validation. Le seuil est fixé par la direction."}
+              </T>
             </p>
           )}
         </CardBody>
@@ -83,7 +92,9 @@ export default async function ApprovalWorkflowsPage() {
             <Input name="name" required maxLength={120} />
           </Field>
           <div className="sm:col-span-3">
-            <SubmitButton>Créer le circuit</SubmitButton>
+            <SubmitButton>
+              <T>Créer le circuit</T>
+            </SubmitButton>
           </div>
         </ActionForm>
       </Disclosure>
@@ -101,12 +112,14 @@ export default async function ApprovalWorkflowsPage() {
                 description={`${APPROVAL_OBJECT[w.objectType]} · ${w.companyName ?? "Tout le groupe"}`}
                 actions={
                   <ActionPanel action={setWorkflowActiveAction} className="flex items-center gap-2">
-                    <Badge tone={w.active ? "green" : "gray"}>{w.active ? "Actif" : "Inactif"}</Badge>
+                    <Badge tone={w.active ? "green" : "gray"}>
+                      <Tr>{w.active ? "Actif" : "Inactif"}</Tr>
+                    </Badge>
                     <PanelForm>
                       <input type="hidden" name="workflowId" value={w.id} />
                       <input type="hidden" name="active" value={w.active ? "false" : "true"} />
                       <SubmitButton variant="ghost" size="sm">
-                        {w.active ? "Désactiver" : "Activer"}
+                        <Tr>{w.active ? "Désactiver" : "Activer"}</Tr>
                       </SubmitButton>
                     </PanelForm>
                   </ActionPanel>
@@ -119,33 +132,57 @@ export default async function ApprovalWorkflowsPage() {
                   <Table>
                     <THead>
                       <tr>
-                        <TH>Ordre</TH>
-                        <TH>Étape</TH>
-                        <TH>Valideur</TH>
-                        <TH>Montant</TH>
-                        <TH>Priorités</TH>
-                        <TH className="sr-only">Actions</TH>
+                        <TH>
+                          <T>Ordre</T>
+                        </TH>
+                        <TH>
+                          <T>Étape</T>
+                        </TH>
+                        <TH>
+                          <T>Valideur</T>
+                        </TH>
+                        <TH>
+                          <T>Montant</T>
+                        </TH>
+                        <TH>
+                          <T>Priorités</T>
+                        </TH>
+                        <TH className="sr-only">
+                          <T>Actions</T>
+                        </TH>
                       </tr>
                     </THead>
                     <TBody>
                       {w.steps.map((s) => (
                         <TR key={s.id}>
-                          <TD className="tabular-nums">{s.position}</TD>
-                          <TD className="font-medium text-slate-900">{s.name}</TD>
-                          <TD>{s.approverRole ? `${ROLE[s.approverRole] ?? s.approverRole} (périmètre de l'objet)` : (s.approverName ?? "—")}</TD>
                           <TD className="tabular-nums">
-                            {s.minAmount != null
-                              ? `À partir de ${formatCurrency(s.minAmount)}`
-                              : s.maxAmount != null
-                                ? `Moins de ${formatCurrency(s.maxAmount)}`
-                                : "Toujours"}
+                            <Tr>{s.position}</Tr>
                           </TD>
-                          <TD>{s.priorities.length > 0 ? s.priorities.join(", ") : "Toutes"}</TD>
-                          <TD className="text-right">
+                          <TD className="font-medium text-slate-900">
+                            <Tr>{s.name}</Tr>
+                          </TD>
+                          <TD>
+                            <Tr>
+                              {s.approverRole ? tpl`${ROLE[s.approverRole] ?? s.approverRole} (périmètre de l'objet)` : (s.approverName ?? "—")}
+                            </Tr>
+                          </TD>
+                          <TD className="tabular-nums">
+                            <Tr>
+                              {s.minAmount != null
+                                ? tpl`À partir de ${formatCurrency(s.minAmount)}`
+                                : s.maxAmount != null
+                                  ? tpl`Moins de ${formatCurrency(s.maxAmount)}`
+                                  : "Toujours"}
+                            </Tr>
+                          </TD>
+                          <TD>
+                            <Tr>{s.priorities.length > 0 ? s.priorities.join(", ") : "Toutes"}</Tr>
+                          </TD>
+                          <TD className="text-end">
                             <PanelForm>
                               <input type="hidden" name="stepId" value={s.id} />
                               <SubmitButton variant="ghost" size="sm">
-                                Retirer
+                                <T>Retirer</T>
                               </SubmitButton>
                             </PanelForm>
                           </TD>
@@ -172,7 +209,9 @@ export default async function ApprovalWorkflowsPage() {
                     </Field>
                     {w.objectType === "WORK_REQUEST" ? (
                       <fieldset className="space-y-1 sm:col-span-2 lg:col-span-4">
-                        <legend className="text-sm font-medium text-slate-700">Priorités concernées (aucune cochée : toutes)</legend>
+                        <legend className="text-sm font-medium text-slate-700">
+                          <T>Priorités concernées (aucune cochée : toutes)</T>
+                        </legend>
                         <div className="flex flex-wrap gap-4">
                           {["P1", "P2", "P3", "P4"].map((p) => (
                             <Checkbox key={p} name="priorities[]" value={p} label={p} />
@@ -181,7 +220,9 @@ export default async function ApprovalWorkflowsPage() {
                       </fieldset>
                     ) : null}
                     <div className="sm:col-span-2 lg:col-span-4">
-                      <SubmitButton>Ajouter l&apos;étape</SubmitButton>
+                      <SubmitButton>
+                        <T>Ajouter l&apos;étape</T>
+                      </SubmitButton>
                     </div>
                   </ActionForm>
                 </Disclosure>

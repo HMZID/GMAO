@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, Loading } from "../../components/ui";
 import { SyncBanner } from "../../components/sync-banner";
 import { useSession } from "../../context/session";
+import { useT } from "../../i18n";
 
 const icon = (glyph: string) =>
   function TabIcon({ color }: { color: ColorValue }) {
@@ -16,6 +17,7 @@ const icon = (glyph: string) =>
  */
 export default function TabsLayout() {
   const { state, can } = useSession();
+  const t = useT();
   if (state.status === "loading") return <Loading />;
   if (state.status === "signedOut") return <Redirect href="/login" />;
 
@@ -31,11 +33,17 @@ export default function TabsLayout() {
             tabBarStyle: { minHeight: 60 },
           }}
         >
-          <Tabs.Screen name="index" options={{ title: "Mes interventions", tabBarIcon: icon("🛠"), href: can("workorder.read") ? undefined : null }} />
-          <Tabs.Screen name="equipment" options={{ title: "Équipements", tabBarIcon: icon("🚜"), href: can("equipment.read") ? undefined : null }} />
-          <Tabs.Screen name="due" options={{ title: "Échéances", tabBarIcon: icon("📅"), href: can("plan.read") ? undefined : null }} />
-          <Tabs.Screen name="scan" options={{ title: "Scanner", tabBarIcon: icon("▣") }} />
-          <Tabs.Screen name="sync" options={{ title: "Synchro", tabBarIcon: icon("⟳") }} />
+          <Tabs.Screen
+            name="index"
+            options={{ title: t("Mes interventions"), tabBarIcon: icon("🛠"), href: can("workorder.read") ? undefined : null }}
+          />
+          <Tabs.Screen
+            name="equipment"
+            options={{ title: t("Équipements"), tabBarIcon: icon("🚜"), href: can("equipment.read") ? undefined : null }}
+          />
+          <Tabs.Screen name="due" options={{ title: t("Échéances"), tabBarIcon: icon("📅"), href: can("plan.read") ? undefined : null }} />
+          <Tabs.Screen name="scan" options={{ title: t("Scanner"), tabBarIcon: icon("▣") }} />
+          <Tabs.Screen name="sync" options={{ title: t("Synchro"), tabBarIcon: icon("⟳") }} />
         </Tabs>
       </View>
     </SafeAreaView>

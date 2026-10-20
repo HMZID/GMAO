@@ -2,6 +2,9 @@
  * Notifications par courriel (NOT-01, NOT-03, NOT-04, CDC §11.1) : événements, préférences, modèles,
  * reprises après échec et clés anti-doublon. Module pur, testé dans `__tests__/email.test.ts`.
  */
+import { DEFAULT_LOCALE, directionOf, type Locale } from "@/i18n/config";
+import { dictionaryOf } from "@/i18n/dictionaries";
+import { tpl, translate } from "@/i18n/translate";
 import type { Role } from "@/server/authz/permissions";
 
 export const EMAIL_EVENTS = [
@@ -201,32 +204,44 @@ export function absoluteLink(baseUrl: string, path: string | null | undefined) {
 export function renderEmail(
   event: EmailEvent,
   content: EmailContent,
-  options: { appName?: string; baseUrl: string; recipientName?: string | null },
+  options: { appName?: string; baseUrl: string; recipientName?: string | null; locale?: Locale },
 ): RenderedEmail {
+  const locale = options.locale ?? DEFAULT_LOCALE;
+  const dictionary = dictionaryOf(locale);
+  const tr = (text: string) => translate(dictionary, text);
   const app = options.appName ?? "GMAO";
   const definition = EMAIL_EVENT_DEFINITIONS[event];
   const link = absoluteLink(options.baseUrl, content.link);
   const preferences = absoluteLink(options.baseUrl, "/notifications");
   const footer = definition.mandatory
-    ? "Alerte obligatoire : elle ne peut pas être désactivée."
-    : `Vous recevez ce message selon vos préférences de notification${preferences ? ` : ${preferences}` : "."}`;
-  const items = (content.items ?? []).map((i) => ({ ...i, href: absoluteLink(options.baseUrl, i.link) }));
+    ? tr("Alerte obligatoire : elle ne peut pas être désactivée.")
+    : tr(tpl`Vous recevez ce message selon vos préférences de notification${preferences ? ` : ${preferences}` : "."}`);
+  const items = (content.items ?? []).map((i) => ({
+    label: tr(i.label),
+    detail: i.detail ? tr(i.detail) : null,
+    href: absoluteLink(options.baseUrl, i.link),
+  }));
+  const title = tr(content.title);
+  const intro = tr(content.intro ?? content.title);
+  const linkLabel = tr(content.linkLabel ?? "Ouvrir dans la GMAO");
+  const greeting = options.recipientName ? tr(tpl`Bonjour ${options.recipientName},`) : tr("Bonjour,");
+  const signature = `${app} — ${tr(definition.label)}`;
 
   const text = [
-    options.recipientName ? `Bonjour ${options.recipientName},` : "Bonjour,",
+    greeting,
     "",
-    content.intro ?? content.title,
+    intro,
     ...(items.length > 0 ? ["", ...items.map((i) => `- ${i.label}${i.detail ? ` : ${i.detail}` : ""}${i.href ? ` (${i.href})` : ""}`)] : []),
-    ...(link ? ["", `${content.linkLabel ?? "Ouvrir dans la GMAO"} : ${link}`] : []),
+    ...(link ? ["", `${linkLabel} : ${link}`] : []),
     "",
     "--",
-    `${app} — ${definition.label}`,
+    signature,
     footer,
   ].join("\n");
 
-  const html = `<!doctype html><html lang="fr"><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.5">
-<p>${escapeHtml(options.recipientName ? `Bonjour ${options.recipientName},` : "Bonjour,")}</p>
-<p>${escapeHtml(content.intro ?? content.title)}</p>
+  const html = `<!doctype html><html lang="${locale}" dir="${directionOf(locale)}"><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.5">
+<p>${escapeHtml(greeting)}</p>
+<p>${escapeHtml(intro)}</p>
 ${
   items.length > 0
     ? `<ul>${items
@@ -237,11 +252,11 @@ ${
         .join("")}</ul>`
     : ""
 }
-${link ? `<p><a href="${escapeHtml(link)}" style="display:inline-block;background:#0f766e;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none">${escapeHtml(content.linkLabel ?? "Ouvrir dans la GMAO")}</a></p>` : ""}
-<p style="color:#64748b;font-size:12px">${escapeHtml(`${app} — ${definition.label}`)}<br>${escapeHtml(footer)}</p>
+${link ? `<p><a href="${escapeHtml(link)}" style="display:inline-block;background:#0f766e;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none">${escapeHtml(linkLabel)}</a></p>` : ""}
+<p style="color:#64748b;font-size:12px">${escapeHtml(signature)}<br>${escapeHtml(footer)}</p>
 </body></html>`;
 
-  return { subject: `[${app}] ${content.title}`.slice(0, 250), text, html };
+  return { subject: `[${app}] ${title}`.slice(0, 250), text, html };
 }
 
 /* ------------------------------------------------------------------ */
@@ -249,8 +264,8 @@ ${link ? `<p><a href="${escapeHtml(link)}" style="display:inline-block;backgroun
 /* ------------------------------------------------------------------ */
 
 /** Mise en page commune : bandeau sombre à liseré jaune, comme le site. */
-function brandedHtml(product: string, body: string, footer: string) {
-  return `<!doctype html><html lang="fr"><body style="margin:0;background:#f3f0e8;font-family:Arial,Helvetica,sans-serif;color:#15171a;line-height:1.55">
+function brandedHtml(product: string, body: string, footer: string, locale: Locale = DEFAULT_LOCALE) {
+  return `<!doctype html><html lang="${locale}" dir="${directionOf(locale)}"><body style="margin:0;background:#f3f0e8;font-family:Arial,Helvetica,sans-serif;color:#15171a;line-height:1.55">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0e8;padding:24px 0"><tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #d9d4c7">
 <tr><td style="background:#15171a;border-bottom:4px solid #ffb800;padding:18px 28px;color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:.5px">${escapeHtml(product)}</td></tr>
@@ -261,6 +276,12 @@ function brandedHtml(product: string, body: string, footer: string) {
 
 function button(href: string, label: string) {
   return `<p style="margin:24px 0"><a href="${escapeHtml(href)}" style="display:inline-block;background:#ffb800;color:#15171a;padding:12px 22px;font-weight:bold;text-decoration:none">${escapeHtml(label)}</a></p>`;
+}
+
+/** Traducteur d'une langue : le texte français (ou un gabarit `tpl`) sert de clé. */
+function translator(locale: Locale = DEFAULT_LOCALE) {
+  const dictionary = dictionaryOf(locale);
+  return (text: string) => translate(dictionary, text);
 }
 
 export type DemoAccessEmailInput = {
@@ -274,48 +295,62 @@ export type DemoAccessEmailInput = {
   endsOn: string;
   /** Renvoi des accès : nouveau mot de passe provisoire, l'ancien ne fonctionne plus. */
   resent?: boolean;
+  locale?: Locale;
 };
 
 /** Accès de démonstration : lien de connexion, identifiant et mot de passe provisoire (à changer à la première connexion). */
 export function renderDemoAccessEmail(input: DemoAccessEmailInput): RenderedEmail {
+  const tr = translator(input.locale);
   const intro = input.resent
-    ? `Voici de nouveaux accès à votre espace « ${input.organization} ». Le mot de passe provisoire précédent ne fonctionne plus.`
-    : `Votre espace de démonstration « ${input.organization} » est ouvert jusqu'au ${input.endsOn}.`;
+    ? tr(tpl`Voici de nouveaux accès à votre espace « ${input.organization} ». Le mot de passe provisoire précédent ne fonctionne plus.`)
+    : tr(tpl`Votre espace de démonstration « ${input.organization} » est ouvert jusqu'au ${input.endsOn}.`);
   const steps = [
-    "Connectez-vous avec l'identifiant et le mot de passe provisoire ci-dessous.",
-    "Choisissez votre propre mot de passe (demandé à la première connexion).",
-    "Importez vos engins depuis Excel (menu Imports) et invitez vos équipes (Administration).",
+    tr("Connectez-vous avec l'identifiant et le mot de passe provisoire ci-dessous."),
+    tr("Choisissez votre propre mot de passe (demandé à la première connexion)."),
+    tr("Importez vos engins depuis Excel (menu Imports) et invitez vos équipes (Administration)."),
   ];
+  const greeting = tr(tpl`Bonjour ${input.recipientName},`);
+  const personal = tr("Ce mot de passe est personnel : ne le transférez pas.");
+  const labels = {
+    url: tr("Adresse de connexion"),
+    login: tr("Identifiant"),
+    password: tr("Mot de passe provisoire"),
+  };
   const text = [
-    `Bonjour ${input.recipientName},`,
+    greeting,
     "",
     intro,
     "",
-    `Adresse de connexion : ${input.loginUrl}`,
-    `Identifiant : ${input.login}`,
-    `Mot de passe provisoire : ${input.password}`,
+    `${labels.url} : ${input.loginUrl}`,
+    `${labels.login} : ${input.login}`,
+    `${labels.password} : ${input.password}`,
     "",
     ...steps.map((s, i) => `${i + 1}. ${s}`),
     "",
-    "Ce mot de passe est personnel : ne le transférez pas.",
+    personal,
     "",
     "--",
-    `${input.product} — accès de démonstration`,
+    `${input.product} — ${tr("accès de démonstration")}`,
   ].join("\n");
   const row = (label: string, value: string, mono = false) =>
     `<tr><td style="padding:8px 12px;color:#6b6659;font-size:13px;border-bottom:1px solid #ece7da;white-space:nowrap">${escapeHtml(label)}</td><td style="padding:8px 12px;border-bottom:1px solid #ece7da;${mono ? "font-family:Consolas,Menlo,monospace;font-size:16px;font-weight:bold;letter-spacing:1px" : "font-weight:bold"}">${escapeHtml(value)}</td></tr>`;
-  const body = `<p style="margin-top:0">${escapeHtml(`Bonjour ${input.recipientName},`)}</p>
+  const body = `<p style="margin-top:0">${escapeHtml(greeting)}</p>
 <p>${escapeHtml(intro)}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #d9d4c7;background:#faf8f3;margin:20px 0">
-${row("Adresse de connexion", input.loginUrl)}${row("Identifiant", input.login)}${row("Mot de passe provisoire", input.password, true)}
+${row(labels.url, input.loginUrl)}${row(labels.login, input.login)}${row(labels.password, input.password, true)}
 </table>
-${button(input.loginUrl, "Me connecter")}
-<ol style="padding-left:20px;margin:0">${steps.map((s) => `<li style="margin-bottom:6px">${escapeHtml(s)}</li>`).join("")}</ol>
-<p style="color:#6b6659;font-size:13px">Ce mot de passe est personnel : ne le transférez pas.</p>`;
+${button(input.loginUrl, tr("Me connecter"))}
+<ol style="padding-inline-start:20px;margin:0">${steps.map((s) => `<li style="margin-bottom:6px">${escapeHtml(s)}</li>`).join("")}</ol>
+<p style="color:#6b6659;font-size:13px">${escapeHtml(personal)}</p>`;
   return {
-    subject: `[${input.product}] ${input.resent ? "Vos nouveaux accès de démonstration" : "Votre espace de démonstration est prêt"}`,
+    subject: `[${input.product}] ${input.resent ? tr("Vos nouveaux accès de démonstration") : tr("Votre espace de démonstration est prêt")}`,
     text,
-    html: brandedHtml(input.product, body, `${input.product} — vous recevez ce message à la suite de votre demande de démonstration.`),
+    html: brandedHtml(
+      input.product,
+      body,
+      `${input.product} — ${tr("vous recevez ce message à la suite de votre demande de démonstration.")}`,
+      input.locale,
+    ),
   };
 }
 
@@ -327,32 +362,35 @@ export type DemoRequestEmailInput = {
   details: { label: string; value: string | null | undefined }[];
   message?: string | null;
   link: string;
+  locale?: Locale;
 };
 
 /** Nouvelle demande de démonstration, pour les administrateurs de la plateforme. */
 export function renderDemoRequestEmail(input: DemoRequestEmailInput): RenderedEmail {
-  const details = input.details.filter((d) => d.value);
+  const tr = translator(input.locale);
+  const details = input.details.filter((d) => d.value).map((d) => ({ label: tr(d.label), value: d.value }));
+  const summary = tr(tpl`Nouvelle demande de démonstration : ${input.company} (${input.contactName}, ${input.email}).`);
   const text = [
-    "Bonjour,",
+    tr("Bonjour,"),
     "",
-    `Nouvelle demande de démonstration : ${input.company} (${input.contactName}, ${input.email}).`,
+    summary,
     ...details.map((d) => `- ${d.label} : ${d.value}`),
-    ...(input.message ? ["", `Message : ${input.message}`] : []),
+    ...(input.message ? ["", `${tr("Message")} : ${input.message}`] : []),
     "",
-    `Accepter ou refuser : ${input.link}`,
+    `${tr("Accepter ou refuser")} : ${input.link}`,
     "",
     "--",
-    `${input.product} — administration du site`,
+    `${input.product} — ${tr("administration du site")}`,
   ].join("\n");
-  const body = `<p style="margin-top:0">Bonjour,</p>
-<p>Nouvelle demande de démonstration : <strong>${escapeHtml(input.company)}</strong> (${escapeHtml(input.contactName)}, ${escapeHtml(input.email)}).</p>
+  const body = `<p style="margin-top:0">${escapeHtml(tr("Bonjour,"))}</p>
+<p>${escapeHtml(summary)}</p>
 ${details.length ? `<ul>${details.map((d) => `<li>${escapeHtml(d.label)} : ${escapeHtml(String(d.value))}</li>`).join("")}</ul>` : ""}
-${input.message ? `<blockquote style="margin:16px 0;padding:8px 14px;border-left:4px solid #ffb800;background:#faf8f3">${escapeHtml(input.message)}</blockquote>` : ""}
-${button(input.link, "Examiner la demande")}`;
+${input.message ? `<blockquote style="margin:16px 0;padding:8px 14px;border-inline-start:4px solid #ffb800;background:#faf8f3">${escapeHtml(input.message)}</blockquote>` : ""}
+${button(input.link, tr("Examiner la demande"))}`;
   return {
-    subject: `[${input.product}] Demande de démonstration : ${input.company}`.slice(0, 250),
+    subject: `[${input.product}] ${tr(tpl`Demande de démonstration : ${input.company}`)}`.slice(0, 250),
     text,
-    html: brandedHtml(input.product, body, `${input.product} — administration du site commercial.`),
+    html: brandedHtml(input.product, body, `${input.product} — ${tr("administration du site commercial.")}`, input.locale),
   };
 }
 
@@ -362,17 +400,22 @@ export function renderDemoDeclinedEmail(input: {
   recipientName: string;
   reason?: string | null;
   contactEmail?: string | null;
+  locale?: Locale;
 }): RenderedEmail {
+  const tr = translator(input.locale);
+  const greeting = tr(tpl`Bonjour ${input.recipientName},`);
   const lines = [
-    `Merci pour l'intérêt que vous portez à ${input.product}. Nous ne pouvons pas donner suite à votre demande de démonstration pour le moment.`,
+    tr(
+      tpl`Merci pour l'intérêt que vous portez à ${input.product}. Nous ne pouvons pas donner suite à votre demande de démonstration pour le moment.`,
+    ),
     ...(input.reason ? [input.reason] : []),
-    ...(input.contactEmail ? [`Pour toute question : ${input.contactEmail}.`] : []),
+    ...(input.contactEmail ? [tr(tpl`Pour toute question : ${input.contactEmail}.`)] : []),
   ];
-  const text = [`Bonjour ${input.recipientName},`, "", ...lines, "", "--", input.product].join("\n");
-  const body = `<p style="margin-top:0">${escapeHtml(`Bonjour ${input.recipientName},`)}</p>${lines.map((l) => `<p>${escapeHtml(l)}</p>`).join("")}`;
+  const text = [greeting, "", ...lines, "", "--", input.product].join("\n");
+  const body = `<p style="margin-top:0">${escapeHtml(greeting)}</p>${lines.map((l) => `<p>${escapeHtml(l)}</p>`).join("")}`;
   return {
-    subject: `[${input.product}] Votre demande de démonstration`,
+    subject: `[${input.product}] ${tr("Votre demande de démonstration")}`,
     text,
-    html: brandedHtml(input.product, body, `${input.product} — réponse à votre demande de démonstration.`),
+    html: brandedHtml(input.product, body, `${input.product} — ${tr("réponse à votre demande de démonstration.")}`, input.locale),
   };
 }

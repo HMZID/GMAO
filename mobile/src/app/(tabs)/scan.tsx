@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { Button, Card, Message, Screen, styles } from "../../components/ui";
 import { useSession } from "../../context/session";
+import { useT } from "../../i18n";
 import { ApiError, NetworkError } from "../../lib/api";
 import { extractQrToken } from "../../lib/qr";
 import { cacheStore } from "../../lib/storage";
@@ -14,6 +15,7 @@ import { cacheStore } from "../../lib/storage";
  */
 export default function ScanScreen() {
   const { api } = useSession();
+  const t = useT();
   const [permission, requestPermission] = useCameraPermissions();
   const [active, setActive] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -42,12 +44,12 @@ export default function ScanScreen() {
       if (cached) {
         router.push({ pathname: "/equipment/[id]", params: { id: cached.data.id } });
       } else if (e instanceof ApiError && e.status === 404) {
-        setMessage("Code inconnu ou équipement hors de votre périmètre.");
+        setMessage(t("Code inconnu ou équipement hors de votre périmètre."));
       } else {
         setMessage(
           e instanceof NetworkError
-            ? "Hors connexion : cet équipement n'a pas encore été consulté sur l'appareil."
-            : "Lecture impossible, réessayer.",
+            ? t("Hors connexion : cet équipement n'a pas encore été consulté sur l'appareil.")
+            : t("Lecture impossible, réessayer."),
         );
       }
     } finally {
@@ -60,7 +62,7 @@ export default function ScanScreen() {
     return (
       <Screen>
         <Card title="Caméra">
-          <Text style={styles.text}>La caméra est nécessaire pour lire le QR code des équipements.</Text>
+          <Text style={styles.text}>{t("La caméra est nécessaire pour lire le QR code des équipements.")}</Text>
           <Button title="Autoriser la caméra" onPress={requestPermission} />
         </Card>
       </Screen>
@@ -78,11 +80,7 @@ export default function ScanScreen() {
         />
       ) : null}
       <View style={{ position: "absolute", left: 16, right: 16, bottom: 24, gap: 8 }}>
-        {message ? (
-          <Message tone="amber">{message}</Message>
-        ) : (
-          <Message tone="gray">Viser le QR code de l&apos;étiquette de l&apos;équipement.</Message>
-        )}
+        {message ? <Message tone="amber">{message}</Message> : <Message tone="gray">{t("Viser le QR code de l'étiquette de l'équipement.")}</Message>}
       </View>
     </View>
   );

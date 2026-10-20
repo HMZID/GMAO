@@ -10,6 +10,8 @@ import { getAuthContext } from "@/server/auth/session";
 import { listMyApprovalRequests, listMySubstitutes, listPendingForMe, listUserOptions, objectLink } from "@/server/services/approvals";
 import { countPendingInventoryCounts } from "@/server/services/inventory";
 import { addSubstituteAction, decideFromListAction, removeSubstituteAction } from "./actions";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Validations" };
 
@@ -34,9 +36,9 @@ export default async function ValidationsPage() {
       {inventoryPending > 0 ? (
         <div className="mb-6">
           <Alert tone="amber">
-            {inventoryPending} écart(s) d&apos;inventaire à valider :{" "}
+            <T params={{ n: inventoryPending }}>{"{n} écart(s) d'inventaire à valider :"}</T>{" "}
             <Link href="/stock/inventaire" className="font-medium underline">
-              ouvrir l&apos;inventaire
+              <T>ouvrir l&apos;inventaire</T>
             </Link>
             .
           </Alert>
@@ -44,7 +46,7 @@ export default async function ValidationsPage() {
       ) : null}
 
       <Card className="mb-6">
-        <CardHeader title={`À valider (${pending.length})`} description="Étapes dont vous êtes valideur, directement ou comme suppléant" />
+        <CardHeader title={tpl`À valider (${pending.length})`} description="Étapes dont vous êtes valideur, directement ou comme suppléant" />
         {/* Un seul panneau pour la liste : le message reste affiché quand la demande tranchée disparaît. */}
         <ActionPanel action={decideFromListAction} className="[&>[role]]:mx-5 [&>[role]]:mt-4">
           {pending.length === 0 ? (
@@ -55,16 +57,26 @@ export default async function ValidationsPage() {
                 <li key={p.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_22rem]">
                   <div className="space-y-1 text-sm">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge tone="violet">{APPROVAL_OBJECT[p.objectType]}</Badge>
+                      <Badge tone="violet">
+                        <Tr>{APPROVAL_OBJECT[p.objectType]}</Tr>
+                      </Badge>
                       {p.amount != null ? <span className="font-semibold tabular-nums text-slate-900">{formatCurrency(p.amount)}</span> : null}
                     </div>
                     <Link href={p.link} className="block font-medium text-brand-700 hover:underline">
-                      {p.label}
+                      <Tr>{p.label}</Tr>
                     </Link>
                     <p className="text-slate-600">
-                      Étape « {p.step.name} » · {p.companyName} · demandé par {p.requesterName} le {formatDateTime(p.createdAt)}
+                      <T
+                        params={{ name: p.step.name, companyName: p.companyName, requesterName: p.requesterName, date: formatDateTime(p.createdAt) }}
+                      >
+                        {"Étape « {name} » · {companyName} · demandé par {requesterName} le {date}"}
+                      </T>
                     </p>
-                    {p.onBehalfOf ? <p className="text-xs text-amber-700">Vous décidez comme suppléant.</p> : null}
+                    {p.onBehalfOf ? (
+                      <p className="text-xs text-amber-700">
+                        <T>Vous décidez comme suppléant.</T>
+                      </p>
+                    ) : null}
                   </div>
                   <PanelForm className="space-y-2">
                     <input type="hidden" name="requestId" value={p.id} />
@@ -73,10 +85,10 @@ export default async function ValidationsPage() {
                     </Field>
                     <div className="flex gap-2">
                       <SubmitButton name="decision" value="APPROVED" size="sm">
-                        Valider
+                        <T>Valider</T>
                       </SubmitButton>
                       <SubmitButton name="decision" value="REJECTED" variant="danger" size="sm">
-                        Refuser
+                        <T>Refuser</T>
                       </SubmitButton>
                     </div>
                   </PanelForm>
@@ -96,9 +108,15 @@ export default async function ValidationsPage() {
             <Table>
               <THead>
                 <tr>
-                  <TH>Objet</TH>
-                  <TH>Statut</TH>
-                  <TH className="text-right">Montant</TH>
+                  <TH>
+                    <T>Objet</T>
+                  </TH>
+                  <TH>
+                    <T>Statut</T>
+                  </TH>
+                  <TH className="text-end">
+                    <T>Montant</T>
+                  </TH>
                 </tr>
               </THead>
               <TBody>
@@ -106,17 +124,24 @@ export default async function ValidationsPage() {
                   <TR key={r.id}>
                     <TD>
                       <Link href={objectLink(r.objectType, r.objectId)} className="font-medium text-brand-700 hover:underline">
-                        {r.label}
+                        <Tr>{r.label}</Tr>
                       </Link>
                       <p className="text-xs text-slate-500">
-                        {APPROVAL_OBJECT[r.objectType]} · {formatDateTime(r.createdAt)}
-                        {r.status === "PENDING" ? ` · étape « ${r.steps.find((s) => s.position === r.currentPosition)?.name ?? ""} »` : ""}
+                        <Tr>{APPROVAL_OBJECT[r.objectType]}</Tr> · {formatDateTime(r.createdAt)}
+                        {r.status === "PENDING" ? (
+                          <>
+                            {" · "}
+                            <T params={{ step: r.steps.find((s) => s.position === r.currentPosition)?.name ?? "" }}>{"étape « {step} »"}</T>
+                          </>
+                        ) : null}
                       </p>
                     </TD>
                     <TD>
-                      <Badge tone={APPROVAL_STATUS[r.status]?.tone}>{APPROVAL_STATUS[r.status]?.label}</Badge>
+                      <Badge tone={APPROVAL_STATUS[r.status]?.tone}>
+                        <Tr>{APPROVAL_STATUS[r.status]?.label}</Tr>
+                      </Badge>
                     </TD>
-                    <TD className="text-right tabular-nums">{r.amount != null ? formatCurrency(r.amount) : "—"}</TD>
+                    <TD className="text-end tabular-nums">{r.amount != null ? formatCurrency(r.amount) : "—"}</TD>
                   </TR>
                 ))}
               </TBody>
@@ -128,7 +153,9 @@ export default async function ValidationsPage() {
           <CardHeader title="Suppléance" description="Pendant une absence, votre suppléant décide à votre place ; chaque décision le mentionne." />
           <CardBody className="space-y-4">
             {substitutes.length === 0 ? (
-              <p className="text-sm text-slate-500">Aucune suppléance.</p>
+              <p className="text-sm text-slate-500">
+                <T>Aucune suppléance.</T>
+              </p>
             ) : (
               <ActionPanel action={removeSubstituteAction}>
                 <ul className="divide-y divide-slate-100 text-sm">
@@ -137,11 +164,11 @@ export default async function ValidationsPage() {
                     return (
                       <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                         <span>
-                          {s.given ? `${s.substituteName} vous remplace` : `Vous remplacez ${s.userName}`} du {formatDate(s.validFrom)} au{" "}
+                          <Tr>{s.given ? `${s.substituteName} vous remplace` : tpl`Vous remplacez ${s.userName}`}</Tr> du {formatDate(s.validFrom)} au{" "}
                           {formatDate(s.validTo)}
                           {active ? (
-                            <Badge tone="green" className="ml-2">
-                              En cours
+                            <Badge tone="green" className="ms-2">
+                              <T>En cours</T>
                             </Badge>
                           ) : null}
                         </span>
@@ -149,7 +176,7 @@ export default async function ValidationsPage() {
                           <PanelForm>
                             <input type="hidden" name="id" value={s.id} />
                             <SubmitButton variant="ghost" size="sm">
-                              Retirer
+                              <T>Retirer</T>
                             </SubmitButton>
                           </PanelForm>
                         ) : null}
@@ -176,7 +203,9 @@ export default async function ValidationsPage() {
                   <Input type="date" name="validTo" required />
                 </Field>
                 <div className="flex items-end">
-                  <SubmitButton>Désigner</SubmitButton>
+                  <SubmitButton>
+                    <T>Désigner</T>
+                  </SubmitButton>
                 </div>
               </ActionForm>
             </Disclosure>

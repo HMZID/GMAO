@@ -8,6 +8,7 @@ import { PART_TRACKING, options } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { listPartFamilies } from "@/server/services/stock";
 import { createPartAction } from "../../actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Nouvel article" };
 
@@ -65,9 +66,11 @@ export default async function NewPartPage() {
             </Field>
             <Checkbox name="isRepairable" label="Pièce réparable (échange standard)" className="sm:col-span-2" />
             <div className="flex items-center gap-3 border-t border-slate-100 pt-5 sm:col-span-2">
-              <SubmitButton>Créer l&apos;article</SubmitButton>
+              <SubmitButton>
+                <T>Créer l&apos;article</T>
+              </SubmitButton>
               <ButtonLink href="/stock" variant="ghost">
-                Annuler
+                <T>Annuler</T>
               </ButtonLink>
             </div>
           </ActionForm>

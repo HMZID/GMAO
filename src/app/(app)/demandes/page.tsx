@@ -13,6 +13,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listSites } from "@/server/services/organization";
 import { listWorkRequests, workRequestFilters } from "@/server/services/work-requests";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Demandes d'intervention" };
 
@@ -27,7 +28,13 @@ export default async function WorkRequestsPage(props: PageProps<"/demandes">) {
       <PageHeader
         title="Demandes d'intervention"
         description="Pannes et anomalies signalées, à qualifier puis à transformer en intervention à réaliser."
-        actions={ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Créer une demande d&apos;intervention</ButtonLink> : null}
+        actions={
+          ctx.can("request.create") ? (
+            <ButtonLink href="/demandes/nouvelle">
+              <T>Créer une demande d&apos;intervention</T>
+            </ButtonLink>
+          ) : null
+        }
       />
       <Card>
         <FilterBar resetHref="/demandes">
@@ -61,12 +68,24 @@ export default async function WorkRequestsPage(props: PageProps<"/demandes">) {
           <Table>
             <THead>
               <tr>
-                <TH>Demande</TH>
-                <TH>Équipement</TH>
-                <TH>Symptôme</TH>
-                <TH>Priorité</TH>
-                <TH>Signalée</TH>
-                <TH>Statut</TH>
+                <TH>
+                  <T>Demande</T>
+                </TH>
+                <TH>
+                  <T>Équipement</T>
+                </TH>
+                <TH>
+                  <T>Symptôme</T>
+                </TH>
+                <TH>
+                  <T>Priorité</T>
+                </TH>
+                <TH>
+                  <T>Signalée</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -74,20 +93,32 @@ export default async function WorkRequestsPage(props: PageProps<"/demandes">) {
                 <TR key={r.id}>
                   <TD className="whitespace-nowrap">
                     <Link href={`/demandes/${r.id}`} className="font-medium text-brand-700 hover:underline">
-                      {r.number}
+                      <Tr>{r.number}</Tr>
                     </Link>
                   </TD>
                   <TD>
                     <Link href={`/equipements/${r.equipmentId}`} className="hover:underline">
-                      {r.equipmentCode}
+                      <Tr>{r.equipmentCode}</Tr>
                     </Link>
-                    <p className="text-xs text-slate-500">{r.siteName}</p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{r.siteName}</Tr>
+                    </p>
                   </TD>
                   <TD>
-                    <p className="max-w-80 text-slate-900">{r.symptom}</p>
+                    <p className="max-w-80 text-slate-900">
+                      <Tr>{r.symptom}</Tr>
+                    </p>
                     <div className="mt-1 flex gap-1">
-                      {r.isStopped ? <Badge tone="red">Machine arrêtée</Badge> : null}
-                      {r.isSafetyRisk ? <Badge tone="red">Sécurité</Badge> : null}
+                      {r.isStopped ? (
+                        <Badge tone="red">
+                          <T>Machine arrêtée</T>
+                        </Badge>
+                      ) : null}
+                      {r.isSafetyRisk ? (
+                        <Badge tone="red">
+                          <T>Sécurité</T>
+                        </Badge>
+                      ) : null}
                     </div>
                   </TD>
                   <TD>
@@ -95,7 +126,9 @@ export default async function WorkRequestsPage(props: PageProps<"/demandes">) {
                   </TD>
                   <TD className="whitespace-nowrap">
                     {formatDateTime(r.reportedAt)}
-                    <p className="text-xs text-slate-500">{r.reportedByName}</p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{r.reportedByName}</Tr>
+                    </p>
                   </TD>
                   <TD>
                     <RequestStatusBadge status={r.status} />

@@ -7,6 +7,7 @@ import { Badge, Card, EmptyState, Table, TBody, TD, TH, THead, TR } from "@/comp
 import { getAuthContext } from "@/server/auth/session";
 import { listSuppliers } from "@/server/services/stock";
 import { createSupplierAction } from "./actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Fournisseurs et prestataires" };
 
@@ -41,7 +42,9 @@ export default async function SuppliersPage() {
             </Field>
             <Checkbox name="isContractor" label="Prestataire de maintenance (réalise des interventions)" />
             <div className="sm:col-span-2 lg:col-span-3">
-              <SubmitButton>Créer</SubmitButton>
+              <SubmitButton>
+                <T>Créer</T>
+              </SubmitButton>
             </div>
           </ActionForm>
         </Disclosure>
@@ -53,31 +56,61 @@ export default async function SuppliersPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Raison sociale</TH>
-                <TH>Identifiant fiscal</TH>
-                <TH>Contact</TH>
-                <TH>Rôle</TH>
-                <TH className="text-right">Interventions à réaliser</TH>
+                <TH>
+                  <T>Raison sociale</T>
+                </TH>
+                <TH>
+                  <T>Identifiant fiscal</T>
+                </TH>
+                <TH>
+                  <T>Contact</T>
+                </TH>
+                <TH>
+                  <T>Rôle</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Interventions à réaliser</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
               {suppliers.map((s) => (
                 <TR key={s.id}>
                   <TD className="font-medium text-slate-900">
-                    {s.name}
-                    {!s.active ? <Badge className="ml-2">Inactif</Badge> : null}
+                    <Tr>{s.name}</Tr>
+                    {!s.active ? (
+                      <Badge className="ms-2">
+                        <T>Inactif</T>
+                      </Badge>
+                    ) : null}
                   </TD>
                   <TD className="font-mono text-xs">{s.taxId ?? "—"}</TD>
                   <TD className="text-xs">
                     {s.email ? (
                       <a href={`mailto:${s.email}`} className="text-brand-700 hover:underline">
-                        {s.email}
+                        <Tr>{s.email}</Tr>
                       </a>
                     ) : null}
-                    {s.phone ? <p className="text-slate-500">{s.phone}</p> : null}
+                    {s.phone ? (
+                      <p className="text-slate-500">
+                        <Tr>{s.phone}</Tr>
+                      </p>
+                    ) : null}
                   </TD>
-                  <TD>{s.isContractor ? <Badge tone="violet">Prestataire</Badge> : <Badge>Fournisseur</Badge>}</TD>
-                  <TD className="text-right tabular-nums">{s.workOrderCount}</TD>
+                  <TD>
+                    {s.isContractor ? (
+                      <Badge tone="violet">
+                        <T>Prestataire</T>
+                      </Badge>
+                    ) : (
+                      <Badge>
+                        <T>Fournisseur</T>
+                      </Badge>
+                    )}
+                  </TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{s.workOrderCount}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>

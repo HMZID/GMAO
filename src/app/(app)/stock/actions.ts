@@ -8,6 +8,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { createInventoryCount, decideInventoryCount } from "@/server/services/inventory";
 import { createMovement, createPart, updateStockLevelSettings } from "@/server/services/stock";
 import { formToObject } from "@/server/validation";
+import { tpl } from "@/i18n/translate";
 
 const MOVEMENT_MESSAGES: Record<string, string> = {
   RECEIPT: "Réception enregistrée : stock et coût moyen pondéré mis à jour.",
@@ -38,13 +39,15 @@ export async function inventoryCountAction(_: ActionState, formData: FormData): 
     const ctx = await getAuthContext();
     const count = await createInventoryCount(ctx, formToObject(formData));
     refresh();
-    const gap = count.difference === 0 ? "aucun écart" : `écart de ${count.difference > 0 ? "+" : ""}${count.difference}`;
+    const sign = count.difference > 0 ? "+" : "";
     return {
       status: "success",
       message:
         count.status === "PENDING"
-          ? `Comptage enregistré, ${gap} : au-delà du seuil, l'écart attend la validation du responsable ; le stock n'a pas changé.`
-          : `Comptage enregistré, ${gap}${count.difference === 0 ? "." : " : stock ajusté."}`,
+          ? tpl`Comptage enregistré, écart de ${sign}${count.difference} : au-delà du seuil, l'écart attend la validation du responsable ; le stock n'a pas changé.`
+          : count.difference === 0
+            ? tpl`Comptage enregistré, aucun écart.`
+            : tpl`Comptage enregistré, écart de ${sign}${count.difference} : stock ajusté.`,
       at: Date.now(),
     };
   });

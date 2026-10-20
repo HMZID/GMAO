@@ -8,6 +8,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { addOperation, createPlan, generatePreventiveWorkOrders, operationInput, postponeDueItem } from "@/server/services/preventive";
 import { parseInput } from "@/server/services/_shared";
 import { formToObject, text } from "@/server/validation";
+import { tpl } from "@/i18n/translate";
 
 /**
  * Opération saisie dans un formulaire à plat : déclencheurs calendaire et compteur facultatifs
@@ -68,7 +69,7 @@ export async function generateAction(_: ActionState): Promise<ActionState> {
       message:
         created === 0
           ? "Aucune intervention à générer : toutes les échéances proches ont déjà la leur."
-          : `${created} intervention(s) préventive(s) générée(s).`,
+          : tpl`${created} intervention(s) préventive(s) générée(s).`,
     } satisfies ActionState;
   });
 }

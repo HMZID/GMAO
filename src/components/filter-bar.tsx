@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { CollapseOnMobile } from "./collapse-on-mobile";
+import { T, Tr } from "@/i18n/client";
 
 /**
  * Barre de filtres d'une liste : formulaire GET (l'URL porte les filtres, partageable et sans JavaScript).
@@ -14,22 +15,26 @@ export function FilterBar({ children, resetHref }: { children: ReactNode; resetH
     <details open className="group border-b border-slate-100">
       <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 px-4 text-sm font-medium text-slate-700 md:hidden [&::-webkit-details-marker]:hidden">
         <SlidersHorizontal className="h-4 w-4" aria-hidden />
-        Filtres et recherche
+        <T>Filtres et recherche</T>
         <span data-active-filters className="hidden rounded-full bg-brand-100 px-2 py-0.5 text-xs text-brand-800">
-          actifs
+          <T>actifs</T>
         </span>
-        <span className="ml-auto text-xs text-slate-500 group-open:hidden">Afficher</span>
-        <span className="ml-auto hidden text-xs text-slate-500 group-open:inline">Masquer</span>
+        <span className="ms-auto text-xs text-slate-500 group-open:hidden">
+          <T>Afficher</T>
+        </span>
+        <span className="ms-auto hidden text-xs text-slate-500 group-open:inline">
+          <T>Masquer</T>
+        </span>
       </summary>
       <CollapseOnMobile />
       <form method="get" className="flex flex-wrap items-end gap-3 px-4 pb-4 pt-1 max-md:*:w-full md:px-5 md:pt-4">
-        {children}
+        <Tr>{children}</Tr>
         <div className="flex items-center gap-3">
           <Button type="submit" variant="secondary" className="max-md:flex-1">
-            Filtrer
+            <T>Filtrer</T>
           </Button>
           <Link href={resetHref} className="text-sm text-slate-500 hover:text-slate-800">
-            Réinitialiser
+            <T>Réinitialiser</T>
           </Link>
         </div>
       </form>

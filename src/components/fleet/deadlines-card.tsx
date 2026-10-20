@@ -8,6 +8,7 @@ import { DEADLINE_KIND, options } from "@/lib/labels";
 import type { AuthContext } from "@/server/authz/context";
 import { listDeadlines } from "@/server/services/fleet-deadlines";
 import { DeadlinesTable } from "./deadlines-table";
+import { T } from "@/i18n/client";
 
 /** Carte « Échéances administratives » de la fiche équipement : assurance, visite technique, vignette. */
 export async function DeadlinesCard({
@@ -35,7 +36,7 @@ export async function DeadlinesCard({
         description="Assurance, visite technique, vignette : alertes au responsable du parc à J−30, J−7 et à l'échéance"
         actions={
           <Link href="/equipements/echeances" className="text-sm text-brand-700 hover:underline">
-            Tout le parc
+            <T>Tout le parc</T>
           </Link>
         }
       />
@@ -66,7 +67,9 @@ export async function DeadlinesCard({
                 <Textarea name="notes" rows={2} maxLength={1000} />
               </Field>
               <div className="sm:col-span-2">
-                <SubmitButton>Enregistrer l&apos;échéance</SubmitButton>
+                <SubmitButton>
+                  <T>Enregistrer l&apos;échéance</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </Disclosure>

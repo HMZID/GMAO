@@ -9,6 +9,7 @@ import { DEADLINE_KIND, DEADLINE_STATE, DEADLINE_STATUS } from "@/lib/labels";
 import type { AuthContext } from "@/server/authz/context";
 import { daysUntil, deadlineState } from "@/server/domain/fleet-deadlines";
 import type { listDeadlines } from "@/server/services/fleet-deadlines";
+import { T, Tr } from "@/i18n/client";
 
 type Deadline = Awaited<ReturnType<typeof listDeadlines>>[number];
 
@@ -43,12 +44,26 @@ export function DeadlinesTable({
         <Table>
           <THead>
             <tr>
-              {showEquipment ? <TH>Équipement</TH> : null}
-              <TH>Échéance</TH>
-              <TH>Date</TH>
-              <TH>État</TH>
-              <TH>Organisme</TH>
-              <TH className="sr-only">Actions</TH>
+              {showEquipment ? (
+                <TH>
+                  <T>Équipement</T>
+                </TH>
+              ) : null}
+              <TH>
+                <T>Échéance</T>
+              </TH>
+              <TH>
+                <T>Date</T>
+              </TH>
+              <TH>
+                <T>État</T>
+              </TH>
+              <TH>
+                <T>Organisme</T>
+              </TH>
+              <TH className="sr-only">
+                <T>Actions</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
@@ -62,17 +77,27 @@ export function DeadlinesTable({
                   {showEquipment ? (
                     <TD>
                       <Link href={`/equipements/${d.equipmentId}`} className="font-medium text-brand-700 hover:underline">
-                        {d.equipmentCode}
+                        <Tr>{d.equipmentCode}</Tr>
                       </Link>
                       <p className="text-xs text-slate-500">
-                        {d.equipmentName} · {d.siteName}
+                        <Tr>{d.equipmentName}</Tr> · <Tr>{d.siteName}</Tr>
                       </p>
                     </TD>
                   ) : null}
                   <TD>
-                    <Badge tone={DEADLINE_KIND[d.kind]?.tone}>{DEADLINE_KIND[d.kind]?.label ?? d.kind}</Badge>
-                    {d.label ? <p className="mt-1 text-sm text-slate-900">{d.label}</p> : null}
-                    {d.reference ? <p className="text-xs text-slate-500">Réf. {d.reference}</p> : null}
+                    <Badge tone={DEADLINE_KIND[d.kind]?.tone}>
+                      <Tr>{DEADLINE_KIND[d.kind]?.label ?? d.kind}</Tr>
+                    </Badge>
+                    {d.label ? (
+                      <p className="mt-1 text-sm text-slate-900">
+                        <Tr>{d.label}</Tr>
+                      </p>
+                    ) : null}
+                    {d.reference ? (
+                      <p className="text-xs text-slate-500">
+                        <T params={{ reference: d.reference }}>{"Réf. {reference}"}</T>
+                      </p>
+                    ) : null}
                   </TD>
                   <TD className="whitespace-nowrap">
                     {formatDate(d.dueDate)}
@@ -80,19 +105,23 @@ export function DeadlinesTable({
                   </TD>
                   <TD>
                     {open ? (
-                      <Badge tone={DEADLINE_STATE[state].tone}>{DEADLINE_STATE[state].label}</Badge>
+                      <Badge tone={DEADLINE_STATE[state].tone}>
+                        <Tr>{DEADLINE_STATE[state].label}</Tr>
+                      </Badge>
                     ) : (
-                      <Badge tone={DEADLINE_STATUS[d.status]?.tone}>{DEADLINE_STATUS[d.status]?.label ?? d.status}</Badge>
+                      <Badge tone={DEADLINE_STATUS[d.status]?.tone}>
+                        <Tr>{DEADLINE_STATUS[d.status]?.label ?? d.status}</Tr>
+                      </Badge>
                     )}
                   </TD>
                   <TD>
                     {d.provider ?? "—"}
                     {d.amount !== null ? <p className="text-xs text-slate-500">{formatCurrency(d.amount)}</p> : null}
                   </TD>
-                  <TD className="text-right">
+                  <TD className="text-end">
                     {canWrite ? (
                       <div className="flex flex-col items-end gap-2">
-                        <Disclosure summary="Renouveler" className="text-left">
+                        <Disclosure summary="Renouveler" className="text-start">
                           <PanelForm className="grid gap-3 sm:min-w-72">
                             <input type="hidden" name="deadlineId" value={d.id} />
                             <input type="hidden" name="intent" value="renew" />
@@ -105,10 +134,12 @@ export function DeadlinesTable({
                             <Field label="Montant payé" name="amount">
                               <Input type="number" name="amount" min={0} step="0.001" />
                             </Field>
-                            <SubmitButton size="sm">Enregistrer le renouvellement</SubmitButton>
+                            <SubmitButton size="sm">
+                              <T>Enregistrer le renouvellement</T>
+                            </SubmitButton>
                           </PanelForm>
                         </Disclosure>
-                        <Disclosure summary="Annuler" className="text-left">
+                        <Disclosure summary="Annuler" className="text-start">
                           <PanelForm className="grid gap-3 sm:min-w-72">
                             <input type="hidden" name="deadlineId" value={d.id} />
                             <input type="hidden" name="intent" value="cancel" />
@@ -116,7 +147,7 @@ export function DeadlinesTable({
                               <Input name="reason" required maxLength={500} />
                             </Field>
                             <SubmitButton variant="danger" size="sm">
-                              Annuler l&apos;échéance
+                              <T>Annuler l&apos;échéance</T>
                             </SubmitButton>
                           </PanelForm>
                         </Disclosure>

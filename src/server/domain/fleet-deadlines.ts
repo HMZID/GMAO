@@ -4,6 +4,7 @@
  * puis rappel chaque semaine tant que l'échéance n'est pas renouvelée. Module pur, testé dans
  * `__tests__/fleet-deadlines.test.ts`.
  */
+import { tpl, tx } from "@/i18n/translate";
 
 export const DEADLINE_KINDS = ["INSURANCE", "TECHNICAL_INSPECTION", "VIGNETTE", "OTHER"] as const;
 export type DeadlineKind = (typeof DEADLINE_KINDS)[number];
@@ -50,10 +51,20 @@ export function deadlineState(dueDate: Date, now: Date, timeZone = "Europe/Paris
   return days <= 30 ? "SOON" : "OK";
 }
 
-/** Phrase de l'alerte (notification et courriel). */
-export function deadlineAlertText(input: { kind: DeadlineKind; label: string | null; equipmentCode: string; days: number }) {
-  const what = input.label?.trim() || DEADLINE_KIND_LABEL[input.kind];
-  if (input.days < 0) return `${what} de ${input.equipmentCode} échue depuis ${-input.days} jour(s) : à renouveler sans attendre.`;
-  if (input.days === 0) return `${what} de ${input.equipmentCode} arrive à échéance aujourd'hui.`;
-  return `${what} de ${input.equipmentCode} à renouveler dans ${input.days} jour(s).`;
+/**
+ * Phrase de l'alerte (notification et courriel). `translatable` : gabarit `tpl` (traduit à l'affichage dans la langue
+ * du lecteur) au lieu du texte français brut.
+ */
+export function deadlineAlertText(input: { kind: DeadlineKind; label: string | null; equipmentCode: string; days: number }, translatable = false) {
+  const custom = input.label?.trim();
+  const what = custom || (translatable ? tx(DEADLINE_KIND_LABEL[input.kind]) : DEADLINE_KIND_LABEL[input.kind]);
+  const code = input.equipmentCode;
+  if (translatable) {
+    if (input.days < 0) return tpl`${what} de ${code} échue depuis ${-input.days} jour(s) : à renouveler sans attendre.`;
+    if (input.days === 0) return tpl`${what} de ${code} arrive à échéance aujourd'hui.`;
+    return tpl`${what} de ${code} à renouveler dans ${input.days} jour(s).`;
+  }
+  if (input.days < 0) return `${what} de ${code} échue depuis ${-input.days} jour(s) : à renouveler sans attendre.`;
+  if (input.days === 0) return `${what} de ${code} arrive à échéance aujourd'hui.`;
+  return `${what} de ${code} à renouveler dans ${input.days} jour(s).`;
 }

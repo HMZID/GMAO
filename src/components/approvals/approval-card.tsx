@@ -6,6 +6,7 @@ import { Badge, Card, CardBody, CardHeader } from "@/components/ui/primitives";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { APPROVAL_STATUS, ROLE } from "@/lib/labels";
 import type { approvalTimeline } from "@/server/services/approvals";
+import { T, Tr } from "@/i18n/client";
 
 type Timeline = Awaited<ReturnType<typeof approvalTimeline>>;
 
@@ -31,12 +32,17 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
   const decided = new Map(a.decisions.map((d) => [d.stepPosition, d]));
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-slate-900">{a.label}</p>
+      <p className="text-sm font-medium text-slate-900">
+        <Tr>{a.label}</Tr>
+      </p>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Badge tone={APPROVAL_STATUS[a.status]?.tone}>{APPROVAL_STATUS[a.status]?.label ?? a.status}</Badge>
+        <Badge tone={APPROVAL_STATUS[a.status]?.tone}>
+          <Tr>{APPROVAL_STATUS[a.status]?.label ?? a.status}</Tr>
+        </Badge>
         <span className="text-slate-600">
-          Soumise le {formatDateTime(a.createdAt)} par {a.requesterName ?? "—"}
-          {a.amount != null ? ` · ${formatCurrency(a.amount)}` : ""}
+          <T params={{ date: formatDateTime(a.createdAt), by: a.requesterName ?? "—", amount: a.amount != null ? formatCurrency(a.amount) : "" }}>
+            {a.amount != null ? "Soumise le {date} par {by} · {amount}" : "Soumise le {date} par {by}"}
+          </T>
         </span>
       </div>
       <ol className="space-y-2">
@@ -52,18 +58,33 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
               />
               <div>
                 <p className="font-medium text-slate-800">
-                  {step.name}
+                  <Tr>{step.name}</Tr>
                   <span className="font-normal text-slate-500">
                     {" "}
-                    · {step.approverRole ? (ROLE[step.approverRole] ?? step.approverRole) : "valideur nommé"}
+                    · <Tr>{step.approverRole ? (ROLE[step.approverRole] ?? step.approverRole) : "valideur nommé"}</Tr>
                   </span>
-                  {current ? <span className="ml-2 text-xs font-normal text-amber-700">étape en cours</span> : null}
+                  {current ? (
+                    <span className="ms-2 text-xs font-normal text-amber-700">
+                      <T>étape en cours</T>
+                    </span>
+                  ) : null}
                 </p>
                 {d ? (
                   <p className="text-slate-600">
-                    {d.decision === "APPROVED" ? "Validée" : "Refusée"} par {d.decidedBy}
-                    {d.onBehalfOf ? ` (suppléant de ${d.onBehalfOf})` : ""} le {formatDateTime(d.createdAt)}
-                    {d.comment ? <span className="block italic text-slate-700">« {d.comment} »</span> : null}
+                    <T params={{ by: d.decidedBy, date: formatDateTime(d.createdAt), onBehalfOf: d.onBehalfOf ?? "" }}>
+                      {d.decision === "APPROVED"
+                        ? d.onBehalfOf
+                          ? "Validée par {by} (suppléant de {onBehalfOf}) le {date}"
+                          : "Validée par {by} le {date}"
+                        : d.onBehalfOf
+                          ? "Refusée par {by} (suppléant de {onBehalfOf}) le {date}"
+                          : "Refusée par {by} le {date}"}
+                    </T>
+                    {d.comment ? (
+                      <span className="block italic text-slate-700">
+                        « <Tr>{d.comment}</Tr> »
+                      </span>
+                    ) : null}
                   </p>
                 ) : null}
               </div>
@@ -80,10 +101,10 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
             </Field>
             <div className="flex flex-wrap gap-2">
               <SubmitButton name="decision" value="APPROVED">
-                Valider
+                <T>Valider</T>
               </SubmitButton>
               <SubmitButton name="decision" value="REJECTED" variant="danger">
-                Refuser
+                <T>Refuser</T>
               </SubmitButton>
             </div>
           </PanelForm>

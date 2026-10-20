@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/primitives";
 import { safeRedirectPath } from "@/server/domain/login-security";
 import { TwoFactorForm } from "./two-factor-form";
+import { T } from "@/i18n/client";
 
 export const metadata: Metadata = { title: "Vérification" };
 
@@ -24,8 +25,12 @@ export default function VerificationPage(props: PageProps<"/connexion/verificati
           <span className="text-xl font-semibold">GMAO</span>
         </div>
         <div className="rounded-lg bg-white p-6 shadow-xl">
-          <h1 className="text-lg font-semibold text-slate-900">Vérification en deux étapes</h1>
-          <p className="mb-5 mt-1 text-sm text-slate-500">Saisissez le code à 6 chiffres affiché par votre application d&apos;authentification.</p>
+          <h1 className="text-lg font-semibold text-slate-900">
+            <T>Vérification en deux étapes</T>
+          </h1>
+          <p className="mb-5 mt-1 text-sm text-slate-500">
+            <T>Saisissez le code à 6 chiffres affiché par votre application d&apos;authentification.</T>
+          </p>
           <Suspense
             fallback={
               <div className="space-y-4" aria-busy="true" aria-label="Chargement du formulaire">
@@ -39,7 +44,7 @@ export default function VerificationPage(props: PageProps<"/connexion/verificati
         </div>
         <p className="mt-4 text-center text-xs text-slate-400">
           <a href="/login" className="underline">
-            Reprendre la connexion
+            <T>Reprendre la connexion</T>
           </a>
         </p>
       </div>

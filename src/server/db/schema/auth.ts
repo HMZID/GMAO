@@ -24,6 +24,8 @@ export const user = pgTable("user", {
   mustChangePassword: boolean("must_change_password").notNull().default(false),
   /** Double authentification (TOTP) active : géré par le plugin twoFactor de Better Auth (TEC-04). */
   twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+  /** Langue choisie (fr, en, ar) : celle des courriels et des alertes qui lui sont adressés. */
+  locale: text("locale").notNull().default("fr"),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });

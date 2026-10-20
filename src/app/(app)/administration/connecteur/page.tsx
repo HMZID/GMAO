@@ -12,6 +12,7 @@ import { API_KEY_ACCESS, API_KEY_ACCESS_LABEL, type ApiKeyAccess } from "@/serve
 import { publicUrl } from "@/server/public-url";
 import { listApiKeys } from "@/server/services/api-keys";
 import { createApiKeyAction, revokeApiKeyAction } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Connecteur de l'organisation" };
 
@@ -68,7 +69,9 @@ export default async function ConnectorPage() {
                 />
               </Field>
               <div className="sm:col-span-3">
-                <SubmitButton>Créer la clé</SubmitButton>
+                <SubmitButton>
+                  <T>Créer la clé</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </Disclosure>
@@ -79,36 +82,62 @@ export default async function ConnectorPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Clé</TH>
-                <TH>Accès</TH>
-                <TH>Créée</TH>
-                <TH>Dernière utilisation</TH>
-                <TH>Échéance</TH>
-                <TH>État</TH>
-                <TH className="sr-only">Actions</TH>
+                <TH>
+                  <T>Clé</T>
+                </TH>
+                <TH>
+                  <T>Accès</T>
+                </TH>
+                <TH>
+                  <T>Créée</T>
+                </TH>
+                <TH>
+                  <T>Dernière utilisation</T>
+                </TH>
+                <TH>
+                  <T>Échéance</T>
+                </TH>
+                <TH>
+                  <T>État</T>
+                </TH>
+                <TH className="sr-only">
+                  <T>Actions</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
               {keys.map((k) => (
                 <TR key={k.id}>
                   <TD>
-                    <p className="font-medium text-slate-900">{k.name}</p>
-                    <p className="font-mono text-xs text-slate-500">{k.prefix}…</p>
+                    <p className="font-medium text-slate-900">
+                      <Tr>{k.name}</Tr>
+                    </p>
+                    <p className="font-mono text-xs text-slate-500">
+                      <Tr>{k.prefix}</Tr>…
+                    </p>
                   </TD>
-                  <TD>{API_KEY_ACCESS_LABEL[k.access as ApiKeyAccess] ?? k.access}</TD>
-                  <TD className="text-xs">
-                    {formatDate(k.createdAt)} par {k.createdBy}
-                  </TD>
-                  <TD className="text-xs">{k.lastUsedAt ? formatDateTime(k.lastUsedAt) : "Jamais"}</TD>
-                  <TD className="text-xs">{k.expiresAt ? formatDate(k.expiresAt) : "Aucune"}</TD>
                   <TD>
-                    <Badge tone={STATE[k.state].tone}>{STATE[k.state].label}</Badge>
+                    <Tr>{API_KEY_ACCESS_LABEL[k.access as ApiKeyAccess] ?? k.access}</Tr>
+                  </TD>
+                  <TD className="text-xs">
+                    <T params={{ date: formatDate(k.createdAt), createdBy: k.createdBy }}>{"{date} par {createdBy}"}</T>
+                  </TD>
+                  <TD className="text-xs">
+                    <Tr>{k.lastUsedAt ? formatDateTime(k.lastUsedAt) : "Jamais"}</Tr>
+                  </TD>
+                  <TD className="text-xs">
+                    <Tr>{k.expiresAt ? formatDate(k.expiresAt) : "Aucune"}</Tr>
+                  </TD>
+                  <TD>
+                    <Badge tone={STATE[k.state].tone}>
+                      <Tr>{STATE[k.state].label}</Tr>
+                    </Badge>
                   </TD>
                   <TD>
                     {k.state === "ACTIVE" ? (
                       <ActionForm action={revokeApiKeyAction.bind(null, k.id)} showMessage={false}>
                         <SubmitButton size="sm" variant="ghost">
-                          Révoquer
+                          <T>Révoquer</T>
                         </SubmitButton>
                       </ActionForm>
                     ) : null}
@@ -135,9 +164,12 @@ export default async function ConnectorPage() {
           <Step title="Extraction incrémentale (ETL) : lignes créées ou modifiées depuis la dernière exécution, par pages">
             <Code>{`GET ${base}/api/v1/exports/work-orders?updatedSince=2026-01-01T00:00:00Z&limit=1000&offset=0`}</Code>
             <p className="mt-1 text-xs text-slate-500">
-              Rejouer avec <code>offset=page.next</code> tant que <code>page.next</code> n&apos;est pas nul ; conserver l&apos;heure de début de
-              l&apos;extraction comme prochain <code>updatedSince</code>. Jeux de données : equipment, work-orders, work-requests, meter-readings,
-              suppliers, technicians, parts, stock-levels, stock-movements.
+              <T>Rejouer avec</T> <code>offset=page.next</code> <T>tant que</T> <code>page.next</code>{" "}
+              <T>n&apos;est pas nul ; conserver l&apos;heure de début de l&apos;extraction comme prochain</T> <code>updatedSince</code>
+              <T>
+                . Jeux de données : equipment, work-orders, work-requests, meter-readings, suppliers, technicians, parts, stock-levels,
+                stock-movements.
+              </T>
             </p>
           </Step>
           <Step title="Fichier complet (CSV ou Excel)">
@@ -156,20 +188,24 @@ export default async function ConnectorPage() {
           <Step title="Assistant IA (MCP) : clé « Assistant IA », serveur MCP en HTTP">
             <Code>{`claude mcp add --transport http gmao ${base}/api/mcp --header "Authorization: Bearer gmk_…"`}</Code>
             <p className="mt-1 text-xs text-slate-500">
-              Outils : recherche et fiche d&apos;équipement, interventions, demandes, signalement de panne, échéances, indicateurs, extraction de
-              données. Tout client compatible MCP (« Streamable HTTP ») peut s&apos;y brancher.
+              <T>
+                Outils : recherche et fiche d&apos;équipement, interventions, demandes, signalement de panne, échéances, indicateurs, extraction de
+                données. Tout client compatible MCP (« Streamable HTTP ») peut s&apos;y brancher.
+              </T>
             </p>
           </Step>
           <Step title="Indicateurs personnalisés">
             <Code>{`GET ${base}/api/v1/indicators`}</Code>
           </Step>
           <Alert tone="blue">
-            Catalogue complet des points d&apos;entrée et de leurs schémas :{" "}
+            <T>Catalogue complet des points d&apos;entrée et de leurs schémas :</T>{" "}
             <Link href="/api/v1" className="font-medium underline">
-              /api/v1
+              <T>/api/v1</T>
             </Link>
-            . Une clé ne donne jamais accès au paramétrage ni aux comptes ; ses actions sont tracées au journal d&apos;audit au nom de son créateur
-            (canal API). Elle est refusée dès qu&apos;elle est révoquée, expirée, ou si son créateur est désactivé.
+            <T>
+              . Une clé ne donne jamais accès au paramétrage ni aux comptes ; ses actions sont tracées au journal d&apos;audit au nom de son créateur
+              (canal API). Elle est refusée dès qu&apos;elle est révoquée, expirée, ou si son créateur est désactivé.
+            </T>
           </Alert>
         </CardBody>
       </Card>
@@ -180,8 +216,10 @@ export default async function ConnectorPage() {
 function Step({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <p className="mb-1 font-medium text-slate-900">{title}</p>
-      {children}
+      <p className="mb-1 font-medium text-slate-900">
+        <Tr>{title}</Tr>
+      </p>
+      <Tr>{children}</Tr>
     </div>
   );
 }

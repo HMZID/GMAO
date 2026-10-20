@@ -2,6 +2,8 @@
  * Règles des documents joints (EQP-07) : formats acceptés, taille maximale, contrôle du contenu réel
  * du fichier (signature binaire) et nom de fichier sûr. Module pur, testé dans `__tests__/documents.test.ts`.
  */
+import { INTL_LOCALE } from "@/i18n/config";
+import { requestLocale } from "@/i18n/request-locale";
 
 export const DOCUMENT_KINDS = ["MANUAL", "CERTIFICATE", "INVOICE", "PHOTO", "REPORT", "OTHER"] as const;
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
@@ -134,10 +136,15 @@ export function contentDisposition(fileName: string, inline: boolean) {
   return `${inline ? "inline" : "attachment"}; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(name)}`;
 }
 
+const SIZE_UNITS = { fr: ["o", "Ko", "Mo"], en: ["B", "KB", "MB"], ar: ["بايت", "ك.ب", "م.ب"] } as const;
+
+/** Taille d'un fichier, dans la langue de la requête (unités et séparateurs). */
 export function formatSize(bytes: number) {
-  if (bytes < 1024) return `${bytes} o`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
-  return `${(bytes / (1024 * 1024)).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo`;
+  const locale = requestLocale();
+  const [byte, kilo, mega] = SIZE_UNITS[locale];
+  if (bytes < 1024) return `${bytes} ${byte}`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} ${kilo}`;
+  return `${(bytes / (1024 * 1024)).toLocaleString(INTL_LOCALE[locale], { maximumFractionDigits: 1 })} ${mega}`;
 }
 
 /** Statuts d'OT après lesquels les pièces jointes de l'intervenant ne peuvent plus être retirées par lui-même. */

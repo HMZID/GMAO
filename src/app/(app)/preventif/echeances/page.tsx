@@ -14,6 +14,7 @@ import { cleanFilters, queryParams } from "@/server/pages";
 import { listSites } from "@/server/services/organization";
 import { dueFilters, listDueItems } from "@/server/services/preventive";
 import { generateAction, postponeAction } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Échéances préventives" };
 
@@ -33,7 +34,9 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
         actions={
           canManage ? (
             <ActionForm action={generateAction} showMessage>
-              <SubmitButton>Générer les interventions préventives</SubmitButton>
+              <SubmitButton>
+                <T>Générer les interventions préventives</T>
+              </SubmitButton>
             </ActionForm>
           ) : null
         }
@@ -68,13 +71,27 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
           <Table>
             <THead>
               <tr>
-                <TH>Équipement</TH>
-                <TH>Opération</TH>
-                <TH>Échéance</TH>
-                <TH>Compteur actuel</TH>
-                <TH>Prévue le</TH>
-                <TH>Statut</TH>
-                <TH>Intervention</TH>
+                <TH>
+                  <T>Équipement</T>
+                </TH>
+                <TH>
+                  <T>Opération</T>
+                </TH>
+                <TH>
+                  <T>Échéance</T>
+                </TH>
+                <TH>
+                  <T>Compteur actuel</T>
+                </TH>
+                <TH>
+                  <T>Prévue le</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
+                <TH>
+                  <T>Intervention</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -82,15 +99,17 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                 <TR key={d.id}>
                   <TD>
                     <Link href={`/equipements/${d.equipmentId}`} className="font-medium text-brand-700 hover:underline">
-                      {d.equipmentCode}
+                      <Tr>{d.equipmentCode}</Tr>
                     </Link>
-                    <p className="text-xs text-slate-500">{d.equipmentName}</p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{d.equipmentName}</Tr>
+                    </p>
                   </TD>
                   <TD>
-                    {d.operationName}
+                    <Tr>{d.operationName}</Tr>
                     <p className="text-xs text-slate-500">
-                      {d.operationCode}
-                      {d.isRegulatory ? " · réglementaire" : ""}
+                      <Tr>{d.operationCode}</Tr>
+                      <Tr>{d.isRegulatory ? " · réglementaire" : ""}</Tr>
                     </p>
                   </TD>
                   <TD className="whitespace-nowrap">
@@ -101,8 +120,8 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                       .filter(Boolean)
                       .join(" ou ")}
                     {d.postponedTo ? (
-                      <Badge tone="amber" className="ml-1">
-                        reportée au {formatDate(d.postponedTo)}
+                      <Badge tone="amber" className="ms-1">
+                        <T params={{ date: formatDate(d.postponedTo) }}>{"reportée au {date}"}</T>
                       </Badge>
                     ) : null}
                   </TD>
@@ -116,10 +135,12 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                   <TD className="min-w-48">
                     {d.workOrderId ? (
                       <Link href={`/interventions/${d.workOrderId}`} className="text-brand-700 hover:underline">
-                        {d.workOrderNumber}
+                        <Tr>{d.workOrderNumber}</Tr>
                       </Link>
                     ) : (
-                      <span className="text-xs text-slate-400">Non généré</span>
+                      <span className="text-xs text-slate-400">
+                        <T>Non généré</T>
+                      </span>
                     )}
                     {canManage && !d.workOrderId ? (
                       <Disclosure summary="Reporter" className="mt-2">
@@ -131,7 +152,7 @@ export default async function DueItemsPage(props: PageProps<"/preventif/echeance
                             <Input id={`ppr-${d.id}`} name="reason" required maxLength={500} />
                           </Field>
                           <SubmitButton size="sm" variant="secondary">
-                            Reporter
+                            <T>Reporter</T>
                           </SubmitButton>
                         </ActionForm>
                       </Disclosure>
