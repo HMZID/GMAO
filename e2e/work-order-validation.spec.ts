@@ -99,6 +99,10 @@ test("validation des interventions : responsable maintenance sous le seuil, dire
     ).toBeTruthy();
     const after = await workOrder(manager, refused.id);
     expect(after).toMatchObject({ validationStatus: "REJECTED", status: "CANCELLED" });
+
+    // Désactivée, la validation garde son seuil : la direction le retrouve en la réactivant.
+    await direction.put("/api/v1/work-order-validation", { data: { enabled: false, threshold: 3000 } });
+    expect((await (await manager.get("/api/v1/work-order-validation")).json()).data).toEqual({ enabled: false, threshold: 3000 });
   } finally {
     // La démonstration reste dans son état d'origine : validation des interventions désactivée.
     await direction.put("/api/v1/work-order-validation", { data: { enabled: false, threshold: 3000 } });
