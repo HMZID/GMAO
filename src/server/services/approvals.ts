@@ -777,10 +777,11 @@ async function findGroupWorkOrderWorkflow(tx: DbOrTx, tenantId: string) {
 /** Réglage lisible par tous ceux qui gèrent des interventions : responsable maintenance, chef d'atelier, direction. */
 export async function getWorkOrderValidationSetting(ctx: AuthContext): Promise<WorkOrderValidationSetting> {
   const workflow = await findGroupWorkOrderWorkflow(db, ctx.tenantId);
-  if (!workflow || !workflow.active) return { enabled: false, threshold: null };
+  if (!workflow) return { enabled: false, threshold: null };
   const steps = await db.select().from(approvalSteps).where(eq(approvalSteps.workflowId, workflow.id));
   const executive = steps.find((s) => s.approverRole === "EXECUTIVE");
-  return { enabled: steps.length > 0, threshold: executive?.minAmount ?? null };
+  // Le seuil enregistré reste affiché quand la validation est désactivée : la direction le retrouve en la réactivant.
+  return { enabled: workflow.active && steps.length > 0, threshold: executive?.minAmount ?? null };
 }
 
 export const workOrderValidationInput = z.object({
