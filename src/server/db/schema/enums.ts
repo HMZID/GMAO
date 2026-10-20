@@ -51,7 +51,7 @@ export const importStatusEnum = pgEnum("import_status", ["SIMULATED", "RUNNING",
 export const importModeEnum = pgEnum("import_mode", ["ALL_OR_NOTHING", "VALID_ONLY"]);
 
 // Circuits de validation et achats (HAB-04, ACH-01, ACH-02)
-export const approvalObjectEnum = pgEnum("approval_object", ["WORK_REQUEST", "PURCHASE_REQUEST", "MAINTENANCE_EXPENSE"]);
+export const approvalObjectEnum = pgEnum("approval_object", ["WORK_REQUEST", "PURCHASE_REQUEST", "MAINTENANCE_EXPENSE", "WORK_ORDER"]);
 
 export const approvalStatusEnum = pgEnum("approval_status", ["PENDING", "APPROVED", "REJECTED", "CANCELLED"]);
 

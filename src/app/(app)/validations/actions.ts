@@ -2,7 +2,16 @@
 
 import type { ActionState } from "@/lib/action-state";
 import { act } from "@/server/actions";
-import { addStep, addSubstitute, createWorkflow, decideApproval, removeStep, removeSubstitute, setWorkflowActive } from "@/server/services/approvals";
+import {
+  addStep,
+  addSubstitute,
+  createWorkflow,
+  decideApproval,
+  removeStep,
+  removeSubstitute,
+  setWorkflowActive,
+  setWorkOrderValidation,
+} from "@/server/services/approvals";
 import { formToObject } from "@/server/validation";
 
 /** Décision sur l'étape en cours : le bouton cliqué porte la décision (name="decision"). */
@@ -48,4 +57,13 @@ export async function removeStepAction(_: ActionState, formData: FormData): Prom
 export async function setWorkflowActiveAction(_: ActionState, formData: FormData): Promise<ActionState> {
   const active = formData.get("active") === "true";
   return act((ctx) => setWorkflowActive(ctx, String(formData.get("workflowId") ?? ""), active), active ? "Circuit activé." : "Circuit désactivé.");
+}
+
+/** Seuil de validation des interventions : fixé par la direction (droit `approval.threshold`). */
+export async function setWorkOrderValidationAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  const data = formToObject(formData);
+  return act(
+    (ctx) => setWorkOrderValidation(ctx, { enabled: formData.get("enabled") === "on", threshold: data.threshold }),
+    "Validation des interventions enregistrée.",
+  );
 }

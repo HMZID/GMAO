@@ -31,6 +31,7 @@ export const APPROVAL_OBJECT: Record<string, string> = {
   WORK_REQUEST: "Demande d'intervention",
   PURCHASE_REQUEST: "Demande d'achat",
   MAINTENANCE_EXPENSE: "Dépense de maintenance",
+  WORK_ORDER: "Intervention à réaliser",
 };
 
 export const APPROVAL_STATUS: Record<string, { label: string; tone: Tone }> = {

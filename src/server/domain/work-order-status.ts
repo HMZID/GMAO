@@ -56,6 +56,8 @@ export type WorkOrderSnapshot = {
   hasReportDocument: boolean;
   /** Dépenses en attente de validation (HAB-04). */
   pendingExpenses?: number;
+  /** Intervention en attente de validation (responsable maintenance ou direction, HAB-04) : ni planifiable ni démarrable. */
+  pendingValidation?: boolean;
 };
 
 export type TransitionInput = {
@@ -97,6 +99,7 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
 
   switch (to) {
     case "PLANNED": {
+      if (wo.pendingValidation) errors.push("L'intervention est en attente de validation : la planifier après la décision du valideur.");
       if (!actor.canManage) errors.push("Seul un gestionnaire d'interventions peut planifier.");
       if (!wo.plannedStart) errors.push("La date prévue est obligatoire.");
       if (wo.assigneeTechnicianIds.length === 0 && !(wo.isExternal && wo.hasSupplier)) {
@@ -109,6 +112,9 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
       break;
     }
     case "IN_PROGRESS": {
+      if (wo.pendingValidation && wo.status !== "WORK_DONE" && wo.status !== "TECH_CLOSED") {
+        errors.push("L'intervention est en attente de validation : la démarrer après la décision du valideur.");
+      }
       const isAssignee = !!actor.technicianId && wo.assigneeTechnicianIds.includes(actor.technicianId);
       if (!isAssignee && !actor.canManage) errors.push("Seul un intervenant affecté peut démarrer l'intervention.");
       if (wo.status === "WORK_DONE" && !reason) errors.push("Le motif (essai non concluant) est obligatoire.");

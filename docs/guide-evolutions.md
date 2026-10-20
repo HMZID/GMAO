@@ -84,7 +84,15 @@ Contrôles : le contenu réel du fichier est vérifié (un exécutable renommé 
 Circuits de la démonstration (CDC §2.4) :
 - **DI P1** → chef d'atelier du site ;
 - **demande d'achat** → responsable achats, puis direction à partir de 5 000 € ;
-- **dépense** → responsable maintenance à partir de 1 000 €, puis direction à partir de 10 000 €.
+- **dépense** → responsable maintenance à partir de 1 000 €, puis direction à partir de 10 000 € ;
+- **intervention** → seuil de 3 000 € préparé mais **inactif** : la direction l'active dans Administration › Circuits de validation › « Validation des interventions ».
+
+### Validation des interventions (seuil de la direction)
+
+1. La direction coche « Soumettre les interventions à validation » et fixe le **seuil** (€). Sans seuil, le responsable maintenance valide toutes les interventions. Seule la direction modifie ce réglage.
+2. À la création d'une intervention (formulaire ou API), le **coût estimé** décide : sous le seuil, le responsable maintenance valide ; à partir du seuil, la direction. La direction peut valider n'importe laquelle, et **crée sans validation**. Le responsable maintenance crée sans validation sous le seuil.
+3. Tant qu'elle est « en attente de validation », l'intervention ne peut être ni planifiée ni démarrée. Refusée (commentaire obligatoire), elle est annulée.
+4. Pas concernées : interventions préventives générées automatiquement, transformation d'une demande d'intervention, récidive.
 
 ### Utilisation
 

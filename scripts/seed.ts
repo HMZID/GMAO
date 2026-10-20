@@ -15,7 +15,7 @@ import { ROLES, type Role } from "@/server/authz/permissions";
 import { db } from "@/server/db";
 import * as s from "@/server/db/schema";
 import { computeDue, type OperationRule } from "@/server/domain/preventive";
-import { addStep, createWorkflow } from "@/server/services/approvals";
+import { addStep, createWorkflow, setWorkOrderValidation } from "@/server/services/approvals";
 import { assignEquipment, createEquipment } from "@/server/services/equipment";
 import { createPurchaseRequest } from "@/server/services/purchase-requests";
 import { createMeter, recordReading, replaceMeter } from "@/server/services/meters";
@@ -2037,6 +2037,12 @@ async function main() {
   const wfExpenses = await createWorkflow(ctx, { objectType: "MAINTENANCE_EXPENSE", name: "Dépenses de maintenance" });
   await addStep(ctx, wfExpenses.id, { name: "Responsable maintenance", approverRole: "MAINTENANCE_MANAGER", minAmount: 1000 });
   await addStep(ctx, wfExpenses.id, { name: "Direction", approverRole: "EXECUTIVE", minAmount: 10000 });
+  // Validation des interventions (HAB-04) : seuil de 3 000 € fixé par la direction, laissée inactive pour que la démonstration
+  // et les scénarios de recette ne changent pas ; la direction l'active dans Administration › Circuits de validation.
+  const executiveCtx = buildAuthContext({ id: users["direction@demo.gmao"], tenantId: T, name: "Hélène Garnier", email: "direction@demo.gmao" }, [
+    { role: "EXECUTIVE", scopeType: "TENANT", scopeId: null },
+  ]);
+  await setWorkOrderValidation(executiveCtx, { enabled: false, threshold: 3000 });
 
   const chefLyonCtx = buildAuthContext({ id: users["chef.lyon@demo.gmao"], tenantId: T, name: "Marc Lefèvre", email: "chef.lyon@demo.gmao" }, [
     { role: "WORKSHOP_MANAGER", scopeType: "SITE", scopeId: lyo.id },
