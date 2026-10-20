@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Tr, useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import type { NavIcon, NavItem } from "./nav-items";
 
@@ -43,8 +44,9 @@ export function isActive(pathname: string, href: string) {
 
 export function SidebarNav({ items, variant = "sidebar" }: { items: Pick<NavItem, "href" | "label" | "icon">[]; variant?: "sidebar" | "mobile" }) {
   const pathname = usePathname();
+  const t = useT();
   return (
-    <nav aria-label="Navigation principale" className={cn(variant === "sidebar" ? "flex-1 space-y-0.5 px-3 py-4" : "grid gap-1 p-2")}>
+    <nav aria-label={t("Navigation principale")} className={cn(variant === "sidebar" ? "flex-1 space-y-0.5 px-3 py-4" : "grid gap-1 p-2")}>
       {items.map((item) => {
         const Icon = NAV_ICONS[item.icon];
         const active = isActive(pathname, item.href);
@@ -65,7 +67,7 @@ export function SidebarNav({ items, variant = "sidebar" }: { items: Pick<NavItem
             )}
           >
             <Icon className="h-4 w-4 shrink-0" aria-hidden />
-            {item.label}
+            <Tr>{item.label}</Tr>
           </Link>
         );
       })}

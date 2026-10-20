@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/primitives";
 import { CRITICALITY, DUE_STATUS, EQUIPMENT_STATUS, PRIORITY, READING_STATUS, REQUEST_STATUS, TASK_RESULT, WORK_ORDER_STATUS } from "@/lib/labels";
+import { T } from "@/i18n/client";
 
 export function EquipmentStatusBadge({ status }: { status: string }) {
   const s = EQUIPMENT_STATUS[status] ?? { label: status, tone: "gray" as const };
@@ -38,7 +39,12 @@ export function ReadingStatusBadge({ status }: { status: string }) {
 }
 
 export function TaskResultBadge({ result }: { result: string | null }) {
-  if (!result) return <Badge>À faire</Badge>;
+  if (!result)
+    return (
+      <Badge>
+        <T>À faire</T>
+      </Badge>
+    );
   const r = TASK_RESULT[result] ?? { label: result, tone: "gray" as const };
   return <Badge tone={r.tone}>{r.label}</Badge>;
 }

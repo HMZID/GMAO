@@ -12,6 +12,7 @@ import { isUuid, queryParams } from "@/server/pages";
 import { listWarehouses } from "@/server/services/organization";
 import { listMovements, listPartOptions, listSupplierOptions } from "@/server/services/stock";
 import { MovementForm } from "../movement-form";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Mouvements de stock" };
 
@@ -81,13 +82,27 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
           <Table>
             <THead>
               <tr>
-                <TH>Date</TH>
-                <TH>Mouvement</TH>
-                <TH>Article</TH>
-                <TH>Magasin</TH>
-                <TH className="text-end">Quantité</TH>
-                <TH className="text-end">Coût unitaire</TH>
-                <TH>Référence / intervention</TH>
+                <TH>
+                  <T>Date</T>
+                </TH>
+                <TH>
+                  <T>Mouvement</T>
+                </TH>
+                <TH>
+                  <T>Article</T>
+                </TH>
+                <TH>
+                  <T>Magasin</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Quantité</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Coût unitaire</T>
+                </TH>
+                <TH>
+                  <T>Référence / intervention</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -121,14 +136,14 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
         <div className="flex justify-between border-t border-slate-100 px-5 py-3 text-sm">
           {page > 1 ? (
             <Link href={withParams("/stock/mouvements", { ...params, page: page - 1 })} className="text-brand-700 hover:underline">
-              ← Plus récents
+              <T>← Plus récents</T>
             </Link>
           ) : (
             <span />
           )}
           {movements.length === 50 ? (
             <Link href={withParams("/stock/mouvements", { ...params, page: page + 1 })} className="text-brand-700 hover:underline">
-              Plus anciens →
+              <T>Plus anciens →</T>
             </Link>
           ) : null}
         </div>

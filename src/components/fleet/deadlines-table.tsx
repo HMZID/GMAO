@@ -9,6 +9,7 @@ import { DEADLINE_KIND, DEADLINE_STATE, DEADLINE_STATUS } from "@/lib/labels";
 import type { AuthContext } from "@/server/authz/context";
 import { daysUntil, deadlineState } from "@/server/domain/fleet-deadlines";
 import type { listDeadlines } from "@/server/services/fleet-deadlines";
+import { T } from "@/i18n/client";
 
 type Deadline = Awaited<ReturnType<typeof listDeadlines>>[number];
 
@@ -43,12 +44,26 @@ export function DeadlinesTable({
         <Table>
           <THead>
             <tr>
-              {showEquipment ? <TH>Équipement</TH> : null}
-              <TH>Échéance</TH>
-              <TH>Date</TH>
-              <TH>État</TH>
-              <TH>Organisme</TH>
-              <TH className="sr-only">Actions</TH>
+              {showEquipment ? (
+                <TH>
+                  <T>Équipement</T>
+                </TH>
+              ) : null}
+              <TH>
+                <T>Échéance</T>
+              </TH>
+              <TH>
+                <T>Date</T>
+              </TH>
+              <TH>
+                <T>État</T>
+              </TH>
+              <TH>
+                <T>Organisme</T>
+              </TH>
+              <TH className="sr-only">
+                <T>Actions</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
@@ -72,7 +87,11 @@ export function DeadlinesTable({
                   <TD>
                     <Badge tone={DEADLINE_KIND[d.kind]?.tone}>{DEADLINE_KIND[d.kind]?.label ?? d.kind}</Badge>
                     {d.label ? <p className="mt-1 text-sm text-slate-900">{d.label}</p> : null}
-                    {d.reference ? <p className="text-xs text-slate-500">Réf. {d.reference}</p> : null}
+                    {d.reference ? (
+                      <p className="text-xs text-slate-500">
+                        <T params={{ reference: d.reference }}>{"Réf. {reference}"}</T>
+                      </p>
+                    ) : null}
                   </TD>
                   <TD className="whitespace-nowrap">
                     {formatDate(d.dueDate)}
@@ -105,7 +124,9 @@ export function DeadlinesTable({
                             <Field label="Montant payé" name="amount">
                               <Input type="number" name="amount" min={0} step="0.001" />
                             </Field>
-                            <SubmitButton size="sm">Enregistrer le renouvellement</SubmitButton>
+                            <SubmitButton size="sm">
+                              <T>Enregistrer le renouvellement</T>
+                            </SubmitButton>
                           </PanelForm>
                         </Disclosure>
                         <Disclosure summary="Annuler" className="text-start">
@@ -116,7 +137,7 @@ export function DeadlinesTable({
                               <Input name="reason" required maxLength={500} />
                             </Field>
                             <SubmitButton variant="danger" size="sm">
-                              Annuler l&apos;échéance
+                              <T>Annuler l&apos;échéance</T>
                             </SubmitButton>
                           </PanelForm>
                         </Disclosure>

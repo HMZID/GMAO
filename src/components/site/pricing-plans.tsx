@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { displayedPrice, planFeatures, type Billing } from "@/server/domain/site";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export type PlanView = {
   id: string;
@@ -85,7 +85,9 @@ export function PricingPlans({
               {plan.tagline ? <p className={`mt-2 text-sm ${dark ? "text-white/70" : "text-asphalt-500"}`}>{plan.tagline}</p> : null}
               <div className="mt-6 min-h-24">
                 {amount === null ? (
-                  <p className="site-display text-5xl">{plan.priceUnit || "Sur devis"}</p>
+                  <p className="site-display text-5xl">
+                    <Tr>{plan.priceUnit || "Sur devis"}</Tr>
+                  </p>
                 ) : (
                   <>
                     <p className="flex items-start gap-1">
@@ -93,14 +95,16 @@ export function PricingPlans({
                       <span className="site-display mt-1 text-2xl">{currency}</span>
                       {plan.priceMonthly !== null && amount < plan.priceMonthly ? (
                         <s className={`site-display ms-3 mt-1 text-2xl ${dark ? "text-white/40" : "text-asphalt-500/60"}`}>
-                          <span className="sr-only"><T>au lieu de</T> </span>
+                          <span className="sr-only">
+                            <T>au lieu de</T>{" "}
+                          </span>
                           {price.format(plan.priceMonthly)} {currency}
                         </s>
                       ) : null}
                     </p>
                     <p className={`text-sm ${dark ? "text-white/70" : "text-asphalt-500"}`}>
                       {plan.priceUnit}
-                      {billing === "yearly" && annualMonths < 12 ? " · facturé annuellement" : ""}
+                      <Tr>{billing === "yearly" && annualMonths < 12 ? " · facturé annuellement" : ""}</Tr>
                     </p>
                   </>
                 )}
@@ -125,7 +129,7 @@ export function PricingPlans({
                 href={`/essai-gratuit?offre=${encodeURIComponent(plan.name)}`}
                 className={`site-btn mt-8 w-full ${dark ? "site-btn-signal" : "bg-asphalt text-white hover:bg-asphalt-700"}`}
               >
-                {plan.ctaLabel || "Essayer gratuitement"}
+                <Tr>{plan.ctaLabel || "Essayer gratuitement"}</Tr>
               </Link>
             </article>
           );

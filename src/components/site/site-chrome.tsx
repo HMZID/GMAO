@@ -30,7 +30,9 @@ function Announcement({ settings }: { settings: SiteSettings }) {
   return (
     <div className="bg-signal text-asphalt">
       <p className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-3 gap-y-1 px-4 py-2 text-center text-sm font-semibold">
-        <span className="site-label rounded-sm bg-asphalt px-1.5 py-0.5 text-[10px] text-signal"><T>Offre</T></span>
+        <span className="site-label rounded-sm bg-asphalt px-1.5 py-0.5 text-[10px] text-signal">
+          <T>Offre</T>
+        </span>
         <span>{settings["announcement.text"]}</span>
         {href && settings["announcement.linkLabel"] ? (
           <Link href={href} className="inline-flex items-center gap-1 underline decoration-2 underline-offset-4 hover:no-underline">
@@ -67,7 +69,9 @@ function Header({ settings }: { settings: SiteSettings }) {
           <details className="group relative lg:hidden">
             <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center border-2 border-asphalt [&::-webkit-details-marker]:hidden">
               <Menu className="h-5 w-5" aria-hidden />
-              <span className="sr-only"><T>Menu</T></span>
+              <span className="sr-only">
+                <T>Menu</T>
+              </span>
             </summary>
             <nav
               aria-label="Navigation du site (mobile)"
@@ -102,7 +106,9 @@ function Footer({ site }: { site: SiteData }) {
             </Link>
           </div>
           <div>
-            <h2 className="site-label text-signal"><T>Produit</T></h2>
+            <h2 className="site-label text-signal">
+              <T>Produit</T>
+            </h2>
             <ul className="mt-4 space-y-2 text-white/80">
               {NAV.map((n) => (
                 <li key={n.href}>
@@ -119,7 +125,9 @@ function Footer({ site }: { site: SiteData }) {
             </ul>
           </div>
           <div>
-            <h2 className="site-label text-signal"><T>Contact</T></h2>
+            <h2 className="site-label text-signal">
+              <T>Contact</T>
+            </h2>
             <ul className="mt-4 space-y-2 text-white/80">
               {settings["contact.email"] ? (
                 <li>
@@ -148,7 +156,7 @@ function Footer({ site }: { site: SiteData }) {
           </div>
         </div>
         <p className="site-label mx-auto max-w-7xl border-t border-white/10 px-4 py-5 text-[11px] text-white/50 sm:px-6">
-          © {site.year} {settings["brand.name"]} · Maintenance des engins, véhicules et équipements
+          <T params={{ year: site.year, v: settings["brand.name"] }}>{"© {year} {v} · Maintenance des engins, véhicules et équipements"}</T>
         </p>
       </div>
     </footer>

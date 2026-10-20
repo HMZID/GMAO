@@ -10,6 +10,7 @@ import { APPROVAL_OBJECT, ROLE, options } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { listUserOptions, listWorkflows } from "@/server/services/approvals";
 import { listCompanies } from "@/server/services/organization";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Circuits de validation" };
 
@@ -39,7 +40,9 @@ export default async function ApprovalWorkflowsPage() {
             <Input name="name" required maxLength={120} />
           </Field>
           <div className="sm:col-span-3">
-            <SubmitButton>Créer le circuit</SubmitButton>
+            <SubmitButton>
+              <T>Créer le circuit</T>
+            </SubmitButton>
           </div>
         </ActionForm>
       </Disclosure>
@@ -57,12 +60,14 @@ export default async function ApprovalWorkflowsPage() {
                 description={`${APPROVAL_OBJECT[w.objectType]} · ${w.companyName ?? "Tout le groupe"}`}
                 actions={
                   <ActionPanel action={setWorkflowActiveAction} className="flex items-center gap-2">
-                    <Badge tone={w.active ? "green" : "gray"}>{w.active ? "Actif" : "Inactif"}</Badge>
+                    <Badge tone={w.active ? "green" : "gray"}>
+                      <Tr>{w.active ? "Actif" : "Inactif"}</Tr>
+                    </Badge>
                     <PanelForm>
                       <input type="hidden" name="workflowId" value={w.id} />
                       <input type="hidden" name="active" value={w.active ? "false" : "true"} />
                       <SubmitButton variant="ghost" size="sm">
-                        {w.active ? "Désactiver" : "Activer"}
+                        <Tr>{w.active ? "Désactiver" : "Activer"}</Tr>
                       </SubmitButton>
                     </PanelForm>
                   </ActionPanel>
@@ -75,12 +80,24 @@ export default async function ApprovalWorkflowsPage() {
                   <Table>
                     <THead>
                       <tr>
-                        <TH>Ordre</TH>
-                        <TH>Étape</TH>
-                        <TH>Valideur</TH>
-                        <TH>À partir de</TH>
-                        <TH>Priorités</TH>
-                        <TH className="sr-only">Actions</TH>
+                        <TH>
+                          <T>Ordre</T>
+                        </TH>
+                        <TH>
+                          <T>Étape</T>
+                        </TH>
+                        <TH>
+                          <T>Valideur</T>
+                        </TH>
+                        <TH>
+                          <T>À partir de</T>
+                        </TH>
+                        <TH>
+                          <T>Priorités</T>
+                        </TH>
+                        <TH className="sr-only">
+                          <T>Actions</T>
+                        </TH>
                       </tr>
                     </THead>
                     <TBody>
@@ -89,13 +106,17 @@ export default async function ApprovalWorkflowsPage() {
                           <TD className="tabular-nums">{s.position}</TD>
                           <TD className="font-medium text-slate-900">{s.name}</TD>
                           <TD>{s.approverRole ? `${ROLE[s.approverRole] ?? s.approverRole} (périmètre de l'objet)` : (s.approverName ?? "—")}</TD>
-                          <TD className="tabular-nums">{s.minAmount != null ? formatCurrency(s.minAmount) : "Toujours"}</TD>
-                          <TD>{s.priorities.length > 0 ? s.priorities.join(", ") : "Toutes"}</TD>
+                          <TD className="tabular-nums">
+                            <Tr>{s.minAmount != null ? formatCurrency(s.minAmount) : "Toujours"}</Tr>
+                          </TD>
+                          <TD>
+                            <Tr>{s.priorities.length > 0 ? s.priorities.join(", ") : "Toutes"}</Tr>
+                          </TD>
                           <TD className="text-end">
                             <PanelForm>
                               <input type="hidden" name="stepId" value={s.id} />
                               <SubmitButton variant="ghost" size="sm">
-                                Retirer
+                                <T>Retirer</T>
                               </SubmitButton>
                             </PanelForm>
                           </TD>
@@ -122,7 +143,9 @@ export default async function ApprovalWorkflowsPage() {
                     </Field>
                     {w.objectType === "WORK_REQUEST" ? (
                       <fieldset className="space-y-1 sm:col-span-2 lg:col-span-4">
-                        <legend className="text-sm font-medium text-slate-700">Priorités concernées (aucune cochée : toutes)</legend>
+                        <legend className="text-sm font-medium text-slate-700">
+                          <T>Priorités concernées (aucune cochée : toutes)</T>
+                        </legend>
                         <div className="flex flex-wrap gap-4">
                           {["P1", "P2", "P3", "P4"].map((p) => (
                             <Checkbox key={p} name="priorities[]" value={p} label={p} />
@@ -131,7 +154,9 @@ export default async function ApprovalWorkflowsPage() {
                       </fieldset>
                     ) : null}
                     <div className="sm:col-span-2 lg:col-span-4">
-                      <SubmitButton>Ajouter l&apos;étape</SubmitButton>
+                      <SubmitButton>
+                        <T>Ajouter l&apos;étape</T>
+                      </SubmitButton>
                     </div>
                   </ActionForm>
                 </Disclosure>

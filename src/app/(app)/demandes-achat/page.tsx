@@ -11,6 +11,7 @@ import { PURCHASE_REQUEST_STATUS } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listPurchaseRequests, purchaseRequestFilters } from "@/server/services/purchase-requests";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Demandes d'achat" };
 
@@ -25,7 +26,13 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
       <PageHeader
         title="Demandes d'achat"
         description="Pièces et prestations à acheter, rattachées à une intervention, un équipement ou un centre de coût, puis validées selon les seuils."
-        actions={ctx.can("purchase.create") ? <ButtonLink href="/demandes-achat/nouvelle">Nouvelle demande</ButtonLink> : null}
+        actions={
+          ctx.can("purchase.create") ? (
+            <ButtonLink href="/demandes-achat/nouvelle">
+              <T>Nouvelle demande</T>
+            </ButtonLink>
+          ) : null
+        }
       />
       <Card>
         <FilterBar resetHref="/demandes-achat">
@@ -48,12 +55,24 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
           <Table>
             <THead>
               <tr>
-                <TH>Demande</TH>
-                <TH>Objet</TH>
-                <TH className="text-end">Quantité</TH>
-                <TH className="text-end">Montant estimé</TH>
-                <TH>Besoin</TH>
-                <TH>Statut</TH>
+                <TH>
+                  <T>Demande</T>
+                </TH>
+                <TH>
+                  <T>Objet</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Quantité</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Montant estimé</T>
+                </TH>
+                <TH>
+                  <T>Besoin</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
               </tr>
             </THead>
             <TBody>

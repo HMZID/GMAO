@@ -1,6 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { SITE_ITEM_KIND_DEFINITIONS, type SiteItemKind } from "@/server/domain/site";
+import { T } from "@/i18n/client";
 
 /** Adresse des listes de blocs dans l'administration (type de bloc → segment d'URL). */
 export const KIND_SLUGS: Record<SiteItemKind, string> = {
@@ -54,7 +55,7 @@ export function SiteAdminNav({ active, pending }: { active: string; pending?: nu
         rel="noreferrer"
         className="ms-auto flex shrink-0 items-center gap-1 px-3 py-2 text-sm font-medium text-brand-700 hover:underline"
       >
-        Voir le site
+        <T>Voir le site</T>
         <ExternalLink className="h-3.5 w-3.5" aria-hidden />
       </a>
     </nav>

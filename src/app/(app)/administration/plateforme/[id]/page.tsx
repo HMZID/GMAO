@@ -10,6 +10,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getTenantDetail, isPlatformAdmin } from "@/server/services/platform";
 import { createTenantUserAction, startImpersonationAction } from "../../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Organisation cliente" };
 
@@ -48,7 +49,9 @@ export default async function TenantPage(props: PageProps<"/administration/plate
         <CardHeader title="Sociétés et sites" description={`${companies.length} société(s)`} />
         <CardBody>
           {companies.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucune société.</p>
+            <p className="text-sm text-slate-500">
+              <T>Aucune société.</T>
+            </p>
           ) : (
             <ul className="grid gap-3 md:grid-cols-2">
               {companies.map((c) => (
@@ -56,7 +59,9 @@ export default async function TenantPage(props: PageProps<"/administration/plate
                   <p className="font-medium text-slate-900">
                     {c.name} <span className="font-mono text-xs text-slate-500">{c.code}</span>
                   </p>
-                  <p className="mt-1 text-sm text-slate-600">{c.sites.length > 0 ? c.sites.map((s) => s.name).join(" · ") : "Aucun site"}</p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    <Tr>{c.sites.length > 0 ? c.sites.map((s) => s.name).join(" · ") : "Aucun site"}</Tr>
+                  </p>
                 </li>
               ))}
             </ul>
@@ -66,7 +71,7 @@ export default async function TenantPage(props: PageProps<"/administration/plate
 
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-900">
-          Comptes <span className="text-sm font-normal text-slate-500">({users.length})</span>
+          <T>Comptes</T> <span className="text-sm font-normal text-slate-500">({users.length})</span>
         </h2>
         <Disclosure summary="Nouveau compte">
           <ActionForm action={createTenantUserAction.bind(null, tenant.id)} resetOnSuccess className="grid gap-3 sm:grid-cols-2">
@@ -85,7 +90,9 @@ export default async function TenantPage(props: PageProps<"/administration/plate
             <Field label="Périmètre" name="scope" required className="sm:col-span-2">
               <Select name="scope" required options={scopeOptions} defaultValue="TENANT" />
             </Field>
-            <SubmitButton>Créer le compte</SubmitButton>
+            <SubmitButton>
+              <T>Créer le compte</T>
+            </SubmitButton>
           </ActionForm>
         </Disclosure>
       </div>
@@ -96,10 +103,18 @@ export default async function TenantPage(props: PageProps<"/administration/plate
           <Table>
             <THead>
               <tr>
-                <TH>Utilisateur</TH>
-                <TH>Rôles</TH>
-                <TH>Compte</TH>
-                <TH className="sr-only">Actions</TH>
+                <TH>
+                  <T>Utilisateur</T>
+                </TH>
+                <TH>
+                  <T>Rôles</T>
+                </TH>
+                <TH>
+                  <T>Compte</T>
+                </TH>
+                <TH className="sr-only">
+                  <T>Actions</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -119,12 +134,22 @@ export default async function TenantPage(props: PageProps<"/administration/plate
                       ))}
                     </ul>
                   </TD>
-                  <TD>{u.isActive ? <Badge tone="green">Actif</Badge> : <Badge>Désactivé</Badge>}</TD>
+                  <TD>
+                    {u.isActive ? (
+                      <Badge tone="green">
+                        <T>Actif</T>
+                      </Badge>
+                    ) : (
+                      <Badge>
+                        <T>Désactivé</T>
+                      </Badge>
+                    )}
+                  </TD>
                   <TD>
                     {u.isActive && !u.platformAdmin && u.id !== ctx.userId ? (
                       <ActionForm action={startImpersonationAction.bind(null, u.id)}>
                         <SubmitButton size="sm" variant="secondary">
-                          Se connecter en tant que
+                          <T>Se connecter en tant que</T>
                         </SubmitButton>
                       </ActionForm>
                     ) : null}
@@ -137,9 +162,11 @@ export default async function TenantPage(props: PageProps<"/administration/plate
       </Card>
       <div className="mt-4">
         <Alert tone="blue">
-          « Se connecter en tant que » ouvre l&apos;application exactement comme l&apos;utilisateur la voit (menus, données, droits), pendant 4 heures
-          au plus. Un bandeau le rappelle sur chaque page ; chaque action est tracée au journal d&apos;audit au nom de l&apos;utilisateur et de
-          l&apos;administrateur de la plateforme.
+          <T>
+            « Se connecter en tant que » ouvre l&apos;application exactement comme l&apos;utilisateur la voit (menus, données, droits), pendant 4
+            heures au plus. Un bandeau le rappelle sur chaque page ; chaque action est tracée au journal d&apos;audit au nom de l&apos;utilisateur et
+            de l&apos;administrateur de la plateforme.
+          </T>
         </Alert>
       </div>
     </>

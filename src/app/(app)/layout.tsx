@@ -11,6 +11,7 @@ import { getBranding, logoUrl } from "@/server/services/branding";
 import { getOwnTenantAccess } from "@/server/services/platform";
 import { countUnread } from "@/server/services/notifications";
 import { signOutAction, stopImpersonationAction } from "../(auth)/actions";
+import { T, Tr } from "@/i18n/client";
 
 /**
  * Coquille de l'application : la structure est statique, les éléments qui dépendent de la session
@@ -26,7 +27,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <Suspense fallback={<NavFallback />}>
           <Navigation />
         </Suspense>
-        <p className="px-6 pb-4 text-xs text-slate-400">Maintenance des engins et équipements</p>
+        <p className="px-6 pb-4 text-xs text-slate-400">
+          <T>Maintenance des engins et équipements</T>
+        </p>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-slate-200 bg-white/95 px-2 backdrop-blur sm:px-4 lg:px-8">
@@ -104,12 +107,15 @@ async function ImpersonationBanner() {
   return (
     <div role="status" className="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
       <p className="min-w-0 flex-1">
-        <strong>Connecté en tant que {ctx.name}</strong> ({ctx.email}) — organisation {branding.label}. Vous voyez et agissez comme cet utilisateur ;
-        les actions sont tracées au nom de {ctx.impersonator.name}.
+        <strong>
+          <T params={{ name: ctx.name }}>{"Connecté en tant que {name}"}</T>
+        </strong>{" "}
+        ({ctx.email}) — organisation {branding.label}. Vous voyez et agissez comme cet utilisateur ; les actions sont tracées au nom de{" "}
+        {ctx.impersonator.name}.
       </p>
       <form action={stopImpersonationAction}>
         <button type="submit" className="rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-800">
-          Revenir à mon compte
+          <T>Revenir à mon compte</T>
         </button>
       </form>
     </div>
@@ -126,8 +132,11 @@ async function DemoBanner() {
       role="status"
       className={`mb-4 rounded-md border px-3 py-2 text-sm ${daysLeft <= 3 ? "border-amber-300 bg-amber-50 text-amber-900" : "border-violet-200 bg-violet-50 text-violet-900"}`}
     >
-      <strong>Version de démonstration</strong> : il reste {daysLeft} jour{daysLeft > 1 ? "s" : ""}, jusqu&apos;au{" "}
-      {endsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}. Vos données sont conservées à la fin de la période.
+      <strong>
+        <T>Version de démonstration</T>
+      </strong>{" "}
+      : il reste {daysLeft} jour{daysLeft > 1 ? "s" : ""}, jusqu&apos;au {endsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}. Vos
+      données sont conservées à la fin de la période.
     </p>
   );
 }
@@ -200,7 +209,9 @@ async function UserMenu() {
       </Link>
       <div className="hidden text-end sm:block">
         <p className="text-sm font-medium text-slate-900">{ctx.name}</p>
-        <p className="max-w-64 truncate text-xs text-slate-500">{roles || "Aucun rôle"}</p>
+        <p className="max-w-64 truncate text-xs text-slate-500">
+          <Tr>{roles || "Aucun rôle"}</Tr>
+        </p>
       </div>
       <form action={signOutAction}>
         <button

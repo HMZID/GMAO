@@ -10,6 +10,7 @@ import { countDeadlineAlerts } from "@/server/services/fleet-deadlines";
 import { getDashboard } from "@/server/services/kpi";
 import { listDueItems } from "@/server/services/preventive";
 import { listWorkOrders } from "@/server/services/work-orders";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Tableau de bord" };
 
@@ -35,10 +36,14 @@ export default async function DashboardPage() {
         description="Situation du parc et de la maintenance dans votre périmètre."
         actions={
           <>
-            {ctx.can("request.create") ? <ButtonLink href="/demandes/nouvelle">Créer une demande d&apos;intervention</ButtonLink> : null}
+            {ctx.can("request.create") ? (
+              <ButtonLink href="/demandes/nouvelle">
+                <T>Créer une demande d&apos;intervention</T>
+              </ButtonLink>
+            ) : null}
             {ctx.can("workorder.create") ? (
               <ButtonLink href="/interventions/nouveau" variant="secondary">
-                Nouvelle intervention à réaliser
+                <T>Nouvelle intervention à réaliser</T>
               </ButtonLink>
             ) : null}
           </>
@@ -95,7 +100,7 @@ export default async function DashboardPage() {
               .join(", ")}
             .{" "}
             <Link href="/equipements/echeances?horizon=30" className="font-medium underline">
-              Voir les échéances du parc
+              <T>Voir les échéances du parc</T>
             </Link>
           </Alert>
         </div>
@@ -109,7 +114,7 @@ export default async function DashboardPage() {
               description="Par priorité puis date prévue"
               actions={
                 <Link href="/interventions" className="text-sm text-brand-700 hover:underline">
-                  Tout voir
+                  <T>Tout voir</T>
                 </Link>
               }
             />
@@ -119,10 +124,18 @@ export default async function DashboardPage() {
               <Table>
                 <THead>
                   <tr>
-                    <TH>Intervention</TH>
-                    <TH>Équipement</TH>
-                    <TH>Priorité</TH>
-                    <TH>Statut</TH>
+                    <TH>
+                      <T>Intervention</T>
+                    </TH>
+                    <TH>
+                      <T>Équipement</T>
+                    </TH>
+                    <TH>
+                      <T>Priorité</T>
+                    </TH>
+                    <TH>
+                      <T>Statut</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -156,7 +169,7 @@ export default async function DashboardPage() {
               description="En retard, échues ou en pré-alerte"
               actions={
                 <Link href="/preventif/echeances" className="text-sm text-brand-700 hover:underline">
-                  Tout voir
+                  <T>Tout voir</T>
                 </Link>
               }
             />
@@ -166,10 +179,18 @@ export default async function DashboardPage() {
               <Table>
                 <THead>
                   <tr>
-                    <TH>Équipement</TH>
-                    <TH>Opération</TH>
-                    <TH>Échéance</TH>
-                    <TH>Statut</TH>
+                    <TH>
+                      <T>Équipement</T>
+                    </TH>
+                    <TH>
+                      <T>Opération</T>
+                    </TH>
+                    <TH>
+                      <T>Échéance</T>
+                    </TH>
+                    <TH>
+                      <T>Statut</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>

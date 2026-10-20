@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader, Table, TBody, TD, TH, THead, TR } from "@/c
 import { getAuthContext } from "@/server/auth/session";
 import { listCategories, listModels } from "@/server/services/equipment";
 import { createCategoryAction, createModelAction } from "../actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Référentiel équipements" };
 
@@ -28,11 +29,21 @@ export default async function ReferentialPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Code</TH>
-                <TH>Catégorie</TH>
-                <TH>Criticité par défaut</TH>
-                <TH>Attributs</TH>
-                <TH className="text-end">Équipements</TH>
+                <TH>
+                  <T>Code</T>
+                </TH>
+                <TH>
+                  <T>Catégorie</T>
+                </TH>
+                <TH>
+                  <T>Criticité par défaut</T>
+                </TH>
+                <TH>
+                  <T>Attributs</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Équipements</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -62,7 +73,9 @@ export default async function ReferentialPage() {
               <Field label="Criticité" name="defaultCriticality">
                 <Select id="c-crit" name="defaultCriticality" defaultValue="B" options={["A", "B", "C"].map((v) => ({ value: v, label: v }))} />
               </Field>
-              <SubmitButton variant="secondary">Ajouter la catégorie</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Ajouter la catégorie</T>
+              </SubmitButton>
             </ActionForm>
           </CardBody>
         </Card>
@@ -71,9 +84,15 @@ export default async function ReferentialPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Marque</TH>
-                <TH>Modèle</TH>
-                <TH>Catégorie</TH>
+                <TH>
+                  <T>Marque</T>
+                </TH>
+                <TH>
+                  <T>Modèle</T>
+                </TH>
+                <TH>
+                  <T>Catégorie</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -103,7 +122,9 @@ export default async function ReferentialPage() {
               <Field label="Modèle" name="name" required>
                 <Input id="m-name" name="name" required maxLength={120} />
               </Field>
-              <SubmitButton variant="secondary">Ajouter le modèle</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Ajouter le modèle</T>
+              </SubmitButton>
             </ActionForm>
           </CardBody>
         </Card>

@@ -11,6 +11,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getPurchaseRequest } from "@/server/services/purchase-requests";
 import { cancelPurchaseRequestAction } from "../actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Demande d'achat" };
 
@@ -50,7 +51,7 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
           <ApprovalCard approvals={pr.approvals} />
           {pr.approvals.length === 0 && pr.status === "APPROVED" ? (
             <Alert tone="green" title="Validée d'office">
-              Aucune étape du circuit ne s&apos;applique à ce montant.
+              <T>Aucune étape du circuit ne s&apos;applique à ce montant.</T>
             </Alert>
           ) : null}
         </div>
@@ -94,7 +95,9 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
                 <Field label="Motif" name="reason" required>
                   <Input name="reason" required maxLength={500} />
                 </Field>
-                <SubmitButton variant="danger">Annuler la demande</SubmitButton>
+                <SubmitButton variant="danger">
+                  <T>Annuler la demande</T>
+                </SubmitButton>
               </ActionForm>
             </Disclosure>
           ) : null}

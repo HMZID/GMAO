@@ -13,6 +13,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { equipmentFilters, getEquipmentFormOptions, listEquipment } from "@/server/services/equipment";
 import { listSites } from "@/server/services/organization";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Équipements" };
 
@@ -30,9 +31,13 @@ export default async function EquipmentListPage(props: PageProps<"/equipements">
         actions={
           <>
             <ButtonLink href="/equipements/echeances" variant="secondary">
-              Échéances du parc
+              <T>Échéances du parc</T>
             </ButtonLink>
-            {ctx.can("equipment.write") ? <ButtonLink href="/equipements/nouveau">Nouvel équipement</ButtonLink> : null}
+            {ctx.can("equipment.write") ? (
+              <ButtonLink href="/equipements/nouveau">
+                <T>Nouvel équipement</T>
+              </ButtonLink>
+            ) : null}
           </>
         }
       />
@@ -84,13 +89,27 @@ export default async function EquipmentListPage(props: PageProps<"/equipements">
           <Table>
             <THead>
               <tr>
-                <TH>Code</TH>
-                <TH>Désignation</TH>
-                <TH>Catégorie</TH>
-                <TH>Site</TH>
-                <TH>Compteur</TH>
-                <TH>Criticité</TH>
-                <TH>État</TH>
+                <TH>
+                  <T>Code</T>
+                </TH>
+                <TH>
+                  <T>Désignation</T>
+                </TH>
+                <TH>
+                  <T>Catégorie</T>
+                </TH>
+                <TH>
+                  <T>Site</T>
+                </TH>
+                <TH>
+                  <T>Compteur</T>
+                </TH>
+                <TH>
+                  <T>Criticité</T>
+                </TH>
+                <TH>
+                  <T>État</T>
+                </TH>
               </tr>
             </THead>
             <TBody>

@@ -9,6 +9,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { getMyEmailPreferences, linkOf } from "@/server/services/email";
 import { listMyNotifications } from "@/server/services/notifications";
 import { markAllReadAction, updateEmailPreferencesAction } from "./actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Notifications" };
 
@@ -25,7 +26,9 @@ export default async function NotificationsPage() {
         actions={
           unread > 0 ? (
             <ActionForm action={markAllReadAction}>
-              <SubmitButton variant="secondary">Tout marquer comme lu</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Tout marquer comme lu</T>
+              </SubmitButton>
             </ActionForm>
           ) : null
         }
@@ -44,7 +47,7 @@ export default async function NotificationsPage() {
                     <p className={cn("text-sm", n.readAt ? "text-slate-700" : "font-medium text-slate-900")}>
                       {urgent ? (
                         <Badge tone="red" className="me-2">
-                          Urgent
+                          <T>Urgent</T>
                         </Badge>
                       ) : null}
                       {href ? (
@@ -85,7 +88,9 @@ export default async function NotificationsPage() {
                 </li>
               ))}
             </ul>
-            <SubmitButton>Enregistrer les préférences</SubmitButton>
+            <SubmitButton>
+              <T>Enregistrer les préférences</T>
+            </SubmitButton>
           </ActionForm>
         </CardBody>
       </Card>

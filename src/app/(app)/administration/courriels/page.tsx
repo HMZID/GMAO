@@ -10,6 +10,7 @@ import { EMAIL_EVENT_DEFINITIONS } from "@/server/domain/email";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listOutbox, outboxFilters } from "@/server/services/email";
 import { emailActionAction, runEmailJobsAction } from "./actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Courriels" };
 
@@ -28,7 +29,9 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
         description="File d'envoi des notifications par courriel : chaque envoi est tenté par le processus d'envoi (npm run worker), repris en cas d'erreur passagère, puis mis en échec après 5 tentatives."
         actions={
           <ActionForm action={runEmailJobsAction} className="max-w-md text-end">
-            <SubmitButton variant="secondary">Traiter la file maintenant</SubmitButton>
+            <SubmitButton variant="secondary">
+              <T>Traiter la file maintenant</T>
+            </SubmitButton>
           </ActionForm>
         }
       />
@@ -42,10 +45,12 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
 
       <Card>
         <div className="flex items-center justify-between px-5 py-3 text-sm">
-          <span className="text-slate-600">{params.status ? `Filtre : ${EMAIL_STATUS[params.status]?.label}` : "200 derniers courriels"}</span>
+          <span className="text-slate-600">
+            <Tr>{params.status ? `Filtre : ${EMAIL_STATUS[params.status]?.label}` : "200 derniers courriels"}</Tr>
+          </span>
           {params.status ? (
             <Link href={filter()} className="text-brand-700 hover:underline">
-              Tous les statuts
+              <T>Tous les statuts</T>
             </Link>
           ) : null}
         </div>
@@ -56,11 +61,21 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
             <Table>
               <THead>
                 <tr>
-                  <TH>Courriel</TH>
-                  <TH>Destinataire</TH>
-                  <TH>Statut</TH>
-                  <TH>Tentatives</TH>
-                  <TH className="sr-only">Actions</TH>
+                  <TH>
+                    <T>Courriel</T>
+                  </TH>
+                  <TH>
+                    <T>Destinataire</T>
+                  </TH>
+                  <TH>
+                    <T>Statut</T>
+                  </TH>
+                  <TH>
+                    <T>Tentatives</T>
+                  </TH>
+                  <TH className="sr-only">
+                    <T>Actions</T>
+                  </TH>
                 </tr>
               </THead>
               <TBody>
@@ -69,16 +84,31 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                     <TD>
                       <p className="font-medium text-slate-900">{m.subject}</p>
                       <p className="text-xs text-slate-500">
-                        {EMAIL_EVENT_DEFINITIONS[m.event].label} · créé le {formatDateTime(m.createdAt)}
-                        {m.sentAt ? ` · envoyé le ${formatDateTime(m.sentAt)}${m.transport === "log" ? " (journal, sans envoi réel)" : ""}` : ""}
+                        <T
+                          params={{
+                            label: EMAIL_EVENT_DEFINITIONS[m.event].label,
+                            date: formatDateTime(m.createdAt),
+                            v: m.sentAt
+                              ? ` · envoyé le ${formatDateTime(m.sentAt)}${m.transport === "log" ? " (journal, sans envoi réel)" : ""}`
+                              : "",
+                          }}
+                        >
+                          {"{label} · créé le {date}{v}"}
+                        </T>
                       </p>
-                      {m.lastError ? <p className="mt-1 text-xs text-red-700">Dernière erreur : {m.lastError}</p> : null}
+                      {m.lastError ? (
+                        <p className="mt-1 text-xs text-red-700">
+                          <T params={{ lastError: m.lastError }}>{"Dernière erreur : {lastError}"}</T>
+                        </p>
+                      ) : null}
                     </TD>
                     <TD>{m.toAddress}</TD>
                     <TD>
                       <Badge tone={EMAIL_STATUS[m.status]?.tone}>{EMAIL_STATUS[m.status]?.label}</Badge>
                       {m.status === "PENDING" && m.attempts > 0 ? (
-                        <p className="mt-1 text-xs text-slate-500">Nouvel essai le {formatDateTime(m.nextAttemptAt)}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          <T params={{ date: formatDateTime(m.nextAttemptAt) }}>{"Nouvel essai le {date}"}</T>
+                        </p>
                       ) : null}
                     </TD>
                     <TD className="tabular-nums">{m.attempts}</TD>
@@ -88,7 +118,7 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                           <input type="hidden" name="id" value={m.id} />
                           <input type="hidden" name="op" value="retry" />
                           <SubmitButton variant="ghost" size="sm">
-                            Relancer
+                            <T>Relancer</T>
                           </SubmitButton>
                         </PanelForm>
                       ) : m.status === "PENDING" ? (
@@ -96,7 +126,7 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                           <input type="hidden" name="id" value={m.id} />
                           <input type="hidden" name="op" value="cancel" />
                           <SubmitButton variant="ghost" size="sm">
-                            Annuler
+                            <T>Annuler</T>
                           </SubmitButton>
                         </PanelForm>
                       ) : null}

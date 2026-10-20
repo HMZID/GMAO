@@ -4,6 +4,7 @@ import { Clock, UserX } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { T } from "@/i18n/client";
 
 export type DayViewOrder = { id: string; time: string; equipmentCode: string; title: string; duration: string; priority: string; status: string };
 export type DayViewRow = {
@@ -62,7 +63,7 @@ export function PlanningDayView({ days, rows, initialDay }: { days: DayViewDay[]
       </div>
 
       <p className="px-4 pt-3 text-sm text-slate-600">
-        {current.weekday} {current.day} · {count(current.key)} intervention(s) planifiée(s)
+        <T params={{ weekday: current.weekday, day: current.day, v: count(current.key) }}>{"{weekday} {day} · {v} intervention(s) planifiée(s)"}</T>
       </p>
 
       <ul className="grid gap-3 p-3 md:grid-cols-2">
@@ -86,7 +87,9 @@ export function PlanningDayView({ days, rows, initialDay }: { days: DayViewDay[]
                   >
                     {r.loadLabel}
                   </p>
-                  <p className="text-[11px] text-slate-500">charge de la semaine</p>
+                  <p className="text-[11px] text-slate-500">
+                    <T>charge de la semaine</T>
+                  </p>
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden>
                     <div
                       className={cn("h-full rounded-full", load > 1 ? "bg-red-500" : load > 0.85 ? "bg-amber-500" : "bg-brand-600")}
@@ -102,7 +105,11 @@ export function PlanningDayView({ days, rows, initialDay }: { days: DayViewDay[]
                   {absence}
                 </p>
               ) : null}
-              {orders.length === 0 && !absence ? <p className="mt-3 text-sm text-slate-500">Aucune intervention ce jour.</p> : null}
+              {orders.length === 0 && !absence ? (
+                <p className="mt-3 text-sm text-slate-500">
+                  <T>Aucune intervention ce jour.</T>
+                </p>
+              ) : null}
               {orders.length > 0 ? (
                 <ul className="mt-3 space-y-2">
                   {orders.map((o) => (

@@ -9,6 +9,7 @@ import { isPlatformAdmin } from "@/server/services/platform";
 import { getSiteSettings } from "@/server/services/site";
 import { updateSiteSettingsAction } from "../actions";
 import { SiteAdminNav } from "../site-admin-nav";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Textes du site" };
 
@@ -60,7 +61,9 @@ export default async function SiteContentPage() {
                   );
                 })}
                 <div className="md:col-span-2">
-                  <SubmitButton>Enregistrer</SubmitButton>
+                  <SubmitButton>
+                    <T>Enregistrer</T>
+                  </SubmitButton>
                 </div>
               </ActionForm>
             </CardBody>

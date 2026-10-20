@@ -6,7 +6,7 @@ import type { ComponentProps } from "react";
 import { ActionForm, Field, useActionFormState } from "@/components/forms/action-form";
 import { FLEET_SIZES, SECTORS } from "@/server/domain/site";
 import { submitDemoRequestAction } from "@/app/(site)/essai-gratuit/actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 const control =
   "block w-full border-2 border-asphalt bg-white px-3 text-base text-asphalt placeholder:text-asphalt-500/60 focus:outline-none focus:ring-4 focus:ring-signal/60";
@@ -18,7 +18,9 @@ function TextInput(props: ComponentProps<"input">) {
 function SelectInput({ options, ...props }: ComponentProps<"select"> & { options: { value: string; label: string }[] }) {
   return (
     <select {...props} className={`${control} h-12`}>
-      <option value=""><T>Choisir…</T></option>
+      <option value="">
+        <T>Choisir…</T>
+      </option>
       {options.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
@@ -134,7 +136,7 @@ function Submit() {
   const { pending } = useActionFormState();
   return (
     <button type="submit" disabled={pending} className="site-btn site-btn-signal w-full text-base disabled:opacity-60">
-      {pending ? "Envoi…" : "Demander mon espace de démonstration"}
+      <Tr>{pending ? "Envoi…" : "Demander mon espace de démonstration"}</Tr>
       {pending ? null : <ArrowRight className="rtl-flip h-5 w-5" aria-hidden />}
     </button>
   );

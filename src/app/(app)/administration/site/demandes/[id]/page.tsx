@@ -14,6 +14,7 @@ import { defaultTrialDays, getDemoRequest } from "@/server/services/demo-request
 import { isPlatformAdmin } from "@/server/services/platform";
 import { deleteDemoRequestAction, demoRequestDecisionAction } from "../../actions";
 import { SiteAdminNav } from "../../site-admin-nav";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Demande de démonstration" };
 
@@ -75,7 +76,7 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
             <>
               {existingAccount ? (
                 <Alert tone="red" title="Un compte existe déjà avec ce courriel">
-                  L&apos;acceptation est impossible avec ce courriel : refuser la demande ou contacter le prospect.
+                  <T>L&apos;acceptation est impossible avec ce courriel : refuser la demande ou contacter le prospect.</T>
                 </Alert>
               ) : null}
               <Card>
@@ -95,7 +96,9 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
                     <Field label="Durée de la démonstration" name="durationDays" required>
                       <Select name="durationDays" required defaultValue={String(trialDays)} options={DURATION_OPTIONS} />
                     </Field>
-                    <SubmitButton pendingLabel="Ouverture…">Accepter et envoyer les accès</SubmitButton>
+                    <SubmitButton pendingLabel="Ouverture…">
+                      <T>Accepter et envoyer les accès</T>
+                    </SubmitButton>
                   </PanelForm>
                 </CardBody>
               </Card>
@@ -109,7 +112,9 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
                     </Field>
                     <Checkbox name="notify" label="Prévenir le prospect par courriel" defaultChecked />
                     <div>
-                      <SubmitButton variant="secondary">Refuser la demande</SubmitButton>
+                      <SubmitButton variant="secondary">
+                        <T>Refuser la demande</T>
+                      </SubmitButton>
                     </div>
                   </PanelForm>
                 </CardBody>
@@ -166,7 +171,9 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
                 {r.status === "APPROVED" && passwordChanged === false ? (
                   <PanelForm>
                     <input type="hidden" name="intent" value="resend" />
-                    <SubmitButton variant="secondary">Renvoyer les accès (nouveau mot de passe provisoire)</SubmitButton>
+                    <SubmitButton variant="secondary">
+                      <T>Renvoyer les accès (nouveau mot de passe provisoire)</T>
+                    </SubmitButton>
                   </PanelForm>
                 ) : null}
               </CardBody>
@@ -180,7 +187,7 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
             <CardBody>
               <ActionForm action={deleteDemoRequestAction.bind(null, r.id)}>
                 <SubmitButton variant="danger" pendingLabel="Effacement…">
-                  Effacer définitivement
+                  <T>Effacer définitivement</T>
                 </SubmitButton>
               </ActionForm>
             </CardBody>

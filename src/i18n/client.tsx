@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, use, type ReactNode } from "react";
+import { Children, createContext, use, type ReactNode } from "react";
 import { DEFAULT_LOCALE, type Locale } from "./config";
 import { translate, type Dictionary, type Params } from "./translate";
 
@@ -20,6 +20,17 @@ export function useLocale(): Locale {
 export function useT() {
   const { dictionary } = use(I18nContext);
   return (source: string, params?: Params) => translate(dictionary, source, params);
+}
+
+/**
+ * Traduit les textes (chaînes) d'un contenu : `<Tr>{title}</Tr>`. Les éléments React et les nombres sont laissés
+ * tels quels. Sert aux composants d'interface qui reçoivent un libellé en propriété.
+ */
+export function Tr({ children }: { children?: ReactNode }) {
+  const { dictionary } = use(I18nContext);
+  if (typeof children === "string") return translate(dictionary, children);
+  if (Array.isArray(children)) return Children.map(children, (child) => (typeof child === "string" ? translate(dictionary, child) : child));
+  return children;
 }
 
 /**

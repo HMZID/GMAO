@@ -9,6 +9,7 @@ import { INDICATOR_DEFINITIONS, INDICATOR_SOURCES } from "@/server/domain/indica
 import { listIndicators, type IndicatorResult } from "@/server/services/indicators";
 import { deleteIndicatorAction } from "../actions";
 import { IndicatorForm, type SourceOption } from "./indicator-form";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Indicateurs personnalisés" };
 
@@ -70,7 +71,7 @@ export default async function CustomIndicatorsPage() {
                   canManage ? (
                     <ActionForm action={deleteIndicatorAction.bind(null, indicator.id)} showMessage={false}>
                       <SubmitButton size="sm" variant="ghost">
-                        Supprimer
+                        <T>Supprimer</T>
                       </SubmitButton>
                     </ActionForm>
                   ) : null
@@ -80,7 +81,9 @@ export default async function CustomIndicatorsPage() {
                 {indicator.result ? (
                   <IndicatorView chart={indicator.chart} result={indicator.result} />
                 ) : (
-                  <p className="text-sm text-slate-500">Données non accessibles avec votre profil.</p>
+                  <p className="text-sm text-slate-500">
+                    <T>Données non accessibles avec votre profil.</T>
+                  </p>
                 )}
               </CardBody>
             </Card>
@@ -109,7 +112,9 @@ function IndicatorView({ chart, result }: { chart: string; result: IndicatorResu
         </tbody>
         <tfoot>
           <tr className="border-t border-slate-200 font-semibold">
-            <td className="py-1.5">Ensemble</td>
+            <td className="py-1.5">
+              <T>Ensemble</T>
+            </td>
             <td className="py-1.5 text-end tabular-nums">{value(result.value)}</td>
           </tr>
         </tfoot>

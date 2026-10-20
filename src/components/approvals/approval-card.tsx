@@ -6,6 +6,7 @@ import { Badge, Card, CardBody, CardHeader } from "@/components/ui/primitives";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { APPROVAL_STATUS, ROLE } from "@/lib/labels";
 import type { approvalTimeline } from "@/server/services/approvals";
+import { T, Tr } from "@/i18n/client";
 
 type Timeline = Awaited<ReturnType<typeof approvalTimeline>>;
 
@@ -35,8 +36,9 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Badge tone={APPROVAL_STATUS[a.status]?.tone}>{APPROVAL_STATUS[a.status]?.label ?? a.status}</Badge>
         <span className="text-slate-600">
-          Soumise le {formatDateTime(a.createdAt)} par {a.requesterName ?? "—"}
-          {a.amount != null ? ` · ${formatCurrency(a.amount)}` : ""}
+          <T params={{ date: formatDateTime(a.createdAt), v: a.requesterName ?? "—", v2: a.amount != null ? ` · ${formatCurrency(a.amount)}` : "" }}>
+            {"Soumise le {date} par {v}{v2}"}
+          </T>
         </span>
       </div>
       <ol className="space-y-2">
@@ -55,13 +57,17 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
                   {step.name}
                   <span className="font-normal text-slate-500">
                     {" "}
-                    · {step.approverRole ? (ROLE[step.approverRole] ?? step.approverRole) : "valideur nommé"}
+                    · <Tr>{step.approverRole ? (ROLE[step.approverRole] ?? step.approverRole) : "valideur nommé"}</Tr>
                   </span>
-                  {current ? <span className="ms-2 text-xs font-normal text-amber-700">étape en cours</span> : null}
+                  {current ? (
+                    <span className="ms-2 text-xs font-normal text-amber-700">
+                      <T>étape en cours</T>
+                    </span>
+                  ) : null}
                 </p>
                 {d ? (
                   <p className="text-slate-600">
-                    {d.decision === "APPROVED" ? "Validée" : "Refusée"} par {d.decidedBy}
+                    <Tr>{d.decision === "APPROVED" ? "Validée" : "Refusée"}</Tr> par {d.decidedBy}
                     {d.onBehalfOf ? ` (suppléant de ${d.onBehalfOf})` : ""} le {formatDateTime(d.createdAt)}
                     {d.comment ? <span className="block italic text-slate-700">« {d.comment} »</span> : null}
                   </p>
@@ -80,10 +86,10 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
             </Field>
             <div className="flex flex-wrap gap-2">
               <SubmitButton name="decision" value="APPROVED">
-                Valider
+                <T>Valider</T>
               </SubmitButton>
               <SubmitButton name="decision" value="REJECTED" variant="danger">
-                Refuser
+                <T>Refuser</T>
               </SubmitButton>
             </div>
           </PanelForm>

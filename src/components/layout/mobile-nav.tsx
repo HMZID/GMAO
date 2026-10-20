@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./nav-items";
 import { NAV_ICONS, isActive } from "./sidebar-nav";
+import { T } from "@/i18n/client";
 
 type Item = Pick<NavItem, "href" | "label" | "icon">;
 
@@ -74,7 +75,9 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
         className="flex h-11 w-11 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 lg:hidden"
       >
         <Menu className="h-6 w-6" aria-hidden />
-        <span className="sr-only">Ouvrir le menu</span>
+        <span className="sr-only">
+          <T>Ouvrir le menu</T>
+        </span>
       </button>
 
       {mounted && open
@@ -90,7 +93,9 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
                     className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-white/10"
                   >
                     <X className="h-6 w-6" aria-hidden />
-                    <span className="sr-only">Fermer le menu</span>
+                    <span className="sr-only">
+                      <T>Fermer le menu</T>
+                    </span>
                   </button>
                 </div>
                 <div className="border-b border-white/10 px-4 py-3">
@@ -157,7 +162,7 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
                     className="flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-medium text-slate-600"
                   >
                     <Menu className="h-5 w-5" aria-hidden />
-                    Menu
+                    <T>Menu</T>
                   </button>
                 </li>
               </ul>

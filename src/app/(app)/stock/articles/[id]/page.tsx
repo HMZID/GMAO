@@ -11,6 +11,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getPart } from "@/server/services/stock";
 import { stockLevelSettingsAction } from "../../actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Article" };
 
@@ -31,11 +32,25 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
           <>
             <CriticalityBadge value={part.criticality} />
             {part.family ? <Badge>{part.family}</Badge> : null}
-            {part.isRepairable ? <Badge tone="violet">Réparable</Badge> : null}
-            {!part.active ? <Badge tone="amber">Inactif</Badge> : null}
+            {part.isRepairable ? (
+              <Badge tone="violet">
+                <T>Réparable</T>
+              </Badge>
+            ) : null}
+            {!part.active ? (
+              <Badge tone="amber">
+                <T>Inactif</T>
+              </Badge>
+            ) : null}
           </>
         }
-        actions={canMove ? <ButtonLink href={`/stock/mouvements?partId=${part.id}`}>Nouveau mouvement</ButtonLink> : null}
+        actions={
+          canMove ? (
+            <ButtonLink href={`/stock/mouvements?partId=${part.id}`}>
+              <T>Nouveau mouvement</T>
+            </ButtonLink>
+          ) : null
+        }
       />
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
@@ -50,11 +65,21 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
               <Table>
                 <THead>
                   <tr>
-                    <TH>Magasin</TH>
-                    <TH className="text-end">En stock</TH>
-                    <TH className="text-end">Réservé</TH>
-                    <TH className="text-end">Disponible</TH>
-                    <TH>Seuils (mini · point de commande · maxi)</TH>
+                    <TH>
+                      <T>Magasin</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>En stock</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Réservé</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Disponible</T>
+                    </TH>
+                    <TH>
+                      <T>Seuils (mini · point de commande · maxi)</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -73,7 +98,7 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                           {formatNumber(free)}
                           {below ? (
                             <Badge tone="amber" className="ms-2">
-                              À commander
+                              <T>À commander</T>
                             </Badge>
                           ) : null}
                         </TD>
@@ -129,7 +154,7 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
               title="Derniers mouvements"
               actions={
                 <Link href={`/stock/mouvements?partId=${part.id}`} className="text-sm text-brand-700 hover:underline">
-                  Tous les mouvements
+                  <T>Tous les mouvements</T>
                 </Link>
               }
             />
@@ -139,11 +164,21 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
               <Table>
                 <THead>
                   <tr>
-                    <TH>Date</TH>
-                    <TH>Mouvement</TH>
-                    <TH>Magasin</TH>
-                    <TH className="text-end">Quantité</TH>
-                    <TH>Référence</TH>
+                    <TH>
+                      <T>Date</T>
+                    </TH>
+                    <TH>
+                      <T>Mouvement</T>
+                    </TH>
+                    <TH>
+                      <T>Magasin</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Quantité</T>
+                    </TH>
+                    <TH>
+                      <T>Référence</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>

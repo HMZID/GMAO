@@ -11,6 +11,7 @@ import { IMPORT_DEFINITIONS, type ImportColumn } from "@/server/domain/imports";
 import { loadOr404 } from "@/server/pages";
 import { getImportJob } from "@/server/services/imports";
 import { executeImportAction } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Import" };
 
@@ -48,15 +49,22 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
             <Badge tone={IMPORT_STATUS[job.status]?.tone}>{IMPORT_STATUS[job.status]?.label ?? job.status}</Badge>
             <Badge>{IMPORT_KIND[job.kind]}</Badge>
             <span className="text-sm text-slate-500">
-              {job.author} · simulé le {formatDateTime(job.createdAt)}
-              {job.executedAt ? ` · exécuté le ${formatDateTime(job.executedAt)} (${IMPORT_MODE[job.mode ?? ""] ?? ""})` : ""}
+              <T
+                params={{
+                  author: job.author,
+                  date: formatDateTime(job.createdAt),
+                  v: job.executedAt ? ` · exécuté le ${formatDateTime(job.executedAt)} (${IMPORT_MODE[job.mode ?? ""] ?? ""})` : "",
+                }}
+              >
+                {"{author} · simulé le {date}{v}"}
+              </T>
             </span>
           </>
         }
         actions={
           <a href={`/api/v1/imports/${job.id}/report`} className={buttonClass("secondary")}>
             <Download className="h-4 w-4" aria-hidden />
-            Rapport Excel
+            <T>Rapport Excel</T>
           </a>
         }
       />
@@ -75,8 +83,9 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
       {job.alreadyImported && job.status === "SIMULATED" ? (
         <div className="mb-6">
           <Alert tone="amber" title="Fichier déjà importé">
-            Ce même fichier a été exécuté le {formatDateTime(job.alreadyImported.executedAt)}. Les lignes déjà présentes sont ignorées : aucun doublon
-            ne sera créé.
+            <T params={{ date: formatDateTime(job.alreadyImported.executedAt) }}>
+              {"Ce même fichier a été exécuté le {date}. Les lignes déjà présentes sont ignorées : aucun doublon ne sera créé."}
+            </T>
           </Alert>
         </div>
       ) : null}
@@ -100,23 +109,33 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
             <ActionPanel action={executeImportAction.bind(null, job.id)} className="flex flex-wrap items-start gap-3 [&>[role]]:w-full">
               {job.status !== "SIMULATED" ? (
                 <p className="text-sm text-slate-600">
-                  {job.executedAt
-                    ? `Exécuté le ${formatDateTime(job.executedAt)} (${IMPORT_MODE[job.mode ?? ""] ?? ""}) : ${s.imported} ligne(s) créée(s).`
-                    : "Exécution en cours."}
+                  <Tr>
+                    {job.executedAt
+                      ? `Exécuté le ${formatDateTime(job.executedAt)} (${IMPORT_MODE[job.mode ?? ""] ?? ""}) : ${s.imported} ligne(s) créée(s).`
+                      : "Exécution en cours."}
+                  </Tr>
                 </p>
               ) : null}
               {job.status === "SIMULATED" ? (
                 <PanelForm>
                   <input type="hidden" name="mode" value="ALL_OR_NOTHING" />
-                  <SubmitButton>Tout importer ({s.ready})</SubmitButton>
-                  <p className="mt-1 max-w-xs text-xs text-slate-500">Tout ou rien : refusé tant qu&apos;une ligne est en erreur.</p>
+                  <SubmitButton>
+                    <T params={{ ready: s.ready }}>{"Tout importer ({ready})"}</T>
+                  </SubmitButton>
+                  <p className="mt-1 max-w-xs text-xs text-slate-500">
+                    <T>Tout ou rien : refusé tant qu&apos;une ligne est en erreur.</T>
+                  </p>
                 </PanelForm>
               ) : null}
               {job.status === "SIMULATED" && s.errors > 0 ? (
                 <PanelForm>
                   <input type="hidden" name="mode" value="VALID_ONLY" />
-                  <SubmitButton variant="secondary">Importer les lignes valides ({s.ready})</SubmitButton>
-                  <p className="mt-1 max-w-xs text-xs text-slate-500">Les {s.errors} ligne(s) en erreur restent à corriger et à réimporter.</p>
+                  <SubmitButton variant="secondary">
+                    <T params={{ ready: s.ready }}>{"Importer les lignes valides ({ready})"}</T>
+                  </SubmitButton>
+                  <p className="mt-1 max-w-xs text-xs text-slate-500">
+                    <T params={{ errors: s.errors }}>{"Les {errors} ligne(s) en erreur restent à corriger et à réimporter."}</T>
+                  </p>
                 </PanelForm>
               ) : null}
             </ActionPanel>
@@ -130,7 +149,7 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
           description={rows.length > DISPLAY_LIMIT ? `${DISPLAY_LIMIT} premières lignes ; toutes les lignes sont dans le rapport Excel.` : undefined}
           actions={
             <Link href={onlyIssues ? `/imports/${job.id}` : `/imports/${job.id}?vue=anomalies`} className="text-sm text-brand-700 hover:underline">
-              {onlyIssues ? "Toutes les lignes" : "Lignes en erreur seulement"}
+              <Tr>{onlyIssues ? "Toutes les lignes" : "Lignes en erreur seulement"}</Tr>
             </Link>
           }
         />
@@ -140,12 +159,18 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
           <Table>
             <THead>
               <tr>
-                <TH>Ligne</TH>
-                <TH>Statut</TH>
+                <TH>
+                  <T>Ligne</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
                 {preview.map((c) => (
                   <TH key={c.key}>{c.label}</TH>
                 ))}
-                <TH>Anomalies</TH>
+                <TH>
+                  <T>Anomalies</T>
+                </TH>
               </tr>
             </THead>
             <TBody>

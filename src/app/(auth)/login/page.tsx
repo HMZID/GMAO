@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/primitives";
 import { captchaSiteKey } from "@/server/auth/captcha";
 import { LoginForm } from "./login-form";
+import { T } from "@/i18n/client";
 
 export const metadata: Metadata = { title: "Connexion" };
 
@@ -25,13 +26,17 @@ export default function LoginPage(props: PageProps<"/login">) {
           <span className="text-xl font-semibold">GMAO</span>
         </div>
         <div className="rounded-lg bg-white p-6 shadow-xl">
-          <h1 className="mb-5 text-lg font-semibold text-slate-900">Connexion</h1>
+          <h1 className="mb-5 text-lg font-semibold text-slate-900">
+            <T>Connexion</T>
+          </h1>
           {/* Le formulaire dépend de « next » (URL) : en attendant, un gabarit non soumissible évite de perdre la page demandée. */}
           <Suspense fallback={<LoginFormSkeleton />}>
             <LoginFormWithNext searchParams={props.searchParams} />
           </Suspense>
         </div>
-        <p className="mt-4 text-center text-xs text-slate-400">Les comptes sont créés par l&apos;administrateur.</p>
+        <p className="mt-4 text-center text-xs text-slate-400">
+          <T>Les comptes sont créés par l&apos;administrateur.</T>
+        </p>
       </div>
     </main>
   );

@@ -11,6 +11,7 @@ import { cleanFilters, queryParams } from "@/server/pages";
 import { getEquipmentFormOptions } from "@/server/services/equipment";
 import { getIndicators, indicatorFilters } from "@/server/services/kpi";
 import { listSites } from "@/server/services/organization";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Indicateurs" };
 
@@ -44,7 +45,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
         description={`Période du ${formatDate(k.from)} au ${formatDate(k.to)} — ${k.fleetSize} équipement(s). Les indicateurs calculés sur moins de 3 événements sont « non significatifs ».`}
         actions={
           <ButtonLink href="/indicateurs/personnalises" variant="secondary">
-            Indicateurs personnalisés
+            <T>Indicateurs personnalisés</T>
           </ButtonLink>
         }
       />
@@ -130,11 +131,21 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               <Table>
                 <THead>
                   <tr>
-                    <TH>Catégorie</TH>
-                    <TH className="text-end">Équip.</TH>
-                    <TH className="text-end">Dispo.</TH>
-                    <TH className="text-end">Immob.</TH>
-                    <TH className="text-end">Coût</TH>
+                    <TH>
+                      <T>Catégorie</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Équip.</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Dispo.</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Immob.</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Coût</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -164,9 +175,15 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
                 <Table>
                   <THead>
                     <tr>
-                      <TH>Équipement</TH>
-                      <TH className="text-end">Immob.</TH>
-                      <TH className="text-end">Coût</TH>
+                      <TH>
+                        <T>Équipement</T>
+                      </TH>
+                      <TH className="text-end">
+                        <T>Immob.</T>
+                      </TH>
+                      <TH className="text-end">
+                        <T>Coût</T>
+                      </TH>
                     </tr>
                   </THead>
                   <TBody>
@@ -201,9 +218,15 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               <Table>
                 <THead>
                   <tr>
-                    <TH>Article</TH>
-                    <TH className="text-end">Quantité</TH>
-                    <TH className="text-end">Valeur</TH>
+                    <TH>
+                      <T>Article</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Quantité</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Valeur</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -228,8 +251,10 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               </Table>
             )}
             <CardBody className="border-t border-slate-100 text-xs text-slate-500">
-              Méthode de calcul : disponibilité sur 24 h × jours de la période ; temps moyen entre pannes (MTBF) = heures de fonctionnement ÷ nombre
-              de pannes ; durée moyenne de réparation (MTTR) hors attentes de pièces ou de prestataire.
+              <T>
+                Méthode de calcul : disponibilité sur 24 h × jours de la période ; temps moyen entre pannes (MTBF) = heures de fonctionnement ÷ nombre
+                de pannes ; durée moyenne de réparation (MTTR) hors attentes de pièces ou de prestataire.
+              </T>
             </CardBody>
           </Card>
         </>

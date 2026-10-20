@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { initialActionState, type ActionState } from "@/lib/action-state";
 import { cn } from "@/lib/utils";
+import { T, Tr } from "@/i18n/client";
 
 type FormContext = { state: ActionState; pending: boolean };
 
@@ -95,7 +96,11 @@ export function FormMessage({ className }: { className?: string }) {
         className,
       )}
     >
-      {state.message ? <p className="font-medium">{state.message}</p> : null}
+      {state.message ? (
+        <p className="font-medium">
+          <Tr>{state.message}</Tr>
+        </p>
+      ) : null}
       {state.secret ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <code
@@ -109,21 +114,25 @@ export function FormMessage({ className }: { className?: string }) {
             className="rounded px-2 py-1 text-xs font-medium ring-1 ring-emerald-300 hover:bg-emerald-100"
             onClick={() => void navigator.clipboard?.writeText(state.secret ?? "")}
           >
-            Copier
+            <T>Copier</T>
           </button>
         </div>
       ) : null}
       {state.errors?.length ? (
         <ul className="mt-1 list-disc space-y-0.5 ps-5">
           {state.errors.map((e) => (
-            <li key={e}>{e}</li>
+            <li key={e}>
+              <Tr>{e}</Tr>
+            </li>
           ))}
         </ul>
       ) : null}
       {state.warnings?.length ? (
         <ul className="mt-1 list-disc space-y-0.5 ps-5 text-amber-900">
           {state.warnings.map((w) => (
-            <li key={w}>{w}</li>
+            <li key={w}>
+              <Tr>{w}</Tr>
+            </li>
           ))}
         </ul>
       ) : null}
@@ -160,7 +169,7 @@ export function Field({
   const messageId = `${controlId}-message`;
   const labelContent = (
     <>
-      {label}
+      <Tr>{label}</Tr>
       {required ? (
         <span className="text-red-600" aria-hidden>
           {" "}
@@ -195,11 +204,11 @@ export function Field({
       )}
       {error ? (
         <p id={messageId} className="text-xs text-red-700" role="alert">
-          {error}
+          <Tr>{error}</Tr>
         </p>
       ) : hint ? (
         <p id={messageId} className="text-xs text-slate-500">
-          {hint}
+          <Tr>{hint}</Tr>
         </p>
       ) : null}
     </div>
@@ -227,7 +236,7 @@ export function SubmitButton({
   const { pending } = useActionFormState();
   return (
     <Button type="submit" variant={variant} size={size} disabled={pending} className={className} name={name} value={value}>
-      {pending ? pendingLabel : children}
+      {pending ? <Tr>{pendingLabel}</Tr> : children}
     </Button>
   );
 }

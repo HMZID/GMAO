@@ -10,6 +10,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { listCompanies, listSites } from "@/server/services/organization";
 import { listUsers } from "@/server/services/users";
 import { addRoleAction, createUserAction, removeRoleAction, setUserActiveAction, setUserPasswordAction, updateUserAction } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Utilisateurs et habilitations" };
 
@@ -57,7 +58,9 @@ export default async function UsersPage() {
             <Select id="u-scope" name="scope" required options={scopeOptions} />
           </Field>
           <div className="flex items-end">
-            <SubmitButton>Créer le compte</SubmitButton>
+            <SubmitButton>
+              <T>Créer le compte</T>
+            </SubmitButton>
           </div>
         </ActionForm>
       </Disclosure>
@@ -65,10 +68,18 @@ export default async function UsersPage() {
         <Table>
           <THead>
             <tr>
-              <TH>Utilisateur</TH>
-              <TH>Rôles × périmètres</TH>
-              <TH>Dernière connexion</TH>
-              <TH>Compte</TH>
+              <TH>
+                <T>Utilisateur</T>
+              </TH>
+              <TH>
+                <T>Rôles × périmètres</T>
+              </TH>
+              <TH>
+                <T>Dernière connexion</T>
+              </TH>
+              <TH>
+                <T>Compte</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
@@ -89,12 +100,16 @@ export default async function UsersPage() {
                           <span className="text-sm text-slate-700">{a.scopeLabel}</span>
                           {a.validFrom || a.validTo ? (
                             <Badge tone={expired ? "gray" : future ? "amber" : "violet"}>
-                              Délégation {a.validFrom ? `du ${formatDate(a.validFrom)}` : ""} {a.validTo ? `au ${formatDate(a.validTo)}` : ""}
+                              <T
+                                params={{ v: a.validFrom ? `du ${formatDate(a.validFrom)}` : "", v2: a.validTo ? `au ${formatDate(a.validTo)}` : "" }}
+                              >
+                                {"Délégation {v} {v2}"}
+                              </T>
                             </Badge>
                           ) : null}
                           <ActionForm action={removeRoleAction.bind(null, a.id)} showMessage={false} className="inline">
                             <SubmitButton size="sm" variant="ghost">
-                              Retirer
+                              <T>Retirer</T>
                             </SubmitButton>
                           </ActionForm>
                         </li>
@@ -116,18 +131,28 @@ export default async function UsersPage() {
                         <Input id={`t-${u.id}`} name="validTo" type="date" />
                       </Field>
                       <SubmitButton size="sm" variant="secondary">
-                        Ajouter
+                        <T>Ajouter</T>
                       </SubmitButton>
                     </ActionForm>
                   </Disclosure>
                 </TD>
-                <TD className="whitespace-nowrap text-xs">{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Jamais"}</TD>
+                <TD className="whitespace-nowrap text-xs">
+                  <Tr>{u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "Jamais"}</Tr>
+                </TD>
                 <TD>
-                  {u.isActive ? <Badge tone="green">Actif</Badge> : <Badge>Désactivé</Badge>}
+                  {u.isActive ? (
+                    <Badge tone="green">
+                      <T>Actif</T>
+                    </Badge>
+                  ) : (
+                    <Badge>
+                      <T>Désactivé</T>
+                    </Badge>
+                  )}
                   {u.id !== ctx.userId ? (
                     <ActionForm action={setUserActiveAction.bind(null, u.id, !u.isActive)} className="mt-2">
                       <SubmitButton size="sm" variant={u.isActive ? "ghost" : "secondary"}>
-                        {u.isActive ? "Désactiver" : "Réactiver"}
+                        <Tr>{u.isActive ? "Désactiver" : "Réactiver"}</Tr>
                       </SubmitButton>
                     </ActionForm>
                   ) : null}
@@ -141,7 +166,7 @@ export default async function UsersPage() {
                           <Input name="email" type="email" required defaultValue={u.email} />
                         </Field>
                         <SubmitButton size="sm" variant="secondary">
-                          Enregistrer
+                          <T>Enregistrer</T>
                         </SubmitButton>
                       </ActionForm>
                       <ActionForm action={setUserPasswordAction.bind(null, u.id)} resetOnSuccess className="space-y-2 border-t border-slate-100 pt-3">
@@ -149,7 +174,7 @@ export default async function UsersPage() {
                           <Input name="password" type="password" required minLength={10} autoComplete="new-password" />
                         </Field>
                         <SubmitButton size="sm" variant="secondary">
-                          Remplacer le mot de passe
+                          <T>Remplacer le mot de passe</T>
                         </SubmitButton>
                       </ActionForm>
                     </div>
@@ -161,7 +186,9 @@ export default async function UsersPage() {
         </Table>
       </Card>
       <div className="mt-4">
-        <Alert tone="blue">Un compte désactivé conserve tout son historique ; ses sessions ouvertes sont fermées immédiatement.</Alert>
+        <Alert tone="blue">
+          <T>Un compte désactivé conserve tout son historique ; ses sessions ouvertes sont fermées immédiatement.</T>
+        </Alert>
       </div>
     </>
   );

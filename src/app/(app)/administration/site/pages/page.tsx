@@ -11,6 +11,7 @@ import { isPlatformAdmin } from "@/server/services/platform";
 import { listSitePages } from "@/server/services/site";
 import { createSitePageAction } from "../actions";
 import { SiteAdminNav } from "../site-admin-nav";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Pages du site" };
 
@@ -39,7 +40,9 @@ export default async function SitePagesPage() {
           <input type="hidden" name="published" value="" />
           <input type="hidden" name="showInFooter" value="on" />
           <div className="md:col-span-2">
-            <SubmitButton>Créer et rédiger</SubmitButton>
+            <SubmitButton>
+              <T>Créer et rédiger</T>
+            </SubmitButton>
           </div>
         </ActionForm>
       </Disclosure>
@@ -50,10 +53,18 @@ export default async function SitePagesPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Page</TH>
-                <TH>Adresse</TH>
-                <TH>État</TH>
-                <TH>Modifiée le</TH>
+                <TH>
+                  <T>Page</T>
+                </TH>
+                <TH>
+                  <T>Adresse</T>
+                </TH>
+                <TH>
+                  <T>État</T>
+                </TH>
+                <TH>
+                  <T>Modifiée le</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -64,10 +75,18 @@ export default async function SitePagesPage() {
                       {p.title}
                     </Link>
                   </TD>
-                  <TD className="font-mono text-xs">/infos/{p.slug}</TD>
+                  <TD className="font-mono text-xs">
+                    <T params={{ slug: p.slug }}>{"/infos/{slug}"}</T>
+                  </TD>
                   <TD>
-                    <Badge tone={p.published ? "green" : "gray"}>{p.published ? "Publiée" : "Brouillon"}</Badge>
-                    {p.published && p.showInFooter ? <span className="ms-2 text-xs text-slate-500">pied de page</span> : null}
+                    <Badge tone={p.published ? "green" : "gray"}>
+                      <Tr>{p.published ? "Publiée" : "Brouillon"}</Tr>
+                    </Badge>
+                    {p.published && p.showInFooter ? (
+                      <span className="ms-2 text-xs text-slate-500">
+                        <T>pied de page</T>
+                      </span>
+                    ) : null}
                   </TD>
                   <TD className="text-xs">{formatDateTime(p.updatedAt)}</TD>
                 </TR>

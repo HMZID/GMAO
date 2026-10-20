@@ -11,6 +11,7 @@ import { listInventoryCounts } from "@/server/services/inventory";
 import { listWarehouses } from "@/server/services/organization";
 import { listPartOptions } from "@/server/services/stock";
 import { inventoryCountAction, inventoryDecisionAction } from "../actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Inventaire" };
 
@@ -68,7 +69,9 @@ export default async function InventoryPage() {
                 <Input name="comment" maxLength={500} />
               </Field>
               <div className="sm:col-span-2 lg:col-span-3">
-                <SubmitButton>Enregistrer le comptage</SubmitButton>
+                <SubmitButton>
+                  <T>Enregistrer le comptage</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </CardBody>
@@ -92,12 +95,29 @@ export default async function InventoryPage() {
                       {c.sku} — {c.partName} · {c.warehouseName}
                     </p>
                     <p className="text-slate-600">
-                      Compté {formatNumber(c.countedQuantity)} {c.unit} pour {formatNumber(c.expectedQuantity)} attendu(s) le{" "}
-                      {formatDateTime(c.countedAt)} par {c.countedByName ?? "—"}
+                      <T
+                        params={{
+                          n: formatNumber(c.countedQuantity),
+                          unit: c.unit,
+                          n2: formatNumber(c.expectedQuantity),
+                          date: formatDateTime(c.countedAt),
+                          v: c.countedByName ?? "—",
+                        }}
+                      >
+                        {"Compté {n} {unit} pour {n2} attendu(s) le {date} par {v}"}
+                      </T>
                     </p>
                     <p className="font-semibold tabular-nums text-slate-900">
-                      Écart {c.difference > 0 ? "+" : ""}
-                      {formatNumber(c.difference)} {c.unit} · {formatCurrency(inventoryValue(c.difference, c.unitCost))}
+                      <T
+                        params={{
+                          v: c.difference > 0 ? "+" : "",
+                          n: formatNumber(c.difference),
+                          unit: c.unit,
+                          amount: formatCurrency(inventoryValue(c.difference, c.unitCost)),
+                        }}
+                      >
+                        {"Écart {v}{n} {unit} · {amount}"}
+                      </T>
                     </p>
                     {c.comment ? <p className="text-slate-500">{c.comment}</p> : null}
                   </div>
@@ -109,15 +129,17 @@ export default async function InventoryPage() {
                       </Field>
                       <div className="flex gap-2">
                         <SubmitButton name="decision" value="APPROVE" size="sm">
-                          Valider l&apos;écart
+                          <T>Valider l&apos;écart</T>
                         </SubmitButton>
                         <SubmitButton name="decision" value="REJECT" variant="danger" size="sm">
-                          Refuser
+                          <T>Refuser</T>
                         </SubmitButton>
                       </div>
                     </PanelForm>
                   ) : (
-                    <p className="text-sm text-slate-500">En attente de la validation du responsable maintenance.</p>
+                    <p className="text-sm text-slate-500">
+                      <T>En attente de la validation du responsable maintenance.</T>
+                    </p>
                   )}
                 </li>
               ))}
@@ -134,13 +156,27 @@ export default async function InventoryPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Article</TH>
-                <TH>Magasin</TH>
-                <TH>Compté le</TH>
-                <TH className="text-end">Compté</TH>
-                <TH className="text-end">Attendu</TH>
-                <TH className="text-end">Écart</TH>
-                <TH>Statut</TH>
+                <TH>
+                  <T>Article</T>
+                </TH>
+                <TH>
+                  <T>Magasin</T>
+                </TH>
+                <TH>
+                  <T>Compté le</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Compté</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Attendu</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Écart</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
               </tr>
             </THead>
             <TBody>

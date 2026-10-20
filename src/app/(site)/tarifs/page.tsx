@@ -6,6 +6,7 @@ import { FaqList, FinalCta, SectionHeading } from "@/components/site/sections";
 import { SiteChrome, SiteFallback } from "@/components/site/site-chrome";
 import { loadSite } from "@/components/site/site-data";
 import { settingNumber } from "@/server/domain/site";
+import { T } from "@/i18n/client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await loadSite();
@@ -51,7 +52,9 @@ async function Pricing() {
                 currency={s["pricing.currency"] || "DT"}
               />
             ) : (
-              <p className="text-lg">Tarifs sur demande : écrivez-nous.</p>
+              <p className="text-lg">
+                <T>Tarifs sur demande : écrivez-nous.</T>
+              </p>
             )}
           </div>
         </div>

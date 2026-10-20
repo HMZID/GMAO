@@ -11,6 +11,7 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listPartFamilies, listParts, partFilters } from "@/server/services/stock";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Pièces et stocks" };
 
@@ -30,14 +31,18 @@ export default async function PartsPage(props: PageProps<"/stock">) {
             {ctx.can("stock.read") ? (
               <>
                 <ButtonLink href="/stock/mouvements" variant="secondary">
-                  Mouvements
+                  <T>Mouvements</T>
                 </ButtonLink>
                 <ButtonLink href="/stock/inventaire" variant="secondary">
-                  Inventaire
+                  <T>Inventaire</T>
                 </ButtonLink>
               </>
             ) : null}
-            {ctx.can("part.write") ? <ButtonLink href="/stock/articles/nouveau">Nouvel article</ButtonLink> : null}
+            {ctx.can("part.write") ? (
+              <ButtonLink href="/stock/articles/nouveau">
+                <T>Nouvel article</T>
+              </ButtonLink>
+            ) : null}
           </>
         }
       />
@@ -69,14 +74,30 @@ export default async function PartsPage(props: PageProps<"/stock">) {
           <Table>
             <THead>
               <tr>
-                <TH>Référence</TH>
-                <TH>Désignation</TH>
-                <TH>Famille</TH>
-                <TH className="text-end">En stock</TH>
-                <TH className="text-end">Réservé</TH>
-                <TH className="text-end">Disponible</TH>
-                <TH className="text-end">Coût moyen</TH>
-                <TH>Criticité</TH>
+                <TH>
+                  <T>Référence</T>
+                </TH>
+                <TH>
+                  <T>Désignation</T>
+                </TH>
+                <TH>
+                  <T>Famille</T>
+                </TH>
+                <TH className="text-end">
+                  <T>En stock</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Réservé</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Disponible</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Coût moyen</T>
+                </TH>
+                <TH>
+                  <T>Criticité</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -101,7 +122,7 @@ export default async function PartsPage(props: PageProps<"/stock">) {
                       {formatNumber(onHand - reserved)}
                       {p.belowReorder ? (
                         <Badge tone="amber" className="ms-2">
-                          À commander
+                          <T>À commander</T>
                         </Badge>
                       ) : null}
                     </TD>

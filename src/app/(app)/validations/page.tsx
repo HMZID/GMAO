@@ -10,6 +10,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { listMyApprovalRequests, listMySubstitutes, listPendingForMe, listUserOptions, objectLink } from "@/server/services/approvals";
 import { countPendingInventoryCounts } from "@/server/services/inventory";
 import { addSubstituteAction, decideFromListAction, removeSubstituteAction } from "./actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Validations" };
 
@@ -36,7 +37,7 @@ export default async function ValidationsPage() {
           <Alert tone="amber">
             {inventoryPending} écart(s) d&apos;inventaire à valider :{" "}
             <Link href="/stock/inventaire" className="font-medium underline">
-              ouvrir l&apos;inventaire
+              <T>ouvrir l&apos;inventaire</T>
             </Link>
             .
           </Alert>
@@ -62,9 +63,17 @@ export default async function ValidationsPage() {
                       {p.label}
                     </Link>
                     <p className="text-slate-600">
-                      Étape « {p.step.name} » · {p.companyName} · demandé par {p.requesterName} le {formatDateTime(p.createdAt)}
+                      <T
+                        params={{ name: p.step.name, companyName: p.companyName, requesterName: p.requesterName, date: formatDateTime(p.createdAt) }}
+                      >
+                        {"Étape « {name} » · {companyName} · demandé par {requesterName} le {date}"}
+                      </T>
                     </p>
-                    {p.onBehalfOf ? <p className="text-xs text-amber-700">Vous décidez comme suppléant.</p> : null}
+                    {p.onBehalfOf ? (
+                      <p className="text-xs text-amber-700">
+                        <T>Vous décidez comme suppléant.</T>
+                      </p>
+                    ) : null}
                   </div>
                   <PanelForm className="space-y-2">
                     <input type="hidden" name="requestId" value={p.id} />
@@ -73,10 +82,10 @@ export default async function ValidationsPage() {
                     </Field>
                     <div className="flex gap-2">
                       <SubmitButton name="decision" value="APPROVED" size="sm">
-                        Valider
+                        <T>Valider</T>
                       </SubmitButton>
                       <SubmitButton name="decision" value="REJECTED" variant="danger" size="sm">
-                        Refuser
+                        <T>Refuser</T>
                       </SubmitButton>
                     </div>
                   </PanelForm>
@@ -96,9 +105,15 @@ export default async function ValidationsPage() {
             <Table>
               <THead>
                 <tr>
-                  <TH>Objet</TH>
-                  <TH>Statut</TH>
-                  <TH className="text-end">Montant</TH>
+                  <TH>
+                    <T>Objet</T>
+                  </TH>
+                  <TH>
+                    <T>Statut</T>
+                  </TH>
+                  <TH className="text-end">
+                    <T>Montant</T>
+                  </TH>
                 </tr>
               </THead>
               <TBody>
@@ -128,7 +143,9 @@ export default async function ValidationsPage() {
           <CardHeader title="Suppléance" description="Pendant une absence, votre suppléant décide à votre place ; chaque décision le mentionne." />
           <CardBody className="space-y-4">
             {substitutes.length === 0 ? (
-              <p className="text-sm text-slate-500">Aucune suppléance.</p>
+              <p className="text-sm text-slate-500">
+                <T>Aucune suppléance.</T>
+              </p>
             ) : (
               <ActionPanel action={removeSubstituteAction}>
                 <ul className="divide-y divide-slate-100 text-sm">
@@ -141,7 +158,7 @@ export default async function ValidationsPage() {
                           {formatDate(s.validTo)}
                           {active ? (
                             <Badge tone="green" className="ms-2">
-                              En cours
+                              <T>En cours</T>
                             </Badge>
                           ) : null}
                         </span>
@@ -149,7 +166,7 @@ export default async function ValidationsPage() {
                           <PanelForm>
                             <input type="hidden" name="id" value={s.id} />
                             <SubmitButton variant="ghost" size="sm">
-                              Retirer
+                              <T>Retirer</T>
                             </SubmitButton>
                           </PanelForm>
                         ) : null}
@@ -176,7 +193,9 @@ export default async function ValidationsPage() {
                   <Input type="date" name="validTo" required />
                 </Field>
                 <div className="flex items-end">
-                  <SubmitButton>Désigner</SubmitButton>
+                  <SubmitButton>
+                    <T>Désigner</T>
+                  </SubmitButton>
                 </div>
               </ActionForm>
             </Disclosure>

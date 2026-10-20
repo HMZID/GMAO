@@ -12,6 +12,7 @@ import { listWorkshops } from "@/server/services/organization";
 import { listSupplierOptions } from "@/server/services/stock";
 import { listTechnicianOptions } from "@/server/services/work-orders";
 import { createWorkOrderAction } from "../actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Nouvelle intervention à réaliser" };
 
@@ -89,7 +90,9 @@ export default async function NewWorkOrderPage(props: PageProps<"/interventions/
               </Field>
             </div>
             <fieldset>
-              <legend className="mb-2 text-sm font-medium text-slate-700">Intervenants</legend>
+              <legend className="mb-2 text-sm font-medium text-slate-700">
+                <T>Intervenants</T>
+              </legend>
               <div className="grid gap-2 sm:grid-cols-3">
                 {technicians.map((t) => (
                   <Checkbox key={t.id} name="assigneeIds[]" value={t.id} label={`${t.firstName} ${t.lastName}`} />
@@ -97,9 +100,11 @@ export default async function NewWorkOrderPage(props: PageProps<"/interventions/
               </div>
             </fieldset>
             <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
-              <SubmitButton>Créer l&apos;intervention à réaliser</SubmitButton>
+              <SubmitButton>
+                <T>Créer l&apos;intervention à réaliser</T>
+              </SubmitButton>
               <ButtonLink href="/interventions" variant="ghost">
-                Annuler
+                <T>Annuler</T>
               </ButtonLink>
             </div>
           </ActionForm>

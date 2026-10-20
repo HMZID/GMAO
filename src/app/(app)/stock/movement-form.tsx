@@ -2,6 +2,7 @@ import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form"
 import { Input, Select } from "@/components/ui/inputs";
 import { MANUAL_MOVEMENT, options } from "@/lib/labels";
 import { movementAction } from "./actions";
+import { T } from "@/i18n/client";
 
 type Opt = { id: string; label: string };
 
@@ -60,7 +61,9 @@ export function MovementForm({
         <Input id="mv-reason" name="reason" maxLength={500} />
       </Field>
       <div className="flex items-end">
-        <SubmitButton>Enregistrer le mouvement</SubmitButton>
+        <SubmitButton>
+          <T>Enregistrer le mouvement</T>
+        </SubmitButton>
       </div>
     </ActionForm>
   );

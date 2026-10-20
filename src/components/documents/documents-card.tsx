@@ -9,6 +9,7 @@ import { DOCUMENT_KIND, options } from "@/lib/labels";
 import type { AuthContext } from "@/server/authz/context";
 import { ACCEPT_ATTRIBUTE, formatSize, type DocumentEntity } from "@/server/domain/documents";
 import { listDocuments } from "@/server/services/documents";
+import { T, Tr } from "@/i18n/client";
 
 /** Carte « Documents » des fiches équipement et OT (EQP-07) : liste, consultation, ajout et retrait. */
 export async function DocumentsCard({
@@ -39,11 +40,21 @@ export async function DocumentsCard({
           <Table>
             <THead>
               <tr>
-                <TH>Document</TH>
-                <TH>Type</TH>
-                <TH>Expiration</TH>
-                <TH>Ajouté</TH>
-                <TH className="sr-only">Actions</TH>
+                <TH>
+                  <T>Document</T>
+                </TH>
+                <TH>
+                  <T>Type</T>
+                </TH>
+                <TH>
+                  <T>Expiration</T>
+                </TH>
+                <TH>
+                  <T>Ajouté</T>
+                </TH>
+                <TH className="sr-only">
+                  <T>Actions</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -73,7 +84,7 @@ export async function DocumentsCard({
                       {d.expiresAt ? (
                         <span className={expired ? "font-medium text-red-700" : undefined}>
                           {formatDate(d.expiresAt)}
-                          {expired ? " (expiré)" : ""}
+                          <Tr>{expired ? " (expiré)" : ""}</Tr>
                         </span>
                       ) : (
                         "—"
@@ -85,7 +96,7 @@ export async function DocumentsCard({
                     </TD>
                     <TD className="text-end">
                       <a href={`${d.url}?download=1`} className="text-sm text-slate-600 hover:underline">
-                        Télécharger
+                        <T>Télécharger</T>
                       </a>
                       {d.canDelete ? (
                         <Disclosure summary="Retirer" className="mt-2 text-start">
@@ -95,7 +106,7 @@ export async function DocumentsCard({
                               <Input name="reason" maxLength={500} />
                             </Field>
                             <SubmitButton variant="danger" size="sm">
-                              Retirer le document
+                              <T>Retirer le document</T>
                             </SubmitButton>
                           </PanelForm>
                         </Disclosure>
@@ -134,7 +145,9 @@ export async function DocumentsCard({
                 <Textarea name="description" rows={2} maxLength={1000} />
               </Field>
               <div className="sm:col-span-2">
-                <SubmitButton>Ajouter le document</SubmitButton>
+                <SubmitButton>
+                  <T>Ajouter le document</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </Disclosure>

@@ -11,6 +11,7 @@ import { loadOr404 } from "@/server/pages";
 import { getPlan } from "@/server/services/preventive";
 import { addOperationAction } from "../../actions";
 import { OperationFields } from "../../operation-fields";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Plan d'entretien" };
 
@@ -37,14 +38,24 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
         description={plan.description ?? undefined}
         meta={
           <>
-            <Badge tone="teal">Version {plan.version}</Badge>
-            {plan.category ? <Badge>Catégorie : {plan.category.name}</Badge> : null}
-            {plan.model ? (
+            <Badge tone="teal">
+              <T params={{ version: plan.version }}>{"Version {version}"}</T>
+            </Badge>
+            {plan.category ? (
               <Badge>
-                Modèle : {plan.model.manufacturer} {plan.model.name}
+                <T params={{ name: plan.category.name }}>{"Catégorie : {name}"}</T>
               </Badge>
             ) : null}
-            {!plan.active ? <Badge tone="amber">Inactif</Badge> : null}
+            {plan.model ? (
+              <Badge>
+                <T params={{ manufacturer: plan.model.manufacturer, name: plan.model.name }}>{"Modèle : {manufacturer} {name}"}</T>
+              </Badge>
+            ) : null}
+            {!plan.active ? (
+              <Badge tone="amber">
+                <T>Inactif</T>
+              </Badge>
+            ) : null}
           </>
         }
       />
@@ -62,18 +73,33 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                 actions={
                   <>
                     <Badge tone="blue">{OPERATION_MODE[op.mode]}</Badge>
-                    {op.isRegulatory ? <Badge tone="violet">Réglementaire</Badge> : null}
-                    {op.blockWhenOverdue ? <Badge tone="red">Bloquant si échu</Badge> : null}
+                    {op.isRegulatory ? (
+                      <Badge tone="violet">
+                        <T>Réglementaire</T>
+                      </Badge>
+                    ) : null}
+                    {op.blockWhenOverdue ? (
+                      <Badge tone="red">
+                        <T>Bloquant si échu</T>
+                      </Badge>
+                    ) : null}
                   </>
                 }
               />
               <CardBody className="space-y-3 text-sm">
                 <p className="text-slate-600">
-                  Pré-alerte :{" "}
-                  {[op.preAlertDays != null ? `${op.preAlertDays} j` : null, op.preAlertMeter != null ? formatNumber(op.preAlertMeter) : null]
-                    .filter(Boolean)
-                    .join(" ou ") || "—"}{" "}
-                  · Tolérance : {op.tolerancePercent ?? 10} % · Durée estimée : {op.estimatedMinutes ? formatMinutes(op.estimatedMinutes) : "—"}
+                  <T
+                    params={{
+                      v:
+                        [op.preAlertDays != null ? `${op.preAlertDays} j` : null, op.preAlertMeter != null ? formatNumber(op.preAlertMeter) : null]
+                          .filter(Boolean)
+                          .join(" ou ") || "—",
+                      v2: op.tolerancePercent ?? 10,
+                      v3: op.estimatedMinutes ? formatMinutes(op.estimatedMinutes) : "—",
+                    }}
+                  >
+                    {"Pré-alerte : {v} · Tolérance : {v2} % · Durée estimée : {v3}"}
+                  </T>
                 </p>
                 {op.taskList?.items.length ? (
                   <ol className="list-decimal space-y-0.5 ps-5 text-slate-800">
@@ -84,7 +110,9 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                     ))}
                   </ol>
                 ) : (
-                  <p className="text-slate-400">Pas de checklist.</p>
+                  <p className="text-slate-400">
+                    <T>Pas de checklist.</T>
+                  </p>
                 )}
               </CardBody>
             </Card>
@@ -98,10 +126,12 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
             <Disclosure summary="Ajouter une opération (nouvelle version du plan)">
               <ActionForm action={addOperationAction.bind(null, plan.id)} resetOnSuccess className="space-y-4">
                 <p className="text-sm text-slate-600">
-                  Les interventions déjà générées ne changent pas ; une échéance est créée pour chaque équipement auquel le plan est appliqué.
+                  <T>Les interventions déjà générées ne changent pas ; une échéance est créée pour chaque équipement auquel le plan est appliqué.</T>
                 </p>
                 <OperationFields />
-                <SubmitButton>Ajouter l&apos;opération</SubmitButton>
+                <SubmitButton>
+                  <T>Ajouter l&apos;opération</T>
+                </SubmitButton>
               </ActionForm>
             </Disclosure>
           ) : null}
@@ -119,7 +149,11 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                       {e.code}
                     </Link>{" "}
                     <span className="text-slate-600">{e.name}</span>
-                    {!e.active ? <Badge className="ms-2">Suspendu</Badge> : null}
+                    {!e.active ? (
+                      <Badge className="ms-2">
+                        <T>Suspendu</T>
+                      </Badge>
+                    ) : null}
                   </span>
                   <EquipmentStatusBadge status={e.status} />
                 </li>

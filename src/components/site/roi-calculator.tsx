@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useId, useState } from "react";
 import { estimateRoi } from "@/server/domain/site";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 const amount = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const decimal = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
@@ -68,21 +68,35 @@ export function RoiCalculator({ reductionPct, pricePerEquipment, currency }: { r
       <div className="site-blueprint flex flex-col justify-between gap-6 bg-asphalt p-6 text-white sm:p-8" aria-live="polite">
         <dl className="space-y-5">
           <div>
-            <dt className="site-label text-[11px] text-white/60"><T>Vos immobilisations coûtent aujourd&apos;hui</T></dt>
-            <dd className="site-display mt-1 text-4xl text-white">{money(r.downtimeCost)} / an</dd>
+            <dt className="site-label text-[11px] text-white/60">
+              <T>Vos immobilisations coûtent aujourd&apos;hui</T>
+            </dt>
+            <dd className="site-display mt-1 text-4xl text-white">
+              <T params={{ v: money(r.downtimeCost) }}>{"{v} / an"}</T>
+            </dd>
           </div>
           <div>
-            <dt className="site-label text-[11px] text-white/60">Économie avec −{decimal.format(reductionPct)} % d&apos;immobilisation</dt>
-            <dd className="site-display mt-1 text-5xl text-signal sm:text-6xl">{money(r.savings)} / an</dd>
+            <dt className="site-label text-[11px] text-white/60">
+              <T params={{ v: decimal.format(reductionPct) }}>{"Économie avec −{v} % d'immobilisation"}</T>
+            </dt>
+            <dd className="site-display mt-1 text-5xl text-signal sm:text-6xl">
+              <T params={{ v: money(r.savings) }}>{"{v} / an"}</T>
+            </dd>
           </div>
           {withSubscription ? (
             <div className="grid grid-cols-2 gap-4 border-t border-white/15 pt-4">
               <div>
-                <dt className="site-label text-[10px] text-white/60"><T>Abonnement estimé</T></dt>
-                <dd className="font-plate mt-1 text-lg font-bold">{money(r.subscription)} / an</dd>
+                <dt className="site-label text-[10px] text-white/60">
+                  <T>Abonnement estimé</T>
+                </dt>
+                <dd className="font-plate mt-1 text-lg font-bold">
+                  <T params={{ v: money(r.subscription) }}>{"{v} / an"}</T>
+                </dd>
               </div>
               <div>
-                <dt className="site-label text-[10px] text-white/60"><T>Retour sur investissement</T></dt>
+                <dt className="site-label text-[10px] text-white/60">
+                  <T>Retour sur investissement</T>
+                </dt>
                 <dd className="font-plate mt-1 text-lg font-bold">{r.paybackMonths === null ? "—" : `${decimal.format(r.paybackMonths)} mois`}</dd>
               </div>
             </div>
@@ -90,14 +104,19 @@ export function RoiCalculator({ reductionPct, pricePerEquipment, currency }: { r
         </dl>
         <div>
           <Link href="/essai-gratuit" className="site-btn site-btn-signal w-full">
-            {withSubscription ? "Vérifier sur mon parc, gratuitement" : "Demander un devis pour mon parc"}
+            <Tr>{withSubscription ? "Vérifier sur mon parc, gratuitement" : "Demander un devis pour mon parc"}</Tr>
           </Link>
           <p className="mt-3 text-xs text-white/50">
-            Estimation indicative fondée sur vos hypothèses et sur une réduction de {decimal.format(reductionPct)} % des journées
-            d&apos;immobilisation
-            {withSubscription
-              ? ` ; abonnement calculé à ${money(pricePerEquipment)} HT par équipement et par mois.`
-              : ". L'abonnement fait l'objet d'un devis selon la taille de votre parc."}
+            <T
+              params={{
+                v: decimal.format(reductionPct),
+                v2: withSubscription
+                  ? ` ; abonnement calculé à ${money(pricePerEquipment)} HT par équipement et par mois.`
+                  : ". L'abonnement fait l'objet d'un devis selon la taille de votre parc.",
+              }}
+            >
+              {"Estimation indicative fondée sur vos hypothèses et sur une réduction de {v} % des journées d'immobilisation{v2}"}
+            </T>
           </p>
         </div>
       </div>

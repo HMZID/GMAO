@@ -15,6 +15,7 @@ import { cleanFilters, queryParams } from "@/server/pages";
 import { listSites } from "@/server/services/organization";
 import { EMERGENCY_RESERVE, getWeekPlanning, weekInput } from "@/server/services/planning";
 import { PlanningDayView, type DayViewDay, type DayViewRow } from "./day-view";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Planning" };
 
@@ -85,13 +86,17 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <ButtonLink href={withParams("/planning", { week: prev, siteId: params.siteId })} variant="secondary" aria-label="Semaine précédente">
               <ChevronLeft className="rtl-flip h-4 w-4" aria-hidden />
-              <span className="hidden sm:inline">Semaine précédente</span>
+              <span className="hidden sm:inline">
+                <T>Semaine précédente</T>
+              </span>
             </ButtonLink>
             <ButtonLink href={withParams("/planning", { siteId: params.siteId })} variant="ghost" className="flex-1 sm:flex-none">
-              Cette semaine
+              <T>Cette semaine</T>
             </ButtonLink>
             <ButtonLink href={withParams("/planning", { week: next, siteId: params.siteId })} variant="secondary" aria-label="Semaine suivante">
-              <span className="hidden sm:inline">Semaine suivante</span>
+              <span className="hidden sm:inline">
+                <T>Semaine suivante</T>
+              </span>
               <ChevronRight className="rtl-flip h-4 w-4" aria-hidden />
             </ButtonLink>
           </div>
@@ -110,10 +115,10 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
             />
           </FilterField>
           <button type="submit" className="h-10 rounded-md px-4 text-sm font-medium ring-1 ring-slate-300 hover:bg-slate-50">
-            Afficher
+            <T>Afficher</T>
           </button>
           <p className="ms-auto hidden text-sm text-slate-600 xl:block">
-            Semaine du {formatDay(plan.weekStart)} au {formatDay(lastDay)}
+            <T params={{ date: formatDay(plan.weekStart), date2: formatDay(lastDay) }}>{"Semaine du {date} au {date2}"}</T>
           </p>
         </form>
         {plan.rows.length === 0 ? (
@@ -129,7 +134,9 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
               <table className="w-full min-w-[1100px] table-fixed border-t border-slate-200 text-sm">
                 <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="sticky start-0 z-10 w-44 bg-slate-50 px-4 py-2.5">Technicien</th>
+                    <th className="sticky start-0 z-10 w-44 bg-slate-50 px-4 py-2.5">
+                      <T>Technicien</T>
+                    </th>
                     {plan.days.map((d) => (
                       <th
                         key={iso(d)}
@@ -138,7 +145,9 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                         {formatDay(d)}
                       </th>
                     ))}
-                    <th className="w-32 px-4 py-2.5 text-end">Charge</th>
+                    <th className="w-32 px-4 py-2.5 text-end">
+                      <T>Charge</T>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -161,7 +170,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                             <td key={key} className={cn("px-2 py-2", key === today && "bg-brand-50/40", absence && "bg-slate-100")}>
                               {absence ? (
                                 <p className="mb-1 rounded bg-slate-200 px-2 py-1 text-xs text-slate-700">
-                                  {ABSENCE_TYPE[absence.type] ?? "Absence"}
+                                  <Tr>{ABSENCE_TYPE[absence.type] ?? "Absence"}</Tr>
                                   {absence.comment ? ` — ${absence.comment}` : ""}
                                 </p>
                               ) : null}
@@ -200,7 +209,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                             {row.load === null ? "—" : formatPercent(row.load)}
                           </p>
                           <p className="text-xs text-slate-500">
-                            {formatNumber(row.plannedHours)} h / {formatNumber(row.capacityHours)} h
+                            <T params={{ n: formatNumber(row.plannedHours), n2: formatNumber(row.capacityHours) }}>{"{n} h / {n2} h"}</T>
                           </p>
                           <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-slate-100" aria-hidden>
                             <div
@@ -230,11 +239,21 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
           <Table>
             <THead>
               <tr>
-                <TH>Intervention</TH>
-                <TH>Équipement</TH>
-                <TH>Priorité</TH>
-                <TH>Durée estimée</TH>
-                <TH>Statut</TH>
+                <TH>
+                  <T>Intervention</T>
+                </TH>
+                <TH>
+                  <T>Équipement</T>
+                </TH>
+                <TH>
+                  <T>Priorité</T>
+                </TH>
+                <TH>
+                  <T>Durée estimée</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -250,7 +269,15 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
                   <TD>
                     <PriorityBadge value={b.priority} />
                   </TD>
-                  <TD>{b.estimatedMinutes ? formatMinutes(b.estimatedMinutes) : <Badge>non estimée</Badge>}</TD>
+                  <TD>
+                    {b.estimatedMinutes ? (
+                      formatMinutes(b.estimatedMinutes)
+                    ) : (
+                      <Badge>
+                        <T>non estimée</T>
+                      </Badge>
+                    )}
+                  </TD>
                   <TD>
                     <WorkOrderStatusBadge status={b.status} />
                   </TD>

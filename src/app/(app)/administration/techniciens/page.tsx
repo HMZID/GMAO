@@ -10,6 +10,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { listSites } from "@/server/services/organization";
 import { listTechnicians, listUsers } from "@/server/services/users";
 import { addAbsenceAction, createTechnicianAction } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Techniciens" };
 
@@ -63,7 +64,9 @@ export default async function TechniciansPage() {
                   options={users.filter((u) => !linked.has(u.id)).map((u) => ({ value: u.id, label: `${u.name} — ${u.email}` }))}
                 />
               </Field>
-              <SubmitButton variant="secondary">Créer</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Créer</T>
+              </SubmitButton>
             </ActionForm>
           </Disclosure>
         ) : null}
@@ -91,7 +94,9 @@ export default async function TechniciansPage() {
               <Field label="Commentaire" name="comment" className="sm:col-span-2">
                 <Input id="a-comment" name="comment" maxLength={300} />
               </Field>
-              <SubmitButton variant="secondary">Enregistrer</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Enregistrer</T>
+              </SubmitButton>
             </ActionForm>
           </Disclosure>
         ) : null}
@@ -100,13 +105,27 @@ export default async function TechniciansPage() {
         <Table>
           <THead>
             <tr>
-              <TH>Technicien</TH>
-              <TH>Site</TH>
-              <TH>Qualification</TH>
-              <TH className="text-end">Heures / jour</TH>
-              <TH className="text-end">Taux horaire</TH>
-              <TH>Habilitations</TH>
-              <TH>Compte</TH>
+              <TH>
+                <T>Technicien</T>
+              </TH>
+              <TH>
+                <T>Site</T>
+              </TH>
+              <TH>
+                <T>Qualification</T>
+              </TH>
+              <TH className="text-end">
+                <T>Heures / jour</T>
+              </TH>
+              <TH className="text-end">
+                <T>Taux horaire</T>
+              </TH>
+              <TH>
+                <T>Habilitations</T>
+              </TH>
+              <TH>
+                <T>Compte</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
@@ -114,7 +133,11 @@ export default async function TechniciansPage() {
               <TR key={t.id}>
                 <TD className="font-medium text-slate-900">
                   {t.firstName} {t.lastName}
-                  {!t.active ? <Badge className="ms-2">Inactif</Badge> : null}
+                  {!t.active ? (
+                    <Badge className="ms-2">
+                      <T>Inactif</T>
+                    </Badge>
+                  ) : null}
                   {t.employeeNumber ? <p className="font-mono text-xs font-normal text-slate-500">{t.employeeNumber}</p> : null}
                 </TD>
                 <TD>{t.site.name}</TD>
@@ -131,7 +154,7 @@ export default async function TechniciansPage() {
                           {c.name}{" "}
                           {c.validUntil ? (
                             <Badge tone={expired ? "red" : expiring ? "amber" : "gray"}>
-                              {expired ? "expirée le" : "jusqu'au"} {formatDate(c.validUntil)}
+                              <Tr>{expired ? "expirée le" : "jusqu'au"}</Tr> {formatDate(c.validUntil)}
                             </Badge>
                           ) : null}
                         </li>

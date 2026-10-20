@@ -12,6 +12,7 @@ import { isPlatformAdmin } from "@/server/services/platform";
 import { listSitePlans } from "@/server/services/site";
 import { createSitePlanAction, deleteSitePlanAction, moveSitePlanAction, updateSitePlanAction } from "../actions";
 import { SiteAdminNav } from "../site-admin-nav";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Offres et tarifs" };
 
@@ -68,15 +69,19 @@ export default async function SitePlansPage() {
       <SiteAdminNav active="tarifs" />
       <div className="mb-6">
         <Alert tone="blue">
-          Les prix sont affichés hors taxes. La remise du paiement annuel (mois facturés sur 12) et son libellé se règlent dans « Textes et réglages
-          », rubrique « Essai et tarifs ».
+          <T>
+            Les prix sont affichés hors taxes. La remise du paiement annuel (mois facturés sur 12) et son libellé se règlent dans « Textes et réglages
+            », rubrique « Essai et tarifs ».
+          </T>
         </Alert>
       </div>
       <Disclosure summary="Ajouter une offre" className="mb-6">
         <ActionForm action={createSitePlanAction} resetOnSuccess className="grid gap-4 md:grid-cols-2">
           <PlanFields />
           <div className="md:col-span-2">
-            <SubmitButton>Ajouter</SubmitButton>
+            <SubmitButton>
+              <T>Ajouter</T>
+            </SubmitButton>
           </div>
         </ActionForm>
       </Disclosure>
@@ -94,16 +99,18 @@ export default async function SitePlansPage() {
                     <p className="font-medium text-slate-900">
                       {plan.name}
                       <span className="ms-2 text-sm font-normal text-slate-500">
-                        {plan.priceMonthly === null ? plan.priceUnit || "Sur devis" : `${formatNumber(plan.priceMonthly)} ${plan.priceUnit ?? ""}`}
+                        <Tr>
+                          {plan.priceMonthly === null ? plan.priceUnit || "Sur devis" : `${formatNumber(plan.priceMonthly)} ${plan.priceUnit ?? ""}`}
+                        </Tr>
                       </span>
                       {plan.highlighted ? (
                         <Badge tone="amber" className="ms-2">
-                          Mise en avant
+                          <T>Mise en avant</T>
                         </Badge>
                       ) : null}
                       {!plan.published ? (
                         <Badge tone="gray" className="ms-2">
-                          Non publiée
+                          <T>Non publiée</T>
                         </Badge>
                       ) : null}
                     </p>
@@ -136,12 +143,14 @@ export default async function SitePlansPage() {
                   <ActionForm action={updateSitePlanAction.bind(null, plan.id)} className="grid gap-4 md:grid-cols-2">
                     <PlanFields plan={plan} />
                     <div className="md:col-span-2">
-                      <SubmitButton>Enregistrer</SubmitButton>
+                      <SubmitButton>
+                        <T>Enregistrer</T>
+                      </SubmitButton>
                     </div>
                   </ActionForm>
                   <ActionForm action={deleteSitePlanAction.bind(null, plan.id)} className="mt-4 border-t border-slate-100 pt-4">
                     <SubmitButton variant="danger" size="sm" pendingLabel="Suppression…">
-                      Supprimer l&apos;offre
+                      <T>Supprimer l&apos;offre</T>
                     </SubmitButton>
                   </ActionForm>
                 </Disclosure>

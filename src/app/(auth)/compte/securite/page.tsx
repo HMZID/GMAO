@@ -10,6 +10,7 @@ import { adminTwoFactorEnforced } from "@/server/domain/two-factor";
 import { needsAdminTwoFactorSetup } from "@/server/services/platform";
 import { disableTwoFactorAction } from "../actions";
 import { RegenerateBackupCodes, TwoFactorEnrollment } from "./two-factor-setup";
+import { T } from "@/i18n/client";
 
 export const metadata: Metadata = { title: "Sécurité du compte" };
 
@@ -29,12 +30,14 @@ async function AccountSecurity({ searchParams }: { searchParams: PageProps<"/com
       <div className="space-y-4">
         {required ? (
           <p role="alert" className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            Obligatoire pour l&apos;administrateur de la plateforme : vos droits de plateforme sont suspendus jusqu&apos;à l&apos;activation.
+            <T>Obligatoire pour l&apos;administrateur de la plateforme : vos droits de plateforme sont suspendus jusqu&apos;à l&apos;activation.</T>
           </p>
         ) : (
           <p className="text-sm text-slate-600">
-            Un code de votre téléphone sera demandé à chaque connexion, en plus du mot de passe. L&apos;application mobile GMAO ne gère pas encore ce
-            code : ne l&apos;activez pas sur un compte utilisé sur le terrain.
+            <T>
+              Un code de votre téléphone sera demandé à chaque connexion, en plus du mot de passe. L&apos;application mobile GMAO ne gère pas encore
+              ce code : ne l&apos;activez pas sur un compte utilisé sur le terrain.
+            </T>
           </p>
         )}
         <TwoFactorEnrollment />
@@ -44,28 +47,33 @@ async function AccountSecurity({ searchParams }: { searchParams: PageProps<"/com
   return (
     <div className="space-y-6">
       <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
-        {justEnabled ? "Double authentification activée. " : "Double authentification active : "}
-        un code de votre application est demandé à chaque connexion.
+        <T params={{ v: justEnabled ? "Double authentification activée. " : "Double authentification active : " }}>
+          {"{v}un code de votre application est demandé à chaque connexion."}
+        </T>
       </p>
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-slate-900">Codes de secours</h2>
+        <h2 className="text-sm font-semibold text-slate-900">
+          <T>Codes de secours</T>
+        </h2>
         <RegenerateBackupCodes />
       </section>
       {adminLocked ? null : (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-900">Désactiver</h2>
+          <h2 className="text-sm font-semibold text-slate-900">
+            <T>Désactiver</T>
+          </h2>
           <ActionForm action={disableTwoFactorAction} className="space-y-3">
             <Field label="Mot de passe actuel" name="password" required>
               <Input name="password" type="password" autoComplete="current-password" required />
             </Field>
             <SubmitButton variant="secondary" className="w-full">
-              Désactiver la double authentification
+              <T>Désactiver la double authentification</T>
             </SubmitButton>
           </ActionForm>
         </section>
       )}
       <Link href={continueHref} className="block text-center text-sm text-brand-700 hover:underline">
-        Retour à l&apos;application
+        <T>Retour à l&apos;application</T>
       </Link>
     </div>
   );
@@ -82,7 +90,9 @@ export default function AccountSecurityPage(props: PageProps<"/compte/securite">
           <span className="text-xl font-semibold">GMAO</span>
         </div>
         <div className="rounded-lg bg-white p-6 shadow-xl">
-          <h1 className="mb-4 text-lg font-semibold text-slate-900">Sécurité du compte</h1>
+          <h1 className="mb-4 text-lg font-semibold text-slate-900">
+            <T>Sécurité du compte</T>
+          </h1>
           <Suspense
             fallback={
               <div className="space-y-4" aria-busy="true" aria-label="Chargement">

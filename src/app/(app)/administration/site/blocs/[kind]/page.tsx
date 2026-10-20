@@ -13,6 +13,7 @@ import { isPlatformAdmin } from "@/server/services/platform";
 import { listSiteItems } from "@/server/services/site";
 import { createSiteItemAction, deleteSiteItemAction, moveSiteItemAction, updateSiteItemAction } from "../../actions";
 import { KIND_SLUGS, SiteAdminNav, kindFromSlug } from "../../site-admin-nav";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Blocs du site" };
 
@@ -71,7 +72,9 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
         <ActionForm action={createSiteItemAction.bind(null, kind)} resetOnSuccess className="grid gap-4 md:grid-cols-2">
           <ItemFields kind={kind} />
           <div className="md:col-span-2">
-            <SubmitButton>Ajouter</SubmitButton>
+            <SubmitButton>
+              <T>Ajouter</T>
+            </SubmitButton>
           </div>
         </ActionForm>
       </Disclosure>
@@ -97,7 +100,7 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                       {item.meta ? <span className="ms-2 text-sm font-normal text-slate-500">{item.meta}</span> : null}
                       {!item.published ? (
                         <Badge tone="gray" className="ms-2">
-                          Non publié
+                          <T>Non publié</T>
                         </Badge>
                       ) : null}
                     </p>
@@ -130,12 +133,14 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                   <ActionForm action={updateSiteItemAction.bind(null, item.id)} className="grid gap-4 md:grid-cols-2">
                     <ItemFields kind={kind} item={item} />
                     <div className="md:col-span-2">
-                      <SubmitButton>Enregistrer</SubmitButton>
+                      <SubmitButton>
+                        <T>Enregistrer</T>
+                      </SubmitButton>
                     </div>
                   </ActionForm>
                   <ActionForm action={deleteSiteItemAction.bind(null, item.id)} className="mt-4 border-t border-slate-100 pt-4">
                     <SubmitButton variant="danger" size="sm" pendingLabel="Suppression…">
-                      Supprimer
+                      <T>Supprimer</T>
                     </SubmitButton>
                   </ActionForm>
                 </Disclosure>

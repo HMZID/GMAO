@@ -13,6 +13,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listSites } from "@/server/services/organization";
 import { listWorkOrders, workOrderFilters } from "@/server/services/work-orders";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Interventions à réaliser" };
 
@@ -27,7 +28,13 @@ export default async function WorkOrdersPage(props: PageProps<"/interventions">)
       <PageHeader
         title="Interventions à réaliser"
         description="Interventions préventives, correctives et réglementaires, de la création à la clôture."
-        actions={ctx.can("workorder.create") ? <ButtonLink href="/interventions/nouveau">Nouvelle intervention à réaliser</ButtonLink> : null}
+        actions={
+          ctx.can("workorder.create") ? (
+            <ButtonLink href="/interventions/nouveau">
+              <T>Nouvelle intervention à réaliser</T>
+            </ButtonLink>
+          ) : null
+        }
       />
       <Card>
         <FilterBar resetHref="/interventions">
@@ -64,9 +71,9 @@ export default async function WorkOrdersPage(props: PageProps<"/interventions">)
         </FilterBar>
         {params.equipmentId ? (
           <p className="border-b border-slate-100 bg-slate-50 px-5 py-2 text-sm text-slate-600">
-            Filtré sur un équipement ·{" "}
+            <T>Filtré sur un équipement ·</T>{" "}
             <Link href="/interventions" className="text-brand-700 hover:underline">
-              retirer
+              <T>retirer</T>
             </Link>
           </p>
         ) : null}
@@ -76,13 +83,27 @@ export default async function WorkOrdersPage(props: PageProps<"/interventions">)
           <Table>
             <THead>
               <tr>
-                <TH>Intervention</TH>
-                <TH>Équipement</TH>
-                <TH>Type</TH>
-                <TH>Priorité</TH>
-                <TH>Prévu</TH>
-                <TH>Intervenants</TH>
-                <TH>Statut</TH>
+                <TH>
+                  <T>Intervention</T>
+                </TH>
+                <TH>
+                  <T>Équipement</T>
+                </TH>
+                <TH>
+                  <T>Type</T>
+                </TH>
+                <TH>
+                  <T>Priorité</T>
+                </TH>
+                <TH>
+                  <T>Prévu</T>
+                </TH>
+                <TH>
+                  <T>Intervenants</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -103,21 +124,37 @@ export default async function WorkOrdersPage(props: PageProps<"/interventions">)
                   <TD>
                     {WORK_ORDER_TYPE[w.type] ?? w.type}
                     <div className="mt-1 flex gap-1">
-                      {w.isImmobilizing ? <Badge tone="red">Immobilisant</Badge> : null}
-                      {w.isExternal ? <Badge tone="violet">Externe</Badge> : null}
+                      {w.isImmobilizing ? (
+                        <Badge tone="red">
+                          <T>Immobilisant</T>
+                        </Badge>
+                      ) : null}
+                      {w.isExternal ? (
+                        <Badge tone="violet">
+                          <T>Externe</T>
+                        </Badge>
+                      ) : null}
                     </div>
                   </TD>
                   <TD>
                     <PriorityBadge value={w.priority} short />
                   </TD>
                   <TD className="whitespace-nowrap">
-                    {w.plannedStart ? formatDateTime(w.plannedStart) : <span className="text-slate-400">À planifier</span>}
+                    {w.plannedStart ? (
+                      formatDateTime(w.plannedStart)
+                    ) : (
+                      <span className="text-slate-400">
+                        <T>À planifier</T>
+                      </span>
+                    )}
                   </TD>
                   <TD className="max-w-48 text-xs">{w.assignees ?? <span className="text-slate-400">—</span>}</TD>
                   <TD>
                     <WorkOrderStatusBadge status={w.status} />
                     {w.status === "ON_HOLD" && w.holdReason ? <p className="mt-1 text-xs text-amber-700">{HOLD_REASON[w.holdReason]}</p> : null}
-                    <p className="mt-1 text-xs text-slate-400">créé le {formatDate(w.createdAt)}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      <T params={{ date: formatDate(w.createdAt) }}>{"créé le {date}"}</T>
+                    </p>
                   </TD>
                 </TR>
               ))}

@@ -12,6 +12,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { IMPORT_DEFINITIONS, MAX_IMPORT_ROWS } from "@/server/domain/imports";
 import { importableKinds, listImportJobs } from "@/server/services/imports";
 import { simulateImportAction } from "./actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Imports" };
 
@@ -43,14 +44,16 @@ export default async function ImportsPage() {
             <CardBody className="flex flex-1 flex-col gap-4">
               <a href={`/api/v1/imports/templates/${kind.toLowerCase()}`} className={buttonClass("secondary", "sm", "self-start")}>
                 <Download className="h-4 w-4" aria-hidden />
-                Télécharger le modèle
+                <T>Télécharger le modèle</T>
               </a>
               <ActionForm action={simulateImportAction} className="mt-auto space-y-3">
                 <input type="hidden" name="kind" value={kind} />
                 <Field label="Fichier Excel rempli" name="file" required>
                   <Input type="file" name="file" required accept=".xlsx" className="h-auto py-1.5" />
                 </Field>
-                <SubmitButton>Simuler l&apos;import</SubmitButton>
+                <SubmitButton>
+                  <T>Simuler l&apos;import</T>
+                </SubmitButton>
               </ActionForm>
             </CardBody>
           </Card>
@@ -65,13 +68,27 @@ export default async function ImportsPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Fichier</TH>
-                <TH>Type</TH>
-                <TH>Statut</TH>
-                <TH className="text-end">Lignes</TH>
-                <TH className="text-end">Importées</TH>
-                <TH className="text-end">Erreurs</TH>
-                <TH>Par</TH>
+                <TH>
+                  <T>Fichier</T>
+                </TH>
+                <TH>
+                  <T>Type</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Lignes</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Importées</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Erreurs</T>
+                </TH>
+                <TH>
+                  <T>Par</T>
+                </TH>
               </tr>
             </THead>
             <TBody>

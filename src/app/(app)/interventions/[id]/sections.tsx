@@ -31,6 +31,7 @@ import {
   transitionAction,
   workOrderReadingAction,
 } from "../actions";
+import { T } from "@/i18n/client";
 
 export type WorkOrder = Awaited<ReturnType<typeof getWorkOrder>>;
 type Opt = { id: string; label: string };
@@ -95,7 +96,7 @@ export function TransitionsCard({ wo }: { wo: WorkOrder }) {
                 {t.to === "TECH_CLOSED" ? <Checkbox name="testsPassed" required label="Essais de remise en service conformes" /> : null}
                 {t.to === "TECH_CLOSED" && wo.requiresRelease ? (
                   <p className="text-xs text-amber-800">
-                    Équipement critique ou intervention de sécurité : validation par une personne habilitée, différente de l&apos;exécutant.
+                    <T>Équipement critique ou intervention de sécurité : validation par une personne habilitée, différente de l&apos;exécutant.</T>
                   </p>
                 ) : null}
                 <SubmitButton variant={variant} size="sm">
@@ -153,7 +154,9 @@ export function PlanningCard({
             />
           </Field>
           <fieldset>
-            <legend className="mb-1 text-sm font-medium text-slate-700">Intervenants</legend>
+            <legend className="mb-1 text-sm font-medium text-slate-700">
+              <T>Intervenants</T>
+            </legend>
             <div className="grid gap-1.5">
               {sorted.map((t) => (
                 <Checkbox key={t.id} name="assigneeIds[]" value={t.id} label={t.label} defaultChecked={assigned.has(t.id)} />
@@ -170,7 +173,9 @@ export function PlanningCard({
               options={suppliers.map((s) => ({ value: s.id, label: s.label }))}
             />
           </Field>
-          <SubmitButton variant="secondary">Enregistrer la planification</SubmitButton>
+          <SubmitButton variant="secondary">
+            <T>Enregistrer la planification</T>
+          </SubmitButton>
         </ActionForm>
       </CardBody>
     </Card>
@@ -233,13 +238,13 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
                     aria-label="Commentaire"
                   />
                   <SubmitButton size="sm" variant="secondary" name="result" value="OK">
-                    Conforme
+                    <T>Conforme</T>
                   </SubmitButton>
                   <SubmitButton size="sm" variant="secondary" name="result" value="NOK">
-                    Non conforme
+                    <T>Non conforme</T>
                   </SubmitButton>
                   <SubmitButton size="sm" variant="ghost" name="result" value="NA">
-                    Sans objet
+                    <T>Sans objet</T>
                   </SubmitButton>
                   <FormMessage className="mb-0 w-full" />
                 </ActionForm>
@@ -255,7 +260,9 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
               <Input id="task-label" name="label" required maxLength={300} />
             </Field>
             <Checkbox name="required" label="Obligatoire" className="h-10" />
-            <SubmitButton variant="secondary">Ajouter</SubmitButton>
+            <SubmitButton variant="secondary">
+              <T>Ajouter</T>
+            </SubmitButton>
           </ActionForm>
         </CardBody>
       ) : null}
@@ -289,14 +296,16 @@ export function TimeCard({
           <ActionForm action={timeAction.bind(null, wo.id)} className="flex flex-wrap items-center gap-3">
             {running ? (
               <>
-                <Badge tone="violet">Pointage en cours depuis {formatDateTime(running.startedAt)}</Badge>
+                <Badge tone="violet">
+                  <T params={{ date: formatDateTime(running.startedAt) }}>{"Pointage en cours depuis {date}"}</T>
+                </Badge>
                 <SubmitButton name="action" value="stop" variant="secondary" size="sm">
-                  Arrêter le pointage
+                  <T>Arrêter le pointage</T>
                 </SubmitButton>
               </>
             ) : (
               <SubmitButton name="action" value="start" size="sm">
-                Démarrer le pointage
+                <T>Démarrer le pointage</T>
               </SubmitButton>
             )}
           </ActionForm>
@@ -308,10 +317,18 @@ export function TimeCard({
         <Table>
           <THead>
             <tr>
-              <TH>Technicien</TH>
-              <TH>Début</TH>
-              <TH className="text-end">Durée</TH>
-              <TH>Commentaire</TH>
+              <TH>
+                <T>Technicien</T>
+              </TH>
+              <TH>
+                <T>Début</T>
+              </TH>
+              <TH className="text-end">
+                <T>Durée</T>
+              </TH>
+              <TH>
+                <T>Commentaire</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
@@ -321,7 +338,15 @@ export function TimeCard({
                   {t.technician.firstName} {t.technician.lastName}
                 </TD>
                 <TD className="whitespace-nowrap">{formatDateTime(t.startedAt)}</TD>
-                <TD className="text-end tabular-nums">{t.endedAt ? formatMinutes(t.minutes) : <Badge tone="violet">en cours</Badge>}</TD>
+                <TD className="text-end tabular-nums">
+                  {t.endedAt ? (
+                    formatMinutes(t.minutes)
+                  ) : (
+                    <Badge tone="violet">
+                      <T>en cours</T>
+                    </Badge>
+                  )}
+                </TD>
                 <TD className="text-xs text-slate-500">{t.comment}</TD>
               </TR>
             ))}
@@ -354,7 +379,9 @@ export function TimeCard({
                 <Input id="time-comment" name="comment" maxLength={500} />
               </Field>
               <div>
-                <SubmitButton variant="secondary">Enregistrer</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Enregistrer</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </Disclosure>
@@ -378,11 +405,13 @@ export function ReportCard({ wo, canReport, canRead }: { wo: WorkOrder; canRepor
           <div className="rounded-md bg-slate-50 p-3 text-sm">
             <p className="text-slate-700">
               {meter.label} : <span className="font-semibold tabular-nums">{formatNumber(meter.lastValue, meter.unit)}</span>
-              <span className="text-xs text-slate-500"> (relevé du {formatDateTime(meter.lastReadAt)})</span>
+              <span className="text-xs text-slate-500">
+                <T params={{ date: formatDateTime(meter.lastReadAt) }}>{" (relevé du {date})"}</T>
+              </span>
             </p>
             {wo.snapshot.hasMeterReadingSinceStart ? (
               <p className="mt-1 flex items-center gap-1 text-xs text-emerald-700">
-                <ReadingStatusBadge status="VALID" /> Relevé saisi pendant l&apos;intervention
+                <ReadingStatusBadge status="VALID" /> <T>Relevé saisi pendant l&apos;intervention</T>
               </p>
             ) : null}
             {canRead ? (
@@ -390,7 +419,9 @@ export function ReportCard({ wo, canReport, canRead }: { wo: WorkOrder; canRepor
                 <Field label={`Relevé (${meter.unit})`} name="value" required className="w-40">
                   <Input id="wo-reading" name="value" type="number" min={0} step="0.1" required />
                 </Field>
-                <SubmitButton variant="secondary">Enregistrer le relevé</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Enregistrer le relevé</T>
+                </SubmitButton>
               </ActionForm>
             ) : null}
           </div>
@@ -411,16 +442,24 @@ export function ReportCard({ wo, canReport, canRead }: { wo: WorkOrder; canRepor
                 <Input id="remedyCode" name="remedyCode" defaultValue={wo.remedyCode ?? ""} maxLength={40} />
               </Field>
             </div>
-            <SubmitButton variant="secondary">Enregistrer le compte rendu</SubmitButton>
+            <SubmitButton variant="secondary">
+              <T>Enregistrer le compte rendu</T>
+            </SubmitButton>
           </ActionForm>
         ) : (
           <div className="space-y-2 text-sm">
             <p className="whitespace-pre-line text-slate-800">
-              {wo.workSummary || <span className="text-slate-400">Pas encore de compte rendu.</span>}
+              {wo.workSummary || (
+                <span className="text-slate-400">
+                  <T>Pas encore de compte rendu.</T>
+                </span>
+              )}
             </p>
             {wo.symptomCode || wo.causeCode || wo.remedyCode ? (
               <p className="text-xs text-slate-500">
-                Symptôme : {wo.symptomCode ?? "—"} · Cause : {wo.causeCode ?? "—"} · Remède : {wo.remedyCode ?? "—"}
+                <T params={{ v: wo.symptomCode ?? "—", v2: wo.causeCode ?? "—", v3: wo.remedyCode ?? "—" }}>
+                  {"Symptôme : {v} · Cause : {v2} · Remède : {v3}"}
+                </T>
               </p>
             ) : null}
           </div>
@@ -464,10 +503,18 @@ export function PartsCard({
         <Table>
           <THead>
             <tr>
-              <TH>Réservation</TH>
-              <TH>Magasin</TH>
-              <TH className="text-end">Quantité</TH>
-              <TH>Statut</TH>
+              <TH>
+                <T>Réservation</T>
+              </TH>
+              <TH>
+                <T>Magasin</T>
+              </TH>
+              <TH className="text-end">
+                <T>Quantité</T>
+              </TH>
+              <TH>
+                <T>Statut</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
@@ -492,11 +539,21 @@ export function PartsCard({
         <Table className="border-t border-slate-100">
           <THead>
             <tr>
-              <TH>Mouvement</TH>
-              <TH>Article</TH>
-              <TH>Magasin</TH>
-              <TH className="text-end">Quantité</TH>
-              <TH className="text-end">Valeur</TH>
+              <TH>
+                <T>Mouvement</T>
+              </TH>
+              <TH>
+                <T>Article</T>
+              </TH>
+              <TH>
+                <T>Magasin</T>
+              </TH>
+              <TH className="text-end">
+                <T>Quantité</T>
+              </TH>
+              <TH className="text-end">
+                <T>Valeur</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
@@ -540,13 +597,15 @@ export function PartsCard({
               <Input id="part-qty" name="quantity" type="number" min={0} step="any" required />
             </Field>
             <div className="flex items-end">
-              <SubmitButton variant="secondary">Valider</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Valider</T>
+              </SubmitButton>
             </div>
           </ActionForm>
           {active.length > 0 && canIssue ? (
             <ActionForm action={releaseReservationsAction.bind(null, wo.id)}>
               <SubmitButton variant="ghost" size="sm">
-                Libérer les réservations non consommées
+                <T>Libérer les réservations non consommées</T>
               </SubmitButton>
             </ActionForm>
           ) : null}
@@ -579,7 +638,9 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
             </div>
           ))}
           <div className="flex justify-between border-t border-slate-200 pt-1 font-semibold">
-            <dt>Total</dt>
+            <dt>
+              <T>Total</T>
+            </dt>
             <dd className="tabular-nums">{formatCurrency(c.total)}</dd>
           </div>
         </dl>
@@ -612,7 +673,9 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
                   <Input id="ext-amount" name="externalCost" type="number" min={0} step="0.01" required defaultValue={wo.externalCost ?? ""} />
                 </Field>
                 <Checkbox name="externalCostIsFinal" label="Montant facturé (sinon provision)" defaultChecked={wo.externalCostIsFinal} />
-                <SubmitButton variant="secondary">Enregistrer</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Enregistrer</T>
+                </SubmitButton>
               </ActionForm>
             </Disclosure>
             <Disclosure summary="Autre coût (location, transport…)">
@@ -623,7 +686,9 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
                 <Field label="Montant HT (€)" name="amount" required>
                   <Input id="other-amount" name="amount" type="number" min={0} step="0.01" required />
                 </Field>
-                <SubmitButton variant="secondary">Ajouter</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Ajouter</T>
+                </SubmitButton>
               </ActionForm>
             </Disclosure>
           </>

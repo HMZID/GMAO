@@ -17,6 +17,7 @@ import { listPartOptions, listSupplierOptions } from "@/server/services/stock";
 import { getWorkOrder, listTechnicianOptions } from "@/server/services/work-orders";
 import { recurrenceAction } from "../actions";
 import { ChecklistCard, CostsCard, HistoryCard, PartsCard, PlanningCard, ReportCard, TimeCard, TransitionsCard } from "./sections";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Intervention à réaliser" };
 
@@ -59,21 +60,39 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
             <WorkOrderStatusBadge status={wo.status} />
             <PriorityBadge value={wo.priority} />
             <Badge>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Badge>
-            {wo.isImmobilizing ? <Badge tone="red">Immobilisant</Badge> : null}
-            {wo.isSafetyRelated ? <Badge tone="red">Sécurité</Badge> : null}
-            {wo.isExternal ? <Badge tone="violet">Prestataire</Badge> : null}
-            {wo.reopenCount > 0 ? <Badge tone="amber">Rouvert {wo.reopenCount} fois</Badge> : null}
+            {wo.isImmobilizing ? (
+              <Badge tone="red">
+                <T>Immobilisant</T>
+              </Badge>
+            ) : null}
+            {wo.isSafetyRelated ? (
+              <Badge tone="red">
+                <T>Sécurité</T>
+              </Badge>
+            ) : null}
+            {wo.isExternal ? (
+              <Badge tone="violet">
+                <T>Prestataire</T>
+              </Badge>
+            ) : null}
+            {wo.reopenCount > 0 ? (
+              <Badge tone="amber">
+                <T params={{ reopenCount: wo.reopenCount }}>{"Rouvert {reopenCount} fois"}</T>
+              </Badge>
+            ) : null}
           </>
         }
         actions={
           <>
             <Link href={`/impression/intervention/${wo.id}`} className={buttonClass("secondary")}>
               <Printer className="h-4 w-4" aria-hidden />
-              Fiche à signer
+              <T>Fiche à signer</T>
             </Link>
             {wo.canManage && (status === "TECH_CLOSED" || status === "CLOSED") ? (
               <ActionForm action={recurrenceAction.bind(null, wo.id)} showMessage>
-                <SubmitButton variant="secondary">Créer une intervention de récidive</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Créer une intervention de récidive</T>
+                </SubmitButton>
               </ActionForm>
             ) : null}
           </>
@@ -83,13 +102,15 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
       <div className="mb-6 space-y-3">
         {status === "ON_HOLD" ? (
           <Alert tone="amber" title={`En attente${reasonOfHold ? ` : ${reasonOfHold}` : ""}`}>
-            {wo.holdComment ?? "Reprendre l'intervention dès que la cause de l'attente est levée."}
+            <Tr>{wo.holdComment ?? "Reprendre l'intervention dès que la cause de l'attente est levée."}</Tr>
           </Alert>
         ) : null}
         {wo.requiresRelease && isOpen ? (
           <Alert tone="blue" title="Remise en service à valider">
-            Équipement de criticité A ou intervention liée à la sécurité : la clôture technique est validée par une personne habilitée, différente de
-            l&apos;exécutant.
+            <T>
+              Équipement de criticité A ou intervention liée à la sécurité : la clôture technique est validée par une personne habilitée, différente
+              de l&apos;exécutant.
+            </T>
           </Alert>
         ) : null}
         {status === "CANCELLED" ? (
@@ -99,9 +120,15 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
         ) : null}
         {status === "TECH_CLOSED" || status === "CLOSED" ? (
           <Alert tone="green" title={`Clôturé techniquement le ${formatDateTime(wo.techClosedAt)}`}>
-            Résultat : {wo.outcome ? WORK_ORDER_OUTCOME[wo.outcome] : "—"}
-            {wo.releaseValidatedBy ? ` · remise en service validée par ${wo.releaseValidatedBy.name}` : ""}
-            {wo.meterValueAtClose !== null ? ` · compteur à la clôture : ${formatNumber(wo.meterValueAtClose)}` : ""}
+            <T
+              params={{
+                v: wo.outcome ? WORK_ORDER_OUTCOME[wo.outcome] : "—",
+                v2: wo.releaseValidatedBy ? ` · remise en service validée par ${wo.releaseValidatedBy.name}` : "",
+                v3: wo.meterValueAtClose !== null ? ` · compteur à la clôture : ${formatNumber(wo.meterValueAtClose)}` : "",
+              }}
+            >
+              {"Résultat : {v}{v2}{v3}"}
+            </T>
           </Alert>
         ) : null}
       </div>
@@ -138,7 +165,7 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                 actions={
                   ctx.canOn("purchase.create", wo) && isOpen ? (
                     <Link href={`/demandes-achat/nouvelle?workOrderId=${wo.id}`} className="text-sm text-brand-700 hover:underline">
-                      Nouvelle demande d&apos;achat
+                      <T>Nouvelle demande d&apos;achat</T>
                     </Link>
                   ) : null
                 }
@@ -233,7 +260,7 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                       </span>
                     ) : wo.parentWorkOrderId ? (
                       <Link href={`/interventions/${wo.parentWorkOrderId}`} className="text-brand-700 hover:underline">
-                        Récidive d&apos;une intervention précédente
+                        <T>Récidive d&apos;une intervention précédente</T>
                       </Link>
                     ) : null,
                   },

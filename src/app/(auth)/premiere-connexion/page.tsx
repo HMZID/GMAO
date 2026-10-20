@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/primitives";
 import { getOwnAuthContext } from "@/server/auth/session";
 import { FirstLoginForm } from "./first-login-form";
+import { T } from "@/i18n/client";
 
 export const metadata: Metadata = { title: "Première connexion" };
 
@@ -15,7 +16,9 @@ async function FirstLogin() {
   return (
     <>
       <p className="mb-5 mt-1 text-sm text-slate-500">
-        Bienvenue {ctx.name}. Choisissez votre mot de passe personnel : le mot de passe provisoire reçu par courriel ne servira plus.
+        <T params={{ name: ctx.name }}>
+          {"Bienvenue {name}. Choisissez votre mot de passe personnel : le mot de passe provisoire reçu par courriel ne servira plus."}
+        </T>
       </p>
       <FirstLoginForm email={ctx.email} />
     </>
@@ -33,7 +36,9 @@ export default function FirstLoginPage() {
           <span className="text-xl font-semibold">GMAO</span>
         </div>
         <div className="rounded-lg bg-white p-6 shadow-xl">
-          <h1 className="text-lg font-semibold text-slate-900">Première connexion</h1>
+          <h1 className="text-lg font-semibold text-slate-900">
+            <T>Première connexion</T>
+          </h1>
           <Suspense
             fallback={
               <div className="mt-4 space-y-4" aria-busy="true" aria-label="Chargement du formulaire">

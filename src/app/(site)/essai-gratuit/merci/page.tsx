@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { SiteChrome, SiteFallback } from "@/components/site/site-chrome";
 import { loadSite } from "@/components/site/site-data";
+import { T } from "@/i18n/client";
 
 export const metadata: Metadata = { title: "Demande reçue", robots: { index: false, follow: false } };
 
@@ -29,11 +30,11 @@ async function Thanks() {
           <p className="mt-6 text-lg text-white/75">{s["form.thanksText"]}</p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link href="/decouvrir#fonctionnalites" className="site-btn site-btn-signal">
-              Revoir les fonctionnalités
+              <T>Revoir les fonctionnalités</T>
               <ArrowRight className="rtl-flip h-4 w-4" aria-hidden />
             </Link>
             <Link href="/login" className="site-btn site-btn-ghost border-white/40">
-              Déjà reçu vos accès ? Se connecter
+              <T>Déjà reçu vos accès ? Se connecter</T>
             </Link>
           </div>
         </div>

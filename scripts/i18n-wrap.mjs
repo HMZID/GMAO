@@ -29,6 +29,70 @@ function isAcronym(text) {
   return /^[A-Z0-9 .\-/+&%()]+$/.test(text) && text.length <= 6;
 }
 
+/** Texte JSX nettoyé comme le fait React (lignes rognées, jointes par une espace). */
+function cleanJsxText(text) {
+  const lines = text.split(/\r\n|\n|\r/);
+  let last = 0;
+  lines.forEach((l, i) => { if (/[^ \t]/.test(l)) last = i; });
+  let out = "";
+  lines.forEach((line, i) => {
+    let t = line.replace(/\t/g, " ");
+    if (i !== 0) t = t.replace(/^[ ]+/, "");
+    if (i !== lines.length - 1) t = t.replace(/[ ]+$/, "");
+    if (t) {
+      if (i !== last) t += " ";
+      out += t;
+    }
+  });
+  return out;
+}
+
+function containsJsx(node) {
+  let found = false;
+  (function walk(n) {
+    if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isJsxFragment(n)) found = true;
+    else ts.forEachChild(n, walk);
+  })(node);
+  return found;
+}
+
+const FORMAT_NAMES = { formatDate: "date", formatDateTime: "date", formatNumber: "n", formatCurrency: "amount", formatDay: "date" };
+
+function paramName(expr, used) {
+  let base = "v";
+  if (ts.isIdentifier(expr)) base = expr.text;
+  else if (ts.isPropertyAccessExpression(expr)) base = expr.name.text;
+  else if (ts.isCallExpression(expr) && ts.isIdentifier(expr.expression)) base = FORMAT_NAMES[expr.expression.text] ?? "v";
+  else if (ts.isElementAccessExpression(expr)) base = "v";
+  base = base.replace(/[^A-Za-z0-9_]/g, "") || "v";
+  let name = base, i = 1;
+  while (used.has(name)) name = `${base}${++i}`;
+  used.add(name);
+  return name;
+}
+
+/** Fusionne texte et expressions en un seul <T params={{…}}>{"texte {param}"}</T> ; null si un enfant est un élément JSX. */
+function buildTemplate(children) {
+  let template = "";
+  const params = [];
+  const used = new Set();
+  for (const c of children) {
+    if (ts.isJsxText(c)) template += cleanJsxText(c.text);
+    else if (ts.isJsxExpression(c)) {
+      const e = c.expression;
+      if (!e) continue;
+      if (ts.isStringLiteral(e) && e.text.trim() === "") { template += e.text; continue; }
+      if (containsJsx(e)) return null;
+      const name = paramName(e, used);
+      params.push(`${name}: ${e.getText()}`);
+      template += `{${name}}`;
+    } else return null;
+  }
+  template = template.replace(/&(apos|amp|nbsp|laquo|raquo|quot|hellip|middot);/g, (m, n) => ({ apos: "'", amp: "&", nbsp: " ", laquo: "«", raquo: "»", quot: '"', hellip: "…", middot: "·" })[n]);
+  if (!LETTER.test(template.replace(/\{\w+\}/g, ""))) return null;
+  return `<T params={{ ${params.join(", ")} }}>{${JSON.stringify(template)}}</T>`;
+}
+
 let touched = 0, wrapped = 0;
 for (const root of roots) {
   for (const file of walk(root)) {
@@ -47,7 +111,9 @@ for (const root of roots) {
           // Texte entre deux expressions ({a} texte {b}) : l'ordre des mots change d'une langue à l'autre.
           if (texts.length > 0 && exprs.length > 0) {
             const hasSentence = texts.some((t) => t.text.trim().split(/\s+/).length > 1 || /[a-zà-ÿ]{3,}/i.test(t.text));
-            if (hasSentence) manual.push(`${file}:${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1}  <${name || "fragment"}> ${JSON.stringify(texts.map((t) => t.text.trim()).join(" … ").slice(0, 80))}`);
+            const template = hasSentence ? buildTemplate(children) : null;
+            if (template) edits.push({ start: children.pos, end: children.end, replacement: template });
+            else if (hasSentence) manual.push(`${file}:${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1}  <${name || "fragment"}> ${JSON.stringify(texts.map((t) => t.text.trim()).join(" … ").slice(0, 80))}`);
           } else {
             for (const t of texts) {
               const raw = t.text;
@@ -69,7 +135,8 @@ for (const root of roots) {
     const fixed = edits.sort((a, b) => b.start - a.start);
     for (const e of fixed) {
       if (e.start < 0) continue;
-      out = out.slice(0, e.start) + `<T>${out.slice(e.start, e.end)}</T>` + out.slice(e.end);
+      const piece = e.replacement ?? `<T>${out.slice(e.start, e.end)}</T>`;
+      out = out.slice(0, e.start) + piece + out.slice(e.end);
       wrapped++;
     }
     if (!/from "@\/i18n\/client"/.test(out)) {

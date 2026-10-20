@@ -3,6 +3,7 @@
 import { useActionState, useId } from "react";
 import { Input } from "@/components/ui/inputs";
 import { confirmEnrollmentAction, regenerateBackupCodesAction, startEnrollmentAction, type EnrollmentState } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 const idle: EnrollmentState = { status: "idle" };
 const button =
@@ -29,7 +30,7 @@ function PasswordField() {
   return (
     <div className="space-y-1">
       <label htmlFor={id} className="block text-sm font-medium text-slate-700">
-        Mot de passe actuel
+        <T>Mot de passe actuel</T>
       </label>
       <Input id={id} name="password" type="password" autoComplete="current-password" required />
     </div>
@@ -39,7 +40,9 @@ function PasswordField() {
 function BackupCodes({ codes }: { codes: string[] }) {
   return (
     <div className="rounded-md border border-amber-300 bg-amber-50 p-3">
-      <p className="text-sm font-medium text-amber-900">Codes de secours : notez-les et rangez-les en lieu sûr (un usage chacun).</p>
+      <p className="text-sm font-medium text-amber-900">
+        <T>Codes de secours : notez-les et rangez-les en lieu sûr (un usage chacun).</T>
+      </p>
       <ul className="mt-2 grid grid-cols-2 gap-1 font-mono text-sm" aria-label="Codes de secours">
         {codes.map((c) => (
           <li key={c}>{c}</li>
@@ -59,13 +62,17 @@ export function TwoFactorEnrollment() {
     return (
       <div className="space-y-4">
         <ol className="list-decimal space-y-1 ps-5 text-sm text-slate-600">
-          <li>Scannez ce QR code avec une application d&apos;authentification (Google Authenticator, Microsoft Authenticator…).</li>
-          <li>Saisissez le code à 6 chiffres qu&apos;elle affiche.</li>
+          <li>
+            <T>Scannez ce QR code avec une application d&apos;authentification (Google Authenticator, Microsoft Authenticator…).</T>
+          </li>
+          <li>
+            <T>Saisissez le code à 6 chiffres qu&apos;elle affiche.</T>
+          </li>
         </ol>
         {/* SVG produit par la bibliothèque qrcode à partir de l'URI otpauth : aucune donnée saisie. */}
         <div className="flex justify-center" aria-label="QR code d'activation" dangerouslySetInnerHTML={{ __html: started.qrSvg }} />
         <p className="text-center text-xs text-slate-500">
-          Saisie manuelle :{" "}
+          <T>Saisie manuelle :</T>{" "}
           <span className="select-all font-mono text-slate-800" data-totp-secret>
             {started.secret}
           </span>
@@ -74,13 +81,13 @@ export function TwoFactorEnrollment() {
         <form action={confirm} className="space-y-3">
           <div className="space-y-1">
             <label htmlFor={codeId} className="block text-sm font-medium text-slate-700">
-              Code de vérification
+              <T>Code de vérification</T>
             </label>
             <Input id={codeId} name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={7} required autoFocus />
           </div>
           <Message state={confirmed} />
           <button type="submit" disabled={confirming} className={button}>
-            {confirming ? "Vérification…" : "Activer la double authentification"}
+            <Tr>{confirming ? "Vérification…" : "Activer la double authentification"}</Tr>
           </button>
         </form>
       </div>
@@ -89,11 +96,13 @@ export function TwoFactorEnrollment() {
 
   return (
     <form action={start} className="space-y-3">
-      <p className="text-sm text-slate-600">Pour commencer, confirmez votre mot de passe.</p>
+      <p className="text-sm text-slate-600">
+        <T>Pour commencer, confirmez votre mot de passe.</T>
+      </p>
       <PasswordField />
       <Message state={started} />
       <button type="submit" disabled={starting} className={button}>
-        {starting ? "Préparation…" : "Configurer l'application d'authentification"}
+        <Tr>{starting ? "Préparation…" : "Configurer l'application d'authentification"}</Tr>
       </button>
     </form>
   );
@@ -108,7 +117,7 @@ export function RegenerateBackupCodes() {
       <Message state={state} />
       {state.backupCodes ? <BackupCodes codes={state.backupCodes} /> : null}
       <button type="submit" disabled={pending} className={button}>
-        {pending ? "Génération…" : "Générer de nouveaux codes de secours"}
+        <Tr>{pending ? "Génération…" : "Générer de nouveaux codes de secours"}</Tr>
       </button>
     </form>
   );
