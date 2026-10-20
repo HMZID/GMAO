@@ -1,3 +1,4 @@
+import { tpl, tx } from "@/i18n/translate";
 import "server-only";
 import { and, asc, count, eq, gte, sql, type SQL } from "drizzle-orm";
 import { alias, type PgSelect } from "drizzle-orm/pg-core";
@@ -65,7 +66,8 @@ export function exportableDatasets(ctx: AuthContext): ExportDataset[] {
 
 function assertDataset(ctx: AuthContext, dataset: ExportDataset) {
   assertCan(ctx, "data.export");
-  if (!ctx.can(READ_PERMISSION[dataset])) throw new ForbiddenError(`Export « ${EXPORT_DEFINITIONS[dataset].label} » : droit de lecture requis.`);
+  if (!ctx.can(READ_PERMISSION[dataset]))
+    throw new ForbiddenError(tpl`Export « ${tx(EXPORT_DEFINITIONS[dataset].label)} » : droit de lecture requis.`);
 }
 
 export const datasetSchema = z.enum(EXPORT_DATASETS, `Jeu de données attendu : ${EXPORT_DATASETS.join(", ")}`);

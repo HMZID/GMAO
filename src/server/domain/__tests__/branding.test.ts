@@ -1,3 +1,4 @@
+import { plainText } from "@/i18n/translate";
 import { describe, expect, it } from "vitest";
 import { brandLabel, checkLogo, MAX_LOGO_BYTES } from "../branding";
 
@@ -13,7 +14,10 @@ describe("checkLogo", () => {
     expect(checkLogo({ name: "logo.pdf", size: 2048, head: PDF }).ok).toBe(false);
     expect(checkLogo({ name: "logo.svg", size: 2048, head: PNG }).ok).toBe(false);
     const renamed = checkLogo({ name: "logo.jpg", size: 2048, head: PNG });
-    expect(renamed).toEqual({ ok: false, errors: ["Le contenu du fichier ne correspond pas à son extension .jpg."] });
+    expect({ ...renamed, errors: renamed.ok ? [] : renamed.errors.map(plainText) }).toEqual({
+      ok: false,
+      errors: ["Le contenu du fichier ne correspond pas à son extension .jpg."],
+    });
   });
 
   it("liste toutes les anomalies en une fois", () => {

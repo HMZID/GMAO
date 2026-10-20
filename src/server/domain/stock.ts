@@ -1,6 +1,7 @@
 /**
  * Règles de stock (CDC §7.5, STK-05, STK-08, STK-14, STK-15).
  */
+import { tpl } from "@/i18n/translate";
 
 export type MovementType = "RECEIPT" | "ISSUE" | "RETURN" | "TRANSFER_OUT" | "TRANSFER_IN" | "ADJUSTMENT" | "SCRAP";
 
@@ -41,7 +42,7 @@ export function checkIssue({ onHand, reserved, reservedForWorkOrder, quantity }:
   if (!(quantity > 0)) errors.push("La quantité doit être positive.");
   const free = available(onHand, reserved);
   if (quantity > reservedForWorkOrder + free) {
-    errors.push(`Stock insuffisant : ${round3(reservedForWorkOrder + free)} disponible(s) pour cette intervention, ${quantity} demandé(s).`);
+    errors.push(tpl`Stock insuffisant : ${round3(reservedForWorkOrder + free)} disponible(s) pour cette intervention, ${quantity} demandé(s).`);
   }
   if (onHand - quantity < 0) errors.push("Le stock physique ne peut pas devenir négatif.");
   return errors;
@@ -51,7 +52,7 @@ export function checkIssue({ onHand, reserved, reservedForWorkOrder, quantity }:
 export function checkReservation(onHand: number, reserved: number, quantity: number): string[] {
   if (!(quantity > 0)) return ["La quantité doit être positive."];
   const free = available(onHand, reserved);
-  return quantity > free ? [`Seulement ${free} disponible(s) à réserver.`] : [];
+  return quantity > free ? [tpl`Seulement ${free} disponible(s) à réserver.`] : [];
 }
 
 /** Coût moyen pondéré après une réception (STK-15). */

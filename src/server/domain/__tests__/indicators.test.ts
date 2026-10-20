@@ -1,3 +1,4 @@
+import { plainText } from "@/i18n/translate";
 import { describe, expect, it } from "vitest";
 import {
   describeIndicator,
@@ -40,7 +41,7 @@ describe("Indicateurs personnalisés : validation", () => {
       periodDays: 12,
       chart: "number",
     });
-    expect(errors).toEqual([
+    expect(errors.map(plainText)).toEqual([
       "Champ « externalCost » indisponible pour équipements.",
       "Regroupement « technician » indisponible.",
       "Filtre « site » indisponible.",

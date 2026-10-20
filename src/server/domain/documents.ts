@@ -2,6 +2,7 @@
  * Règles des documents joints (EQP-07) : formats acceptés, taille maximale, contrôle du contenu réel
  * du fichier (signature binaire) et nom de fichier sûr. Module pur, testé dans `__tests__/documents.test.ts`.
  */
+import { tpl } from "@/i18n/translate";
 import { INTL_LOCALE } from "@/i18n/config";
 import { requestLocale } from "@/i18n/request-locale";
 
@@ -100,11 +101,11 @@ export function checkFile(file: { name: string; size: number; head: Uint8Array }
   const format = FILE_FORMATS.find((f) => f.extensions.includes(ext));
 
   if (file.size === 0) errors.push("Le fichier est vide.");
-  if (file.size > limitBytes) errors.push(`Le fichier dépasse la taille maximale de ${formatSize(limitBytes)} (${formatSize(file.size)}).`);
+  if (file.size > limitBytes) errors.push(tpl`Le fichier dépasse la taille maximale de ${formatSize(limitBytes)} (${formatSize(file.size)}).`);
   if (!format) {
-    errors.push(`Format non accepté (.${ext || "?"}). Formats acceptés : ${FILE_FORMATS.map((f) => f.label).join(", ")}.`);
+    errors.push(tpl`Format non accepté (.${ext || "?"}). Formats acceptés : ${FILE_FORMATS.map((f) => f.label).join(", ")}.`);
   } else if (file.size > 0 && !format.matches(file.head)) {
-    errors.push(`Le contenu du fichier ne correspond pas à son extension .${ext}.`);
+    errors.push(tpl`Le contenu du fichier ne correspond pas à son extension .${ext}.`);
   }
 
   return errors.length > 0 || !format ? { ok: false, errors } : { ok: true, format };

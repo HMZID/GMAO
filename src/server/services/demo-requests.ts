@@ -310,7 +310,7 @@ export async function approveDemoRequest(ctx: AuthContext, id: string, raw: unkn
   if (errors.length) throw new BusinessRuleError(errors);
   const [existing] = await db.select({ id: user.id }).from(user).where(eq(user.email, request.email));
   if (existing)
-    throw new ConflictError(`Un compte existe déjà avec le courriel ${request.email} : refuser la demande ou utiliser un autre courriel.`);
+    throw new ConflictError(tpl`Un compte existe déjà avec le courriel ${request.email} : refuser la demande ou utiliser un autre courriel.`);
 
   const password = generateProvisionalPassword();
   const passwordHash = await hashPassword(password);

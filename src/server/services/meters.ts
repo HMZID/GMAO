@@ -1,3 +1,4 @@
+import { tpl } from "@/i18n/translate";
 import "server-only";
 import { and, asc, desc, eq, gt, lt } from "drizzle-orm";
 import { z } from "zod";
@@ -164,8 +165,8 @@ export async function reviewReading(ctx: AuthContext, readingId: string, raw: un
     if (input.decision === "VALID") {
       const { previous, next } = await validNeighbours(tx, meter.id, reading.readAt);
       const errors: string[] = [];
-      if (previous && reading.value < previous.value) errors.push(`Valeur inférieure au relevé valide précédent (${previous.value}).`);
-      if (next && reading.value > next.value) errors.push(`Valeur supérieure au relevé valide suivant (${next.value}).`);
+      if (previous && reading.value < previous.value) errors.push(tpl`Valeur inférieure au relevé valide précédent (${previous.value}).`);
+      if (next && reading.value > next.value) errors.push(tpl`Valeur supérieure au relevé valide suivant (${next.value}).`);
       if (errors.length > 0) throw new BusinessRuleError(errors);
     }
 

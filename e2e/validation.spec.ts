@@ -37,3 +37,25 @@ test("API : erreurs de validation en français, champ par champ, sans caractère
   expect(fieldErrors.symptom).toEqual(["200 caractères au maximum"]);
   expect(JSON.stringify(body)).not.toMatch(/[⁠-⁤]|Invalid|expected/);
 });
+
+test("en anglais et en arabe : bulle du navigateur, erreur du champ et rappel dans la langue choisie", async ({ page }) => {
+  await login(page, USERS.executive);
+  for (const [locale, required, toFix] of [
+    ["en", "Required field", "Fields to correct:"],
+    ["ar", "حقل إلزامي", "حقول يجب تصحيحها:"],
+  ] as const) {
+    await page.context().addCookies([{ name: "gmao-locale", value: locale, domain: new URL(page.url()).hostname, path: "/" }]);
+    await page.goto("/equipements/nouveau");
+    const code = page.locator("input[name=code]");
+    const form = page.locator("form").filter({ has: code });
+    // Envoi vide : le navigateur bloque, avec le message de la langue de l'application.
+    await form.locator("button[type=submit]").click();
+    await expect.poll(() => code.evaluate((el: HTMLInputElement) => el.validationMessage)).toBe(required);
+    // Contrôle du navigateur contourné : le serveur répond, dans la même langue.
+    await form.evaluate((element) => element.setAttribute("novalidate", ""));
+    await form.locator("button[type=submit]").click();
+    await expect(page.getByRole("alert").filter({ hasText: toFix })).toBeVisible();
+    await expect(page.getByText(required).first()).toBeVisible();
+    await expect(page.getByText("Champ obligatoire")).toHaveCount(0);
+  }
+});

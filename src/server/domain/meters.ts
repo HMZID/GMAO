@@ -3,6 +3,7 @@
  * La valeur lue (affichée par le compteur physique) diffère de la valeur cumulée
  * dès qu'un compteur a été remplacé : cumulée = lue + offset.
  */
+import { tpl } from "@/i18n/translate";
 
 export type MeterType = "HOURS" | "KM" | "CYCLES" | "OTHER";
 export type ReadingSource = "MANUAL" | "WORK_ORDER" | "TELEMATICS" | "IMPORT";
@@ -51,11 +52,13 @@ export function checkReading(input: ReadingCheckInput): ReadingCheck {
 
   if (input.previous && input.value < input.previous.value) {
     inconsistent = true;
-    reasons.push(`Valeur inférieure au relevé précédent (${input.previous.value}). En cas de changement de compteur, enregistrer un remplacement.`);
+    reasons.push(
+      tpl`Valeur inférieure au relevé précédent (${input.previous.value}). En cas de changement de compteur, enregistrer un remplacement.`,
+    );
   }
   if (input.next && input.value > input.next.value) {
     inconsistent = true;
-    reasons.push(`Valeur supérieure au relevé suivant (${input.next.value}) : insertion rétroactive incohérente.`);
+    reasons.push(tpl`Valeur supérieure au relevé suivant (${input.next.value}) : insertion rétroactive incohérente.`);
   }
   if (inconsistent) {
     return { status: interactive ? "REJECTED" : "TO_CHECK", reasons };
