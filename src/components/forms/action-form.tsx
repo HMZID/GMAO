@@ -76,7 +76,7 @@ export function ActionForm({
         }}
       >
         {showMessage ? <FormMessage /> : null}
-        <Tr>{children}</Tr>
+        {children}
       </form>
     </FormStateContext>
   );
@@ -259,7 +259,7 @@ export function ActionPanel({ action, children, className }: { action: Action; c
       <PanelContext value={formAction}>
         <div className={className}>
           <FormMessage />
-          <Tr>{children}</Tr>
+          {children}
         </div>
       </PanelContext>
     </FormStateContext>
@@ -281,7 +281,7 @@ export function PanelForm({ children, className }: { children: ReactNode; classN
         startTransition(() => dispatch(formData));
       }}
     >
-      <Tr>{children}</Tr>
+      {children}
     </form>
   );
 }

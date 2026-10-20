@@ -29,7 +29,9 @@ export function useT() {
 export function Tr({ children }: { children?: ReactNode }) {
   const { dictionary } = use(I18nContext);
   if (typeof children === "string") return translate(dictionary, children);
-  if (Array.isArray(children)) return Children.map(children, (child) => (typeof child === "string" ? translate(dictionary, child) : child));
+  // Sans texte parmi les enfants, ils sont rendus tels quels : la structure (et les clés) de l'arbre ne change pas.
+  if (Array.isArray(children) && Children.toArray(children).some((child) => typeof child === "string"))
+    return Children.map(children, (child) => (typeof child === "string" ? translate(dictionary, child) : child));
   return children;
 }
 
