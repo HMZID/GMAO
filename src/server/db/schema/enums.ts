@@ -133,3 +133,12 @@ export const reservationStatusEnum = pgEnum("reservation_status", ["ACTIVE", "CO
 export const inventoryCountStatusEnum = pgEnum("inventory_count_status", ["PENDING", "APPLIED", "REJECTED"]);
 
 export const absenceTypeEnum = pgEnum("absence_type", ["LEAVE", "TRAINING", "SICK", "OTHER"]);
+
+// Carburant et fluides (fonction ajoutée hors CDC : consommation, cartes carburant, anomalies)
+export const fluidKindEnum = pgEnum("fluid_kind", ["DIESEL", "GASOLINE", "ADBLUE", "ENGINE_OIL", "HYDRAULIC_OIL", "COOLANT", "OTHER"]);
+
+export const fuelSourceEnum = pgEnum("fuel_source", ["MANUAL", "MOBILE", "CARD_IMPORT", "API"]);
+
+export const fuelReviewEnum = pgEnum("fuel_review", ["NONE", "TO_REVIEW", "JUSTIFIED"]);
+
+export const fuelEntryStatusEnum = pgEnum("fuel_entry_status", ["VALID", "CANCELLED"]);
