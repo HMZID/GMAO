@@ -274,8 +274,20 @@ export async function listStockLevels(ctx: AuthContext, raw: unknown = {}) {
 
 export async function countBelowReorder(ctx: AuthContext) {
   if (!ctx.can("stock.read")) return 0;
-  const rows = await listStockLevels(ctx, { belowReorder: true });
-  return rows.length;
+  const [row] = await db
+    .select({ n: count() })
+    .from(stockLevels)
+    .innerJoin(warehouses, eq(warehouses.id, stockLevels.warehouseId))
+    .innerJoin(sites, eq(sites.id, warehouses.siteId))
+    .where(
+      and(
+        eq(stockLevels.tenantId, ctx.tenantId),
+        scopeWhere(ctx.scope("stock.read"), sites.companyId, sites.id),
+        isNotNull(stockLevels.reorderPoint),
+        lte(sql`${stockLevels.onHand} - ${stockLevels.reserved}`, stockLevels.reorderPoint),
+      ),
+    );
+  return row?.n ?? 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -334,7 +346,25 @@ async function writeMovement(ctx: AuthContext, raw: unknown) {
       .from(parts)
       .where(and(eq(parts.id, input.partId), eq(parts.tenantId, ctx.tenantId)));
     if (!part) throw new NotFoundError("Article");
-    const level = await lockLevel(tx, ctx, part.id, wh.id);
+    // Transfert : les deux lignes de stock sont verrouillées dans un ordre fixe (identifiant du magasin), sinon
+    // deux transferts croisés A→B et B→A s'attendraient mutuellement (blocage).
+    let target: Awaited<ReturnType<typeof warehouseScope>> | null = null;
+    let targetLevel: Awaited<ReturnType<typeof lockLevel>> | null = null;
+    let level: Awaited<ReturnType<typeof lockLevel>>;
+    if (input.type === "TRANSFER") {
+      target = await warehouseScope(tx, ctx, input.targetWarehouseId!);
+      assertCanOn(ctx, "stock.move", target);
+      if (target.id === wh.id) throw new BusinessRuleError(["Le magasin de destination doit être différent."]);
+      if (wh.id < target.id) {
+        level = await lockLevel(tx, ctx, part.id, wh.id);
+        targetLevel = await lockLevel(tx, ctx, part.id, target.id);
+      } else {
+        targetLevel = await lockLevel(tx, ctx, part.id, target.id);
+        level = await lockLevel(tx, ctx, part.id, wh.id);
+      }
+    } else {
+      level = await lockLevel(tx, ctx, part.id, wh.id);
+    }
 
     const base = {
       tenantId: ctx.tenantId,
@@ -410,10 +440,7 @@ async function writeMovement(ctx: AuthContext, raw: unknown) {
     }
 
     // TRANSFER — TODO(STK-06) : gérer le transit en deux temps (expédition puis réception).
-    const target = await warehouseScope(tx, ctx, input.targetWarehouseId!);
-    assertCanOn(ctx, "stock.move", target);
-    if (target.id === wh.id) throw new BusinessRuleError(["Le magasin de destination doit être différent."]);
-    const targetLevel = await lockLevel(tx, ctx, part.id, target.id);
+    if (!target || !targetLevel) throw new BusinessRuleError(["Magasin de destination obligatoire."]);
     await tx
       .update(stockLevels)
       .set({ onHand: sql`${stockLevels.onHand} + ${input.quantity}` })

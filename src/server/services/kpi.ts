@@ -11,6 +11,7 @@ import {
   meterReadings,
   meters,
   parts,
+  planOperations,
   stockMovements,
   timeEntries,
   workOrderCosts,
@@ -240,7 +241,8 @@ export async function getIndicators(ctx: AuthContext, raw: unknown = {}, now: Da
             Number,
           ),
         external:
-          sql<number>`coalesce("work_orders"."external_cost", 0) + coalesce((select sum(c.amount) from work_order_costs c where c.work_order_id = "work_orders"."id"), 0)`.mapWith(
+          // HAB-04 : seules les dépenses approuvées comptent, comme dans le coût total (maintenanceCosts).
+          sql<number>`coalesce("work_orders"."external_cost", 0) + coalesce((select sum(c.amount) from work_order_costs c where c.work_order_id = "work_orders"."id" and c.approval_status = 'APPROVED'), 0)`.mapWith(
             Number,
           ),
       })
@@ -287,8 +289,15 @@ export async function getIndicators(ctx: AuthContext, raw: unknown = {}, now: Da
       )
       .limit(10),
     db
-      .select({ status: dueItems.status, dueDate: dueItems.dueDate, baseDate: dueItems.baseDate, completedAt: dueItems.completedAt })
+      .select({
+        status: dueItems.status,
+        dueDate: dueItems.dueDate,
+        baseDate: dueItems.baseDate,
+        completedAt: dueItems.completedAt,
+        tolerancePercent: planOperations.tolerancePercent,
+      })
       .from(dueItems)
+      .innerJoin(planOperations, eq(planOperations.id, dueItems.operationId))
       .where(and(inArray(dueItems.equipmentId, ids), isNotNull(dueItems.dueDate), gte(dueItems.dueDate, from), lt(dueItems.dueDate, to))),
   ]);
 
@@ -330,7 +339,8 @@ export async function getIndicators(ctx: AuthContext, raw: unknown = {}, now: Da
 
   const doneOnTime = dueRows.filter((d) => {
     if (d.status !== "DONE" || !d.completedAt || !d.dueDate) return false;
-    const toleranceMs = (d.dueDate.getTime() - d.baseDate.getTime()) * 0.1;
+    // PRV-09 : tolérance propre à l'opération (10 % par défaut), la même que pour le statut « en retard ».
+    const toleranceMs = (d.dueDate.getTime() - d.baseDate.getTime()) * ((d.tolerancePercent ?? 10) / 100);
     return d.completedAt.getTime() <= d.dueDate.getTime() + toleranceMs + 86_400_000;
   }).length;
   const dueInPeriod = dueRows.filter((d) => d.dueDate && d.dueDate <= to && d.status !== "SKIPPED" && d.status !== "SUPERSEDED").length;

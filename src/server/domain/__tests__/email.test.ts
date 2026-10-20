@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   absoluteLink,
@@ -89,5 +90,22 @@ describe("Courriels : modèles", () => {
     expect(renderEmail("STOCK_ALERT", { title: "Stock", items: [{ label: "FLT-01", detail: "2 u" }] }, { baseUrl: base }).text).toContain(
       "https://gmao.example.fr/notifications",
     );
+  });
+});
+
+describe("tâche planifiée Vercel et récapitulatifs quotidiens", () => {
+  // La tâche quotidienne (vercel.json) doit tomber après l'heure des récapitulatifs, été comme hiver :
+  // 5 h UTC donnait 6 h à Paris en heure d'hiver, avant l'heure paramétrée (7 h), donc aucun récapitulatif.
+  const cron = (JSON.parse(readFileSync("vercel.json", "utf8")) as { crons: { path: string; schedule: string }[] }).crons.find(
+    (c) => c.path === "/api/cron/notifications",
+  )!;
+  const [minute, hour] = cron.schedule.split(" ").map(Number);
+
+  it.each([
+    ["heure d'été", "2026-07-15"],
+    ["heure d'hiver", "2026-12-15"],
+  ])("envoie le récapitulatif en %s", (_label, day) => {
+    const run = new Date(`${day}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00Z`);
+    expect(isDigestTime(run, 7)).toBe(true);
   });
 });

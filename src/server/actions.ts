@@ -4,6 +4,7 @@ import { unstable_rethrow } from "next/navigation";
 import type { ActionState } from "@/lib/action-state";
 import { getAuthContext } from "@/server/auth/session";
 import type { AuthContext } from "@/server/authz/context";
+import { flushEmailQueueAfterResponse } from "@/server/email/flush";
 import { AppError, BusinessRuleError, ConflictError, ValidationError } from "@/server/errors";
 
 /**
@@ -29,6 +30,7 @@ export async function act(fn: (ctx: AuthContext) => Promise<unknown>, successMes
   return runAction(async () => {
     const ctx = await getAuthContext();
     const result = await fn(ctx);
+    flushEmailQueueAfterResponse();
     refresh();
     return isActionState(result) ? { ...result, at: Date.now() } : undefined;
   }, successMessage);
