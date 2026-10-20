@@ -4,7 +4,7 @@ import type { Permission } from "@/server/authz/permissions";
 import { documentDeleteInput, documentInput, documentListInput } from "@/server/services/documents";
 import { cancelInput as deadlineCancelInput, deadlineFilters, deadlineInput, renewalInput } from "@/server/services/fleet-deadlines";
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
-import { decisionInput } from "@/server/services/approvals";
+import { decisionInput, workOrderValidationInput } from "@/server/services/approvals";
 import { preferencesInput } from "@/server/services/email";
 import { exportQuery } from "@/server/services/exports";
 import { executeInput } from "@/server/services/imports";
@@ -388,6 +388,19 @@ export const ENDPOINTS: Endpoint[] = [
     body: decisionInput,
   },
   { method: "GET", path: "/api/v1/approval-workflows", summary: "Circuits de validation et leurs étapes", permission: "settings.manage" },
+  {
+    method: "GET",
+    path: "/api/v1/work-order-validation",
+    summary: "Validation des interventions : en vigueur ou non, seuil au-delà duquel la direction valide",
+    permission: "workorder.read",
+  },
+  {
+    method: "PUT",
+    path: "/api/v1/work-order-validation",
+    summary: "Fixe la validation des interventions et le seuil de la direction (direction seule)",
+    permission: "approval.threshold",
+    body: workOrderValidationInput,
+  },
   {
     method: "GET",
     path: "/api/v1/purchase-requests",

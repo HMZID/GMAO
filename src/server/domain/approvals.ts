@@ -4,7 +4,7 @@
  */
 import type { Role } from "@/server/authz/permissions";
 
-export const APPROVAL_OBJECTS = ["WORK_REQUEST", "PURCHASE_REQUEST", "MAINTENANCE_EXPENSE"] as const;
+export const APPROVAL_OBJECTS = ["WORK_REQUEST", "PURCHASE_REQUEST", "MAINTENANCE_EXPENSE", "WORK_ORDER"] as const;
 export type ApprovalObject = (typeof APPROVAL_OBJECTS)[number];
 
 export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
@@ -18,6 +18,8 @@ export type StepDefinition = {
   approverUserId: string | null;
   /** L'étape s'applique à partir de ce montant (inclus) ; null : quel que soit le montant. */
   minAmount: number | null;
+  /** L'étape ne s'applique qu'en dessous de ce montant (exclu) ; null : sans plafond. */
+  maxAmount: number | null;
   /** L'étape ne s'applique qu'à ces priorités (DI) ; vide : toutes. */
   priorities: string[];
 };
@@ -29,18 +31,47 @@ export type RequestStep = Pick<StepDefinition, "position" | "name" | "approverRo
 export function applicableSteps(steps: StepDefinition[], object: { amount?: number | null; priority?: string | null }): RequestStep[] {
   return steps
     .filter((s) => s.minAmount === null || (object.amount ?? 0) >= s.minAmount)
+    .filter((s) => s.maxAmount === null || (object.amount ?? 0) < s.maxAmount)
     .filter((s) => s.priorities.length === 0 || (!!object.priority && s.priorities.includes(object.priority)))
     .sort((a, b) => a.position - b.position)
     .map(({ position, name, approverRole, approverUserId }) => ({ position, name, approverRole, approverUserId }));
 }
 
 /** Contrôle de cohérence d'une étape saisie par l'administrateur. */
-export function checkStepDefinition(step: Pick<StepDefinition, "approverRole" | "approverUserId" | "minAmount">): string[] {
+export function checkStepDefinition(
+  step: Pick<StepDefinition, "approverRole" | "approverUserId" | "minAmount"> & { maxAmount?: number | null },
+): string[] {
   const errors: string[] = [];
   if (!step.approverRole && !step.approverUserId) errors.push("Choisir un rôle valideur ou une personne nommée.");
   if (step.approverRole && step.approverUserId) errors.push("Choisir un rôle ou une personne, pas les deux.");
   if (step.minAmount !== null && step.minAmount < 0) errors.push("Le seuil doit être positif.");
+  if (step.maxAmount != null && step.maxAmount < 0) errors.push("Le plafond doit être positif.");
+  if (step.maxAmount != null && step.minAmount !== null && step.maxAmount <= step.minAmount) errors.push("Le plafond doit dépasser le seuil.");
   return errors;
+}
+
+/**
+ * Hiérarchie des valideurs (HAB-04) : la direction a les droits du responsable maintenance. Elle peut donc trancher
+ * toute étape confiée à ce rôle, y compris sous le seuil où le responsable maintenance valide seul.
+ */
+const COVERED_ROLES: Partial<Record<Role, readonly Role[]>> = { EXECUTIVE: ["MAINTENANCE_MANAGER"] };
+
+/** Un rôle détenu permet-il de décider une étape confiée à `stepRole` ? */
+export function roleCovers(heldRole: Role, stepRole: Role | null): boolean {
+  if (!stepRole) return false;
+  return heldRole === stepRole || (COVERED_ROLES[heldRole] ?? []).includes(stepRole);
+}
+
+/** Seuil de validation des interventions (HAB-04) : sous ce montant le responsable maintenance valide, à partir de ce montant la direction. */
+export const WORK_ORDER_STEP_ROLES = { below: "MAINTENANCE_MANAGER", from: "EXECUTIVE" } as const satisfies Record<string, Role>;
+
+/**
+ * Étapes qu'il reste à faire valider une fois retirées celles que le créateur peut trancher lui-même : la direction
+ * crée sans validation, le responsable maintenance crée sans validation sous le seuil et passe par la direction au-delà.
+ * Les autres rôles passent par toutes les étapes applicables.
+ */
+export function stepsLeftForCreator(steps: RequestStep[], creatorRoles: readonly Role[]): RequestStep[] {
+  return steps.filter((s) => !creatorRoles.some((role) => roleCovers(role, s.approverRole)));
 }
 
 export type DecisionCheckInput = {

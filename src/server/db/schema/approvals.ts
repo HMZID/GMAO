@@ -46,6 +46,8 @@ export const approvalSteps = pgTable(
     approverUserId: text("approver_user_id").references(() => user.id),
     /** Seuil financier : l'étape s'applique à partir de ce montant (inclus). */
     minAmount: money("min_amount"),
+    /** L'étape ne s'applique qu'en dessous de ce montant (exclu) : intervention validée par le responsable maintenance sous le seuil, par la direction au-dessus. */
+    maxAmount: money("max_amount"),
     /** Priorités concernées (DI) ; vide : toutes. */
     priorities: jsonb("priorities").$type<string[]>().notNull().default([]),
   },

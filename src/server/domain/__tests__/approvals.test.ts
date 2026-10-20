@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { afterDecision, applicableSteps, checkDecision, checkStepDefinition, isActiveSubstitution, type StepDefinition } from "../approvals";
+import {
+  afterDecision,
+  applicableSteps,
+  checkDecision,
+  checkStepDefinition,
+  isActiveSubstitution,
+  roleCovers,
+  stepsLeftForCreator,
+  type StepDefinition,
+} from "../approvals";
 
 const step = (position: number, overrides: Partial<StepDefinition> = {}): StepDefinition => ({
   position,
@@ -7,6 +16,7 @@ const step = (position: number, overrides: Partial<StepDefinition> = {}): StepDe
   approverRole: "PURCHASING_MANAGER",
   approverUserId: null,
   minAmount: null,
+  maxAmount: null,
   priorities: [],
   ...overrides,
 });
@@ -87,5 +97,52 @@ describe("Circuits : décisions", () => {
     const s = { validFrom: new Date("2026-10-01T00:00:00Z"), validTo: new Date("2026-10-15T23:59:59Z") };
     expect(isActiveSubstitution(s, new Date("2026-10-08T12:00:00Z"))).toBe(true);
     expect(isActiveSubstitution(s, new Date("2026-10-16T00:00:00Z"))).toBe(false);
+  });
+});
+
+describe("Validation des interventions : responsable maintenance sous le seuil, direction au-dessus (HAB-04)", () => {
+  // Circuit posé par la direction : seuil à 5 000 €.
+  const workOrder = [
+    step(1, { name: "Responsable maintenance", approverRole: "MAINTENANCE_MANAGER", maxAmount: 5000 }),
+    step(2, { name: "Direction", approverRole: "EXECUTIVE", minAmount: 5000 }),
+  ];
+
+  it("sous le seuil, seul le responsable maintenance valide ; à partir du seuil, seule la direction", () => {
+    expect(applicableSteps(workOrder, { amount: 4999.99 }).map((s) => s.name)).toEqual(["Responsable maintenance"]);
+    expect(applicableSteps(workOrder, { amount: 5000 }).map((s) => s.name)).toEqual(["Direction"]);
+    expect(applicableSteps(workOrder, { amount: 0 }).map((s) => s.name)).toEqual(["Responsable maintenance"]);
+    expect(applicableSteps(workOrder, {}).map((s) => s.name)).toEqual(["Responsable maintenance"]);
+  });
+
+  it("la direction a les droits du responsable maintenance, pas l'inverse", () => {
+    expect(roleCovers("EXECUTIVE", "MAINTENANCE_MANAGER")).toBe(true);
+    expect(roleCovers("EXECUTIVE", "EXECUTIVE")).toBe(true);
+    expect(roleCovers("MAINTENANCE_MANAGER", "EXECUTIVE")).toBe(false);
+    expect(roleCovers("WORKSHOP_MANAGER", "MAINTENANCE_MANAGER")).toBe(false);
+    expect(roleCovers("EXECUTIVE", null)).toBe(false);
+  });
+
+  it("la direction crée sans validation", () => {
+    expect(stepsLeftForCreator(applicableSteps(workOrder, { amount: 100 }), ["EXECUTIVE"])).toEqual([]);
+    expect(stepsLeftForCreator(applicableSteps(workOrder, { amount: 90_000 }), ["EXECUTIVE"])).toEqual([]);
+  });
+
+  it("le responsable maintenance crée sans validation sous le seuil, avec la direction au-delà", () => {
+    expect(stepsLeftForCreator(applicableSteps(workOrder, { amount: 100 }), ["MAINTENANCE_MANAGER"])).toEqual([]);
+    expect(stepsLeftForCreator(applicableSteps(workOrder, { amount: 8000 }), ["MAINTENANCE_MANAGER"]).map((s) => s.name)).toEqual(["Direction"]);
+  });
+
+  it("les autres rôles passent par la validation applicable", () => {
+    expect(stepsLeftForCreator(applicableSteps(workOrder, { amount: 100 }), ["WORKSHOP_MANAGER"]).map((s) => s.name)).toEqual([
+      "Responsable maintenance",
+    ]);
+    expect(stepsLeftForCreator(applicableSteps(workOrder, { amount: 8000 }), ["TECHNICIAN", "WORKSHOP_MANAGER"]).map((s) => s.name)).toEqual([
+      "Direction",
+    ]);
+  });
+
+  it("refuse un plafond incohérent", () => {
+    expect(checkStepDefinition({ approverRole: "MAINTENANCE_MANAGER", approverUserId: null, minAmount: 1000, maxAmount: 500 })).toHaveLength(1);
+    expect(checkStepDefinition({ approverRole: "MAINTENANCE_MANAGER", approverUserId: null, minAmount: null, maxAmount: 5000 })).toEqual([]);
   });
 });

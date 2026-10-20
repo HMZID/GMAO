@@ -1,4 +1,10 @@
-import { addStepAction, createWorkflowAction, removeStepAction, setWorkflowActiveAction } from "@/app/(app)/validations/actions";
+import {
+  addStepAction,
+  createWorkflowAction,
+  removeStepAction,
+  setWorkflowActiveAction,
+  setWorkOrderValidationAction,
+} from "@/app/(app)/validations/actions";
 import { Forbidden } from "@/components/forbidden";
 import { ActionForm, ActionPanel, Field, PanelForm, SubmitButton } from "@/components/forms/action-form";
 import { PageHeader } from "@/components/layout/page-header";
@@ -8,7 +14,7 @@ import { Badge, Card, CardBody, CardHeader, EmptyState, Table, TBody, TD, TH, TH
 import { formatCurrency } from "@/lib/format";
 import { APPROVAL_OBJECT, ROLE, options } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
-import { listUserOptions, listWorkflows } from "@/server/services/approvals";
+import { getWorkOrderValidationSetting, listUserOptions, listWorkflows } from "@/server/services/approvals";
 import { listCompanies } from "@/server/services/organization";
 
 export const metadata = { title: "Circuits de validation" };
@@ -16,7 +22,13 @@ export const metadata = { title: "Circuits de validation" };
 export default async function ApprovalWorkflowsPage() {
   const ctx = await getAuthContext();
   if (!ctx.can("settings.manage")) return <Forbidden what="le paramétrage des circuits de validation" />;
-  const [workflows, companies, users] = await Promise.all([listWorkflows(ctx), listCompanies(ctx), listUserOptions(ctx)]);
+  const [workflows, companies, users, setting] = await Promise.all([
+    listWorkflows(ctx),
+    listCompanies(ctx),
+    listUserOptions(ctx),
+    getWorkOrderValidationSetting(ctx),
+  ]);
+  const canSetThreshold = ctx.can("approval.threshold");
   const userOptions = users.map((u) => ({ value: u.id, label: u.name }));
 
   return (
@@ -26,6 +38,38 @@ export default async function ApprovalWorkflowsPage() {
         title="Circuits de validation"
         description="Par type d'objet et par société (le circuit du groupe s'applique à défaut). Une étape s'applique à partir de son seuil et, pour les demandes d'intervention, aux priorités choisies. Les demandes déjà soumises gardent leurs étapes."
       />
+
+      <Card className="mb-6">
+        <CardHeader
+          title="Validation des interventions"
+          description="Le responsable maintenance valide toutes les interventions dont le coût estimé est inférieur au seuil ; à partir du seuil, la direction valide. La direction crée sans validation et peut tout valider."
+          actions={<Badge tone={setting.enabled ? "green" : "gray"}>{setting.enabled ? "Actif" : "Inactif"}</Badge>}
+        />
+        <CardBody>
+          {canSetThreshold ? (
+            <ActionForm action={setWorkOrderValidationAction} className="grid gap-4 sm:grid-cols-3">
+              <div className="flex items-end">
+                <Checkbox name="enabled" label="Soumettre les interventions à validation" defaultChecked={setting.enabled} />
+              </div>
+              <Field label="Seuil de la direction (€)" name="threshold" hint="Vide : le responsable maintenance valide toutes les interventions">
+                <Input name="threshold" type="number" min="0" step="0.01" defaultValue={setting.threshold ?? ""} />
+              </Field>
+              <div className="flex items-end">
+                <SubmitButton>Enregistrer</SubmitButton>
+              </div>
+            </ActionForm>
+          ) : (
+            <p className="text-sm text-slate-700">
+              {setting.enabled
+                ? setting.threshold !== null
+                  ? `Interventions validées par le responsable maintenance sous ${formatCurrency(setting.threshold)}, par la direction à partir de ce montant.`
+                  : "Interventions validées par le responsable maintenance, sans seuil."
+                : "Les interventions ne sont pas soumises à validation."}{" "}
+              Le seuil est fixé par la direction.
+            </p>
+          )}
+        </CardBody>
+      </Card>
 
       <Disclosure summary="Nouveau circuit" className="mb-6">
         <ActionForm action={createWorkflowAction} resetOnSuccess className="grid gap-4 sm:grid-cols-3">
@@ -78,7 +122,7 @@ export default async function ApprovalWorkflowsPage() {
                         <TH>Ordre</TH>
                         <TH>Étape</TH>
                         <TH>Valideur</TH>
-                        <TH>À partir de</TH>
+                        <TH>Montant</TH>
                         <TH>Priorités</TH>
                         <TH className="sr-only">Actions</TH>
                       </tr>
@@ -89,7 +133,13 @@ export default async function ApprovalWorkflowsPage() {
                           <TD className="tabular-nums">{s.position}</TD>
                           <TD className="font-medium text-slate-900">{s.name}</TD>
                           <TD>{s.approverRole ? `${ROLE[s.approverRole] ?? s.approverRole} (périmètre de l'objet)` : (s.approverName ?? "—")}</TD>
-                          <TD className="tabular-nums">{s.minAmount != null ? formatCurrency(s.minAmount) : "Toujours"}</TD>
+                          <TD className="tabular-nums">
+                            {s.minAmount != null
+                              ? `À partir de ${formatCurrency(s.minAmount)}`
+                              : s.maxAmount != null
+                                ? `Moins de ${formatCurrency(s.maxAmount)}`
+                                : "Toujours"}
+                          </TD>
                           <TD>{s.priorities.length > 0 ? s.priorities.join(", ") : "Toutes"}</TD>
                           <TD className="text-right">
                             <PanelForm>
