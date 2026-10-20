@@ -33,7 +33,9 @@ function isAcronym(text) {
 function cleanJsxText(text) {
   const lines = text.split(/\r\n|\n|\r/);
   let last = 0;
-  lines.forEach((l, i) => { if (/[^ \t]/.test(l)) last = i; });
+  lines.forEach((l, i) => {
+    if (/[^ \t]/.test(l)) last = i;
+  });
   let out = "";
   lines.forEach((line, i) => {
     let t = line.replace(/\t/g, " ");
@@ -65,7 +67,8 @@ function paramName(expr, used) {
   else if (ts.isCallExpression(expr) && ts.isIdentifier(expr.expression)) base = FORMAT_NAMES[expr.expression.text] ?? "v";
   else if (ts.isElementAccessExpression(expr)) base = "v";
   base = base.replace(/[^A-Za-z0-9_]/g, "") || "v";
-  let name = base, i = 1;
+  let name = base,
+    i = 1;
   while (used.has(name)) name = `${base}${++i}`;
   used.add(name);
   return name;
@@ -81,19 +84,26 @@ function buildTemplate(children) {
     else if (ts.isJsxExpression(c)) {
       const e = c.expression;
       if (!e) continue;
-      if (ts.isStringLiteral(e) && e.text.trim() === "") { template += e.text; continue; }
+      if (ts.isStringLiteral(e) && e.text.trim() === "") {
+        template += e.text;
+        continue;
+      }
       if (containsJsx(e)) return null;
       const name = paramName(e, used);
       params.push(`${name}: ${e.getText()}`);
       template += `{${name}}`;
     } else return null;
   }
-  template = template.replace(/&(apos|amp|nbsp|laquo|raquo|quot|hellip|middot);/g, (m, n) => ({ apos: "'", amp: "&", nbsp: " ", laquo: "«", raquo: "»", quot: '"', hellip: "…", middot: "·" })[n]);
+  template = template.replace(
+    /&(apos|amp|nbsp|laquo|raquo|quot|hellip|middot);/g,
+    (m, n) => ({ apos: "'", amp: "&", nbsp: " ", laquo: "«", raquo: "»", quot: '"', hellip: "…", middot: "·" })[n],
+  );
   if (!LETTER.test(template.replace(/\{\w+\}/g, ""))) return null;
   return `<T params={{ ${params.join(", ")} }}>{${JSON.stringify(template)}}</T>`;
 }
 
-let touched = 0, wrapped = 0;
+let touched = 0,
+  wrapped = 0;
 for (const root of roots) {
   for (const file of walk(root)) {
     if (/src[\/]i18n/.test(file)) continue;
@@ -107,13 +117,23 @@ for (const root of roots) {
         if (!SKIP_TAGS.has(name)) {
           const children = node.children;
           const texts = children.filter((c) => ts.isJsxText(c) && !c.containsOnlyTriviaWhiteSpaces && LETTER.test(c.text));
-          const exprs = children.filter((c) => ts.isJsxExpression(c) && !(c.expression && ts.isStringLiteral(c.expression) && c.expression.text.trim() === ""));
+          const exprs = children.filter(
+            (c) => ts.isJsxExpression(c) && !(c.expression && ts.isStringLiteral(c.expression) && c.expression.text.trim() === ""),
+          );
           // Texte entre deux expressions ({a} texte {b}) : l'ordre des mots change d'une langue à l'autre.
           if (texts.length > 0 && exprs.length > 0) {
             const hasSentence = texts.some((t) => t.text.trim().split(/\s+/).length > 1 || /[a-zà-ÿ]{3,}/i.test(t.text));
             const template = hasSentence ? buildTemplate(children) : null;
             if (template) edits.push({ start: children.pos, end: children.end, replacement: template });
-            else if (hasSentence) manual.push(`${file}:${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1}  <${name || "fragment"}> ${JSON.stringify(texts.map((t) => t.text.trim()).join(" … ").slice(0, 80))}`);
+            else if (hasSentence)
+              manual.push(
+                `${file}:${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1}  <${name || "fragment"}> ${JSON.stringify(
+                  texts
+                    .map((t) => t.text.trim())
+                    .join(" … ")
+                    .slice(0, 80),
+                )}`,
+              );
           } else {
             for (const t of texts) {
               const raw = t.text;

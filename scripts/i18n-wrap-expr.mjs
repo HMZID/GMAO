@@ -26,7 +26,8 @@ const SKIP_TAGS = new Set(["T", "Tr", "style", "script", "code", "pre", "title"]
 
 /** Une feuille de l'expression est-elle un texte d'interface littéral ? (branches de ?:, ??, ||, &&) */
 function hasUiLeaf(e) {
-  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return looksLikeUiText(e.text.trim()) && !/gmk_|curl |mcp add|Authorization|^(GET|POST) /.test(e.text);
+  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e))
+    return looksLikeUiText(e.text.trim()) && !/gmk_|curl |mcp add|Authorization|^(GET|POST) /.test(e.text);
   if (ts.isParenthesizedExpression(e)) return hasUiLeaf(e.expression);
   if (ts.isTaggedTemplateExpression(e)) return e.tag.getText() === "tpl";
   if (ts.isConditionalExpression(e)) return hasUiLeaf(e.whenTrue) || hasUiLeaf(e.whenFalse);
@@ -47,14 +48,16 @@ function isMemberRead(e) {
 function rootIdentifier(e) {
   if (ts.isParenthesizedExpression(e) || ts.isNonNullExpression(e)) return rootIdentifier(e.expression);
   if (ts.isElementAccessExpression(e) || ts.isPropertyAccessExpression(e)) return rootIdentifier(e.expression);
-  if (ts.isBinaryExpression(e) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(e.operatorToken.kind)) return rootIdentifier(e.left);
+  if (ts.isBinaryExpression(e) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(e.operatorToken.kind))
+    return rootIdentifier(e.left);
   if (ts.isIdentifier(e)) return e.text;
   return null;
 }
 
 /** Lecture d'une table de libellés : identifiant en capitales (ROLE, WORK_ORDER_TYPE…) puis accès à un élément. */
 function isLabelRead(e) {
-  if (!(ts.isElementAccessExpression(e) || ts.isPropertyAccessExpression(e) || ts.isBinaryExpression(e) || ts.isParenthesizedExpression(e))) return false;
+  if (!(ts.isElementAccessExpression(e) || ts.isPropertyAccessExpression(e) || ts.isBinaryExpression(e) || ts.isParenthesizedExpression(e)))
+    return false;
   const root = rootIdentifier(e);
   return !!root && /^[A-Z][A-Z0-9_]{2,}$/.test(root);
 }
@@ -68,7 +71,8 @@ function containsJsx(node) {
   return found;
 }
 
-let touched = 0, wrapped = 0;
+let touched = 0,
+  wrapped = 0;
 for (const root of roots) {
   for (const file of walk(root)) {
     if (/src[\\/]i18n/.test(file)) continue;
@@ -80,7 +84,12 @@ for (const root of roots) {
         const name = ts.isJsxElement(node) ? node.openingElement.tagName.getText() : "";
         if (!SKIP_TAGS.has(name)) {
           for (const c of node.children) {
-            if (ts.isJsxExpression(c) && c.expression && (hasUiLeaf(c.expression) || (members && isMemberRead(c.expression)) || (labels && isLabelRead(c.expression))) && !containsJsx(c.expression)) {
+            if (
+              ts.isJsxExpression(c) &&
+              c.expression &&
+              (hasUiLeaf(c.expression) || (members && isMemberRead(c.expression)) || (labels && isLabelRead(c.expression))) &&
+              !containsJsx(c.expression)
+            ) {
               edits.push({ start: c.getStart(), end: c.end });
             }
           }
@@ -96,7 +105,10 @@ for (const root of roots) {
     }
     if (/import \{([^}]*)\} from "@\/i18n\/client"/.test(out)) {
       out = out.replace(/import \{([^}]*)\} from "@\/i18n\/client"/, (m, names) => {
-        const list = names.split(",").map((s) => s.trim()).filter(Boolean);
+        const list = names
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
         if (!list.includes("Tr")) list.push("Tr");
         return `import { ${list.join(", ")} } from "@/i18n/client"`;
       });

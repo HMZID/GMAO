@@ -20,12 +20,41 @@ function walk(d, o = []) {
   return o;
 }
 
-const NOISE_ATTRS = new Set(["className", "href", "key", "id", "htmlFor", "name", "type", "value", "defaultValue", "src", "action", "style", "role", "autoComplete"]);
-const TEXT_PROPS = new Set(["message", "label", "title", "description", "hint", "summary", "text", "absolute", "placeholder", "short", "pendingLabel", "what"]);
+const NOISE_ATTRS = new Set([
+  "className",
+  "href",
+  "key",
+  "id",
+  "htmlFor",
+  "name",
+  "type",
+  "value",
+  "defaultValue",
+  "src",
+  "action",
+  "style",
+  "role",
+  "autoComplete",
+]);
+const TEXT_PROPS = new Set([
+  "message",
+  "label",
+  "title",
+  "description",
+  "hint",
+  "summary",
+  "text",
+  "absolute",
+  "placeholder",
+  "short",
+  "pendingLabel",
+  "what",
+]);
 const TECHNICAL = /^(GET|POST|PUT|curl|claude) |gmk_|\/api\/|^COMPANY:|^SITE:/;
 
 const manual = [];
-let touched = 0, wrapped = 0;
+let touched = 0,
+  wrapped = 0;
 for (const root of roots) {
   for (const file of walk(root)) {
     const isTsx = file.endsWith("x");
@@ -73,13 +102,23 @@ for (const root of roots) {
       const sf2 = ts.createSourceFile(file, out, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
       const spans = [];
       (function v(n) {
-        if (ts.isJsxExpression(n) && !ts.isJsxAttribute(n.parent) && n.expression && ts.isTaggedTemplateExpression(n.expression) && n.expression.tag.getText() === "tpl") spans.push([n.getStart(), n.end]);
+        if (
+          ts.isJsxExpression(n) &&
+          !ts.isJsxAttribute(n.parent) &&
+          n.expression &&
+          ts.isTaggedTemplateExpression(n.expression) &&
+          n.expression.tag.getText() === "tpl"
+        )
+          spans.push([n.getStart(), n.end]);
         ts.forEachChild(n, v);
       })(sf2);
       for (const [s, e] of spans.sort((a, b) => b[0] - a[0])) out = out.slice(0, s) + "<Tr>" + out.slice(s, e) + "</Tr>" + out.slice(e);
       if (/import \{([^}]*)\} from "@\/i18n\/client"/.test(out)) {
         out = out.replace(/import \{([^}]*)\} from "@\/i18n\/client"/, (m, names) => {
-          const list = names.split(",").map((s) => s.trim()).filter(Boolean);
+          const list = names
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
           if (!list.includes("Tr")) list.push("Tr");
           return `import { ${list.join(", ")} } from "@/i18n/client"`;
         });
@@ -88,7 +127,8 @@ for (const root of roots) {
       }
     }
     if (!/from "@\/i18n\/translate"/.test(out)) out = addImport(out, `import { tpl } from "@/i18n/translate";`);
-    else if (!/\btpl\b[^"]*from "@\/i18n\/translate"/.test(out)) out = out.replace(/import \{([^}]*)\} from "@\/i18n\/translate"/, (m, names) => `import { ${names.trim()}, tpl } from "@/i18n/translate"`);
+    else if (!/\btpl\b[^"]*from "@\/i18n\/translate"/.test(out))
+      out = out.replace(/import \{([^}]*)\} from "@\/i18n\/translate"/, (m, names) => `import { ${names.trim()}, tpl } from "@/i18n/translate"`);
     touched++;
     if (!dry) writeFileSync(file, out);
   }

@@ -4,9 +4,33 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
 
-const ENTITIES = { "&apos;": "'", "&amp;": "&", "&nbsp;": "\u00a0", "&laquo;": "«", "&raquo;": "»", "&quot;": '"', "&lt;": "<", "&gt;": ">", "&hellip;": "…", "&middot;": "·" };
+const ENTITIES = {
+  "&apos;": "'",
+  "&amp;": "&",
+  "&nbsp;": "\u00a0",
+  "&laquo;": "«",
+  "&raquo;": "»",
+  "&quot;": '"',
+  "&lt;": "<",
+  "&gt;": ">",
+  "&hellip;": "…",
+  "&middot;": "·",
+};
 const decode = (s) => s.replace(/&[a-z]+;/g, (m) => ENTITIES[m] ?? m);
-const TEXT_PROPS = new Set(["title", "label", "description", "hint", "placeholder", "aria-label", "alt", "emptyText", "pendingLabel", "short", "text", "name"]);
+const TEXT_PROPS = new Set([
+  "title",
+  "label",
+  "description",
+  "hint",
+  "placeholder",
+  "aria-label",
+  "alt",
+  "emptyText",
+  "pendingLabel",
+  "short",
+  "text",
+  "name",
+]);
 
 /** Textes littéraux d'une expression (branches de ?:, ??, ||, parenthèses, gabarits tpl). */
 export function stringLeaves(e) {
@@ -39,7 +63,13 @@ export function looksLikeUiText(s) {
   if (/^[A-Z0-9_]+$/.test(s)) return false;
   // Listes de classes CSS (Tailwind) : jetons en minuscules avec tirets, deux-points ou crochets.
   const tokens = s.split(/\s+/);
-  if (tokens.length >= 1 && tokens.every((t) => /^[a-z0-9:\[\]\-_/.%()!#,'"=&@*]+$/.test(t)) && tokens.some((t) => /[-:\[\]]/.test(t)) && !/[àâçéèêëîïôùûü]/.test(s)) return false;
+  if (
+    tokens.length >= 1 &&
+    tokens.every((t) => /^[a-z0-9:\[\]\-_/.%()!#,'"=&@*]+$/.test(t)) &&
+    tokens.some((t) => /[-:\[\]]/.test(t)) &&
+    !/[àâçéèêëîïôùûü]/.test(s)
+  )
+    return false;
   if (/^(https?:|\/|#|\.|@)/.test(s)) return false;
   if (/^[a-z]+[A-Z]\w*$/.test(s)) return false; // camelCase
   return /[A-ZÀ-Ý]/.test(s[0]) || /\s/.test(s) || /[à-ÿ]/.test(s);
@@ -67,14 +97,21 @@ export function extract(roots) {
   };
   for (const root of roots) {
     for (const file of walk(root)) {
-      const sf = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+      const sf = ts.createSourceFile(
+        file,
+        readFileSync(file, "utf8"),
+        ts.ScriptTarget.Latest,
+        true,
+        file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+      );
       const isLabels = /lib[\\/]labels\.ts$|domain[\\/](site-defaults|email)\.ts$|nav-items\.ts$|site[\\/]site-data|components[\\/]site/.test(file);
       const visit = (n) => {
-                // <T>texte</T>, <T>{"texte"}</T>, <T>{cond ? "a" : "b"}</T>
+        // <T>texte</T>, <T>{"texte"}</T>, <T>{cond ? "a" : "b"}</T>
         if (ts.isJsxElement(n) && n.openingElement.tagName.getText() === "T") {
           const kids = n.children;
           if (kids.length === 1 && ts.isJsxText(kids[0])) add(jsxTextKey(kids[0].text), "T", file);
-          else if (kids.length === 1 && ts.isJsxExpression(kids[0]) && kids[0].expression) for (const s of stringLeaves(kids[0].expression)) add(s, "T", file);
+          else if (kids.length === 1 && ts.isJsxExpression(kids[0]) && kids[0].expression)
+            for (const s of stringLeaves(kids[0].expression)) add(s, "T", file);
         }
         // <Tr>{cond ? "a" : "b"}</Tr>
         if (ts.isJsxElement(n) && n.openingElement.tagName.getText() === "Tr") {
@@ -87,11 +124,23 @@ export function extract(roots) {
           else add(t.head.text + t.templateSpans.map((s, i) => `{${i + 1}}` + s.literal.text).join(""), "tpl", file);
         }
         // t("…") / msg("…")
-        if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && ["t", "msg"].includes(n.expression.text) && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0])) {
+        if (
+          ts.isCallExpression(n) &&
+          ts.isIdentifier(n.expression) &&
+          ["t", "msg"].includes(n.expression.text) &&
+          n.arguments[0] &&
+          ts.isStringLiteralLike(n.arguments[0])
+        ) {
           add(n.arguments[0].text, n.expression.text, file);
         }
         // props de texte
-        if (ts.isJsxAttribute(n) && TEXT_PROPS.has(n.name.getText()) && n.initializer && ts.isStringLiteral(n.initializer) && looksLikeUiText(n.initializer.text)) {
+        if (
+          ts.isJsxAttribute(n) &&
+          TEXT_PROPS.has(n.name.getText()) &&
+          n.initializer &&
+          ts.isStringLiteral(n.initializer) &&
+          looksLikeUiText(n.initializer.text)
+        ) {
           if (!(n.name.getText() === "name")) add(decode(n.initializer.text), "prop", file);
         }
         // chaînes de libellés (labels.ts…) : toute chaîne qui ressemble à un texte d'interface
