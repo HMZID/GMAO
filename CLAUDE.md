@@ -40,6 +40,7 @@ Avant de rendre la main : `npm run format`, `npm run lint`, `npm run typecheck`,
 - Formulaires de modification : `formToObject(formData, { keepEmpty: true })` et champs facultatifs en `clearable(...)` (vide = effacé).
 - Dates-heures saisies sans fuseau : interprétées en Europe/Paris par `optionalDate` / `date()` ; affichage par `src/lib/format.ts`. Valeurs `datetime-local` produites par `toDateTimeInput`.
 - Montants et compteurs : colonnes `numeric` lues comme `number` ; arrondis dans le domaine.
+- Langues (fr, en, ar) : tout texte affiché passe par `<T>`, `<Tr>`, `useT` / `getT` ou `tpl` ; chaque nouveau texte est traduit dans `src/i18n/dictionaries/` (le test de couverture l'exige) ; mobile : `mobile/src/i18n`. Voir `docs/langues.md`.
 
 ## Next.js 16 : points d'attention
 

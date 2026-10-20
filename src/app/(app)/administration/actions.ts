@@ -1,5 +1,6 @@
 "use server";
 
+import { formatDate } from "@/lib/format";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/action-state";
@@ -48,7 +49,7 @@ export async function createDemoTenantAction(_: ActionState, formData: FormData)
     const created = await createDemoTenant(ctx, formToObject(formData));
     return {
       status: "success",
-      message: tpl`Démonstration « ${created.name} » ouverte jusqu'au ${created.demoEndsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} : communiquer à ${created.adminEmail} son mot de passe initial.`,
+      message: tpl`Démonstration « ${created.name} » ouverte jusqu'au ${formatDate(created.demoEndsAt)} : communiquer à ${created.adminEmail} son mot de passe initial.`,
     } satisfies ActionState;
   });
 }

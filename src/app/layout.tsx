@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { EnvironmentBanner } from "@/components/layout/environment-banner";
 import { LOCALE_BOOTSTRAP_SCRIPT } from "@/i18n/config";
 import { LocaleProvider } from "@/i18n/provider";
+import { AttributeTranslator } from "@/i18n/attribute-translator";
 import { TitleTranslator } from "@/i18n/title-translator";
 import { Tr } from "@/i18n/client";
 import "./globals.css";
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Suspense fallback={null}>
           <LocaleProvider>
             <TitleTranslator />
+            <AttributeTranslator />
             <EnvironmentBanner />
             <Tr>{children}</Tr>
           </LocaleProvider>

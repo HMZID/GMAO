@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_LOCALE, LOCALES, directionOf, isLocale } from "../config";
-import { interpolate, templateKey, tpl, translate } from "../translate";
+import { interpolate, templateKey, tpl, tplParts, translate, tx } from "../translate";
 
 describe("langues", () => {
   it("français par défaut, anglais et arabe en plus", () => {
@@ -46,5 +46,19 @@ describe("translate", () => {
   it("l'ordre des valeurs peut changer d'une langue à l'autre", () => {
     const text = tpl`${"A"} sur ${"B"}`;
     expect(translate({ "{1} sur {2}": "{2} / {1}" }, text)).toBe("B / A");
+  });
+
+  it("une valeur marquée tx est traduite à l'affichage, une donnée saisie reste telle quelle", () => {
+    const dictionary = { "{1} de {2} échue": "{1} for {2} expired", Assurance: "Insurance" };
+    expect(translate(dictionary, tpl`${tx("Assurance")} de ${"CA-101"} échue`)).toBe("Insurance for CA-101 expired");
+    expect(translate(dictionary, tpl`${"Assurance"} de ${"CA-101"} échue`)).toBe("Assurance for CA-101 expired");
+    expect(translate({}, tpl`${tx("Assurance")} de ${"CA-101"} échue`)).toBe("Assurance de CA-101 échue");
+  });
+
+  it("plusieurs phrases stockées ensemble sont traduites une à une", () => {
+    const dictionary = { "Échéance le {1}": "Due on {1}", "Organisme : {1}": "Provider: {1}" };
+    const text = tplParts([tpl`Échéance le ${"01/02/2026"}`, tpl`Organisme : ${"Axa"}`]);
+    expect(translate(dictionary, text)).toBe("Due on 01/02/2026 · Provider: Axa");
+    expect(translate({}, text)).toBe("Échéance le 01/02/2026 · Organisme : Axa");
   });
 });

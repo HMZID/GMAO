@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import type { ActionState } from "@/lib/action-state";
+import { getLocale } from "@/i18n/server";
 import { runAction } from "@/server/actions";
 import { submitDemoRequest } from "@/server/services/demo-requests";
 import { processEmailQueue } from "@/server/services/email";
@@ -18,7 +19,7 @@ async function clientIp() {
 /** Demande de compte de démonstration (visiteur anonyme) : enregistrée, administrateurs prévenus, page de confirmation. */
 export async function submitDemoRequestAction(_: ActionState, formData: FormData): Promise<ActionState> {
   return runAction(async () => {
-    const result = await submitDemoRequest(formToObject(formData), { ip: await clientIp() });
+    const result = await submitDemoRequest(formToObject(formData), { ip: await clientIp(), locale: await getLocale() });
     // Alerte des administrateurs envoyée tout de suite, sans attendre le passage du processus d'envoi.
     if (result.status === "created") after(() => processEmailQueue({ limit: 20 }).catch((e) => console.error("[courriel]", e)));
     redirect("/essai-gratuit/merci");

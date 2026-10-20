@@ -41,10 +41,20 @@ import { DEADLINE_KIND_LABEL, daysUntil, deadlineAlertStage, deadlineAlertText }
 import { NotFoundError } from "@/server/errors";
 import { getEmailTransport, type EmailTransport } from "@/server/email/transport";
 import { formatDate, formatNumber } from "@/lib/format";
+import { DEFAULT_LOCALE, isLocale, type Locale } from "@/i18n/config";
+import { withLocale } from "@/i18n/request-locale";
+import { dictionaryOf } from "@/i18n/dictionaries";
+import { tpl, tplParts, translate, tx } from "@/i18n/translate";
 import { publicUrl } from "@/server/public-url";
 import { assertCan, audit, parseInput, scopeWhere } from "./_shared";
 
 const baseUrl = publicUrl;
+
+/** Traducteur d'une langue, pour composer les morceaux d'une ligne de récapitulatif. */
+const translatorOf = (locale: Locale) => {
+  const dictionary = dictionaryOf(locale);
+  return (text: string) => translate(dictionary, text);
+};
 
 /* ------------------------------------------------------------------ */
 /* Mise en file (dans la transaction de l'événement)                   */
@@ -56,7 +66,8 @@ export type EmailRequest = {
   event: EmailEvent;
   /** Clé de l'événement pour ce destinataire : un second envoi pour la même clé est ignoré. */
   dedupKey: string;
-  content: EmailContent;
+  /** Contenu, ou fonction de la langue du destinataire (dates et nombres mis en forme dans cette langue). */
+  content: EmailContent | ((locale: Locale) => EmailContent);
 };
 
 /**
@@ -65,7 +76,7 @@ export type EmailRequest = {
  */
 export async function enqueueEmail(tx: DbOrTx, request: EmailRequest): Promise<boolean> {
   const [recipient] = await tx
-    .select({ email: user.email, name: user.name, isActive: user.isActive })
+    .select({ email: user.email, name: user.name, isActive: user.isActive, locale: user.locale })
     .from(user)
     .where(and(eq(user.id, request.userId), eq(user.tenantId, request.tenantId)));
   if (!recipient?.isActive || !recipient.email) return false;
@@ -75,7 +86,10 @@ export async function enqueueEmail(tx: DbOrTx, request: EmailRequest): Promise<b
     .where(eq(emailPreferences.userId, request.userId));
   if (!wantsEmail(request.event, Object.fromEntries(prefs.map((p) => [p.event, p.enabled])))) return false;
 
-  const mail = renderEmail(request.event, request.content, { baseUrl: baseUrl(), recipientName: recipient.name });
+  const locale = isLocale(recipient.locale) ? recipient.locale : DEFAULT_LOCALE;
+  const content =
+    typeof request.content === "function" ? withLocale(locale, () => (request.content as (l: Locale) => EmailContent)(locale)) : request.content;
+  const mail = renderEmail(request.event, content, { baseUrl: baseUrl(), recipientName: recipient.name, locale });
   const inserted = await tx
     .insert(emailOutbox)
     .values({
@@ -289,8 +303,15 @@ export async function runScheduledAlerts(now: Date = new Date()) {
   return { queued, digest };
 }
 
-async function queueDigest(tenantId: string, userId: string, event: EmailEvent, day: string, content: EmailContent) {
-  if (!content.items?.length) return 0;
+async function queueDigest(
+  tenantId: string,
+  userId: string,
+  event: EmailEvent,
+  day: string,
+  count: number,
+  content: (locale: Locale) => EmailContent,
+) {
+  if (count === 0) return 0;
   return (await enqueueEmail(db, { tenantId, userId, event, dedupKey: `${event}:${day}:${userId}`, content })) ? 1 : 0;
 }
 
@@ -318,16 +339,25 @@ async function dueDigest(tenantId: string, now: Date, day: string) {
       )
       .orderBy(asc(dueItems.projectedDate))
       .limit(100);
-    queued += await queueDigest(tenantId, userId, "DUE_DIGEST", day, {
-      title: `${rows.length} échéance(s) de maintenance à préparer`,
-      intro: "Échéances préventives en pré-alerte ou échues dans votre périmètre :",
-      items: rows.map((r) => ({
-        label: `${r.code} — ${r.operation}`,
-        detail: `${r.status === "DUE" ? "échue" : "pré-alerte"}${r.dueDate ? `, le ${formatDate(r.dueDate)}` : ""}${r.dueMeter != null ? `, à ${formatNumber(r.dueMeter)}` : ""}`,
-        link: `/equipements/${r.equipmentId}`,
-      })),
-      link: "/preventif/echeances",
-      linkLabel: "Voir les échéances",
+    queued += await queueDigest(tenantId, userId, "DUE_DIGEST", day, rows.length, (locale) => {
+      const tr = translatorOf(locale);
+      return {
+        title: tpl`${rows.length} échéance(s) de maintenance à préparer`,
+        intro: "Échéances préventives en pré-alerte ou échues dans votre périmètre :",
+        items: rows.map((r) => ({
+          label: `${r.code} — ${r.operation}`,
+          detail: [
+            tr(r.status === "DUE" ? "échue" : "pré-alerte"),
+            r.dueDate ? tr(tpl`le ${formatDate(r.dueDate)}`) : null,
+            r.dueMeter != null ? tr(tpl`à ${formatNumber(r.dueMeter)}`) : null,
+          ]
+            .filter(Boolean)
+            .join(", "),
+          link: `/equipements/${r.equipmentId}`,
+        })),
+        link: "/preventif/echeances",
+        linkLabel: "Voir les échéances",
+      };
     });
   }
   return queued;
@@ -360,23 +390,26 @@ async function overdueDigest(tenantId: string, now: Date, day: string) {
         ),
       )
       .limit(100);
-    queued += await queueDigest(tenantId, userId, "OVERDUE", day, {
-      title: `${late.length + held.length} retard(s) à traiter`,
-      intro: "Préventifs en retard au-delà de la tolérance et interventions en attente depuis plus de 5 jours :",
-      items: [
-        ...late.map((r) => ({
-          label: `${r.code} — ${r.operation}`,
-          detail: `en retard${r.dueDate ? ` depuis le ${formatDate(r.dueDate)}` : ""}`,
-          link: `/equipements/${r.equipmentId}`,
-        })),
-        ...held.map((w) => ({
-          label: `${w.number} — ${w.title}`,
-          detail: `en attente depuis plus de ${HOLD_DAYS} jours`,
-          link: `/interventions/${w.id}`,
-        })),
-      ],
-      link: "/interventions?status=ON_HOLD",
-      linkLabel: "Voir les interventions en attente",
+    queued += await queueDigest(tenantId, userId, "OVERDUE", day, late.length + held.length, (locale) => {
+      const tr = translatorOf(locale);
+      return {
+        title: tpl`${late.length + held.length} retard(s) à traiter`,
+        intro: "Préventifs en retard au-delà de la tolérance et interventions en attente depuis plus de 5 jours :",
+        items: [
+          ...late.map((r) => ({
+            label: `${r.code} — ${r.operation}`,
+            detail: r.dueDate ? tr(tpl`en retard depuis le ${formatDate(r.dueDate)}`) : tr("en retard"),
+            link: `/equipements/${r.equipmentId}`,
+          })),
+          ...held.map((w) => ({
+            label: `${w.number} — ${w.title}`,
+            detail: tpl`en attente depuis plus de ${HOLD_DAYS} jours`,
+            link: `/interventions/${w.id}`,
+          })),
+        ],
+        link: "/interventions?status=ON_HOLD",
+        linkLabel: "Voir les interventions en attente",
+      };
     });
   }
   return queued;
@@ -410,22 +443,23 @@ async function stockDigest(tenantId: string, now: Date, day: string) {
       )
       .orderBy(asc(parts.sku))
       .limit(200);
-    queued += await queueDigest(tenantId, userId, "STOCK_ALERT", day, {
-      title: `${rows.length} article(s) sous le point de commande`,
+    queued += await queueDigest(tenantId, userId, "STOCK_ALERT", day, rows.length, () => ({
+      title: tpl`${rows.length} article(s) sous le point de commande`,
       intro: "Articles dont le stock disponible est au point de commande ou en dessous :",
       items: rows.map((r) => ({
         label: `${r.sku} — ${r.name} (${r.warehouse})`,
-        detail: `disponible ${formatNumber(r.onHand - r.reserved)} ${r.unit}, point de commande ${formatNumber(r.reorderPoint ?? 0)}`,
+        detail: tpl`disponible ${formatNumber(r.onHand - r.reserved)} ${r.unit}, point de commande ${formatNumber(r.reorderPoint ?? 0)}`,
         link: `/stock/articles/${r.partId}`,
       })),
       link: "/stock?belowReorder=true",
       linkLabel: "Voir le stock",
-    });
+    }));
   }
   return queued;
 }
 
 const STAGE_LABEL = { J30: "expire dans moins de 30 jours", J7: "expire dans moins de 7 jours", J0: "est expiré" } as const;
+const stageLabel = (stage: keyof typeof STAGE_LABEL) => tx(STAGE_LABEL[stage]);
 
 async function documentExpiries(tenantId: string, now: Date) {
   const horizon = new Date(now.getTime() + 30 * 86_400_000);
@@ -463,12 +497,12 @@ async function documentExpiries(tenantId: string, now: Date) {
         userId,
         event: "DOCUMENT_EXPIRY",
         dedupKey: `DOCUMENT_EXPIRY:${doc.id}:${stage}:${userId}`,
-        content: {
-          title: `Document « ${doc.title} » : ${STAGE_LABEL[stage]}`,
-          intro: `Le document « ${doc.title} » ${STAGE_LABEL[stage]} (échéance le ${formatDate(doc.expiresAt!)}). Prévoir son renouvellement.`,
+        content: () => ({
+          title: tpl`Document « ${doc.title} » : ${stageLabel(stage)}`,
+          intro: tpl`Le document « ${doc.title} » ${stageLabel(stage)} (échéance le ${formatDate(doc.expiresAt!)}). Prévoir son renouvellement.`,
           link: linkOf(doc.entityType === "EQUIPMENT" ? "equipment" : "work_order", doc.entityId),
           linkLabel: "Ouvrir la fiche",
-        },
+        }),
       });
       if (ok) queued++;
     }
@@ -531,19 +565,19 @@ async function fleetDeadlineAlerts(tenantId: string, now: Date) {
     const stage = deadlineAlertStage(row.dueDate, now);
     if (!stage) continue;
     const days = daysUntil(row.dueDate, now);
-    const title = deadlineAlertText({ kind: row.kind, label: row.label, equipmentCode: row.code, days });
+    const title = deadlineAlertText({ kind: row.kind, label: row.label, equipmentCode: row.code, days }, true);
     const details = [
-      `${DEADLINE_KIND_LABEL[row.kind]} — ${row.code} ${row.name}`,
-      `Échéance le ${formatDate(row.dueDate)}`,
-      row.provider ? `Organisme : ${row.provider}` : null,
-      row.reference ? `Référence : ${row.reference}` : null,
+      tpl`${tx(DEADLINE_KIND_LABEL[row.kind])} — ${row.code} ${row.name}`,
+      tpl`Échéance le ${formatDate(row.dueDate)}`,
+      row.provider ? tpl`Organisme : ${row.provider}` : null,
+      row.reference ? tpl`Référence : ${row.reference}` : null,
     ].filter((line): line is string => !!line);
     for (const [userId, scope] of recipients) {
       if (!inScopeOf(scope, row)) continue;
       await notifyOnce(tenantId, userId, {
         type: `fleet_deadline:${row.id}:${stage}${days < 0 ? ":urgent" : ""}`,
         title,
-        body: details.join(" · "),
+        body: tplParts(details),
         entityType: "equipment",
         entityId: row.equipmentId,
       });
@@ -552,11 +586,14 @@ async function fleetDeadlineAlerts(tenantId: string, now: Date) {
         userId,
         event: "FLEET_DEADLINE",
         dedupKey: `FLEET_DEADLINE:${row.id}:${stage}:${userId}`,
-        content: {
-          title,
-          intro: `${title} ${details.slice(1).join(". ")}.`,
-          link: linkOf("equipment", row.equipmentId),
-          linkLabel: "Ouvrir la fiche",
+        content: (locale) => {
+          const tr = translatorOf(locale);
+          return {
+            title: tr(title),
+            intro: `${tr(title)} ${details.slice(1).map(tr).join(". ")}.`,
+            link: linkOf("equipment", row.equipmentId),
+            linkLabel: "Ouvrir la fiche",
+          };
         },
       });
       if (ok) queued++;
@@ -592,15 +629,21 @@ async function preventiveDueNotifications(tenantId: string, now: Date) {
   if (rows.length === 0) return;
   const recipients = await recipientsFor(tenantId, ["FLEET_MANAGER", "WORKSHOP_MANAGER", "MAINTENANCE_MANAGER"], now);
   for (const row of rows) {
-    const due = [row.dueDate ? `le ${formatDate(row.dueDate)}` : null, row.dueMeter ? `à ${formatNumber(row.dueMeter)}` : null]
-      .filter(Boolean)
-      .join(" ou ");
+    const dueDate = row.dueDate ? formatDate(row.dueDate) : null;
+    const dueMeter = row.dueMeter ? formatNumber(row.dueMeter) : null;
     for (const [userId, scope] of recipients) {
       if (!inScopeOf(scope, row)) continue;
       await notifyOnce(tenantId, userId, {
         type: `preventive_due:${row.id}:${row.status}${row.status === "OVERDUE" ? ":urgent" : ""}`,
-        title: `${row.operation} — ${row.code} : ${DUE_STATUS_TEXT[row.status] ?? row.status}`,
-        body: due ? `Échéance ${due}.` : undefined,
+        title: tpl`${row.operation} — ${row.code} : ${tx(DUE_STATUS_TEXT[row.status] ?? row.status)}`,
+        body:
+          dueDate && dueMeter
+            ? tpl`Échéance le ${dueDate} ou à ${dueMeter}.`
+            : dueDate
+              ? tpl`Échéance le ${dueDate}.`
+              : dueMeter
+                ? tpl`Échéance à ${dueMeter}.`
+                : undefined,
         entityType: "equipment",
         entityId: row.equipmentId,
       });

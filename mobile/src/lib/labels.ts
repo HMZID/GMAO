@@ -1,3 +1,5 @@
+import { formatLocaleTag } from "../i18n/current";
+
 /** Libellés français des énumérations de l'API (l'API utilise des identifiants anglais). */
 
 export type Tone = "gray" | "green" | "blue" | "amber" | "red";
@@ -32,14 +34,14 @@ export const PRIORITY_TONE: Record<string, Tone> = { P1: "red", P2: "amber", P3:
 
 export function formatDate(value: string | null | undefined) {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" });
+  return new Date(value).toLocaleDateString(formatLocaleTag(), { timeZone: "Europe/Paris" });
 }
 
 export function formatDateTime(value: string | null | undefined) {
   if (!value) return "—";
-  return new Date(value).toLocaleString("fr-FR", { timeZone: "Europe/Paris", dateStyle: "short", timeStyle: "short" });
+  return new Date(value).toLocaleString(formatLocaleTag(), { timeZone: "Europe/Paris", dateStyle: "short", timeStyle: "short" });
 }
 
 export function formatNumber(value: number | null | undefined) {
-  return value == null ? "—" : value.toLocaleString("fr-FR");
+  return value == null ? "—" : value.toLocaleString(formatLocaleTag());
 }
