@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { isActiveAssignment, isInScope, type AuthContext } from "@/server/authz/context";
 import { roleHas, type Permission, type Role } from "@/server/authz/permissions";
 import { db, type DbOrTx } from "@/server/db";
@@ -115,11 +115,11 @@ export async function listMyNotifications(ctx: AuthContext, limit = 20) {
 }
 
 export async function countUnread(ctx: AuthContext) {
-  const rows = await db
-    .select({ id: notifications.id })
+  const [row] = await db
+    .select({ n: count() })
     .from(notifications)
     .where(and(eq(notifications.tenantId, ctx.tenantId), eq(notifications.userId, ctx.userId), isNull(notifications.readAt)));
-  return rows.length;
+  return row?.n ?? 0;
 }
 
 export async function markAllRead(ctx: AuthContext) {
