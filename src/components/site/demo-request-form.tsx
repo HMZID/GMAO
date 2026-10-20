@@ -3,13 +3,13 @@
 import { ArrowRight, Mail } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps } from "react";
-import { ActionForm, Field, useActionFormState } from "@/components/forms/action-form";
+import { ActionForm, Field, useActionFormState, useRegisterField } from "@/components/forms/action-form";
 import { FLEET_SIZES, SECTORS } from "@/server/domain/site";
 import { submitDemoRequestAction } from "@/app/(site)/essai-gratuit/actions";
 import { T, Tr } from "@/i18n/client";
 
 const control =
-  "block w-full border-2 border-asphalt bg-white px-3 text-base text-asphalt placeholder:text-asphalt-500/60 focus:outline-none focus:ring-4 focus:ring-signal/60";
+  "block w-full border-2 border-asphalt bg-white px-3 text-base text-asphalt placeholder:text-asphalt-500/60 focus:outline-none focus:ring-4 focus:ring-signal/60 aria-[invalid=true]:border-red-600 aria-[invalid=true]:bg-red-50 user-invalid:border-red-600";
 
 function TextInput(props: ComponentProps<"input">) {
   return <input {...props} className={`${control} h-12`} />;
@@ -113,6 +113,7 @@ export function DemoRequestForm({
 function Consent() {
   const { state } = useActionFormState();
   const error = state.fieldErrors?.consent?.[0];
+  useRegisterField("consent", "Accord");
   return (
     <div className="sm:col-span-2">
       <label className="flex items-start gap-3 text-sm">

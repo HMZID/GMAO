@@ -182,6 +182,7 @@ const en: Dictionary = {
   "Viser le QR code de l'étiquette de l'équipement.": "Aim at the QR code on the equipment label.",
   "Changement de statut": "Status change",
   OK: "OK",
+  "3 caractères au minimum": "3 characters minimum",
 };
 
 const ar: Dictionary = {
@@ -360,6 +361,7 @@ const ar: Dictionary = {
   "Viser le QR code de l'étiquette de l'équipement.": "وجّه الكاميرا نحو رمز QR على ملصق المعدة.",
   "Changement de statut": "تغيير الحالة",
   OK: "موافق",
+  "3 caractères au minimum": "3 أحرف على الأقل",
 };
 
 const EMPTY: Dictionary = {};
