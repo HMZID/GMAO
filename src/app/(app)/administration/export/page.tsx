@@ -81,7 +81,7 @@ export default async function ExportPage(props: PageProps<"/administration/expor
                   <a
                     href={withCompany(`/api/v1/exports/${d.dataset}?format=xlsx`)}
                     className={buttonClass("secondary", "sm")}
-                    aria-label={tpl`${d.label} : télécharger en Excel`}
+                    aria-label={`${d.label} : télécharger en Excel`}
                   >
                     <Download className="h-4 w-4" aria-hidden />
                     <T>Excel</T>
@@ -89,7 +89,7 @@ export default async function ExportPage(props: PageProps<"/administration/expor
                   <a
                     href={withCompany(`/api/v1/exports/${d.dataset}?format=csv`)}
                     className={buttonClass("ghost", "sm")}
-                    aria-label={tpl`${d.label} : télécharger en CSV`}
+                    aria-label={`${d.label} : télécharger en CSV`}
                   >
                     CSV
                   </a>

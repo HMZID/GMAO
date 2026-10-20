@@ -85,7 +85,7 @@ export default async function OrganisationPage() {
             const companySites = sites.filter((s) => s.companyId === company.id);
             const companyJobsites = jobsites.filter((j) => j.companyId === company.id);
             return (
-              <Card key={company.id} aria-label={tpl`Société ${company.name}`}>
+              <Card key={company.id} aria-label={`Société ${company.name}`}>
                 <CardHeader
                   title={
                     <span className="flex flex-wrap items-center gap-2">
@@ -109,7 +109,7 @@ export default async function OrganisationPage() {
                       const siteWorkshops = workshops.filter((w) => w.siteId === site.id);
                       const siteWarehouses = warehouses.filter((w) => w.siteId === site.id);
                       return (
-                        <section key={site.id} aria-label={tpl`Site ${site.name}`} className="rounded-lg border border-slate-200 p-4">
+                        <section key={site.id} aria-label={`Site ${site.name}`} className="rounded-lg border border-slate-200 p-4">
                           <h3 className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
                             <MapPin className="h-4 w-4 text-slate-500" aria-hidden />
                             <Tr>{site.name}</Tr>

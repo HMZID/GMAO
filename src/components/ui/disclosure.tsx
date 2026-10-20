@@ -16,7 +16,7 @@ export function Disclosure({
   className?: string;
 }) {
   return (
-    <details className={cn("group rounded-md border border-slate-200 bg-white", className)} open={defaultOpen}>
+    <details className={cn("group rounded-md border border-slate-200 bg-white", className)} open={defaultOpen || undefined}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-2.5 text-sm font-medium text-slate-800 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
         <Tr>{summary}</Tr>
         <ChevronDown className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden />

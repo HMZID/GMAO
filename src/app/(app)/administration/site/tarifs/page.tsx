@@ -13,7 +13,6 @@ import { listSitePlans } from "@/server/services/site";
 import { createSitePlanAction, deleteSitePlanAction, moveSitePlanAction, updateSitePlanAction } from "../actions";
 import { SiteAdminNav } from "../site-admin-nav";
 import { T, Tr } from "@/i18n/client";
-import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Offres et tarifs" };
 
@@ -123,7 +122,7 @@ export default async function SitePlansPage() {
                         type="submit"
                         disabled={i === 0}
                         className="rounded-md p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"
-                        aria-label={tpl`Monter « ${plan.name} »`}
+                        aria-label={`Monter « ${plan.name} »`}
                       >
                         <ArrowUp className="h-4 w-4" aria-hidden />
                       </button>
@@ -133,7 +132,7 @@ export default async function SitePlansPage() {
                         type="submit"
                         disabled={i === plans.length - 1}
                         className="rounded-md p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"
-                        aria-label={tpl`Descendre « ${plan.name} »`}
+                        aria-label={`Descendre « ${plan.name} »`}
                       >
                         <ArrowDown className="h-4 w-4" aria-hidden />
                       </button>

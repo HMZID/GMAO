@@ -121,7 +121,7 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                         type="submit"
                         disabled={i === 0}
                         className="rounded-md p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"
-                        aria-label={tpl`Monter « ${item.title} »`}
+                        aria-label={`Monter « ${item.title} »`}
                       >
                         <ArrowUp className="h-4 w-4" aria-hidden />
                       </button>
@@ -131,7 +131,7 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                         type="submit"
                         disabled={i === items.length - 1}
                         className="rounded-md p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"
-                        aria-label={tpl`Descendre « ${item.title} »`}
+                        aria-label={`Descendre « ${item.title} »`}
                       >
                         <ArrowDown className="h-4 w-4" aria-hidden />
                       </button>
