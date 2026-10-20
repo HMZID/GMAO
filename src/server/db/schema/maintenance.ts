@@ -299,6 +299,10 @@ export const workOrders = pgTable(
     plannedStart: ts("planned_start"),
     plannedEnd: ts("planned_end"),
     estimatedMinutes: integer("estimated_minutes"),
+    /** Coût estimé de l'intervention : il décide de l'étape de validation (responsable maintenance ou direction, HAB-04). */
+    estimatedCost: money("estimated_cost"),
+    /** Validation de l'intervention (HAB-04) : APPROVED par défaut ; PENDING bloque la planification et le démarrage. */
+    validationStatus: expenseApprovalEnum("validation_status").notNull().default("APPROVED"),
     dueItemId: uuid("due_item_id").references(() => dueItems.id),
     taskListId: uuid("task_list_id").references(() => taskLists.id),
     workSummary: text("work_summary"),

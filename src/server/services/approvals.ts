@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { isActiveAssignment, type AuthContext } from "@/server/authz/context";
 import { ROLES, type Role } from "@/server/authz/permissions";
@@ -15,6 +15,8 @@ import {
   roleAssignments,
   user,
   workOrderCosts,
+  workOrderStatusHistory,
+  workOrders,
   workRequests,
 } from "@/server/db/schema";
 import {
@@ -24,6 +26,8 @@ import {
   checkDecision,
   checkStepDefinition,
   isActiveSubstitution,
+  roleCovers,
+  stepsLeftForCreator,
   type ApprovalObject,
   type RequestStep,
 } from "@/server/domain/approvals";
@@ -33,6 +37,7 @@ import { assertCan, assertCanOn, audit, parseInput } from "./_shared";
 import { releaseEquipmentIfFree } from "./equipment-status";
 import { notifyUsers } from "./notifications";
 import { isUniqueViolation } from "./organization";
+import { releaseReservations } from "./stock";
 
 /* ------------------------------------------------------------------ */
 /* Valideurs : rôle dans le périmètre de l'objet, personne nommée, suppléant */
@@ -79,10 +84,11 @@ async function loadValidators(tx: DbOrTx, tenantId: string, now: Date) {
   /** Valideur direct de l'étape : personne nommée, ou rôle détenu sur la société ou le site de l'objet. */
   const isDirect = (userId: string, step: RequestStep, target: Target) => {
     if (step.approverUserId) return step.approverUserId === userId && activeUsers.has(userId);
+    // La direction a les droits du responsable maintenance (roleCovers) : elle tranche aussi ses étapes.
     return active.some(
       (a) =>
         a.userId === userId &&
-        a.role === step.approverRole &&
+        roleCovers(a.role, step.approverRole) &&
         (a.scopeType === "TENANT" ||
           (a.scopeType === "COMPANY" && a.scopeId === target.companyId) ||
           (a.scopeType === "SITE" && a.scopeId === target.siteId)),
@@ -124,6 +130,8 @@ export type ApprovalSubject = {
   requestedById: string;
   /** Lien de l'objet dans l'application, pour les notifications. */
   entityType: string;
+  /** Retire des étapes applicables celles que le créateur peut trancher lui-même (intervention créée par la direction). */
+  skipSteps?: (steps: RequestStep[]) => RequestStep[];
 };
 
 /** Circuit applicable : celui de la société s'il existe et est actif, sinon celui du groupe. */
@@ -154,7 +162,8 @@ export async function startApproval(tx: DbOrTx, ctx: AuthContext, subject: Appro
     steps.map((s) => ({ ...s, approverRole: s.approverRole as Role | null })),
     { amount: subject.amount, priority: subject.priority },
   );
-  if (applicable.length === 0) return null;
+  const required = subject.skipSteps ? subject.skipSteps(applicable) : applicable;
+  if (required.length === 0) return null;
 
   const [request] = await tx
     .insert(approvalRequests)
@@ -167,24 +176,29 @@ export async function startApproval(tx: DbOrTx, ctx: AuthContext, subject: Appro
       label: subject.label,
       amount: subject.amount ?? null,
       workflowId: workflow.id,
-      steps: applicable,
-      currentPosition: applicable[0].position,
+      steps: required,
+      currentPosition: required[0].position,
       requestedById: subject.requestedById,
     })
     .returning();
-  await audit(tx, ctx, { entityType: "approval", entityId: request.id, action: "approval.submit", after: { ...subject, steps: applicable } });
+  await audit(tx, ctx, {
+    entityType: "approval",
+    entityId: request.id,
+    action: "approval.submit",
+    after: { ...subject, skipSteps: undefined, steps: required },
+  });
 
   const validators = await loadValidators(tx, ctx.tenantId, now);
   const target = { companyId: subject.companyId, siteId: subject.siteId };
   await notifyUsers(
     tx,
     ctx.tenantId,
-    validators.recipients(applicable[0], target).filter((id) => id !== subject.requestedById),
+    validators.recipients(required[0], target).filter((id) => id !== subject.requestedById),
     {
       type: "approval.pending",
-      dedupKey: `approval:${request.id}:${applicable[0].position}`,
+      dedupKey: `approval:${request.id}:${required[0].position}`,
       title: `À valider : ${subject.label}`,
-      body: `${applicable[0].name}${subject.amount != null ? ` — ${subject.amount.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}` : ""}`,
+      body: `${required[0].name}${subject.amount != null ? ` — ${subject.amount.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}` : ""}`,
       entityType: "approval",
       entityId: request.id,
     },
@@ -226,6 +240,7 @@ const OBJECT_LABEL: Record<ApprovalObject, string> = {
   WORK_REQUEST: "demande d'intervention",
   PURCHASE_REQUEST: "demande d'achat",
   MAINTENANCE_EXPENSE: "dépense de maintenance",
+  WORK_ORDER: "intervention",
 };
 
 /**
@@ -347,6 +362,10 @@ async function applyOutcome(
       .where(and(eq(workOrderCosts.id, request.objectId), eq(workOrderCosts.approvalStatus, "PENDING")));
     return;
   }
+  if (request.objectType === "WORK_ORDER") {
+    await applyWorkOrderOutcome(tx, ctx, request, status, comment);
+    return;
+  }
   // DI : validée, elle peut être transformée en OT ; refusée, elle est rejetée avec le commentaire.
   if (status === "REJECTED") {
     const [current] = await tx.select().from(workRequests).where(eq(workRequests.id, request.objectId));
@@ -368,6 +387,53 @@ async function applyOutcome(
     }
     await audit(tx, ctx, { entityType: "work_request", entityId: current.id, action: "reject", before: current, after: { reason: comment } });
   }
+}
+
+/**
+ * Intervention validée : elle peut être planifiée. Refusée : elle est annulée avec le commentaire du valideur, ses
+ * réservations de pièces sont libérées et l'équipement qu'elle immobilisait est remis en service si plus rien ne le retient.
+ */
+async function applyWorkOrderOutcome(
+  tx: DbOrTx,
+  ctx: AuthContext,
+  request: typeof approvalRequests.$inferSelect,
+  status: "APPROVED" | "REJECTED",
+  comment: string | null,
+) {
+  const [wo] = await tx.select().from(workOrders).where(eq(workOrders.id, request.objectId)).for("update");
+  if (!wo || wo.validationStatus !== "PENDING") return;
+  if (status === "APPROVED") {
+    await tx.update(workOrders).set({ validationStatus: "APPROVED" }).where(eq(workOrders.id, wo.id));
+    return;
+  }
+  const now = new Date();
+  const reason = `Refusée en validation${comment ? ` : ${comment}` : ""}`;
+  const open = !["CLOSED", "CANCELLED", "TECH_CLOSED"].includes(wo.status);
+  await tx
+    .update(workOrders)
+    .set({ validationStatus: "REJECTED", ...(open ? { status: "CANCELLED" as const, cancelledAt: now, cancelReason: reason } : {}) })
+    .where(eq(workOrders.id, wo.id));
+  if (!open) return;
+  await tx
+    .insert(workOrderStatusHistory)
+    .values({ workOrderId: wo.id, fromStatus: wo.status, toStatus: "CANCELLED", reason, changedById: ctx.userId });
+  await releaseReservations(tx, wo.id);
+  if (wo.dueItemId) await tx.execute(sql`update due_items set work_order_id = null where id = ${wo.dueItemId}`);
+  if (wo.isImmobilizing) {
+    await releaseEquipmentIfFree(tx, ctx, wo.equipmentId, {
+      reason: `Intervention ${wo.number} refusée en validation`,
+      workOrderId: wo.id,
+      excludeWorkOrderId: wo.id,
+      at: now,
+    });
+  }
+  await audit(tx, ctx, {
+    entityType: "work_order",
+    entityId: wo.id,
+    action: "status:rejected_validation",
+    before: { status: wo.status },
+    after: { reason },
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -426,6 +492,7 @@ export async function listMyApprovalRequests(ctx: AuthContext, limit = 30) {
 export function objectLink(objectType: ApprovalObject, objectId: string, workOrderId?: string | null) {
   if (objectType === "WORK_REQUEST") return `/demandes/${objectId}`;
   if (objectType === "PURCHASE_REQUEST") return `/demandes-achat/${objectId}`;
+  if (objectType === "WORK_ORDER") return `/interventions/${objectId}`;
   return workOrderId ? `/interventions/${workOrderId}` : "/validations";
 }
 
@@ -557,9 +624,20 @@ export const workflowInput = z.object({
   name: text(120, "Nom obligatoire"),
 });
 
+/**
+ * Le circuit des interventions porte le seuil au-delà duquel la direction valide à la place du responsable
+ * maintenance : seule la direction le modifie (droit `approval.threshold`), même par le paramétrage général des circuits.
+ */
+function assertCanEditWorkflow(ctx: AuthContext, objectType: ApprovalObject) {
+  if (objectType === "WORK_ORDER" && !ctx.can("approval.threshold")) {
+    throw new ForbiddenError("Le circuit de validation des interventions est réservé à la direction.");
+  }
+}
+
 export async function createWorkflow(ctx: AuthContext, raw: unknown) {
   assertCan(ctx, "settings.manage");
   const input = parseInput(workflowInput, raw);
+  assertCanEditWorkflow(ctx, input.objectType);
   if (input.companyId) {
     const [company] = await db
       .select({ id: companies.id })
@@ -591,6 +669,7 @@ export const stepInput = z.object({
   approverRole: z.enum(ROLES).optional(),
   approverUserId: z.string().trim().min(1).optional(),
   minAmount: z.coerce.number().min(0, "Le seuil doit être positif").optional(),
+  maxAmount: z.coerce.number().min(0, "Le plafond doit être positif").optional(),
   priorities: z.array(z.enum(["P1", "P2", "P3", "P4"])).default([]),
 });
 
@@ -609,10 +688,12 @@ export async function addStep(ctx: AuthContext, workflowId: string, raw: unknown
   assertCan(ctx, "settings.manage");
   const input = parseInput(stepInput, raw);
   const workflow = await loadWorkflow(ctx, workflowId);
+  assertCanEditWorkflow(ctx, workflow.objectType);
   const errors = checkStepDefinition({
     approverRole: input.approverRole ?? null,
     approverUserId: input.approverUserId ?? null,
     minAmount: input.minAmount ?? null,
+    maxAmount: input.maxAmount ?? null,
   });
   if (input.approverUserId) {
     const [u] = await db
@@ -634,6 +715,7 @@ export async function addStep(ctx: AuthContext, workflowId: string, raw: unknown
         approverRole: input.approverRole ?? null,
         approverUserId: input.approverUserId ?? null,
         minAmount: input.minAmount ?? null,
+        maxAmount: input.maxAmount ?? null,
         priorities: input.priorities,
       })
       .returning();
@@ -651,6 +733,11 @@ export async function removeStep(ctx: AuthContext, stepId: string) {
     .innerJoin(approvalWorkflows, eq(approvalWorkflows.id, approvalSteps.workflowId))
     .where(and(eq(approvalSteps.id, stepId), eq(approvalWorkflows.tenantId, ctx.tenantId)));
   if (!step) throw new NotFoundError("Étape");
+  const [owner] = await db
+    .select({ objectType: approvalWorkflows.objectType })
+    .from(approvalWorkflows)
+    .where(eq(approvalWorkflows.id, step.step.workflowId));
+  if (owner) assertCanEditWorkflow(ctx, owner.objectType);
   await db.transaction(async (tx) => {
     await tx.delete(approvalSteps).where(eq(approvalSteps.id, stepId));
     await audit(tx, ctx, { entityType: "approval_workflow", entityId: step.step.workflowId, action: "remove_step", before: step.step });
@@ -660,9 +747,121 @@ export async function removeStep(ctx: AuthContext, stepId: string) {
 export async function setWorkflowActive(ctx: AuthContext, workflowId: string, active: boolean) {
   assertCan(ctx, "settings.manage");
   const workflow = await loadWorkflow(ctx, workflowId);
+  assertCanEditWorkflow(ctx, workflow.objectType);
   await db.transaction(async (tx) => {
     await tx.update(approvalWorkflows).set({ active }).where(eq(approvalWorkflows.id, workflow.id));
     await audit(tx, ctx, { entityType: "approval_workflow", entityId: workflow.id, action: active ? "activate" : "deactivate" });
+  });
+}
+
+/* ------------------------------------------------------------------ */
+/* Validation des interventions : seuil fixé par la direction (HAB-04)  */
+/* ------------------------------------------------------------------ */
+
+export type WorkOrderValidationSetting = {
+  /** Validation des interventions en vigueur ? Sinon, aucune intervention n'est soumise à validation. */
+  enabled: boolean;
+  /** Montant estimé à partir duquel la direction valide ; null : le responsable maintenance valide toutes les interventions. */
+  threshold: number | null;
+};
+
+/** Circuit des interventions du groupe (celui d'une société, créé par le paramétrage général, l'emporte à l'usage). */
+async function findGroupWorkOrderWorkflow(tx: DbOrTx, tenantId: string) {
+  const [workflow] = await tx
+    .select()
+    .from(approvalWorkflows)
+    .where(and(eq(approvalWorkflows.tenantId, tenantId), eq(approvalWorkflows.objectType, "WORK_ORDER"), isNull(approvalWorkflows.companyId)));
+  return workflow ?? null;
+}
+
+/** Réglage lisible par tous ceux qui gèrent des interventions : responsable maintenance, chef d'atelier, direction. */
+export async function getWorkOrderValidationSetting(ctx: AuthContext): Promise<WorkOrderValidationSetting> {
+  const workflow = await findGroupWorkOrderWorkflow(db, ctx.tenantId);
+  if (!workflow || !workflow.active) return { enabled: false, threshold: null };
+  const steps = await db.select().from(approvalSteps).where(eq(approvalSteps.workflowId, workflow.id));
+  const executive = steps.find((s) => s.approverRole === "EXECUTIVE");
+  return { enabled: steps.length > 0, threshold: executive?.minAmount ?? null };
+}
+
+export const workOrderValidationInput = z.object({
+  enabled: z.coerce.boolean(),
+  threshold: z.coerce.number().min(0, "Le seuil doit être positif").optional(),
+});
+
+/**
+ * Seuil de validation des interventions, fixé par la direction seule. Sous le seuil, le responsable maintenance valide ;
+ * à partir du seuil, la direction. Sans seuil, le responsable maintenance valide toutes les interventions. La direction
+ * crée sans validation et peut tout valider. Désactivé : aucune intervention n'est soumise à validation.
+ */
+export async function setWorkOrderValidation(ctx: AuthContext, raw: unknown) {
+  assertCan(ctx, "approval.threshold");
+  const input = parseInput(workOrderValidationInput, raw);
+  const threshold = input.threshold && input.threshold > 0 ? input.threshold : null;
+  return db.transaction(async (tx) => {
+    const before = await findGroupWorkOrderWorkflow(tx, ctx.tenantId);
+    let workflow = before;
+    if (!workflow) {
+      [workflow] = await tx
+        .insert(approvalWorkflows)
+        .values({ tenantId: ctx.tenantId, companyId: null, objectType: "WORK_ORDER", name: "Validation des interventions" })
+        .returning();
+    }
+    // Les demandes déjà soumises gardent leurs étapes figées : seul l'avenir change.
+    await tx.delete(approvalSteps).where(eq(approvalSteps.workflowId, workflow.id));
+    await tx.update(approvalWorkflows).set({ active: input.enabled }).where(eq(approvalWorkflows.id, workflow.id));
+    await tx.insert(approvalSteps).values({
+      workflowId: workflow.id,
+      position: 1,
+      name: "Validation par le responsable maintenance",
+      approverRole: "MAINTENANCE_MANAGER",
+      maxAmount: threshold,
+    });
+    if (threshold !== null) {
+      await tx.insert(approvalSteps).values({
+        workflowId: workflow.id,
+        position: 2,
+        name: "Validation par la direction",
+        approverRole: "EXECUTIVE",
+        minAmount: threshold,
+      });
+    }
+    await audit(tx, ctx, {
+      entityType: "approval_workflow",
+      entityId: workflow.id,
+      action: "work_order_threshold",
+      before: before ? { active: before.active } : null,
+      after: { enabled: input.enabled, threshold },
+    });
+    return { enabled: input.enabled, threshold } satisfies WorkOrderValidationSetting;
+  });
+}
+
+/**
+ * Soumet une intervention créée à son circuit, après avoir retiré les étapes que son créateur peut trancher lui-même
+ * (la direction ne passe par aucune validation ; le responsable maintenance, par la direction seulement au-delà du seuil).
+ * Renvoie la demande de validation, ou null si l'intervention n'a besoin d'aucune validation.
+ */
+export async function submitWorkOrderForValidation(
+  tx: DbOrTx,
+  ctx: AuthContext,
+  wo: { id: string; number: string; title: string; companyId: string; siteId: string; estimatedCost: number | null },
+) {
+  const heldRoles = ctx.assignments
+    .filter(
+      (a) =>
+        a.scopeType === "TENANT" || (a.scopeType === "COMPANY" && a.scopeId === wo.companyId) || (a.scopeType === "SITE" && a.scopeId === wo.siteId),
+    )
+    .map((a) => a.role);
+  return startApproval(tx, ctx, {
+    objectType: "WORK_ORDER",
+    objectId: wo.id,
+    companyId: wo.companyId,
+    siteId: wo.siteId,
+    label: `${wo.number} · ${wo.title}`.slice(0, 200),
+    amount: wo.estimatedCost ?? 0,
+    requestedById: ctx.userId,
+    entityType: "work_order",
+    skipSteps: (steps) => stepsLeftForCreator(steps, heldRoles),
   });
 }
 

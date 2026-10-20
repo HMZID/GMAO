@@ -7,6 +7,8 @@ import { Card, CardBody } from "@/components/ui/primitives";
 import { PRIORITY, WORK_ORDER_TYPE, options } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { isUuid } from "@/server/pages";
+import { getWorkOrderValidationSetting } from "@/server/services/approvals";
+import { formatCurrency } from "@/lib/format";
 import { listEquipmentOptions } from "@/server/services/equipment";
 import { listWorkshops } from "@/server/services/organization";
 import { listSupplierOptions } from "@/server/services/stock";
@@ -21,12 +23,21 @@ export default async function NewWorkOrderPage(props: PageProps<"/interventions/
   if (!ctx.can("workorder.create")) return <Forbidden what="la création d'interventions" />;
   const sp = await props.searchParams;
   const preselected = isUuid(sp.equipmentId) ? sp.equipmentId : "";
-  const [equipment, workshops, technicians, suppliers] = await Promise.all([
+  const [equipment, workshops, technicians, suppliers, validation] = await Promise.all([
     listEquipmentOptions(ctx, "workorder.create"),
     listWorkshops(ctx),
     listTechnicianOptions(ctx),
     listSupplierOptions(ctx),
+    getWorkOrderValidationSetting(ctx),
   ]);
+  const executive = ctx.can("approval.threshold");
+  const validationHint = !validation.enabled
+    ? undefined
+    : executive
+      ? "Créée par la direction : aucune validation."
+      : validation.threshold !== null
+        ? `Validée par le responsable maintenance sous ${formatCurrency(validation.threshold)}, par la direction à partir de ce montant.`
+        : "Validée par le responsable maintenance.";
 
   return (
     <>
@@ -87,6 +98,9 @@ export default async function NewWorkOrderPage(props: PageProps<"/interventions/
               </Field>
               <Field label="Durée estimée (minutes)" name="estimatedMinutes">
                 <Input id="estimatedMinutes" name="estimatedMinutes" type="number" min={1} />
+              </Field>
+              <Field label="Coût estimé (€)" name="estimatedCost" hint={validationHint}>
+                <Input id="estimatedCost" name="estimatedCost" type="number" min={0} step="0.01" />
               </Field>
             </div>
             <fieldset>
