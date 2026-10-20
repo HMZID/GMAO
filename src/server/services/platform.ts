@@ -114,7 +114,15 @@ export async function createDemoTenant(ctx: AuthContext, raw: unknown, now = new
 export async function provisionDemoTenant(
   tx: DbOrTx,
   ctx: AuthContext,
-  input: { organizationName: string; adminName: string; adminEmail: string; passwordHash: string; endsAt: Date; mustChangePassword: boolean },
+  input: {
+    organizationName: string;
+    adminName: string;
+    adminEmail: string;
+    passwordHash: string;
+    endsAt: Date;
+    mustChangePassword: boolean;
+    locale?: string;
+  },
 ) {
   const { endsAt } = input;
   const [tenant] = await tx
@@ -142,6 +150,7 @@ export async function provisionDemoTenant(
     tenantId: tenant.id,
     isActive: true,
     mustChangePassword: input.mustChangePassword,
+    ...(input.locale ? { locale: input.locale } : {}),
   });
   await tx.insert(account).values({ id: randomUUID(), accountId: userId, providerId: "credential", userId, password: input.passwordHash });
   // Le client est géré par sa direction : tous les droits de son organisation, dont la gestion des accès.

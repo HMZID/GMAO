@@ -92,6 +92,8 @@ export const demoRequests = pgTable(
     message: text("message"),
     /** Offre consultée avant la demande (nom de l'offre). */
     planInterest: text("plan_interest"),
+    /** Langue du site au moment de la demande : celle des courriels adressés au prospect. */
+    locale: text("locale").notNull().default("fr"),
     consentAt: ts("consent_at").notNull(),
     /** Empreinte de l'adresse IP (limitation des envois), jamais l'adresse elle-même. */
     ipHash: text("ip_hash"),

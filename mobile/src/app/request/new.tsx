@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Switch, Text, View } from "react-native";
 import { Button, Card, colors, Field, Message, Screen, styles } from "../../components/ui";
 import { useSync } from "../../context/sync";
+import { useT } from "../../i18n";
 
 /**
  * Signalement d'une panne (MOB-03, COR-01) en un écran : symptôme, machine arrêtée, risque sécurité.
@@ -12,6 +13,7 @@ import { useSync } from "../../context/sync";
 export default function NewRequest() {
   const { equipmentId, code } = useLocalSearchParams<{ equipmentId: string; code?: string }>();
   const { enqueue, online } = useSync();
+  const t = useT();
   const [symptom, setSymptom] = useState("");
   const [description, setDescription] = useState("");
   const [isStopped, setStopped] = useState(false);
@@ -24,8 +26,8 @@ export default function NewRequest() {
 
   return (
     <Screen>
-      <Card title={`Panne sur ${code ?? "l'équipement"}`}>
-        {!online ? <Message tone="amber">Hors connexion : la demande sera envoyée au retour du réseau.</Message> : null}
+      <Card title={code ? t("Panne sur {code}", { code }) : t("Panne sur l'équipement")}>
+        {!online ? <Message tone="amber">{t("Hors connexion : la demande sera envoyée au retour du réseau.")}</Message> : null}
         <Field label="Symptôme" value={symptom} onChangeText={setSymptom} placeholder="Ex. fuite hydraulique sur le bras" maxLength={200} />
         <Field label="Précisions" value={description} onChangeText={setDescription} multiline maxLength={2000} />
         <Toggle label="La machine est arrêtée" value={isStopped} onChange={setStopped} />
@@ -37,10 +39,11 @@ export default function NewRequest() {
 }
 
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  const t = useT();
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", minHeight: 52 }}>
-      <Text style={styles.text}>{label}</Text>
-      <Switch accessibilityLabel={label} value={value} onValueChange={onChange} trackColor={{ true: colors.brand }} />
+      <Text style={styles.text}>{t(label)}</Text>
+      <Switch accessibilityLabel={t(label)} value={value} onValueChange={onChange} trackColor={{ true: colors.brand }} />
     </View>
   );
 }

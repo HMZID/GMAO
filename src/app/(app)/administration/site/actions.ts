@@ -1,5 +1,6 @@
 "use server";
 
+import { formatDate } from "@/lib/format";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import type { ActionState } from "@/lib/action-state";
@@ -45,7 +46,7 @@ export async function demoRequestDecisionAction(id: string, _: ActionState, form
         sendQueuedEmailsSoon();
         return {
           status: "success",
-          message: tpl`Démonstration ouverte jusqu'au ${result.endsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} : lien de connexion, identifiant (${result.email}) et mot de passe provisoire envoyés par courriel. Mot de passe provisoire, à dicter si le courriel n'arrive pas :`,
+          message: tpl`Démonstration ouverte jusqu'au ${formatDate(result.endsAt)} : lien de connexion, identifiant (${result.email}) et mot de passe provisoire envoyés par courriel. Mot de passe provisoire, à dicter si le courriel n'arrive pas :`,
           secret: result.password,
         } satisfies ActionState;
       }

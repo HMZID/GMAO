@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useState } from "react";
 import { RefreshControl, Text } from "react-native";
 import { Badge, Card, Field, Loading, Message, Row, Screen, styles } from "../../components/ui";
+import { useT } from "../../i18n";
 import { EQUIPMENT_STATUS, formatDateTime } from "../../lib/labels";
 import { useApiData } from "../../lib/use-api-data";
 
@@ -9,6 +10,7 @@ type EquipmentItem = { id: string; code: string; name: string; status: string; s
 
 /** Équipements du périmètre (CDC §10.3), recherche par code, désignation, immatriculation. */
 export default function EquipmentList() {
+  const t = useT();
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
   const { data, loading, error, stale, reload } = useApiData<{ items: EquipmentItem[] }>(
@@ -25,11 +27,11 @@ export default function EquipmentList() {
         returnKeyType="search"
         placeholder="Code, désignation, immatriculation"
       />
-      {stale ? <Message tone="amber">Hors connexion : liste du {formatDateTime(stale)}.</Message> : null}
+      {stale ? <Message tone="amber">{t("Hors connexion : liste du {date}.", { date: formatDateTime(stale) })}</Message> : null}
       {error ? <Message>{error}</Message> : null}
       {loading && !data ? <Loading /> : null}
       <Card title="Équipements">
-        {data?.items.length === 0 ? <Text style={styles.muted}>Aucun équipement.</Text> : null}
+        {data?.items.length === 0 ? <Text style={styles.muted}>{t("Aucun équipement.")}</Text> : null}
         {data?.items.map((e) => (
           <Row
             key={e.id}

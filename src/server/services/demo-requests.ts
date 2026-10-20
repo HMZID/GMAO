@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE, INTL_LOCALE, isLocale, type Locale } from "@/i18n/config";
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
@@ -26,6 +27,7 @@ import { enqueueDirectEmail } from "./email";
 import { notifyUsers } from "./notifications";
 import { assertPlatformAdmin, provisionDemoTenant } from "./platform";
 import { getSiteSettings } from "./site";
+import { tpl } from "@/i18n/translate";
 
 /* ------------------------------------------------------------------ */
 /* Demandes de démonstration déposées sur le site commercial           */
@@ -74,7 +76,7 @@ function ipFingerprint(ip: string | null | undefined) {
  */
 async function platformAdminRecipients(tx: DbOrTx) {
   const rows = await tx
-    .selectDistinct({ id: user.id, tenantId: user.tenantId, email: user.email, name: user.name })
+    .selectDistinct({ id: user.id, tenantId: user.tenantId, email: user.email, name: user.name, locale: user.locale })
     .from(user)
     .innerJoin(roleAssignments, eq(roleAssignments.userId, user.id))
     .where(and(eq(roleAssignments.role, "ADMIN"), eq(user.isActive, true)));
@@ -90,7 +92,7 @@ const FLEET_LABEL = Object.fromEntries(FLEET_SIZES.map((f) => [f.value, f.label]
  * en attente pour le même courriel ne crée pas de doublon. Les administrateurs de la plateforme sont
  * prévenus dans l'application et par courriel.
  */
-export async function submitDemoRequest(raw: unknown, meta: { ip?: string | null; now?: Date } = {}) {
+export async function submitDemoRequest(raw: unknown, meta: { ip?: string | null; now?: Date; locale?: Locale } = {}) {
   const now = meta.now ?? new Date();
   const input = parseInput(demoRequestInput, raw);
   if (spamSignals({ honeypot: input.website, startedAt: input.startedAt, now: now.getTime() }).length > 0) {
@@ -124,32 +126,35 @@ export async function submitDemoRequest(raw: unknown, meta: { ip?: string | null
         sector: input.sector ?? null,
         message: input.message,
         planInterest: input.planInterest,
+        locale: meta.locale ?? DEFAULT_LOCALE,
         consentAt: now,
         ipHash,
       })
       .returning({ id: demoRequests.id });
 
     const admins = await platformAdminRecipients(tx);
-    const mail = renderDemoRequestEmail({
-      product: settings["brand.name"],
-      company: input.company,
-      contactName: input.contactName,
-      email: input.email,
-      details: [
-        { label: "Fonction", value: input.jobTitle },
-        { label: "Téléphone", value: input.phone },
-        { label: "Parc", value: input.fleetSize ? FLEET_LABEL[input.fleetSize] : null },
-        { label: "Secteur", value: input.sector },
-        { label: "Offre consultée", value: input.planInterest },
-      ],
-      message: input.message,
-      link: `${publicUrl()}/administration/site/demandes/${created.id}`,
-    });
+    const mailFor = (locale: Locale) =>
+      renderDemoRequestEmail({
+        product: settings["brand.name"],
+        company: input.company,
+        contactName: input.contactName,
+        email: input.email,
+        details: [
+          { label: "Fonction", value: input.jobTitle },
+          { label: "Téléphone", value: input.phone },
+          { label: "Parc", value: input.fleetSize ? FLEET_LABEL[input.fleetSize] : null },
+          { label: "Secteur", value: input.sector },
+          { label: "Offre consultée", value: input.planInterest },
+        ],
+        message: input.message,
+        link: `${publicUrl()}/administration/site/demandes/${created.id}`,
+        locale,
+      });
     for (const admin of admins) {
       await notifyUsers(tx, admin.tenantId, [admin.id], {
         type: "demo_request.created",
-        title: `Demande de démonstration : ${input.company}`,
-        body: `${input.contactName} (${input.email}) demande un compte de démonstration.`,
+        title: tpl`Demande de démonstration : ${input.company}`,
+        body: tpl`${input.contactName} (${input.email}) demande un compte de démonstration.`,
         entityType: "demo_request",
         entityId: created.id,
       });
@@ -159,7 +164,7 @@ export async function submitDemoRequest(raw: unknown, meta: { ip?: string | null
         toAddress: admin.email,
         event: "DEMO_REQUEST",
         dedupKey: `demo_request:${created.id}:${admin.id}`,
-        mail,
+        mail: mailFor(isLocale(admin.locale) ? admin.locale : DEFAULT_LOCALE),
       });
     }
     return { status: "created" as const, id: created.id };
@@ -203,6 +208,8 @@ export async function countPendingDemoRequests(ctx: AuthContext) {
   const [row] = await db.select({ n: count() }).from(demoRequests).where(eq(demoRequests.status, "PENDING"));
   return row.n;
 }
+
+const localeOf = (value: string): Locale => (isLocale(value) ? value : DEFAULT_LOCALE);
 
 async function loadRequest(id: string) {
   if (!z.uuid().safeParse(id).success) throw new NotFoundError("Demande");
@@ -263,6 +270,7 @@ async function queueAccessEmail(
     password: string;
     endsAt: Date;
     resent: boolean;
+    locale: Locale;
   },
 ) {
   const settings = await getSiteSettings();
@@ -273,8 +281,9 @@ async function queueAccessEmail(
     login: input.email,
     password: input.password,
     loginUrl: `${publicUrl()}/login`,
-    endsOn: input.endsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris", day: "numeric", month: "long", year: "numeric" }),
+    endsOn: input.endsAt.toLocaleDateString(INTL_LOCALE[input.locale], { timeZone: "Europe/Paris", day: "numeric", month: "long", year: "numeric" }),
     resent: input.resent,
+    locale: input.locale,
   });
   await enqueueDirectEmail(tx, {
     tenantId: input.tenantId,
@@ -319,6 +328,7 @@ export async function approveDemoRequest(ctx: AuthContext, id: string, raw: unkn
       passwordHash,
       endsAt,
       mustChangePassword: true,
+      locale: localeOf(request.locale),
     });
     await tx
       .update(demoRequests)
@@ -342,6 +352,7 @@ export async function approveDemoRequest(ctx: AuthContext, id: string, raw: unkn
       password,
       endsAt,
       resent: false,
+      locale: localeOf(request.locale),
     });
     await audit(tx, ctx, {
       entityType: "demo_request",
@@ -396,6 +407,7 @@ export async function resendDemoAccess(ctx: AuthContext, id: string, now = new D
       password,
       endsAt: tenant.demoEndsAt ?? now,
       resent: true,
+      locale: localeOf(request.locale),
     });
     await audit(tx, ctx, { entityType: "demo_request", entityId: id, action: "resend_access" });
   });
@@ -435,6 +447,7 @@ export async function rejectDemoRequest(ctx: AuthContext, id: string, raw: unkno
           recipientName: request.contactName,
           reason: input.reason,
           contactEmail: settings["contact.email"] || null,
+          locale: localeOf(request.locale),
         }),
       });
     }

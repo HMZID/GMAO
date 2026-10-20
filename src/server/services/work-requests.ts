@@ -13,6 +13,7 @@ import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equi
 import { notifyByPermission } from "./notifications";
 import { nextNumber } from "./numbering";
 import { insertWorkOrder, type Priority } from "./work-order-factory";
+import { tpl } from "@/i18n/translate";
 
 type RequestType = NonNullable<(typeof workRequests.$inferSelect)["type"]>;
 
@@ -102,7 +103,10 @@ export async function createWorkRequest(ctx: AuthContext, raw: unknown) {
       eqRow,
       {
         type: row.priority === "P1" ? "work_request.urgent" : "work_request.created",
-        title: `${row.priority === "P1" ? "URGENT — " : ""}Nouvelle demande d'intervention ${row.number} sur ${eqRow.code}`,
+        title:
+          row.priority === "P1"
+            ? tpl`URGENT — Nouvelle demande d'intervention ${row.number} sur ${eqRow.code}`
+            : tpl`Nouvelle demande d'intervention ${row.number} sur ${eqRow.code}`,
         body: input.symptom,
         entityType: "work_request",
         entityId: row.id,

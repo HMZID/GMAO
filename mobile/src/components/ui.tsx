@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
+import { useT } from "../i18n";
 import type { Tone } from "../lib/labels";
 
 /**
@@ -46,11 +47,12 @@ export function Screen({
 }
 
 export function Card({ title, children, right }: { title?: string; children: ReactNode; right?: ReactNode }) {
+  const t = useT();
   return (
     <View style={styles.card}>
       {title ? (
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>{title}</Text>
+          <Text style={styles.cardTitle}>{t(title)}</Text>
           {right}
         </View>
       ) : null}
@@ -60,9 +62,10 @@ export function Card({ title, children, right }: { title?: string; children: Rea
 }
 
 export function Badge({ label, tone = "gray" }: { label: string; tone?: Tone }) {
+  const t = useT();
   return (
     <View style={[styles.badge, { backgroundColor: tones[tone].bg }]}>
-      <Text style={[styles.badgeText, { color: tones[tone].fg }]}>{label}</Text>
+      <Text style={[styles.badgeText, { color: tones[tone].fg }]}>{t(label)}</Text>
     </View>
   );
 }
@@ -80,6 +83,7 @@ export function Button({
   disabled?: boolean;
   busy?: boolean;
 }) {
+  const t = useT();
   const bg = variant === "primary" ? colors.brand : variant === "danger" ? colors.danger : colors.card;
   const fg = variant === "secondary" ? colors.text : "#fff";
   return (
@@ -94,30 +98,33 @@ export function Button({
         variant === "secondary" && styles.buttonSecondary,
       ]}
     >
-      {busy ? <ActivityIndicator color={fg} /> : <Text style={[styles.buttonText, { color: fg }]}>{title}</Text>}
+      {busy ? <ActivityIndicator color={fg} /> : <Text style={[styles.buttonText, { color: fg }]}>{t(title)}</Text>}
     </Pressable>
   );
 }
 
-export function Field({ label, hint, ...props }: TextInputProps & { label: string; hint?: string }) {
+export function Field({ label, hint, placeholder, ...props }: TextInputProps & { label: string; hint?: string }) {
+  const t = useT();
   return (
     <View style={{ gap: 4 }}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>{t(label)}</Text>
       <TextInput
-        accessibilityLabel={label}
+        accessibilityLabel={t(label)}
+        placeholder={placeholder ? t(placeholder) : undefined}
         placeholderTextColor="#94a3b8"
         style={[styles.input, props.multiline && { minHeight: 90, textAlignVertical: "top" }]}
         {...props}
       />
-      {hint ? <Text style={styles.hint}>{hint}</Text> : null}
+      {hint ? <Text style={styles.hint}>{t(hint)}</Text> : null}
     </View>
   );
 }
 
 export function Message({ tone = "red", children }: { tone?: Tone; children: ReactNode }) {
+  const t = useT();
   return (
     <View style={[styles.message, { backgroundColor: tones[tone].bg }]}>
-      <Text style={{ color: tones[tone].fg, fontSize: 15 }}>{children}</Text>
+      <Text style={{ color: tones[tone].fg, fontSize: 15 }}>{typeof children === "string" ? t(children) : children}</Text>
     </View>
   );
 }

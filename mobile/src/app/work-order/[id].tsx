@@ -4,6 +4,7 @@ import { Alert, Pressable, RefreshControl, Text, View } from "react-native";
 import { Badge, Button, Card, colors, Field, Loading, Message, Row, Screen, styles } from "../../components/ui";
 import { useSession } from "../../context/session";
 import { useSync } from "../../context/sync";
+import { useT } from "../../i18n";
 import { formatDateTime, formatNumber, PRIORITY_TONE, WORK_ORDER_STATUS } from "../../lib/labels";
 import { takeCompressedPhoto } from "../../lib/photo";
 import { describeOperation } from "../../lib/sync";
@@ -53,6 +54,7 @@ export default function WorkOrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { can } = useSession();
   const { enqueue, operations } = useSync();
+  const t = useT();
   const { data: wo, loading, error, stale, reload } = useApiData<WorkOrder>(`/api/v1/work-orders/${id}`);
   const pending = useMemo(
     () => operations.filter((o) => ("workOrderId" in o && o.workOrderId === id) || (o.kind === "photo" && o.entityId === id)),
@@ -64,13 +66,15 @@ export default function WorkOrderScreen() {
 
   const executable = wo.canExecute && ["PLANNED", "IN_PROGRESS", "ON_HOLD", "WORK_DONE"].includes(wo.status);
   const inProgress = wo.status === "IN_PROGRESS";
-  const transition = (to: string) => wo.transitions.find((t) => t.to === to);
+  const transition = (to: string) => wo.transitions.find((tr) => tr.to === to);
 
   return (
     <Screen refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} />}>
       <Stack.Screen options={{ title: wo.number }} />
       {stale ? (
-        <Message tone="amber">Hors connexion : intervention du {formatDateTime(stale)}. Les saisies partiront au retour du réseau.</Message>
+        <Message tone="amber">
+          {t("Hors connexion : intervention du {date}. Les saisies partiront au retour du réseau.", { date: formatDateTime(stale) })}
+        </Message>
       ) : null}
 
       <Card title={wo.title} right={<Badge label={WORK_ORDER_STATUS[wo.status]?.label ?? wo.status} tone={WORK_ORDER_STATUS[wo.status]?.tone} />}>
@@ -81,12 +85,15 @@ export default function WorkOrderScreen() {
         />
         <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
           <Badge label={wo.priority} tone={PRIORITY_TONE[wo.priority]} />
-          {wo.plannedStart ? <Badge label={`Prévu le ${formatDateTime(wo.plannedStart)}`} /> : null}
+          {wo.plannedStart ? <Badge label={t("Prévu le {date}", { date: formatDateTime(wo.plannedStart) })} /> : null}
         </View>
         {wo.description ? <Text style={styles.text}>{wo.description}</Text> : null}
         {pending.length > 0 ? (
           <Message tone="blue">
-            {pending.length} saisie(s) en attente d&apos;envoi : {pending.map((p) => describeOperation(p)).join(", ")}.
+            {t("{count} saisie(s) en attente d'envoi : {list}.", {
+              count: pending.length,
+              list: pending.map((p) => describeOperation(p, t)).join(", "),
+            })}
           </Message>
         ) : null}
         {wo.canExecute && transition("IN_PROGRESS") ? (
@@ -121,14 +128,14 @@ export default function WorkOrderScreen() {
               ))
             : null}
           <Text style={styles.muted}>
-            Le serveur vérifie toutes les conditions (checklist, temps, relevé) à l&apos;envoi ; un refus apparaît dans « Synchro ».
+            {t("Le serveur vérifie toutes les conditions (checklist, temps, relevé) à l'envoi ; un refus apparaît dans « Synchro ».")}
           </Text>
           <Button
             title="Travaux terminés"
             onPress={() =>
-              Alert.alert("Travaux terminés ?", "L'intervention passera à « Travaux terminés » après envoi des saisies.", [
-                { text: "Annuler", style: "cancel" },
-                { text: "Confirmer", onPress: () => void enqueue({ kind: "transition", workOrderId: wo.id, to: "WORK_DONE" }) },
+              Alert.alert(t("Travaux terminés ?"), t("L'intervention passera à « Travaux terminés » après envoi des saisies."), [
+                { text: t("Annuler"), style: "cancel" },
+                { text: t("Confirmer"), onPress: () => void enqueue({ kind: "transition", workOrderId: wo.id, to: "WORK_DONE" }) },
               ])
             }
           />
@@ -142,43 +149,46 @@ export default function WorkOrderScreen() {
 
 function Checklist({ wo, editable }: { wo: WorkOrder; editable: boolean }) {
   const { enqueue, operations } = useSync();
+  const t = useT();
   const [values, setValues] = useState<Record<string, string>>({});
   const local = (taskId: string) => operations.filter((o) => o.kind === "task" && o.taskId === taskId).at(-1);
 
   return (
     <Card title="Checklist">
-      {wo.tasks.map((t) => {
-        const queued = local(t.id);
-        const result = queued && queued.kind === "task" ? queued.result : t.result;
+      {wo.tasks.map((task) => {
+        const queued = local(task.id);
+        const result = queued && queued.kind === "task" ? queued.result : task.result;
         return (
-          <View key={t.id} style={{ gap: 8, borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 }}>
+          <View key={task.id} style={{ gap: 8, borderTopWidth: 1, borderTopColor: "#e2e8f0", paddingTop: 8 }}>
             <Text style={styles.rowTitle}>
-              {t.label}
-              {t.required ? " *" : ""}
+              {task.label}
+              {task.required ? " *" : ""}
             </Text>
-            {t.kind === "MEASURE" ? (
+            {task.kind === "MEASURE" ? (
               <Text style={styles.muted}>
-                Mesure en {t.unit ?? "—"}
-                {t.minValue != null || t.maxValue != null ? ` (attendu : ${formatNumber(t.minValue)} à ${formatNumber(t.maxValue)})` : ""}
-                {t.measuredValue != null ? ` · relevé : ${formatNumber(t.measuredValue)}` : ""}
+                {t("Mesure en {unit}", { unit: task.unit ?? "—" })}
+                {task.minValue != null || task.maxValue != null
+                  ? ` (${t("attendu : {min} à {max}", { min: formatNumber(task.minValue), max: formatNumber(task.maxValue) })})`
+                  : ""}
+                {task.measuredValue != null ? ` · ${t("relevé : {value}", { value: formatNumber(task.measuredValue) })}` : ""}
               </Text>
             ) : null}
             {editable ? (
-              t.kind === "MEASURE" ? (
+              task.kind === "MEASURE" ? (
                 <View style={{ flexDirection: "row", gap: 8, alignItems: "flex-end" }}>
                   <View style={{ flex: 1 }}>
                     <Field
                       label="Valeur mesurée"
                       keyboardType="decimal-pad"
-                      value={values[t.id] ?? ""}
-                      onChangeText={(v) => setValues({ ...values, [t.id]: v })}
+                      value={values[task.id] ?? ""}
+                      onChangeText={(v) => setValues({ ...values, [task.id]: v })}
                     />
                   </View>
                   <Button
                     title="OK"
-                    disabled={!values[t.id]}
+                    disabled={!values[task.id]}
                     onPress={() =>
-                      void enqueue({ kind: "task", workOrderId: wo.id, taskId: t.id, measuredValue: Number(values[t.id].replace(",", ".")) })
+                      void enqueue({ kind: "task", workOrderId: wo.id, taskId: task.id, measuredValue: Number(values[task.id].replace(",", ".")) })
                     }
                   />
                 </View>
@@ -189,7 +199,7 @@ function Checklist({ wo, editable }: { wo: WorkOrder; editable: boolean }) {
                       key={r}
                       accessibilityRole="button"
                       accessibilityState={{ selected: result === r }}
-                      onPress={() => void enqueue({ kind: "task", workOrderId: wo.id, taskId: t.id, result: r })}
+                      onPress={() => void enqueue({ kind: "task", workOrderId: wo.id, taskId: task.id, result: r })}
                       style={{
                         flex: 1,
                         minHeight: 52,
@@ -207,7 +217,7 @@ function Checklist({ wo, editable }: { wo: WorkOrder; editable: boolean }) {
                 </View>
               )
             ) : (
-              <Text style={styles.muted}>{result ?? "Non renseigné"}</Text>
+              <Text style={styles.muted}>{result ?? t("Non renseigné")}</Text>
             )}
           </View>
         );
@@ -218,6 +228,7 @@ function Checklist({ wo, editable }: { wo: WorkOrder; editable: boolean }) {
 
 function ReportCard({ wo }: { wo: WorkOrder }) {
   const { enqueue } = useSync();
+  const t = useT();
   const [symptomCode, setSymptom] = useState(wo.symptomCode ?? "");
   const [causeCode, setCause] = useState(wo.causeCode ?? "");
   const [remedyCode, setRemedy] = useState(wo.remedyCode ?? "");
@@ -229,7 +240,7 @@ function ReportCard({ wo }: { wo: WorkOrder }) {
       <Field label="Cause" value={causeCode} onChangeText={setCause} maxLength={40} />
       <Field label="Remède" value={remedyCode} onChangeText={setRemedy} maxLength={40} />
       <Field label="Travaux réalisés" value={workSummary} onChangeText={setSummary} multiline maxLength={4000} />
-      {saved ? <Message tone="green">Compte rendu enregistré.</Message> : null}
+      {saved ? <Message tone="green">{t("Compte rendu enregistré.")}</Message> : null}
       <Button
         title="Enregistrer le compte rendu"
         onPress={() => {
@@ -250,18 +261,19 @@ function ReportCard({ wo }: { wo: WorkOrder }) {
 
 function TimeCard({ wo }: { wo: WorkOrder }) {
   const { enqueue } = useSync();
+  const t = useT();
   const [minutes, setMinutes] = useState("");
   const [comment, setComment] = useState("");
   const total = wo.timeEntries.reduce((s, e) => s + (e.minutes ?? 0), 0);
   return (
     <Card title="Temps passé">
       <Text style={styles.muted}>
-        Déjà enregistré : {Math.floor(total / 60)} h {String(total % 60).padStart(2, "0")}
+        {t("Déjà enregistré : {hours} h {minutes}", { hours: Math.floor(total / 60), minutes: String(total % 60).padStart(2, "0") })}
       </Text>
       <View style={{ flexDirection: "row", gap: 8 }}>
         {[15, 30, 60, 120].map((m) => (
           <View key={m} style={{ flex: 1 }}>
-            <Button title={m < 60 ? `${m} min` : `${m / 60} h`} variant="secondary" onPress={() => setMinutes(String(m))} />
+            <Button title={m < 60 ? t("{n} min", { n: m }) : t("{n} h", { n: m / 60 })} variant="secondary" onPress={() => setMinutes(String(m))} />
           </View>
         ))}
       </View>
@@ -282,6 +294,7 @@ function TimeCard({ wo }: { wo: WorkOrder }) {
 
 function PartsCard({ wo }: { wo: WorkOrder }) {
   const { enqueue } = useSync();
+  const t = useT();
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
   const [part, setPart] = useState<Part | null>(null);
@@ -294,7 +307,7 @@ function PartsCard({ wo }: { wo: WorkOrder }) {
     <Card title="Pièces consommées">
       {wo.partLines.map((l) => (
         <Text key={l.id} style={styles.text}>
-          {l.type === "RETURN" ? "Retour" : "Sortie"} · {formatNumber(l.quantity)} {l.unit} · {l.sku} {l.partName} ({l.warehouseName})
+          {l.type === "RETURN" ? t("Retour") : t("Sortie")} · {formatNumber(l.quantity)} {l.unit} · {l.sku} {l.partName} ({l.warehouseName})
         </Text>
       ))}
       <Field
@@ -313,7 +326,7 @@ function PartsCard({ wo }: { wo: WorkOrder }) {
           onPress={() => setPart(p)}
         />
       ))}
-      <Text style={styles.label}>Magasin</Text>
+      <Text style={styles.label}>{t("Magasin")}</Text>
       {warehouses.data?.map((w) => (
         <Row
           key={w.id}
@@ -323,7 +336,12 @@ function PartsCard({ wo }: { wo: WorkOrder }) {
           onPress={() => setWarehouse(w.id)}
         />
       ))}
-      <Field label={`Quantité${part ? ` (${part.unit})` : ""}`} keyboardType="decimal-pad" value={quantity} onChangeText={setQuantity} />
+      <Field
+        label={part ? t("Quantité ({unit})", { unit: part.unit }) : t("Quantité")}
+        keyboardType="decimal-pad"
+        value={quantity}
+        onChangeText={setQuantity}
+      />
       <Button
         title="Consommer la pièce"
         disabled={!part || !warehouseId || !(Number(quantity.replace(",", ".")) > 0)}
@@ -341,7 +359,7 @@ function PartsCard({ wo }: { wo: WorkOrder }) {
         }}
       />
       <Text style={styles.muted}>
-        Stock insuffisant au serveur : la consommation est refusée et apparaît « à revoir » dans Synchro (le stock ne devient jamais négatif).
+        {t("Stock insuffisant au serveur : la consommation est refusée et apparaît « à revoir » dans Synchro (le stock ne devient jamais négatif).")}
       </Text>
     </Card>
   );
@@ -349,15 +367,14 @@ function PartsCard({ wo }: { wo: WorkOrder }) {
 
 function ReadingCard({ wo }: { wo: WorkOrder }) {
   const { enqueue } = useSync();
+  const t = useT();
   const meter = wo.meters.find((m) => m.isPrimary) ?? wo.meters[0];
   const [value, setValue] = useState("");
   const [warning, setWarning] = useState<string | null>(null);
   if (!meter) return null;
   return (
     <Card title="Relevé du compteur">
-      <Text style={styles.muted}>
-        Dernier relevé : {formatNumber(meter.lastValue)} {meter.unit}
-      </Text>
+      <Text style={styles.muted}>{t("Dernier relevé : {value}", { value: `${formatNumber(meter.lastValue)} ${meter.unit}` })}</Text>
       <Field label={`${meter.label} (${meter.unit})`} keyboardType="decimal-pad" value={value} onChangeText={setValue} />
       {warning ? <Message tone="amber">{warning}</Message> : null}
       <Button
@@ -366,7 +383,7 @@ function ReadingCard({ wo }: { wo: WorkOrder }) {
         onPress={() => {
           const v = Number(value.replace(",", "."));
           if (meter.lastValue != null && v < meter.lastValue)
-            return setWarning(`Valeur inférieure au dernier relevé (${formatNumber(meter.lastValue)}) : vérifier.`);
+            return setWarning(t("Valeur inférieure au dernier relevé ({value}) : vérifier.", { value: formatNumber(meter.lastValue) }));
           void enqueue({ kind: "reading", meterId: meter.id, value: v, workOrderId: wo.id });
           setValue("");
           setWarning(null);
@@ -378,6 +395,7 @@ function ReadingCard({ wo }: { wo: WorkOrder }) {
 
 function PhotosCard({ wo }: { wo: WorkOrder }) {
   const { enqueue } = useSync();
+  const t = useT();
   const [error, setError] = useState<string | null>(null);
   const documents = useApiData<{ items: { id: string; title: string; kind: string; createdAt: string }[] }>(
     `/api/v1/documents?entityType=WORK_ORDER&entityId=${wo.id}`,
@@ -385,7 +403,7 @@ function PhotosCard({ wo }: { wo: WorkOrder }) {
   const photos = documents.data?.items.filter((d) => d.kind === "PHOTO") ?? [];
   return (
     <Card title="Photos">
-      <Text style={styles.muted}>{photos.length} photo(s) déjà jointe(s). Les photos partent après les autres saisies.</Text>
+      <Text style={styles.muted}>{t("{count} photo(s) déjà jointe(s). Les photos partent après les autres saisies.", { count: photos.length })}</Text>
       {error ? <Message>{error}</Message> : null}
       <Button
         title="Prendre une photo"

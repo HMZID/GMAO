@@ -15,6 +15,10 @@ export function interpolate(text: string, params?: Params): string {
 /** Séparateurs invisibles (Unicode) qui encadrent les valeurs d'un gabarit `tpl` : ils survivent dans une chaîne ordinaire. */
 const OPEN = "\u2063";
 const CLOSE = "\u2064";
+/** Préfixe d'une valeur de gabarit qui est elle-même un texte à traduire (`tx`) : un libellé, pas une donnée saisie. */
+const TRANSLATABLE = "\u2060";
+const MARKERS = /[\u2063\u2064\u2060]/g;
+const SEGMENT = "\u2061";
 const MARKED = /\u2063([^\u2064]*)\u2064/g;
 
 /**
@@ -30,6 +34,16 @@ export function tpl(strings: TemplateStringsArray, ...values: unknown[]): string
   return out;
 }
 
+/** Valeur de gabarit à traduire à l'affichage : `tpl\`${tx("Assurance")} échue\``. */
+export function tx(text: string): string {
+  return TRANSLATABLE + text;
+}
+
+/** Plusieurs phrases (éventuellement des gabarits) en un seul texte stocké : chacune est traduite à l'affichage, jointes par « · ». */
+export function tplParts(parts: string[]): string {
+  return parts.join(SEGMENT);
+}
+
 /** Phrase-clé d'un gabarit : valeurs remplacées par `{1}`, `{2}`… (dans l'ordre d'apparition). */
 export function templateKey(source: string): { key: string; args: string[] } {
   const args: string[] = [];
@@ -41,12 +55,21 @@ export function templateKey(source: string): { key: string; args: string[] } {
 }
 
 export function translate(dictionary: Dictionary, source: string, params?: Params): string {
+  if (source.includes(SEGMENT))
+    return source
+      .split(SEGMENT)
+      .map((part) => translate(dictionary, part))
+      .join(" · ");
   if (source.includes(OPEN)) {
     const { key, args } = templateKey(source);
     const text = dictionary[key];
     // Pas de traduction : texte français d'origine, sans séparateurs.
-    if (text === undefined) return source.replace(/[\u2063\u2064]/g, "");
-    return text.replace(/\{(\d+)\}/g, (match, n: string) => args[Number(n) - 1] ?? match);
+    if (text === undefined) return source.replace(MARKERS, "");
+    return text.replace(/\{(\d+)\}/g, (match, n: string) => {
+      const arg = args[Number(n) - 1];
+      if (arg === undefined) return match;
+      return arg.startsWith(TRANSLATABLE) ? translate(dictionary, arg.slice(1)) : arg;
+    });
   }
   const direct = dictionary[source];
   if (direct !== undefined) return interpolate(direct, params);

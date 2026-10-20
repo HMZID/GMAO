@@ -3,13 +3,16 @@ import { useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, colors, Field, Message } from "../components/ui";
+import { LanguageSwitcher } from "../components/language-switcher";
 import { useSession } from "../context/session";
+import { useT } from "../i18n";
 import { ApiError, NetworkError } from "../lib/api";
 import { API_URL } from "../lib/config";
 
 /** Connexion avec le compte de la GMAO (mêmes comptes et mêmes droits que sur le web). */
 export default function LoginScreen() {
   const { state, signIn } = useSession();
+  const t = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,7 +40,7 @@ export default function LoginScreen() {
       >
         <View style={{ gap: 4 }}>
           <Text style={{ fontSize: 32, fontWeight: "800", color: colors.brand }}>GMAO</Text>
-          <Text style={{ fontSize: 16, color: colors.text }}>Maintenance des engins, véhicules et équipements</Text>
+          <Text style={{ fontSize: 16, color: colors.text }}>{t("Maintenance des engins, véhicules et équipements")}</Text>
         </View>
         {state.status === "signedOut" && state.message ? <Message tone="amber">{state.message}</Message> : null}
         {error ? <Message>{error}</Message> : null}
@@ -60,7 +63,8 @@ export default function LoginScreen() {
           onSubmitEditing={submit}
         />
         <Button title="Se connecter" onPress={submit} busy={busy} disabled={!email || !password} />
-        <Text style={{ fontSize: 12, color: colors.muted }}>Serveur : {API_URL}</Text>
+        <Text style={{ fontSize: 12, color: colors.muted }}>{t("Serveur : {url}", { url: API_URL })}</Text>
+        <LanguageSwitcher />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

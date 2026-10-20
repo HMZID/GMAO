@@ -38,6 +38,9 @@ import { releaseEquipmentIfFree } from "./equipment-status";
 import { notifyUsers } from "./notifications";
 import { isUniqueViolation } from "./organization";
 import { releaseReservations } from "./stock";
+import { INTL_LOCALE } from "@/i18n/config";
+import { requestLocale } from "@/i18n/request-locale";
+import { tpl, tx as translatable } from "@/i18n/translate";
 
 /* ------------------------------------------------------------------ */
 /* Valideurs : rôle dans le périmètre de l'objet, personne nommée, suppléant */
@@ -197,8 +200,8 @@ export async function startApproval(tx: DbOrTx, ctx: AuthContext, subject: Appro
     {
       type: "approval.pending",
       dedupKey: `approval:${request.id}:${required[0].position}`,
-      title: `À valider : ${subject.label}`,
-      body: `${required[0].name}${subject.amount != null ? ` — ${subject.amount.toLocaleString("fr-FR", { style: "currency", currency: "EUR" })}` : ""}`,
+      title: tpl`À valider : ${subject.label}`,
+      body: `${required[0].name}${subject.amount != null ? ` — ${subject.amount.toLocaleString(INTL_LOCALE[requestLocale()], { style: "currency", currency: "EUR" })}` : ""}`,
       entityType: "approval",
       entityId: request.id,
     },
@@ -314,7 +317,7 @@ export async function decideApproval(ctx: AuthContext, requestId: string, raw: u
         {
           type: "approval.pending",
           dedupKey: `approval:${request.id}:${nextStep.position}`,
-          title: `À valider : ${request.label}`,
+          title: tpl`À valider : ${request.label}`,
           body: nextStep.name,
           entityType: "approval",
           entityId: request.id,
@@ -329,8 +332,10 @@ export async function decideApproval(ctx: AuthContext, requestId: string, raw: u
         {
           type: next.status === "APPROVED" ? "approval.approved" : "approval.rejected",
           dedupKey: `approval-decision:${request.id}`,
-          title: `${next.status === "APPROVED" ? "Validée" : "Refusée"} : ${request.label}`,
-          body: input.comment ?? `Votre ${OBJECT_LABEL[request.objectType]} a été ${next.status === "APPROVED" ? "validée" : "refusée"}.`,
+          title: tpl`${translatable(next.status === "APPROVED" ? "Validée" : "Refusée")} : ${request.label}`,
+          body:
+            input.comment ??
+            tpl`Votre ${translatable(OBJECT_LABEL[request.objectType])} a été ${translatable(next.status === "APPROVED" ? "validée" : "refusée")}.`,
           entityType: "approval",
           entityId: request.id,
         },
