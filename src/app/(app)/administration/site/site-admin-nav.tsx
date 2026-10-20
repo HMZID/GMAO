@@ -1,6 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { SITE_ITEM_KIND_DEFINITIONS, type SiteItemKind } from "@/server/domain/site";
+import { T, Tr } from "@/i18n/client";
 
 /** Adresse des listes de blocs dans l'administration (type de bloc → segment d'URL). */
 export const KIND_SLUGS: Record<SiteItemKind, string> = {
@@ -42,9 +43,11 @@ export function SiteAdminNav({ active, pending }: { active: string; pending?: nu
             t.key === active ? "border-brand-600 text-brand-800" : "border-transparent text-slate-600 hover:text-slate-900"
           }`}
         >
-          {t.label}
+          <Tr>{t.label}</Tr>
           {t.key === "demandes" && pending ? (
-            <span className="rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-white">{pending}</span>
+            <span className="rounded-full bg-amber-500 px-1.5 text-[11px] font-semibold text-white">
+              <Tr>{pending}</Tr>
+            </span>
           ) : null}
         </Link>
       ))}
@@ -52,9 +55,9 @@ export function SiteAdminNav({ active, pending }: { active: string; pending?: nu
         href="/decouvrir"
         target="_blank"
         rel="noreferrer"
-        className="ml-auto flex shrink-0 items-center gap-1 px-3 py-2 text-sm font-medium text-brand-700 hover:underline"
+        className="ms-auto flex shrink-0 items-center gap-1 px-3 py-2 text-sm font-medium text-brand-700 hover:underline"
       >
-        Voir le site
+        <T>Voir le site</T>
         <ExternalLink className="h-3.5 w-3.5" aria-hidden />
       </a>
     </nav>

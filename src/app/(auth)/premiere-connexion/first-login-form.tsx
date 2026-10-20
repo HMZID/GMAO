@@ -3,6 +3,7 @@
 import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form";
 import { Input } from "@/components/ui/inputs";
 import { setInitialPasswordAction } from "../actions";
+import { T } from "@/i18n/client";
 
 export function FirstLoginForm({ email }: { email: string }) {
   return (
@@ -16,7 +17,7 @@ export function FirstLoginForm({ email }: { email: string }) {
         <Input id="confirmation" name="confirmation" type="password" autoComplete="new-password" required minLength={10} />
       </Field>
       <SubmitButton className="w-full" pendingLabel="Enregistrement…">
-        Enregistrer et continuer
+        <T>Enregistrer et continuer</T>
       </SubmitButton>
     </ActionForm>
   );

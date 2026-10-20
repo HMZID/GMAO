@@ -8,6 +8,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { isUuid } from "@/server/pages";
 import { listEquipmentOptions } from "@/server/services/equipment";
 import { createWorkRequestAction } from "../actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Créer une demande d'intervention" };
 
@@ -58,9 +59,11 @@ export default async function NewWorkRequestPage(props: PageProps<"/demandes/nou
               <Input id="meterValue" name="meterValue" type="number" min={0} step="0.1" className="max-w-48" />
             </Field>
             <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
-              <SubmitButton>Envoyer le signalement</SubmitButton>
+              <SubmitButton>
+                <T>Envoyer le signalement</T>
+              </SubmitButton>
               <ButtonLink href="/demandes" variant="ghost">
-                Annuler
+                <T>Annuler</T>
               </ButtonLink>
             </div>
           </ActionForm>

@@ -12,6 +12,7 @@ import { isUuid, queryParams } from "@/server/pages";
 import { listWarehouses } from "@/server/services/organization";
 import { listMovements, listPartOptions, listSupplierOptions } from "@/server/services/stock";
 import { MovementForm } from "../movement-form";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Mouvements de stock" };
 
@@ -81,33 +82,53 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
           <Table>
             <THead>
               <tr>
-                <TH>Date</TH>
-                <TH>Mouvement</TH>
-                <TH>Article</TH>
-                <TH>Magasin</TH>
-                <TH className="text-right">Quantité</TH>
-                <TH className="text-right">Coût unitaire</TH>
-                <TH>Référence / intervention</TH>
+                <TH>
+                  <T>Date</T>
+                </TH>
+                <TH>
+                  <T>Mouvement</T>
+                </TH>
+                <TH>
+                  <T>Article</T>
+                </TH>
+                <TH>
+                  <T>Magasin</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Quantité</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Coût unitaire</T>
+                </TH>
+                <TH>
+                  <T>Référence / intervention</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
               {movements.map((m) => (
                 <TR key={m.id}>
                   <TD className="whitespace-nowrap">{formatDateTime(m.createdAt)}</TD>
-                  <TD>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</TD>
+                  <TD>
+                    <Tr>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</Tr>
+                  </TD>
                   <TD>
                     <Link href={`/stock/articles/${m.partId}`} className="text-brand-700 hover:underline">
-                      {m.sku}
+                      <Tr>{m.sku}</Tr>
                     </Link>
-                    <p className="text-xs text-slate-500">{m.partName}</p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{m.partName}</Tr>
+                    </p>
                   </TD>
-                  <TD>{m.warehouseName}</TD>
-                  <TD className="text-right tabular-nums">{formatNumber(m.quantity, m.unit)}</TD>
-                  <TD className="text-right tabular-nums">{formatCurrency(m.unitCost)}</TD>
+                  <TD>
+                    <Tr>{m.warehouseName}</Tr>
+                  </TD>
+                  <TD className="text-end tabular-nums">{formatNumber(m.quantity, m.unit)}</TD>
+                  <TD className="text-end tabular-nums">{formatCurrency(m.unitCost)}</TD>
                   <TD className="text-xs text-slate-600">
                     {m.workOrderId ? (
                       <Link href={`/interventions/${m.workOrderId}`} className="text-brand-700 hover:underline">
-                        {m.workOrderNumber}
+                        <Tr>{m.workOrderNumber}</Tr>
                       </Link>
                     ) : (
                       [m.reference, m.reason].filter(Boolean).join(" — ")
@@ -121,14 +142,14 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
         <div className="flex justify-between border-t border-slate-100 px-5 py-3 text-sm">
           {page > 1 ? (
             <Link href={withParams("/stock/mouvements", { ...params, page: page - 1 })} className="text-brand-700 hover:underline">
-              ← Plus récents
+              <T>← Plus récents</T>
             </Link>
           ) : (
             <span />
           )}
           {movements.length === 50 ? (
             <Link href={withParams("/stock/mouvements", { ...params, page: page + 1 })} className="text-brand-700 hover:underline">
-              Plus anciens →
+              <T>Plus anciens →</T>
             </Link>
           ) : null}
         </div>

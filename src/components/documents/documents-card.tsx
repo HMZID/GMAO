@@ -9,6 +9,8 @@ import { DOCUMENT_KIND, options } from "@/lib/labels";
 import type { AuthContext } from "@/server/authz/context";
 import { ACCEPT_ATTRIBUTE, formatSize, type DocumentEntity } from "@/server/domain/documents";
 import { listDocuments } from "@/server/services/documents";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 /** Carte « Documents » des fiches équipement et OT (EQP-07) : liste, consultation, ajout et retrait. */
 export async function DocumentsCard({
@@ -39,11 +41,21 @@ export async function DocumentsCard({
           <Table>
             <THead>
               <tr>
-                <TH>Document</TH>
-                <TH>Type</TH>
-                <TH>Expiration</TH>
-                <TH>Ajouté</TH>
-                <TH className="sr-only">Actions</TH>
+                <TH>
+                  <T>Document</T>
+                </TH>
+                <TH>
+                  <T>Type</T>
+                </TH>
+                <TH>
+                  <T>Expiration</T>
+                </TH>
+                <TH>
+                  <T>Ajouté</T>
+                </TH>
+                <TH className="sr-only">
+                  <T>Actions</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -59,21 +71,27 @@ export async function DocumentsCard({
                         className="inline-flex items-center gap-1.5 font-medium text-brand-700 hover:underline"
                       >
                         <FileText className="h-4 w-4 shrink-0" aria-hidden />
-                        {d.title}
+                        <Tr>{d.title}</Tr>
                       </a>
                       <p className="text-xs text-slate-500">
-                        {d.fileName} · {formatSize(d.sizeBytes)}
+                        <Tr>{d.fileName}</Tr> · {formatSize(d.sizeBytes)}
                       </p>
-                      {d.description ? <p className="mt-0.5 text-xs text-slate-600">{d.description}</p> : null}
+                      {d.description ? (
+                        <p className="mt-0.5 text-xs text-slate-600">
+                          <Tr>{d.description}</Tr>
+                        </p>
+                      ) : null}
                     </TD>
                     <TD>
-                      <Badge tone={DOCUMENT_KIND[d.kind]?.tone}>{DOCUMENT_KIND[d.kind]?.label ?? d.kind}</Badge>
+                      <Badge tone={DOCUMENT_KIND[d.kind]?.tone}>
+                        <Tr>{DOCUMENT_KIND[d.kind]?.label ?? d.kind}</Tr>
+                      </Badge>
                     </TD>
                     <TD>
                       {d.expiresAt ? (
                         <span className={expired ? "font-medium text-red-700" : undefined}>
                           {formatDate(d.expiresAt)}
-                          {expired ? " (expiré)" : ""}
+                          <Tr>{expired ? " (expiré)" : ""}</Tr>
                         </span>
                       ) : (
                         "—"
@@ -83,19 +101,19 @@ export async function DocumentsCard({
                       {formatDateTime(d.createdAt)}
                       <p className="text-xs text-slate-500">{d.uploadedBy ?? "—"}</p>
                     </TD>
-                    <TD className="text-right">
+                    <TD className="text-end">
                       <a href={`${d.url}?download=1`} className="text-sm text-slate-600 hover:underline">
-                        Télécharger
+                        <T>Télécharger</T>
                       </a>
                       {d.canDelete ? (
-                        <Disclosure summary="Retirer" className="mt-2 text-left">
+                        <Disclosure summary="Retirer" className="mt-2 text-start">
                           <PanelForm className="space-y-3">
                             <input type="hidden" name="documentId" value={d.id} />
                             <Field label="Motif" name="reason">
                               <Input name="reason" maxLength={500} />
                             </Field>
                             <SubmitButton variant="danger" size="sm">
-                              Retirer le document
+                              <T>Retirer le document</T>
                             </SubmitButton>
                           </PanelForm>
                         </Disclosure>
@@ -116,7 +134,7 @@ export async function DocumentsCard({
                 label="Fichier"
                 name="file"
                 required
-                hint={`PDF, photo, vidéo courte, Word ou Excel ; ${formatSize(maxSizeBytes)} au plus`}
+                hint={tpl`PDF, photo, vidéo courte, Word ou Excel ; ${formatSize(maxSizeBytes)} au plus`}
                 className="sm:col-span-2"
               >
                 <Input type="file" name="file" required accept={ACCEPT_ATTRIBUTE} className="h-auto py-1.5" />
@@ -134,7 +152,9 @@ export async function DocumentsCard({
                 <Textarea name="description" rows={2} maxLength={1000} />
               </Field>
               <div className="sm:col-span-2">
-                <SubmitButton>Ajouter le document</SubmitButton>
+                <SubmitButton>
+                  <T>Ajouter le document</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </Disclosure>

@@ -22,6 +22,7 @@ import {
   updateUser,
 } from "@/server/services/users";
 import { formToObject } from "@/server/validation";
+import { tpl } from "@/i18n/translate";
 
 /* Identité de l'organisation : nom affiché sous « GMAO » et logo */
 
@@ -47,7 +48,7 @@ export async function createDemoTenantAction(_: ActionState, formData: FormData)
     const created = await createDemoTenant(ctx, formToObject(formData));
     return {
       status: "success",
-      message: `Démonstration « ${created.name} » ouverte jusqu'au ${created.demoEndsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} : communiquer à ${created.adminEmail} son mot de passe initial.`,
+      message: tpl`Démonstration « ${created.name} » ouverte jusqu'au ${created.demoEndsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} : communiquer à ${created.adminEmail} son mot de passe initial.`,
     } satisfies ActionState;
   });
 }
@@ -91,7 +92,7 @@ export async function createApiKeyAction(_: ActionState, formData: FormData): Pr
     const created = await createApiKey(ctx, formToObject(formData, { keepEmpty: true }));
     return {
       status: "success",
-      message: `Clé « ${created.name} » créée. Copiez-la maintenant : elle ne sera plus affichée.`,
+      message: tpl`Clé « ${created.name} » créée. Copiez-la maintenant : elle ne sera plus affichée.`,
       secret: created.key,
     } satisfies ActionState;
   });

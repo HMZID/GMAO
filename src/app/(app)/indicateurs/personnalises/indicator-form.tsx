@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form";
 import { Input, Select } from "@/components/ui/inputs";
 import { createIndicatorAction } from "../actions";
+import { T } from "@/i18n/client";
 
 type Option = { value: string; label: string };
 export type SourceOption = {
@@ -103,7 +104,9 @@ export function IndicatorForm({ sources }: { sources: SourceOption[] }) {
         <input type="hidden" name="filterValue" value="" />
       )}
       <div className="flex items-end sm:col-span-2 lg:col-span-3">
-        <SubmitButton>Ajouter l&apos;indicateur</SubmitButton>
+        <SubmitButton>
+          <T>Ajouter l&apos;indicateur</T>
+        </SubmitButton>
       </div>
     </ActionForm>
   );

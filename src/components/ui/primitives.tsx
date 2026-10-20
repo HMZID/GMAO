@@ -1,4 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
+import { Tr } from "@/i18n/client";
 import type { Tone } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { TableCardLabels } from "./table-card-labels";
@@ -26,7 +27,7 @@ export function Badge({ tone = "gray", children, className }: { tone?: Tone; chi
         className,
       )}
     >
-      {children}
+      <Tr>{children}</Tr>
     </span>
   );
 }
@@ -53,10 +54,20 @@ export function CardHeader({
   return (
     <div className={cn("flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-5 py-4", className)}>
       <div>
-        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-        {description ? <p className="mt-0.5 text-sm text-slate-500">{description}</p> : null}
+        <h2 className="text-base font-semibold text-slate-900">
+          <Tr>{title}</Tr>
+        </h2>
+        {description ? (
+          <p className="mt-0.5 text-sm text-slate-500">
+            <Tr>{description}</Tr>
+          </p>
+        ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <Tr>{actions}</Tr>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -76,22 +87,37 @@ export function CardBody({ className, ...props }: ComponentProps<"div">) {
 export function Table({ className, children, cards = true }: { className?: string; children: ReactNode; cards?: boolean }) {
   return (
     <div className={cn("overflow-x-auto", cards && "max-lg:overflow-visible", className)}>
-      <table className={cn("min-w-full divide-y divide-slate-200 text-sm", cards && "table-cards")}>{children}</table>
+      <table className={cn("min-w-full divide-y divide-slate-200 text-sm", cards && "table-cards")}>
+        <Tr>{children}</Tr>
+      </table>
       {cards ? <TableCardLabels /> : null}
     </div>
   );
 }
 
 export function THead({ children }: { children: ReactNode }) {
-  return <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">{children}</thead>;
+  return (
+    <thead className="bg-slate-50 text-start text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <Tr>{children}</Tr>
+    </thead>
+  );
 }
 
 export function TBody({ children }: { children: ReactNode }) {
-  return <tbody className="divide-y divide-slate-100 bg-white">{children}</tbody>;
+  return (
+    <tbody className="divide-y divide-slate-100 bg-white">
+      <Tr>{children}</Tr>
+    </tbody>
+  );
 }
 
 export function TH({ className, ...props }: ComponentProps<"th">) {
-  return <th className={cn("px-4 py-2.5 whitespace-nowrap", className)} {...props} />;
+  const { children, ...rest } = props;
+  return (
+    <th className={cn("px-4 py-2.5 whitespace-nowrap", className)} {...rest}>
+      <Tr>{children}</Tr>
+    </th>
+  );
 }
 
 export function TD({ className, ...props }: ComponentProps<"td">) {
@@ -109,9 +135,19 @@ export function TR({ className, ...props }: ComponentProps<"tr">) {
 export function EmptyState({ title, description, action }: { title: string; description?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
-      <p className="text-sm font-medium text-slate-900">{title}</p>
-      {description ? <p className="max-w-md text-sm text-slate-500">{description}</p> : null}
-      {action ? <div className="mt-2">{action}</div> : null}
+      <p className="text-sm font-medium text-slate-900">
+        <Tr>{title}</Tr>
+      </p>
+      {description ? (
+        <p className="max-w-md text-sm text-slate-500">
+          <Tr>{description}</Tr>
+        </p>
+      ) : null}
+      {action ? (
+        <div className="mt-2">
+          <Tr>{action}</Tr>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -151,32 +187,42 @@ export function StatTile({
   href?: string;
 }) {
   const accent: Record<Tone, string> = {
-    gray: "border-l-slate-300",
-    green: "border-l-emerald-500",
-    blue: "border-l-sky-500",
-    amber: "border-l-amber-500",
-    red: "border-l-red-500",
-    violet: "border-l-violet-500",
-    teal: "border-l-brand-600",
+    gray: "border-s-slate-300",
+    green: "border-s-emerald-500",
+    blue: "border-s-sky-500",
+    amber: "border-s-amber-500",
+    red: "border-s-red-500",
+    violet: "border-s-violet-500",
+    teal: "border-s-brand-600",
   };
   const content = (
     <>
-      <p className="text-xs font-medium uppercase tracking-wide text-pretty text-slate-500">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+      <p className="text-xs font-medium uppercase tracking-wide text-pretty text-slate-500">
+        <Tr>{label}</Tr>
+      </p>
+      <p className="mt-1 text-xl font-semibold tabular-nums text-slate-900 sm:text-2xl">
+        <Tr>{value}</Tr>
+      </p>
+      {hint ? (
+        <p className="mt-1 text-xs text-slate-500">
+          <Tr>{hint}</Tr>
+        </p>
+      ) : null}
     </>
   );
   const className = cn(
-    "block min-w-0 rounded-lg border border-slate-200 border-l-4 bg-white px-3 py-3 shadow-xs sm:px-4",
+    "block min-w-0 rounded-lg border border-slate-200 border-s-4 bg-white px-3 py-3 shadow-xs sm:px-4",
     accent[tone],
     href && "hover:bg-slate-50",
   );
   return href ? (
     <a href={href} className={className}>
-      {content}
+      <Tr>{content}</Tr>
     </a>
   ) : (
-    <div className={className}>{content}</div>
+    <div className={className}>
+      <Tr>{content}</Tr>
+    </div>
   );
 }
 
@@ -186,8 +232,12 @@ export function DescriptionList({ items, columns = 2 }: { items: { label: string
     <dl className={cn("grid gap-x-6 gap-y-3 text-sm", columns === 1 ? "grid-cols-1" : columns === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3")}>
       {items.map((item) => (
         <div key={item.label}>
-          <dt className="text-xs font-medium text-slate-500">{item.label}</dt>
-          <dd className="mt-0.5 text-slate-900">{item.value ?? "—"}</dd>
+          <dt className="text-xs font-medium text-slate-500">
+            <Tr>{item.label}</Tr>
+          </dt>
+          <dd className="mt-0.5 text-slate-900">
+            <Tr>{item.value ?? "—"}</Tr>
+          </dd>
         </div>
       ))}
     </dl>
@@ -203,8 +253,16 @@ export function Alert({ tone = "amber", title, children }: { tone?: "amber" | "r
   };
   return (
     <div className={cn("rounded-md border px-4 py-3 text-sm", styles[tone])} role={tone === "red" ? "alert" : "status"}>
-      {title ? <p className="font-medium">{title}</p> : null}
-      {children ? <div className={cn(title && "mt-1")}>{children}</div> : null}
+      {title ? (
+        <p className="font-medium">
+          <Tr>{title}</Tr>
+        </p>
+      ) : null}
+      {children ? (
+        <div className={cn(title && "mt-1")}>
+          <Tr>{children}</Tr>
+        </div>
+      ) : null}
     </div>
   );
 }

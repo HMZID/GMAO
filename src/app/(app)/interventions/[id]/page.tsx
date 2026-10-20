@@ -17,6 +17,8 @@ import { listPartOptions, listSupplierOptions } from "@/server/services/stock";
 import { getWorkOrder, listTechnicianOptions } from "@/server/services/work-orders";
 import { recurrenceAction } from "../actions";
 import { ChecklistCard, CostsCard, HistoryCard, PartsCard, PlanningCard, ReportCard, TimeCard, TransitionsCard } from "./sections";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Intervention à réaliser" };
 
@@ -50,32 +52,62 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
         back={{ href: "/interventions", label: "Interventions à réaliser" }}
         title={
           <span className="flex flex-wrap items-baseline gap-3">
-            {wo.number}
-            <span className="text-lg font-normal text-slate-600">{wo.title}</span>
+            <Tr>{wo.number}</Tr>
+            <span className="text-lg font-normal text-slate-600">
+              <Tr>{wo.title}</Tr>
+            </span>
           </span>
         }
         meta={
           <>
             <WorkOrderStatusBadge status={wo.status} />
-            {wo.validationStatus === "PENDING" && isOpen ? <Badge tone="amber">En attente de validation</Badge> : null}
-            {wo.validationStatus === "REJECTED" ? <Badge tone="red">Validation refusée</Badge> : null}
+            {wo.validationStatus === "PENDING" && isOpen ? (
+              <Badge tone="amber">
+                <T>En attente de validation</T>
+              </Badge>
+            ) : null}
+            {wo.validationStatus === "REJECTED" ? (
+              <Badge tone="red">
+                <T>Validation refusée</T>
+              </Badge>
+            ) : null}
             <PriorityBadge value={wo.priority} />
-            <Badge>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Badge>
-            {wo.isImmobilizing ? <Badge tone="red">Immobilisant</Badge> : null}
-            {wo.isSafetyRelated ? <Badge tone="red">Sécurité</Badge> : null}
-            {wo.isExternal ? <Badge tone="violet">Prestataire</Badge> : null}
-            {wo.reopenCount > 0 ? <Badge tone="amber">Rouvert {wo.reopenCount} fois</Badge> : null}
+            <Badge>
+              <Tr>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Tr>
+            </Badge>
+            {wo.isImmobilizing ? (
+              <Badge tone="red">
+                <T>Immobilisant</T>
+              </Badge>
+            ) : null}
+            {wo.isSafetyRelated ? (
+              <Badge tone="red">
+                <T>Sécurité</T>
+              </Badge>
+            ) : null}
+            {wo.isExternal ? (
+              <Badge tone="violet">
+                <T>Prestataire</T>
+              </Badge>
+            ) : null}
+            {wo.reopenCount > 0 ? (
+              <Badge tone="amber">
+                <T params={{ reopenCount: wo.reopenCount }}>{"Rouvert {reopenCount} fois"}</T>
+              </Badge>
+            ) : null}
           </>
         }
         actions={
           <>
             <Link href={`/impression/intervention/${wo.id}`} className={buttonClass("secondary")}>
               <Printer className="h-4 w-4" aria-hidden />
-              Fiche à signer
+              <T>Fiche à signer</T>
             </Link>
             {wo.canManage && (status === "TECH_CLOSED" || status === "CLOSED") ? (
               <ActionForm action={recurrenceAction.bind(null, wo.id)} showMessage>
-                <SubmitButton variant="secondary">Créer une intervention de récidive</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Créer une intervention de récidive</T>
+                </SubmitButton>
               </ActionForm>
             ) : null}
           </>
@@ -85,31 +117,48 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
       <div className="mb-6 space-y-3">
         {wo.validationStatus === "PENDING" && isOpen ? (
           <Alert tone="amber" title="Intervention en attente de validation">
-            Elle ne peut être ni planifiée ni démarrée avant la décision du valideur
-            {wo.estimatedCost != null ? ` (coût estimé : ${formatCurrency(wo.estimatedCost)})` : ""}.
+            <T params={{ cost: wo.estimatedCost != null ? formatCurrency(wo.estimatedCost) : "" }}>
+              {wo.estimatedCost != null
+                ? "Elle ne peut être ni planifiée ni démarrée avant la décision du valideur (coût estimé : {cost})."
+                : "Elle ne peut être ni planifiée ni démarrée avant la décision du valideur."}
+            </T>
           </Alert>
         ) : null}
         {status === "ON_HOLD" ? (
-          <Alert tone="amber" title={`En attente${reasonOfHold ? ` : ${reasonOfHold}` : ""}`}>
-            {wo.holdComment ?? "Reprendre l'intervention dès que la cause de l'attente est levée."}
+          <Alert tone="amber" title={tpl`En attente${reasonOfHold ? ` : ${reasonOfHold}` : ""}`}>
+            <Tr>{wo.holdComment ?? "Reprendre l'intervention dès que la cause de l'attente est levée."}</Tr>
           </Alert>
         ) : null}
         {wo.requiresRelease && isOpen ? (
           <Alert tone="blue" title="Remise en service à valider">
-            Équipement de criticité A ou intervention liée à la sécurité : la clôture technique est validée par une personne habilitée, différente de
-            l&apos;exécutant.
+            <T>
+              Équipement de criticité A ou intervention liée à la sécurité : la clôture technique est validée par une personne habilitée, différente
+              de l&apos;exécutant.
+            </T>
           </Alert>
         ) : null}
         {status === "CANCELLED" ? (
-          <Alert tone="amber" title={`Annulé le ${formatDate(wo.cancelledAt)}`}>
-            {wo.cancelReason}
+          <Alert tone="amber" title={tpl`Annulé le ${formatDate(wo.cancelledAt)}`}>
+            <Tr>{wo.cancelReason}</Tr>
           </Alert>
         ) : null}
         {status === "TECH_CLOSED" || status === "CLOSED" ? (
-          <Alert tone="green" title={`Clôturé techniquement le ${formatDateTime(wo.techClosedAt)}`}>
-            Résultat : {wo.outcome ? WORK_ORDER_OUTCOME[wo.outcome] : "—"}
-            {wo.releaseValidatedBy ? ` · remise en service validée par ${wo.releaseValidatedBy.name}` : ""}
-            {wo.meterValueAtClose !== null ? ` · compteur à la clôture : ${formatNumber(wo.meterValueAtClose)}` : ""}
+          <Alert tone="green" title={tpl`Clôturé techniquement le ${formatDateTime(wo.techClosedAt)}`}>
+            <T
+              params={{
+                outcome: wo.outcome ? WORK_ORDER_OUTCOME[wo.outcome] : "—",
+                by: wo.releaseValidatedBy?.name ?? "",
+                meter: wo.meterValueAtClose !== null ? formatNumber(wo.meterValueAtClose) : "",
+              }}
+            >
+              {wo.releaseValidatedBy && wo.meterValueAtClose !== null
+                ? "Résultat : {outcome} · remise en service validée par {by} · compteur à la clôture : {meter}"
+                : wo.releaseValidatedBy
+                  ? "Résultat : {outcome} · remise en service validée par {by}"
+                  : wo.meterValueAtClose !== null
+                    ? "Résultat : {outcome} · compteur à la clôture : {meter}"
+                    : "Résultat : {outcome}"}
+            </T>
           </Alert>
         ) : null}
       </div>
@@ -147,7 +196,7 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                 actions={
                   ctx.canOn("purchase.create", wo) && isOpen ? (
                     <Link href={`/demandes-achat/nouvelle?workOrderId=${wo.id}`} className="text-sm text-brand-700 hover:underline">
-                      Nouvelle demande d&apos;achat
+                      <T>Nouvelle demande d&apos;achat</T>
                     </Link>
                   ) : null
                 }
@@ -158,11 +207,15 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                     {wo.purchaseRequests.map((p) => (
                       <li key={p.id} className="flex flex-wrap items-center gap-2">
                         <Link href={`/demandes-achat/${p.id}`} className="font-medium text-brand-700 hover:underline">
-                          {p.number}
+                          <Tr>{p.number}</Tr>
                         </Link>
-                        <span className="text-slate-700">{p.description}</span>
+                        <span className="text-slate-700">
+                          <Tr>{p.description}</Tr>
+                        </span>
                         <span className="tabular-nums text-slate-500">{formatCurrency(p.amount)}</span>
-                        <Badge tone={PURCHASE_REQUEST_STATUS[p.status]?.tone}>{PURCHASE_REQUEST_STATUS[p.status]?.label}</Badge>
+                        <Badge tone={PURCHASE_REQUEST_STATUS[p.status]?.tone}>
+                          <Tr>{PURCHASE_REQUEST_STATUS[p.status]?.label}</Tr>
+                        </Badge>
                       </li>
                     ))}
                   </ul>
@@ -191,9 +244,9 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                     value: (
                       <span className="flex flex-wrap items-center gap-2">
                         <Link href={`/equipements/${wo.equipment.id}`} className="font-medium text-brand-700 hover:underline">
-                          {wo.equipment.code}
+                          <Tr>{wo.equipment.code}</Tr>
                         </Link>
-                        {wo.equipment.name}
+                        <Tr>{wo.equipment.name}</Tr>
                         <EquipmentStatusBadge status={wo.equipment.status} />
                         <CriticalityBadge value={wo.equipment.criticality} />
                       </span>
@@ -234,7 +287,7 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                         {wo.requests.map((r) => (
                           <span key={r.id} className="flex items-center gap-2">
                             <Link href={`/demandes/${r.id}`} className="text-brand-700 hover:underline">
-                              {r.number}
+                              <Tr>{r.number}</Tr>
                             </Link>
                             <RequestStatusBadge status={r.status} />
                           </span>
@@ -242,14 +295,16 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                       </span>
                     ) : wo.parentWorkOrderId ? (
                       <Link href={`/interventions/${wo.parentWorkOrderId}`} className="text-brand-700 hover:underline">
-                        Récidive d&apos;une intervention précédente
+                        <T>Récidive d&apos;une intervention précédente</T>
                       </Link>
                     ) : null,
                   },
                 ]}
               />
               {wo.description ? (
-                <p className="mt-4 whitespace-pre-line border-t border-slate-100 pt-3 text-sm text-slate-700">{wo.description}</p>
+                <p className="mt-4 whitespace-pre-line border-t border-slate-100 pt-3 text-sm text-slate-700">
+                  <Tr>{wo.description}</Tr>
+                </p>
               ) : null}
             </CardBody>
           </Card>

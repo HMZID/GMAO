@@ -11,6 +11,8 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getPart } from "@/server/services/stock";
 import { stockLevelSettingsAction } from "../../actions";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Article" };
 
@@ -30,19 +32,37 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
         meta={
           <>
             <CriticalityBadge value={part.criticality} />
-            {part.family ? <Badge>{part.family}</Badge> : null}
-            {part.isRepairable ? <Badge tone="violet">Réparable</Badge> : null}
-            {!part.active ? <Badge tone="amber">Inactif</Badge> : null}
+            {part.family ? (
+              <Badge>
+                <Tr>{part.family}</Tr>
+              </Badge>
+            ) : null}
+            {part.isRepairable ? (
+              <Badge tone="violet">
+                <T>Réparable</T>
+              </Badge>
+            ) : null}
+            {!part.active ? (
+              <Badge tone="amber">
+                <T>Inactif</T>
+              </Badge>
+            ) : null}
           </>
         }
-        actions={canMove ? <ButtonLink href={`/stock/mouvements?partId=${part.id}`}>Nouveau mouvement</ButtonLink> : null}
+        actions={
+          canMove ? (
+            <ButtonLink href={`/stock/mouvements?partId=${part.id}`}>
+              <T>Nouveau mouvement</T>
+            </ButtonLink>
+          ) : null
+        }
       />
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
           <Card>
             <CardHeader
               title="Stock par magasin"
-              description={`Total : ${formatNumber(total, part.unit)} — valeur ${formatCurrency(total * part.averageCost)}`}
+              description={tpl`Total : ${formatNumber(total, part.unit)} — valeur ${formatCurrency(total * part.averageCost)}`}
             />
             {part.levels.length === 0 ? (
               <EmptyState title="Aucun stock dans votre périmètre" />
@@ -50,11 +70,21 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
               <Table>
                 <THead>
                   <tr>
-                    <TH>Magasin</TH>
-                    <TH className="text-right">En stock</TH>
-                    <TH className="text-right">Réservé</TH>
-                    <TH className="text-right">Disponible</TH>
-                    <TH>Seuils (mini · point de commande · maxi)</TH>
+                    <TH>
+                      <T>Magasin</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>En stock</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Réservé</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Disponible</T>
+                    </TH>
+                    <TH>
+                      <T>Seuils (mini · point de commande · maxi)</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
@@ -64,16 +94,18 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                     return (
                       <TR key={l.id}>
                         <TD>
-                          {l.warehouseName}
-                          <p className="text-xs text-slate-500">{l.siteName}</p>
+                          <Tr>{l.warehouseName}</Tr>
+                          <p className="text-xs text-slate-500">
+                            <Tr>{l.siteName}</Tr>
+                          </p>
                         </TD>
-                        <TD className="text-right tabular-nums">{formatNumber(l.onHand)}</TD>
-                        <TD className="text-right tabular-nums text-slate-500">{formatNumber(l.reserved)}</TD>
-                        <TD className="text-right tabular-nums">
+                        <TD className="text-end tabular-nums">{formatNumber(l.onHand)}</TD>
+                        <TD className="text-end tabular-nums text-slate-500">{formatNumber(l.reserved)}</TD>
+                        <TD className="text-end tabular-nums">
                           {formatNumber(free)}
                           {below ? (
-                            <Badge tone="amber" className="ml-2">
-                              À commander
+                            <Badge tone="amber" className="ms-2">
+                              <T>À commander</T>
                             </Badge>
                           ) : null}
                         </TD>
@@ -129,7 +161,7 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
               title="Derniers mouvements"
               actions={
                 <Link href={`/stock/mouvements?partId=${part.id}`} className="text-sm text-brand-700 hover:underline">
-                  Tous les mouvements
+                  <T>Tous les mouvements</T>
                 </Link>
               }
             />
@@ -139,24 +171,38 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
               <Table>
                 <THead>
                   <tr>
-                    <TH>Date</TH>
-                    <TH>Mouvement</TH>
-                    <TH>Magasin</TH>
-                    <TH className="text-right">Quantité</TH>
-                    <TH>Référence</TH>
+                    <TH>
+                      <T>Date</T>
+                    </TH>
+                    <TH>
+                      <T>Mouvement</T>
+                    </TH>
+                    <TH>
+                      <T>Magasin</T>
+                    </TH>
+                    <TH className="text-end">
+                      <T>Quantité</T>
+                    </TH>
+                    <TH>
+                      <T>Référence</T>
+                    </TH>
                   </tr>
                 </THead>
                 <TBody>
                   {part.movements.map((m) => (
                     <TR key={m.id}>
                       <TD className="whitespace-nowrap">{formatDateTime(m.createdAt)}</TD>
-                      <TD>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</TD>
-                      <TD>{m.warehouseName}</TD>
-                      <TD className="text-right tabular-nums">{signed(m.type, m.quantity)}</TD>
+                      <TD>
+                        <Tr>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</Tr>
+                      </TD>
+                      <TD>
+                        <Tr>{m.warehouseName}</Tr>
+                      </TD>
+                      <TD className="text-end tabular-nums">{signed(m.type, m.quantity)}</TD>
                       <TD className="text-xs text-slate-600">
                         {m.workOrderId ? (
                           <Link href={`/interventions/${m.workOrderId}`} className="text-brand-700 hover:underline">
-                            {m.workOrderNumber}
+                            <Tr>{m.workOrderNumber}</Tr>
                           </Link>
                         ) : (
                           [m.reference, m.reason].filter(Boolean).join(" — ")

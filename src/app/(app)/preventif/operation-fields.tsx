@@ -1,6 +1,7 @@
 import { Field } from "@/components/forms/action-form";
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/inputs";
 import { CALENDAR_UNIT, METER_TYPE, OPERATION_MODE, options } from "@/lib/labels";
+import { T } from "@/i18n/client";
 
 /** Champs d'une opération de maintenance (PRV-02, PRV-03) : déclencheurs au premier seuil atteint. */
 export function OperationFields() {
@@ -21,7 +22,9 @@ export function OperationFields() {
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600">Tous les</span>
+            <span className="text-sm text-slate-600">
+              <T>Tous les</T>
+            </span>
             <Input name="calendarEvery" type="number" min={1} className="w-24" aria-label="Intervalle calendaire" />
             <Select
               name="calendarUnit"
@@ -32,7 +35,9 @@ export function OperationFields() {
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600">ou tous les</span>
+            <span className="text-sm text-slate-600">
+              <T>ou tous les</T>
+            </span>
             <Input name="meterEvery" type="number" min={1} className="w-28" aria-label="Intervalle compteur" />
             <Select name="meterType" defaultValue="HOURS" className="w-40" aria-label="Type de compteur" options={options(METER_TYPE)} />
           </div>

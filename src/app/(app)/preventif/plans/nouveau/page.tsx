@@ -8,6 +8,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { getEquipmentFormOptions } from "@/server/services/equipment";
 import { createPlanAction } from "../../actions";
 import { OperationFields } from "../../operation-fields";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Nouveau plan d'entretien" };
 
@@ -26,7 +27,9 @@ export default async function NewPlanPage() {
         <CardBody>
           <ActionForm action={createPlanAction} className="space-y-8">
             <fieldset className="grid gap-4 sm:grid-cols-2">
-              <legend className="mb-3 text-sm font-semibold text-slate-900">Plan</legend>
+              <legend className="mb-3 text-sm font-semibold text-slate-900">
+                <T>Plan</T>
+              </legend>
               <Field label="Nom du plan" name="planName" required className="sm:col-span-2">
                 <Input id="planName" name="planName" required maxLength={160} placeholder="Ex. Chargeuse sur pneus — entretien périodique" />
               </Field>
@@ -41,13 +44,17 @@ export default async function NewPlanPage() {
               </Field>
             </fieldset>
             <fieldset>
-              <legend className="mb-3 text-sm font-semibold text-slate-900">Première opération</legend>
+              <legend className="mb-3 text-sm font-semibold text-slate-900">
+                <T>Première opération</T>
+              </legend>
               <OperationFields />
             </fieldset>
             <div className="flex items-center gap-3 border-t border-slate-100 pt-5">
-              <SubmitButton>Créer le plan</SubmitButton>
+              <SubmitButton>
+                <T>Créer le plan</T>
+              </SubmitButton>
               <ButtonLink href="/preventif" variant="ghost">
-                Annuler
+                <T>Annuler</T>
               </ButtonLink>
             </div>
           </ActionForm>

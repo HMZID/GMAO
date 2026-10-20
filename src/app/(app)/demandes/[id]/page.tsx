@@ -11,6 +11,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getWorkRequest } from "@/server/services/work-requests";
 import { convertWorkRequestAction, mergeWorkRequestAction, qualifyWorkRequestAction, rejectWorkRequestAction } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Demande d'intervention" };
 
@@ -33,8 +34,16 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
           <>
             <RequestStatusBadge status={r.status} />
             <PriorityBadge value={r.priority} />
-            {r.isStopped ? <Badge tone="red">Machine arrêtée</Badge> : null}
-            {r.isSafetyRisk ? <Badge tone="red">Risque sécurité</Badge> : null}
+            {r.isStopped ? (
+              <Badge tone="red">
+                <T>Machine arrêtée</T>
+              </Badge>
+            ) : null}
+            {r.isSafetyRisk ? (
+              <Badge tone="red">
+                <T>Risque sécurité</T>
+              </Badge>
+            ) : null}
           </>
         }
       />
@@ -42,27 +51,29 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
       <div className="mb-6 space-y-3">
         {sp.cree ? (
           <Alert tone="green" title="Signalement enregistré">
-            Les gestionnaires du site sont notifiés{r.priority === "P1" ? " en urgence" : ""}.
+            <T>{r.priority === "P1" ? "Les gestionnaires du site sont notifiés en urgence." : "Les gestionnaires du site sont notifiés."}</T>
           </Alert>
         ) : null}
         {open && duplicates > 0 ? (
           <Alert tone="amber" title="Doublon possible">
-            <p>D&apos;autres demandes ou interventions sont ouvertes sur cet équipement :</p>
-            <ul className="mt-1 list-disc pl-5">
+            <p>
+              <T>D&apos;autres demandes ou interventions sont ouvertes sur cet équipement :</T>
+            </p>
+            <ul className="mt-1 list-disc ps-5">
               {r.otherOpenRequests.map((o) => (
                 <li key={o.id}>
                   <Link href={`/demandes/${o.id}`} className="underline">
-                    {o.number}
+                    <Tr>{o.number}</Tr>
                   </Link>{" "}
-                  — {o.symptom} ({formatDateTime(o.reportedAt)})
+                  — <Tr>{o.symptom}</Tr> ({formatDateTime(o.reportedAt)})
                 </li>
               ))}
               {r.openOrders.map((o) => (
                 <li key={o.id}>
                   <Link href={`/interventions/${o.id}`} className="underline">
-                    {o.number}
+                    <Tr>{o.number}</Tr>
                   </Link>{" "}
-                  — {o.title}
+                  — <Tr>{o.title}</Tr>
                 </li>
               ))}
             </ul>
@@ -70,7 +81,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
         ) : null}
         {r.status === "REJECTED" ? (
           <Alert tone="amber" title="Demande rejetée">
-            {r.rejectionReason}
+            <Tr>{r.rejectionReason}</Tr>
           </Alert>
         ) : null}
         {r.workOrder ? (
@@ -79,7 +90,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
             title={r.status === "MERGED" ? "Rattachée à une intervention à réaliser existante" : "Transformée en intervention à réaliser"}
           >
             <Link href={`/interventions/${r.workOrder.id}`} className="font-medium underline">
-              {r.workOrder.number}
+              <Tr>{r.workOrder.number}</Tr>
             </Link>{" "}
             <WorkOrderStatusBadge status={r.workOrder.status} />
           </Alert>
@@ -97,9 +108,9 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
                   value: (
                     <span className="flex flex-wrap items-center gap-2">
                       <Link href={`/equipements/${r.equipment.id}`} className="font-medium text-brand-700 hover:underline">
-                        {r.equipment.code}
+                        <Tr>{r.equipment.code}</Tr>
                       </Link>
-                      {r.equipment.name}
+                      <Tr>{r.equipment.name}</Tr>
                       <EquipmentStatusBadge status={r.equipment.status} />
                       <CriticalityBadge value={r.equipment.criticality} />
                     </span>
@@ -128,7 +139,9 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
               ]}
             />
             <div>
-              <p className="text-xs font-medium text-slate-500">Description</p>
+              <p className="text-xs font-medium text-slate-500">
+                <T>Description</T>
+              </p>
               <p className="mt-1 whitespace-pre-line text-sm text-slate-800">{r.description || "—"}</p>
             </div>
           </CardBody>
@@ -153,7 +166,9 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
                     />
                   </Field>
                   <Checkbox name="immobilize" label="Immobiliser l'équipement" defaultChecked={r.immobilize || r.isStopped || r.isSafetyRisk} />
-                  <SubmitButton>{r.status === "QUALIFIED" ? "Mettre à jour" : "Qualifier"}</SubmitButton>
+                  <SubmitButton>
+                    <Tr>{r.status === "QUALIFIED" ? "Mettre à jour" : "Qualifier"}</Tr>
+                  </SubmitButton>
                 </ActionForm>
               </CardBody>
             </Card>
@@ -167,7 +182,9 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
               />
               <CardBody>
                 <ActionForm action={convertWorkRequestAction.bind(null, r.id)}>
-                  <SubmitButton>Transformer en intervention à réaliser</SubmitButton>
+                  <SubmitButton>
+                    <T>Transformer en intervention à réaliser</T>
+                  </SubmitButton>
                 </ActionForm>
               </CardBody>
             </Card>
@@ -186,7 +203,9 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
                       options={r.openOrders.map((o) => ({ value: o.id, label: `${o.number} — ${o.title}` }))}
                     />
                   </Field>
-                  <SubmitButton variant="secondary">Rattacher</SubmitButton>
+                  <SubmitButton variant="secondary">
+                    <T>Rattacher</T>
+                  </SubmitButton>
                 </ActionForm>
               </CardBody>
             </Card>
@@ -200,7 +219,9 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
                   <Field label="Motif" name="reason" required>
                     <Textarea id="reason" name="reason" required rows={2} maxLength={500} />
                   </Field>
-                  <SubmitButton variant="secondary">Rejeter la demande</SubmitButton>
+                  <SubmitButton variant="secondary">
+                    <T>Rejeter la demande</T>
+                  </SubmitButton>
                 </ActionForm>
               </CardBody>
             </Card>

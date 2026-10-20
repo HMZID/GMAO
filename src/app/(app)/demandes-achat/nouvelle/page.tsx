@@ -10,6 +10,7 @@ import { listCostCenters, listSites } from "@/server/services/organization";
 import { listPartOptions, listSupplierOptions } from "@/server/services/stock";
 import { listWorkOrders } from "@/server/services/work-orders";
 import { createPurchaseRequestAction } from "../actions";
+import { T } from "@/i18n/client";
 
 export const metadata = { title: "Nouvelle demande d'achat" };
 
@@ -61,7 +62,9 @@ export default async function NewPurchaseRequestPage(props: PageProps<"/demandes
               <Input name="neededBy" type="date" />
             </Field>
             <fieldset className="space-y-4 rounded-md border border-slate-200 p-4 sm:col-span-2">
-              <legend className="px-1 text-sm font-medium text-slate-700">Rattachement (un au moins, ACH-01)</legend>
+              <legend className="px-1 text-sm font-medium text-slate-700">
+                <T>Rattachement (un au moins, ACH-01)</T>
+              </legend>
               <Field label="Intervention à réaliser" name="workOrderId">
                 <Select
                   name="workOrderId"
@@ -83,7 +86,9 @@ export default async function NewPurchaseRequestPage(props: PageProps<"/demandes
               </div>
             </fieldset>
             <div className="sm:col-span-2">
-              <SubmitButton>Soumettre la demande</SubmitButton>
+              <SubmitButton>
+                <T>Soumettre la demande</T>
+              </SubmitButton>
             </div>
           </ActionForm>
         </CardBody>

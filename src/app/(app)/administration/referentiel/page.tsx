@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader, Table, TBody, TD, TH, THead, TR } from "@/c
 import { getAuthContext } from "@/server/auth/session";
 import { listCategories, listModels } from "@/server/services/equipment";
 import { createCategoryAction, createModelAction } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Référentiel équipements" };
 
@@ -28,25 +29,41 @@ export default async function ReferentialPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Code</TH>
-                <TH>Catégorie</TH>
-                <TH>Criticité par défaut</TH>
-                <TH>Attributs</TH>
-                <TH className="text-right">Équipements</TH>
+                <TH>
+                  <T>Code</T>
+                </TH>
+                <TH>
+                  <T>Catégorie</T>
+                </TH>
+                <TH>
+                  <T>Criticité par défaut</T>
+                </TH>
+                <TH>
+                  <T>Attributs</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Équipements</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
               {categories.map((c) => (
                 <TR key={c.id}>
-                  <TD className="font-mono text-xs">{c.code}</TD>
-                  <TD>{c.name}</TD>
+                  <TD className="font-mono text-xs">
+                    <Tr>{c.code}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{c.name}</Tr>
+                  </TD>
                   <TD>
                     <CriticalityBadge value={c.defaultCriticality} />
                   </TD>
                   <TD className="text-xs text-slate-600">
                     {c.attributeDefinitions?.map((a) => `${a.label}${a.unit ? ` (${a.unit})` : ""}`).join(", ") || "—"}
                   </TD>
-                  <TD className="text-right tabular-nums">{c.equipmentCount}</TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{c.equipmentCount}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>
@@ -62,7 +79,9 @@ export default async function ReferentialPage() {
               <Field label="Criticité" name="defaultCriticality">
                 <Select id="c-crit" name="defaultCriticality" defaultValue="B" options={["A", "B", "C"].map((v) => ({ value: v, label: v }))} />
               </Field>
-              <SubmitButton variant="secondary">Ajouter la catégorie</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Ajouter la catégorie</T>
+              </SubmitButton>
             </ActionForm>
           </CardBody>
         </Card>
@@ -71,17 +90,29 @@ export default async function ReferentialPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Marque</TH>
-                <TH>Modèle</TH>
-                <TH>Catégorie</TH>
+                <TH>
+                  <T>Marque</T>
+                </TH>
+                <TH>
+                  <T>Modèle</T>
+                </TH>
+                <TH>
+                  <T>Catégorie</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
               {models.map((m) => (
                 <TR key={m.id}>
-                  <TD>{m.manufacturer}</TD>
-                  <TD>{m.name}</TD>
-                  <TD>{m.categoryName}</TD>
+                  <TD>
+                    <Tr>{m.manufacturer}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{m.name}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{m.categoryName}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>
@@ -103,7 +134,9 @@ export default async function ReferentialPage() {
               <Field label="Modèle" name="name" required>
                 <Input id="m-name" name="name" required maxLength={120} />
               </Field>
-              <SubmitButton variant="secondary">Ajouter le modèle</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Ajouter le modèle</T>
+              </SubmitButton>
             </ActionForm>
           </CardBody>
         </Card>

@@ -22,6 +22,7 @@ import {
   updateSiteSettings,
 } from "@/server/services/site";
 import { formToObject } from "@/server/validation";
+import { tpl } from "@/i18n/translate";
 
 /** Courriels d'accès envoyés tout de suite, sans attendre le passage du processus d'envoi. */
 function sendQueuedEmailsSoon() {
@@ -44,7 +45,7 @@ export async function demoRequestDecisionAction(id: string, _: ActionState, form
         sendQueuedEmailsSoon();
         return {
           status: "success",
-          message: `Démonstration ouverte jusqu'au ${result.endsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} : lien de connexion, identifiant (${result.email}) et mot de passe provisoire envoyés par courriel. Mot de passe provisoire, à dicter si le courriel n'arrive pas :`,
+          message: tpl`Démonstration ouverte jusqu'au ${result.endsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })} : lien de connexion, identifiant (${result.email}) et mot de passe provisoire envoyés par courriel. Mot de passe provisoire, à dicter si le courriel n'arrive pas :`,
           secret: result.password,
         } satisfies ActionState;
       }
@@ -53,7 +54,7 @@ export async function demoRequestDecisionAction(id: string, _: ActionState, form
         sendQueuedEmailsSoon();
         return {
           status: "success",
-          message: `Nouveaux accès envoyés à ${result.email} ; l'ancien mot de passe provisoire ne fonctionne plus. Nouveau mot de passe provisoire :`,
+          message: tpl`Nouveaux accès envoyés à ${result.email} ; l'ancien mot de passe provisoire ne fonctionne plus. Nouveau mot de passe provisoire :`,
           secret: result.password,
         } satisfies ActionState;
       }

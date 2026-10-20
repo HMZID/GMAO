@@ -11,6 +11,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getPurchaseRequest } from "@/server/services/purchase-requests";
 import { cancelPurchaseRequestAction } from "../actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Demande d'achat" };
 
@@ -25,15 +26,19 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
         back={{ href: "/demandes-achat", label: "Demandes d'achat" }}
         title={
           <span className="flex flex-wrap items-baseline gap-3">
-            {pr.number}
-            <span className="text-lg font-normal text-slate-600">{pr.description}</span>
+            <Tr>{pr.number}</Tr>
+            <span className="text-lg font-normal text-slate-600">
+              <Tr>{pr.description}</Tr>
+            </span>
           </span>
         }
         meta={
           <>
-            <Badge tone={PURCHASE_REQUEST_STATUS[pr.status]?.tone}>{PURCHASE_REQUEST_STATUS[pr.status]?.label}</Badge>
+            <Badge tone={PURCHASE_REQUEST_STATUS[pr.status]?.tone}>
+              <Tr>{PURCHASE_REQUEST_STATUS[pr.status]?.label}</Tr>
+            </Badge>
             <span className="text-sm text-slate-500">
-              {pr.requester} · {formatDateTime(pr.createdAt)} · {pr.siteName} ({pr.companyName})
+              <Tr>{pr.requester}</Tr> · {formatDateTime(pr.createdAt)} · <Tr>{pr.siteName}</Tr> (<Tr>{pr.companyName}</Tr>)
             </span>
           </>
         }
@@ -41,7 +46,7 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
       {pr.status === "CANCELLED" && pr.cancellationReason ? (
         <div className="mb-6">
           <Alert tone="amber" title="Demande annulée">
-            {pr.cancellationReason}
+            <Tr>{pr.cancellationReason}</Tr>
           </Alert>
         </div>
       ) : null}
@@ -50,7 +55,7 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
           <ApprovalCard approvals={pr.approvals} />
           {pr.approvals.length === 0 && pr.status === "APPROVED" ? (
             <Alert tone="green" title="Validée d'office">
-              Aucune étape du circuit ne s&apos;applique à ce montant.
+              <T>Aucune étape du circuit ne s&apos;applique à ce montant.</T>
             </Alert>
           ) : null}
         </div>
@@ -71,7 +76,7 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
                     label: "Intervention à réaliser",
                     value: pr.workOrder ? (
                       <Link href={`/interventions/${pr.workOrder.id}`} className="text-brand-700 hover:underline">
-                        {pr.workOrder.number} — {pr.workOrder.title}
+                        <Tr>{pr.workOrder.number}</Tr> — <Tr>{pr.workOrder.title}</Tr>
                       </Link>
                     ) : null,
                   },
@@ -79,7 +84,7 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
                     label: "Équipement",
                     value: pr.equipment ? (
                       <Link href={`/equipements/${pr.equipment.id}`} className="text-brand-700 hover:underline">
-                        {pr.equipment.code} — {pr.equipment.name}
+                        <Tr>{pr.equipment.code}</Tr> — <Tr>{pr.equipment.name}</Tr>
                       </Link>
                     ) : null,
                   },
@@ -94,7 +99,9 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
                 <Field label="Motif" name="reason" required>
                   <Input name="reason" required maxLength={500} />
                 </Field>
-                <SubmitButton variant="danger">Annuler la demande</SubmitButton>
+                <SubmitButton variant="danger">
+                  <T>Annuler la demande</T>
+                </SubmitButton>
               </ActionForm>
             </Disclosure>
           ) : null}

@@ -11,6 +11,7 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listPartFamilies, listParts, partFilters } from "@/server/services/stock";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Pièces et stocks" };
 
@@ -30,14 +31,18 @@ export default async function PartsPage(props: PageProps<"/stock">) {
             {ctx.can("stock.read") ? (
               <>
                 <ButtonLink href="/stock/mouvements" variant="secondary">
-                  Mouvements
+                  <T>Mouvements</T>
                 </ButtonLink>
                 <ButtonLink href="/stock/inventaire" variant="secondary">
-                  Inventaire
+                  <T>Inventaire</T>
                 </ButtonLink>
               </>
             ) : null}
-            {ctx.can("part.write") ? <ButtonLink href="/stock/articles/nouveau">Nouvel article</ButtonLink> : null}
+            {ctx.can("part.write") ? (
+              <ButtonLink href="/stock/articles/nouveau">
+                <T>Nouvel article</T>
+              </ButtonLink>
+            ) : null}
           </>
         }
       />
@@ -69,14 +74,30 @@ export default async function PartsPage(props: PageProps<"/stock">) {
           <Table>
             <THead>
               <tr>
-                <TH>Référence</TH>
-                <TH>Désignation</TH>
-                <TH>Famille</TH>
-                <TH className="text-right">En stock</TH>
-                <TH className="text-right">Réservé</TH>
-                <TH className="text-right">Disponible</TH>
-                <TH className="text-right">Coût moyen</TH>
-                <TH>Criticité</TH>
+                <TH>
+                  <T>Référence</T>
+                </TH>
+                <TH>
+                  <T>Désignation</T>
+                </TH>
+                <TH>
+                  <T>Famille</T>
+                </TH>
+                <TH className="text-end">
+                  <T>En stock</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Réservé</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Disponible</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Coût moyen</T>
+                </TH>
+                <TH>
+                  <T>Criticité</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -87,25 +108,25 @@ export default async function PartsPage(props: PageProps<"/stock">) {
                   <TR key={p.id}>
                     <TD className="whitespace-nowrap">
                       <Link href={`/stock/articles/${p.id}`} className="font-medium text-brand-700 hover:underline">
-                        {p.sku}
+                        <Tr>{p.sku}</Tr>
                       </Link>
                     </TD>
                     <TD>
-                      {p.name}
+                      <Tr>{p.name}</Tr>
                       <p className="text-xs text-slate-500">{[p.manufacturer, p.manufacturerRef].filter(Boolean).join(" · ")}</p>
                     </TD>
                     <TD>{p.family ?? "—"}</TD>
-                    <TD className="text-right tabular-nums">{formatNumber(onHand, p.unit)}</TD>
-                    <TD className="text-right tabular-nums text-slate-500">{formatNumber(reserved)}</TD>
-                    <TD className="text-right tabular-nums">
+                    <TD className="text-end tabular-nums">{formatNumber(onHand, p.unit)}</TD>
+                    <TD className="text-end tabular-nums text-slate-500">{formatNumber(reserved)}</TD>
+                    <TD className="text-end tabular-nums">
                       {formatNumber(onHand - reserved)}
                       {p.belowReorder ? (
-                        <Badge tone="amber" className="ml-2">
-                          À commander
+                        <Badge tone="amber" className="ms-2">
+                          <T>À commander</T>
                         </Badge>
                       ) : null}
                     </TD>
-                    <TD className="text-right tabular-nums">{formatCurrency(p.averageCost)}</TD>
+                    <TD className="text-end tabular-nums">{formatCurrency(p.averageCost)}</TD>
                     <TD>
                       <CriticalityBadge value={p.criticality} />
                     </TD>

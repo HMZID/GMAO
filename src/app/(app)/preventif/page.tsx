@@ -7,6 +7,7 @@ import { Badge, Card, CardHeader, EmptyState, StatTile, Table, TBody, TD, TH, TH
 import { getAuthContext } from "@/server/auth/session";
 import { countDueItemsByStatus, listPlans } from "@/server/services/preventive";
 import { generateAction } from "./actions";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Préventif" };
 
@@ -24,10 +25,16 @@ export default async function PreventivePage() {
           <>
             {ctx.can("workorder.manage") ? (
               <ActionForm action={generateAction} showMessage>
-                <SubmitButton variant="secondary">Générer les interventions préventives</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Générer les interventions préventives</T>
+                </SubmitButton>
               </ActionForm>
             ) : null}
-            {ctx.can("plan.write") ? <ButtonLink href="/preventif/plans/nouveau">Nouveau plan</ButtonLink> : null}
+            {ctx.can("plan.write") ? (
+              <ButtonLink href="/preventif/plans/nouveau">
+                <T>Nouveau plan</T>
+              </ButtonLink>
+            ) : null}
           </>
         }
       />
@@ -49,7 +56,7 @@ export default async function PreventivePage() {
           description="Un plan appliqué à un équipement crée une échéance par opération"
           actions={
             <Link href="/preventif/echeances" className="text-sm text-brand-700 hover:underline">
-              Toutes les échéances
+              <T>Toutes les échéances</T>
             </Link>
           }
         />
@@ -59,11 +66,21 @@ export default async function PreventivePage() {
           <Table>
             <THead>
               <tr>
-                <TH>Plan</TH>
-                <TH>S&apos;applique à</TH>
-                <TH className="text-right">Opérations</TH>
-                <TH className="text-right">Équipements</TH>
-                <TH>Version</TH>
+                <TH>
+                  <T>Plan</T>
+                </TH>
+                <TH>
+                  <T>S&apos;applique à</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Opérations</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Équipements</T>
+                </TH>
+                <TH>
+                  <T>Version</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -71,15 +88,29 @@ export default async function PreventivePage() {
                 <TR key={p.id}>
                   <TD>
                     <Link href={`/preventif/plans/${p.id}`} className="font-medium text-brand-700 hover:underline">
-                      {p.name}
+                      <Tr>{p.name}</Tr>
                     </Link>
-                    {!p.active ? <Badge className="ml-2">Inactif</Badge> : null}
-                    {p.description ? <p className="max-w-xl text-xs text-slate-500">{p.description}</p> : null}
+                    {!p.active ? (
+                      <Badge className="ms-2">
+                        <T>Inactif</T>
+                      </Badge>
+                    ) : null}
+                    {p.description ? (
+                      <p className="max-w-xl text-xs text-slate-500">
+                        <Tr>{p.description}</Tr>
+                      </p>
+                    ) : null}
                   </TD>
                   <TD>{[p.categoryName, p.modelName].filter(Boolean).join(" · ") || "—"}</TD>
-                  <TD className="text-right tabular-nums">{p.operations}</TD>
-                  <TD className="text-right tabular-nums">{p.equipmentCount}</TD>
-                  <TD>v{p.version}</TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{p.operations}</Tr>
+                  </TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{p.equipmentCount}</Tr>
+                  </TD>
+                  <TD>
+                    v<Tr>{p.version}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>

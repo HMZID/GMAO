@@ -11,6 +11,7 @@ import { PURCHASE_REQUEST_STATUS } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listPurchaseRequests, purchaseRequestFilters } from "@/server/services/purchase-requests";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Demandes d'achat" };
 
@@ -25,7 +26,13 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
       <PageHeader
         title="Demandes d'achat"
         description="Pièces et prestations à acheter, rattachées à une intervention, un équipement ou un centre de coût, puis validées selon les seuils."
-        actions={ctx.can("purchase.create") ? <ButtonLink href="/demandes-achat/nouvelle">Nouvelle demande</ButtonLink> : null}
+        actions={
+          ctx.can("purchase.create") ? (
+            <ButtonLink href="/demandes-achat/nouvelle">
+              <T>Nouvelle demande</T>
+            </ButtonLink>
+          ) : null
+        }
       />
       <Card>
         <FilterBar resetHref="/demandes-achat">
@@ -48,12 +55,24 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
           <Table>
             <THead>
               <tr>
-                <TH>Demande</TH>
-                <TH>Objet</TH>
-                <TH className="text-right">Quantité</TH>
-                <TH className="text-right">Montant estimé</TH>
-                <TH>Besoin</TH>
-                <TH>Statut</TH>
+                <TH>
+                  <T>Demande</T>
+                </TH>
+                <TH>
+                  <T>Objet</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Quantité</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Montant estimé</T>
+                </TH>
+                <TH>
+                  <T>Besoin</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -61,21 +80,27 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
                 <TR key={r.id}>
                   <TD className="whitespace-nowrap">
                     <Link href={`/demandes-achat/${r.id}`} className="font-medium text-brand-700 hover:underline">
-                      {r.number}
+                      <Tr>{r.number}</Tr>
                     </Link>
                     <p className="text-xs text-slate-500">
-                      {r.requester} · {formatDateTime(r.createdAt)}
+                      <Tr>{r.requester}</Tr> · {formatDateTime(r.createdAt)}
                     </p>
                   </TD>
                   <TD>
-                    <p className="max-w-80 text-slate-900">{r.description}</p>
-                    <p className="text-xs text-slate-500">{r.companyName}</p>
+                    <p className="max-w-80 text-slate-900">
+                      <Tr>{r.description}</Tr>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      <Tr>{r.companyName}</Tr>
+                    </p>
                   </TD>
-                  <TD className="text-right tabular-nums">{formatNumber(r.quantity)}</TD>
-                  <TD className="text-right tabular-nums">{formatCurrency(r.amount)}</TD>
+                  <TD className="text-end tabular-nums">{formatNumber(r.quantity)}</TD>
+                  <TD className="text-end tabular-nums">{formatCurrency(r.amount)}</TD>
                   <TD className="whitespace-nowrap">{r.neededBy ? formatDate(r.neededBy) : "—"}</TD>
                   <TD>
-                    <Badge tone={PURCHASE_REQUEST_STATUS[r.status]?.tone}>{PURCHASE_REQUEST_STATUS[r.status]?.label}</Badge>
+                    <Badge tone={PURCHASE_REQUEST_STATUS[r.status]?.tone}>
+                      <Tr>{PURCHASE_REQUEST_STATUS[r.status]?.label}</Tr>
+                    </Badge>
                   </TD>
                 </TR>
               ))}

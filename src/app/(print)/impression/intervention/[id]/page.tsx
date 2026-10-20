@@ -8,6 +8,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getBranding, logoUrl } from "@/server/services/branding";
 import { getWorkOrder } from "@/server/services/work-orders";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Fiche d'intervention" };
 
@@ -31,11 +32,11 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
     <>
       <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-2 px-4 print:hidden">
         <Link href={`/interventions/${wo.id}`} className={buttonClass("ghost")}>
-          ← Retour à l&apos;intervention
+          <T>← Retour à l&apos;intervention</T>
         </Link>
         <div className="flex flex-wrap gap-2">
           <Link href={withCosts ? `?` : `?couts=1`} className={buttonClass("secondary")} replace>
-            {withCosts ? "Masquer les coûts" : "Afficher les coûts"}
+            <Tr>{withCosts ? "Masquer les coûts" : "Afficher les coûts"}</Tr>
           </Link>
           <PrintButton />
         </div>
@@ -49,42 +50,72 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
               <img src={logo} alt="" className="h-14 w-14 object-contain" />
             ) : null}
             <div>
-              <p className="text-base font-semibold">{branding.label}</p>
-              <p className="text-slate-600">{wo.site.name}</p>
+              <p className="text-base font-semibold">
+                <Tr>{branding.label}</Tr>
+              </p>
+              <p className="text-slate-600">
+                <Tr>{wo.site.name}</Tr>
+              </p>
             </div>
           </div>
-          <div className="text-right">
-            <h1 className="text-lg font-bold uppercase tracking-wide">Fiche d&apos;intervention</h1>
-            <p className="font-mono text-base font-semibold">{wo.number}</p>
-            <p className="text-slate-600">Éditée le {formatDateTime(printedAt)}</p>
+          <div className="text-end">
+            <h1 className="text-lg font-bold uppercase tracking-wide">
+              <T>Fiche d&apos;intervention</T>
+            </h1>
+            <p className="font-mono text-base font-semibold">
+              <Tr>{wo.number}</Tr>
+            </p>
+            <p className="text-slate-600">
+              <T params={{ date: formatDateTime(printedAt) }}>{"Éditée le {date}"}</T>
+            </p>
           </div>
         </header>
 
         <Section title="Intervention">
           <Grid>
             <Item label="Intitulé" wide>
-              {wo.title}
+              <Tr>{wo.title}</Tr>
             </Item>
-            <Item label="Type">{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Item>
-            <Item label="Priorité">{PRIORITY[wo.priority]?.label ?? wo.priority}</Item>
-            <Item label="Statut">{WORK_ORDER_STATUS[wo.status]?.label ?? wo.status}</Item>
-            <Item label="Immobilisant">{wo.isImmobilizing ? "Oui" : "Non"}</Item>
+            <Item label="Type">
+              <Tr>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Tr>
+            </Item>
+            <Item label="Priorité">
+              <Tr>{PRIORITY[wo.priority]?.label ?? wo.priority}</Tr>
+            </Item>
+            <Item label="Statut">
+              <Tr>{WORK_ORDER_STATUS[wo.status]?.label ?? wo.status}</Tr>
+            </Item>
+            <Item label="Immobilisant">
+              <Tr>{wo.isImmobilizing ? "Oui" : "Non"}</Tr>
+            </Item>
             <Item label="Lieu">{wo.jobsite?.name ?? wo.workshop?.name ?? wo.site.name}</Item>
-            <Item label="Prestataire">{wo.isExternal ? (wo.supplier?.name ?? "À désigner") : "Interne"}</Item>
+            <Item label="Prestataire">
+              <Tr>{wo.isExternal ? (wo.supplier?.name ?? "À désigner") : "Interne"}</Tr>
+            </Item>
           </Grid>
-          {wo.description ? <p className="mt-2 whitespace-pre-line">{wo.description}</p> : null}
+          {wo.description ? (
+            <p className="mt-2 whitespace-pre-line">
+              <Tr>{wo.description}</Tr>
+            </p>
+          ) : null}
           {wo.requests.length > 0 ? (
-            <p className="mt-2 text-slate-600">Demande(s) d&apos;origine : {wo.requests.map((r) => `${r.number} — ${r.symptom}`).join(" ; ")}</p>
+            <p className="mt-2 text-slate-600">
+              <T params={{ v: wo.requests.map((r) => `${r.number} — ${r.symptom}`).join(" ; ") }}>{"Demande(s) d'origine : {v}"}</T>
+            </p>
           ) : null}
         </Section>
 
         <Section title="Équipement">
           <Grid>
-            <Item label="Code parc">{wo.equipment.code}</Item>
-            <Item label="Désignation" wide>
-              {wo.equipment.name}
+            <Item label="Code parc">
+              <Tr>{wo.equipment.code}</Tr>
             </Item>
-            <Item label="Marque">{wo.equipment.manufacturer}</Item>
+            <Item label="Désignation" wide>
+              <Tr>{wo.equipment.name}</Tr>
+            </Item>
+            <Item label="Marque">
+              <Tr>{wo.equipment.manufacturer}</Tr>
+            </Item>
             <Item label="Compteur à la clôture">{wo.meterValueAtClose != null ? `${formatNumber(wo.meterValueAtClose)} ${meterUnit}` : "—"}</Item>
           </Grid>
         </Section>
@@ -149,10 +180,16 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
 
         <Section title="Compte rendu">
           <p className="min-h-[18mm] whitespace-pre-line">{wo.workSummary || " "}</p>
-          {wo.outcome ? <p className="mt-1 text-slate-600">Résultat : {WORK_ORDER_OUTCOME[wo.outcome] ?? wo.outcome}</p> : null}
+          {wo.outcome ? (
+            <p className="mt-1 text-slate-600">
+              <T params={{ v: WORK_ORDER_OUTCOME[wo.outcome] ?? wo.outcome }}>{"Résultat : {v}"}</T>
+            </p>
+          ) : null}
           {wo.symptomCode || wo.causeCode || wo.remedyCode ? (
             <p className="mt-1 text-slate-600">
-              Symptôme : {wo.symptomCode ?? "—"} · Cause : {wo.causeCode ?? "—"} · Remède : {wo.remedyCode ?? "—"}
+              <T params={{ v: wo.symptomCode ?? "—", v2: wo.causeCode ?? "—", v3: wo.remedyCode ?? "—" }}>
+                {"Symptôme : {v} · Cause : {v2} · Remède : {v3}"}
+              </T>
             </p>
           ) : null}
         </Section>
@@ -168,20 +205,23 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
         ) : null}
 
         <section className="mt-5 break-inside-avoid">
-          <h2 className="mb-2 border-b border-slate-300 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">Signatures</h2>
+          <h2 className="mb-2 border-b border-slate-300 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+            <T>Signatures</T>
+          </h2>
           <div className="grid grid-cols-3 gap-3">
             <SignatureBox title="Intervenant" name={technicians.join(", ")} />
             <SignatureBox title="Prestataire" name={wo.isExternal ? wo.supplier?.name : undefined} />
             <SignatureBox title="Responsable (réception des travaux)" name={wo.releaseValidatedBy?.name} />
           </div>
           <p className="mt-2 text-[10px] text-slate-500">
-            Signature précédée de la mention « Lu et approuvé ». Les signataires attestent de la réalisation des travaux décrits ci-dessus.
+            <T>Signature précédée de la mention « Lu et approuvé ». Les signataires attestent de la réalisation des travaux décrits ci-dessus.</T>
           </p>
         </section>
 
         <footer className="mt-6 border-t border-slate-300 pt-2 text-[10px] text-slate-500">
-          {branding.label} · Intervention {wo.number} · Statut au {formatDate(printedAt)} : {WORK_ORDER_STATUS[wo.status]?.label ?? wo.status} ·
-          Document édité par GMAO
+          <T params={{ label: branding.label, number: wo.number, date: formatDate(printedAt), v: WORK_ORDER_STATUS[wo.status]?.label ?? wo.status }}>
+            {"{label} · Intervention {number} · Statut au {date} : {v} · Document édité par GMAO"}
+          </T>
         </footer>
       </article>
     </>
@@ -191,35 +231,45 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mt-4 break-inside-avoid">
-      <h2 className="mb-2 border-b border-slate-300 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">{title}</h2>
-      {children}
+      <h2 className="mb-2 border-b border-slate-300 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+        <Tr>{title}</Tr>
+      </h2>
+      <Tr>{children}</Tr>
     </section>
   );
 }
 
 function Grid({ children }: { children: ReactNode }) {
-  return <dl className="grid grid-cols-4 gap-x-4 gap-y-1.5">{children}</dl>;
+  return (
+    <dl className="grid grid-cols-4 gap-x-4 gap-y-1.5">
+      <Tr>{children}</Tr>
+    </dl>
+  );
 }
 
 function Item({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
   return (
     <div className={wide ? "col-span-2" : undefined}>
-      <dt className="text-[10px] uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="font-medium">{children}</dd>
+      <dt className="text-[10px] uppercase tracking-wide text-slate-500">
+        <Tr>{label}</Tr>
+      </dt>
+      <dd className="font-medium">
+        <Tr>{children}</Tr>
+      </dd>
     </div>
   );
 }
 
 /** Tableau simple pour l'impression (sans la présentation en cartes des petits écrans). */
 function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNode[][]; foot?: ReactNode[]; align?: ("left" | "right")[] }) {
-  const cls = (i: number) => (align?.[i] === "right" ? "text-right tabular-nums" : "text-left");
+  const cls = (i: number) => (align?.[i] === "right" ? "text-end tabular-nums" : "text-start");
   return (
     <table className="mt-2 w-full border-collapse text-[11px]">
       <thead>
         <tr className="border-b border-slate-400">
           {head.map((h, i) => (
             <th key={h} className={`px-1 py-1 font-semibold ${cls(i)}`}>
-              {h}
+              <Tr>{h}</Tr>
             </th>
           ))}
         </tr>
@@ -229,7 +279,7 @@ function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNo
           <tr key={r} className="border-b border-slate-200 align-top">
             {row.map((cell, i) => (
               <td key={i} className={`px-1 py-1 ${cls(i)}`}>
-                {cell}
+                <Tr>{cell}</Tr>
               </td>
             ))}
           </tr>
@@ -240,7 +290,7 @@ function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNo
           <tr className="font-semibold">
             {foot.map((cell, i) => (
               <td key={i} className={`px-1 py-1 ${cls(i)}`}>
-                {cell}
+                <Tr>{cell}</Tr>
               </td>
             ))}
           </tr>
@@ -253,10 +303,18 @@ function PrintTable({ head, rows, foot, align }: { head: string[]; rows: ReactNo
 function SignatureBox({ title, name }: { title: string; name?: string | null }) {
   return (
     <div className="flex h-[38mm] flex-col rounded border border-slate-400 p-2">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">{title}</p>
-      <p className="mt-1 text-[11px]">Nom : {name || "………………………………"}</p>
-      <p className="text-[11px]">Date : ……/……/…………</p>
-      <p className="mt-auto text-[10px] text-slate-400">Signature</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-700">
+        <Tr>{title}</Tr>
+      </p>
+      <p className="mt-1 text-[11px]">
+        <T params={{ v: name || "………………………………" }}>{"Nom : {v}"}</T>
+      </p>
+      <p className="text-[11px]">
+        <T>Date : ……/……/…………</T>
+      </p>
+      <p className="mt-auto text-[10px] text-slate-400">
+        <T>Signature</T>
+      </p>
     </div>
   );
 }

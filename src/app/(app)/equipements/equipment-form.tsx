@@ -4,6 +4,7 @@ import { Input, Select, Textarea } from "@/components/ui/inputs";
 import { toDateInput } from "@/lib/format";
 import { ACQUISITION_MODE, METER_TYPE, options } from "@/lib/labels";
 import type { ActionState } from "@/lib/action-state";
+import { T, Tr } from "@/i18n/client";
 
 type Opt = { id: string; label: string };
 
@@ -58,7 +59,9 @@ export function EquipmentForm({
   return (
     <ActionForm action={action} className="space-y-8">
       <fieldset className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <legend className="mb-3 text-sm font-semibold text-slate-900">Identification</legend>
+        <legend className="mb-3 text-sm font-semibold text-slate-900">
+          <T>Identification</T>
+        </legend>
         <Field label="Code parc" name="code" required hint="Unique dans le groupe, ex. CH-012">
           <Input id="code" name="code" defaultValue={values.code} required maxLength={40} />
         </Field>
@@ -112,7 +115,9 @@ export function EquipmentForm({
       </fieldset>
 
       <fieldset className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <legend className="mb-3 text-sm font-semibold text-slate-900">Rattachement</legend>
+        <legend className="mb-3 text-sm font-semibold text-slate-900">
+          <T>Rattachement</T>
+        </legend>
         {mode === "create" ? (
           <Field label="Société propriétaire" name="companyId" required>
             <Select
@@ -131,7 +136,9 @@ export function EquipmentForm({
       </fieldset>
 
       <fieldset className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <legend className="mb-3 text-sm font-semibold text-slate-900">Acquisition et garantie</legend>
+        <legend className="mb-3 text-sm font-semibold text-slate-900">
+          <T>Acquisition et garantie</T>
+        </legend>
         <Field label="Mode d'acquisition" name="acquisitionMode">
           <Select
             id="acquisitionMode"
@@ -159,7 +166,9 @@ export function EquipmentForm({
 
       {mode === "create" ? (
         <fieldset className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <legend className="mb-3 text-sm font-semibold text-slate-900">Compteur principal</legend>
+          <legend className="mb-3 text-sm font-semibold text-slate-900">
+            <T>Compteur principal</T>
+          </legend>
           <Field label="Type de compteur" name="primaryMeterType" hint="Vide : équipement sans compteur (préventif calendaire seulement)">
             <Select id="primaryMeterType" name="primaryMeterType" defaultValue="HOURS" placeholder="Aucun compteur" options={options(METER_TYPE)} />
           </Field>
@@ -174,9 +183,11 @@ export function EquipmentForm({
       </Field>
 
       <div className="flex items-center gap-3 border-t border-slate-100 pt-6">
-        <SubmitButton>{mode === "create" ? "Créer l'équipement" : "Enregistrer"}</SubmitButton>
+        <SubmitButton>
+          <Tr>{mode === "create" ? "Créer l'équipement" : "Enregistrer"}</Tr>
+        </SubmitButton>
         <ButtonLink href={cancelHref} variant="ghost">
-          Annuler
+          <T>Annuler</T>
         </ButtonLink>
       </div>
     </ActionForm>

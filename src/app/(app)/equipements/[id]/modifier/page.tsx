@@ -7,6 +7,8 @@ import { getEquipment, getEquipmentFormOptions } from "@/server/services/equipme
 import { getOrganizationOptions } from "@/server/services/organization";
 import { updateEquipmentAction } from "../../actions";
 import { EquipmentForm } from "../../equipment-form";
+import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Modifier l'équipement" };
 
@@ -18,10 +20,10 @@ export default async function EditEquipmentPage(props: PageProps<"/equipements/[
   const [org, opts] = await Promise.all([getOrganizationOptions(ctx), getEquipmentFormOptions(ctx)]);
   return (
     <>
-      <PageHeader title={`Modifier ${equipment.code}`} back={{ href: `/equipements/${id}`, label: equipment.code }} />
+      <PageHeader title={tpl`Modifier ${equipment.code}`} back={{ href: `/equipements/${id}`, label: equipment.code }} />
       {equipment.status === "RETIRED" ? (
         <Alert tone="amber" title="Équipement réformé">
-          La fiche est en lecture seule.
+          <T>La fiche est en lecture seule.</T>
         </Alert>
       ) : (
         <Card>

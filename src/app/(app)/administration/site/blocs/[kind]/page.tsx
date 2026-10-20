@@ -13,6 +13,8 @@ import { isPlatformAdmin } from "@/server/services/platform";
 import { listSiteItems } from "@/server/services/site";
 import { createSiteItemAction, deleteSiteItemAction, moveSiteItemAction, updateSiteItemAction } from "../../actions";
 import { KIND_SLUGS, SiteAdminNav, kindFromSlug } from "../../site-admin-nav";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Blocs du site" };
 
@@ -67,18 +69,20 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
       />
       <SiteAdminNav active={KIND_SLUGS[kind]} />
 
-      <Disclosure summary={`Ajouter : ${def.label.toLowerCase()}`} className="mb-6">
+      <Disclosure summary={tpl`Ajouter : ${def.label.toLowerCase()}`} className="mb-6">
         <ActionForm action={createSiteItemAction.bind(null, kind)} resetOnSuccess className="grid gap-4 md:grid-cols-2">
           <ItemFields kind={kind} />
           <div className="md:col-span-2">
-            <SubmitButton>Ajouter</SubmitButton>
+            <SubmitButton>
+              <T>Ajouter</T>
+            </SubmitButton>
           </div>
         </ActionForm>
       </Disclosure>
 
       {items.length === 0 ? (
         <Card>
-          <EmptyState title={`Aucun bloc « ${def.plural} »`} description="La rubrique est masquée sur le site tant qu'elle est vide." />
+          <EmptyState title={tpl`Aucun bloc « ${def.plural} »`} description="La rubrique est masquée sur le site tant qu'elle est vide." />
         </Card>
       ) : (
         <ol className="space-y-3">
@@ -93,15 +97,23 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                   ) : null}
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-slate-900">
-                      {item.title}
-                      {item.meta ? <span className="ml-2 text-sm font-normal text-slate-500">{item.meta}</span> : null}
+                      <Tr>{item.title}</Tr>
+                      {item.meta ? (
+                        <span className="ms-2 text-sm font-normal text-slate-500">
+                          <Tr>{item.meta}</Tr>
+                        </span>
+                      ) : null}
                       {!item.published ? (
-                        <Badge tone="gray" className="ml-2">
-                          Non publié
+                        <Badge tone="gray" className="ms-2">
+                          <T>Non publié</T>
                         </Badge>
                       ) : null}
                     </p>
-                    {item.body ? <p className="mt-1 line-clamp-2 text-sm text-slate-600">{item.body}</p> : null}
+                    {item.body ? (
+                      <p className="mt-1 line-clamp-2 text-sm text-slate-600">
+                        <Tr>{item.body}</Tr>
+                      </p>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-1">
                     <ActionForm action={moveSiteItemAction.bind(null, item.id, "up")} showMessage={false}>
@@ -130,12 +142,14 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                   <ActionForm action={updateSiteItemAction.bind(null, item.id)} className="grid gap-4 md:grid-cols-2">
                     <ItemFields kind={kind} item={item} />
                     <div className="md:col-span-2">
-                      <SubmitButton>Enregistrer</SubmitButton>
+                      <SubmitButton>
+                        <T>Enregistrer</T>
+                      </SubmitButton>
                     </div>
                   </ActionForm>
                   <ActionForm action={deleteSiteItemAction.bind(null, item.id)} className="mt-4 border-t border-slate-100 pt-4">
                     <SubmitButton variant="danger" size="sm" pendingLabel="Suppression…">
-                      Supprimer
+                      <T>Supprimer</T>
                     </SubmitButton>
                   </ActionForm>
                 </Disclosure>

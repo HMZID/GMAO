@@ -4,6 +4,7 @@ import { Forbidden } from "@/components/forbidden";
 import { PageHeader } from "@/components/layout/page-header";
 import { getAuthContext } from "@/server/auth/session";
 import { isPlatformAdmin } from "@/server/services/platform";
+import { Tr } from "@/i18n/client";
 
 export const metadata = { title: "Administration" };
 
@@ -101,8 +102,12 @@ export default async function AdministrationPage() {
             className="group rounded-lg border border-slate-200 bg-white p-5 shadow-xs hover:border-brand-300 hover:bg-brand-50/30"
           >
             <s.icon className="h-6 w-6 text-brand-700" aria-hidden />
-            <h2 className="mt-3 font-semibold text-slate-900 group-hover:text-brand-800">{s.title}</h2>
-            <p className="mt-1 text-sm text-slate-500">{s.text}</p>
+            <h2 className="mt-3 font-semibold text-slate-900 group-hover:text-brand-800">
+              <Tr>{s.title}</Tr>
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              <Tr>{s.text}</Tr>
+            </p>
           </Link>
         ))}
       </div>

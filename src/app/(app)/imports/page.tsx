@@ -12,6 +12,8 @@ import { getAuthContext } from "@/server/auth/session";
 import { IMPORT_DEFINITIONS, MAX_IMPORT_ROWS } from "@/server/domain/imports";
 import { importableKinds, listImportJobs } from "@/server/services/imports";
 import { simulateImportAction } from "./actions";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Imports" };
 
@@ -33,7 +35,7 @@ export default async function ImportsPage() {
     <>
       <PageHeader
         title="Imports Excel"
-        description={`Télécharger le modèle, le remplir, puis lancer la simulation : chaque ligne est contrôlée comme une saisie à l'écran avant tout import. ${MAX_IMPORT_ROWS} lignes et 10 Mo au plus par fichier.`}
+        description={tpl`Télécharger le modèle, le remplir, puis lancer la simulation : chaque ligne est contrôlée comme une saisie à l'écran avant tout import. ${MAX_IMPORT_ROWS} lignes et 10 Mo au plus par fichier.`}
       />
 
       <div className="mb-8 grid gap-6 lg:grid-cols-3">
@@ -43,14 +45,16 @@ export default async function ImportsPage() {
             <CardBody className="flex flex-1 flex-col gap-4">
               <a href={`/api/v1/imports/templates/${kind.toLowerCase()}`} className={buttonClass("secondary", "sm", "self-start")}>
                 <Download className="h-4 w-4" aria-hidden />
-                Télécharger le modèle
+                <T>Télécharger le modèle</T>
               </a>
               <ActionForm action={simulateImportAction} className="mt-auto space-y-3">
                 <input type="hidden" name="kind" value={kind} />
                 <Field label="Fichier Excel rempli" name="file" required>
                   <Input type="file" name="file" required accept=".xlsx" className="h-auto py-1.5" />
                 </Field>
-                <SubmitButton>Simuler l&apos;import</SubmitButton>
+                <SubmitButton>
+                  <T>Simuler l&apos;import</T>
+                </SubmitButton>
               </ActionForm>
             </CardBody>
           </Card>
@@ -65,13 +69,27 @@ export default async function ImportsPage() {
           <Table>
             <THead>
               <tr>
-                <TH>Fichier</TH>
-                <TH>Type</TH>
-                <TH>Statut</TH>
-                <TH className="text-right">Lignes</TH>
-                <TH className="text-right">Importées</TH>
-                <TH className="text-right">Erreurs</TH>
-                <TH>Par</TH>
+                <TH>
+                  <T>Fichier</T>
+                </TH>
+                <TH>
+                  <T>Type</T>
+                </TH>
+                <TH>
+                  <T>Statut</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Lignes</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Importées</T>
+                </TH>
+                <TH className="text-end">
+                  <T>Erreurs</T>
+                </TH>
+                <TH>
+                  <T>Par</T>
+                </TH>
               </tr>
             </THead>
             <TBody>
@@ -79,19 +97,33 @@ export default async function ImportsPage() {
                 <TR key={j.id}>
                   <TD>
                     <Link href={`/imports/${j.id}`} className="font-medium text-brand-700 hover:underline">
-                      {j.fileName}
+                      <Tr>{j.fileName}</Tr>
                     </Link>
                     <p className="text-xs text-slate-500">{formatDateTime(j.executedAt ?? j.createdAt)}</p>
                   </TD>
-                  <TD>{IMPORT_KIND[j.kind] ?? j.kind}</TD>
                   <TD>
-                    <Badge tone={IMPORT_STATUS[j.status]?.tone}>{IMPORT_STATUS[j.status]?.label ?? j.status}</Badge>
-                    {j.mode ? <p className="mt-0.5 text-xs text-slate-500">{IMPORT_MODE[j.mode]}</p> : null}
+                    <Tr>{IMPORT_KIND[j.kind] ?? j.kind}</Tr>
                   </TD>
-                  <TD className="text-right tabular-nums">{j.totalRows}</TD>
-                  <TD className="text-right tabular-nums">{j.status === "DONE" ? j.importedRows : "—"}</TD>
-                  <TD className={`text-right tabular-nums ${j.errorRows ? "font-medium text-red-700" : ""}`}>{j.errorRows}</TD>
-                  <TD>{j.author}</TD>
+                  <TD>
+                    <Badge tone={IMPORT_STATUS[j.status]?.tone}>
+                      <Tr>{IMPORT_STATUS[j.status]?.label ?? j.status}</Tr>
+                    </Badge>
+                    {j.mode ? (
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        <Tr>{IMPORT_MODE[j.mode]}</Tr>
+                      </p>
+                    ) : null}
+                  </TD>
+                  <TD className="text-end tabular-nums">
+                    <Tr>{j.totalRows}</Tr>
+                  </TD>
+                  <TD className="text-end tabular-nums">{j.status === "DONE" ? j.importedRows : "—"}</TD>
+                  <TD className={`text-end tabular-nums ${j.errorRows ? "font-medium text-red-700" : ""}`}>
+                    <Tr>{j.errorRows}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{j.author}</Tr>
+                  </TD>
                 </TR>
               ))}
             </TBody>

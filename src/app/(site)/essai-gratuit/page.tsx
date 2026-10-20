@@ -5,6 +5,7 @@ import { DemoRequestForm } from "@/components/site/demo-request-form";
 import { SiteChrome, SiteFallback } from "@/components/site/site-chrome";
 import { loadSite } from "@/components/site/site-data";
 import { settingNumber } from "@/server/domain/site";
+import { T, Tr } from "@/i18n/client";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await loadSite();
@@ -42,34 +43,42 @@ async function Trial({ searchParams }: { searchParams: PageProps<"/essai-gratuit
       <section className="site-blueprint-light bg-paper-deep">
         <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.25fr] lg:py-24">
           <div>
-            <p className="site-label text-asphalt-500">[ Essai gratuit · {days} jours ]</p>
-            <h1 className="site-display mt-4 text-5xl sm:text-6xl">{s["form.title"]}</h1>
-            <p className="mt-6 text-lg text-asphalt-500">{s["form.text"]}</p>
+            <p className="site-label text-asphalt-500">
+              <T params={{ days: days }}>{"[ Essai gratuit · {days} jours ]"}</T>
+            </p>
+            <h1 className="site-display mt-4 text-5xl sm:text-6xl">
+              <Tr>{s["form.title"]}</Tr>
+            </h1>
+            <p className="mt-6 text-lg text-asphalt-500">
+              <Tr>{s["form.text"]}</Tr>
+            </p>
             <ul className="mt-8 space-y-3">
               {INCLUDED.map((i) => (
                 <li key={i} className="flex items-start gap-3 font-semibold">
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center border-2 border-asphalt bg-signal">
                     <Check className="h-3.5 w-3.5" aria-hidden />
                   </span>
-                  {i}
+                  <Tr>{i}</Tr>
                 </li>
               ))}
             </ul>
-            <ol className="mt-10 border-l-4 border-asphalt pl-5 text-sm">
+            <ol className="mt-10 border-s-4 border-asphalt ps-5 text-sm">
               {[
                 "Vous envoyez la demande",
                 "Nous l'examinons et ouvrons votre espace",
                 "Vous recevez le lien, l'identifiant et le mot de passe provisoire",
               ].map((step, i) => (
                 <li key={step} className="py-1.5">
-                  <span className="font-plate mr-2 font-bold">{String(i + 1).padStart(2, "0")}</span>
-                  {step}
+                  <span className="font-plate me-2 font-bold">{String(i + 1).padStart(2, "0")}</span>
+                  <Tr>{step}</Tr>
                 </li>
               ))}
             </ol>
           </div>
           <div className="relative border-2 border-asphalt bg-paper p-6 shadow-[10px_10px_0_var(--color-asphalt)] sm:p-8">
-            <p className="site-label absolute -top-3.5 right-6 border-2 border-asphalt bg-signal px-2 py-1 text-[10px]">Sans carte bancaire</p>
+            <p className="site-label absolute -top-3.5 end-6 border-2 border-asphalt bg-signal px-2 py-1 text-[10px]">
+              <T>Sans carte bancaire</T>
+            </p>
             <DemoRequestForm
               startedAt={site.renderedAt}
               plans={plans.map((p) => p.name)}

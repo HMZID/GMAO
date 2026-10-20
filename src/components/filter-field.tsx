@@ -1,6 +1,7 @@
 "use client";
 
 import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from "react";
+import { Tr } from "@/i18n/client";
 
 /**
  * Libellé compact au-dessus d'un champ de filtre. L'identifiant du champ est rendu unique dans le
@@ -16,14 +17,16 @@ export function FilterField({ label, htmlFor, children, className }: { label: st
       {valid ? (
         <>
           <label htmlFor={id} className="mb-1 block text-xs font-medium text-slate-500">
-            {label}
+            <Tr>{label}</Tr>
           </label>
           {control}
         </>
       ) : (
         // Champ qui ne peut pas recevoir d'identifiant : le libellé l'englobe pour garder l'association.
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-500">{label}</span>
+          <span className="mb-1 block text-xs font-medium text-slate-500">
+            <Tr>{label}</Tr>
+          </span>
           {control}
         </label>
       )}

@@ -34,6 +34,8 @@ import {
   retireEquipmentAction,
   reviewReadingAction,
 } from "../actions";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Fiche équipement" };
 
@@ -57,17 +59,21 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
         back={{ href: "/equipements", label: "Équipements" }}
         title={
           <span className="flex flex-wrap items-center gap-3">
-            {e.code}
-            <span className="text-lg font-normal text-slate-500">{e.name}</span>
+            <Tr>{e.code}</Tr>
+            <span className="text-lg font-normal text-slate-500">
+              <Tr>{e.name}</Tr>
+            </span>
           </span>
         }
         meta={
           <>
             <EquipmentStatusBadge status={e.status} />
             <CriticalityBadge value={e.criticality} />
-            <Badge>{e.category.name}</Badge>
+            <Badge>
+              <Tr>{e.category.name}</Tr>
+            </Badge>
             <span className="text-sm text-slate-500">
-              {e.site.name} · {e.company.name}
+              <Tr>{e.site.name}</Tr> · <Tr>{e.company.name}</Tr>
             </span>
           </>
         }
@@ -75,16 +81,18 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
           retired ? null : (
             <>
               {ctx.canOn("request.create", e) ? (
-                <ButtonLink href={`/demandes/nouvelle?equipmentId=${e.id}`}>Créer une demande d&apos;intervention</ButtonLink>
+                <ButtonLink href={`/demandes/nouvelle?equipmentId=${e.id}`}>
+                  <T>Créer une demande d&apos;intervention</T>
+                </ButtonLink>
               ) : null}
               {ctx.canOn("workorder.create", e) ? (
                 <ButtonLink href={`/interventions/nouveau?equipmentId=${e.id}`} variant="secondary">
-                  Nouvelle intervention à réaliser
+                  <T>Nouvelle intervention à réaliser</T>
                 </ButtonLink>
               ) : null}
               {ctx.canOn("equipment.write", e) ? (
                 <ButtonLink href={`/equipements/${e.id}/modifier`} variant="ghost">
-                  Modifier
+                  <T>Modifier</T>
                 </ButtonLink>
               ) : null}
             </>
@@ -95,14 +103,14 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
       {e.status === "IMMOBILIZED" ? (
         <div className="mb-6">
           <Alert tone="red" title="Équipement immobilisé : inapte à l'exploitation">
-            {lastStatusChange?.reason ?? "Voir les interventions en cours."}
+            <Tr>{lastStatusChange?.reason ?? "Voir les interventions en cours."}</Tr>
           </Alert>
         </div>
       ) : null}
       {retired ? (
         <div className="mb-6">
-          <Alert tone="amber" title={`Réformé le ${formatDate(e.retiredAt)}`}>
-            {e.retirementReason} — fiche en lecture seule, historique conservé.
+          <Alert tone="amber" title={tpl`Réformé le ${formatDate(e.retiredAt)}`}>
+            <T params={{ retirementReason: e.retirementReason }}>{"{retirementReason} — fiche en lecture seule, historique conservé."}</T>
           </Alert>
         </div>
       ) : null}
@@ -150,7 +158,7 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
               />
               <p className="mt-4 flex items-center gap-2 text-xs text-slate-500">
                 <QrCode className="h-4 w-4" aria-hidden />
-                Étiquette QR : <code className="rounded bg-slate-100 px-1.5 py-0.5">{e.qrToken}</code>
+                <T>Étiquette QR :</T> <code className="rounded bg-slate-100 px-1.5 py-0.5">{e.qrToken}</code>
               </p>
             </CardBody>
           </Card>
@@ -165,23 +173,41 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
                   <li key={h.id} className="px-5 py-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-1.5">
-                        {h.fromStatus ? <span className="text-slate-500">{EQUIPMENT_STATUS[h.fromStatus]?.label} →</span> : null}
+                        {h.fromStatus ? (
+                          <span className="text-slate-500">
+                            <Tr>{EQUIPMENT_STATUS[h.fromStatus]?.label}</Tr> →
+                          </span>
+                        ) : null}
                         <EquipmentStatusBadge status={h.toStatus} />
                       </span>
                       <span className="text-xs text-slate-500">{formatDateTime(h.changedAt)}</span>
                     </div>
-                    {h.reason ? <p className="mt-1 text-xs text-slate-600">{h.reason}</p> : null}
-                    {h.changedBy ? <p className="text-xs text-slate-400">{h.changedBy.name}</p> : null}
+                    {h.reason ? (
+                      <p className="mt-1 text-xs text-slate-600">
+                        <Tr>{h.reason}</Tr>
+                      </p>
+                    ) : null}
+                    {h.changedBy ? (
+                      <p className="text-xs text-slate-400">
+                        <Tr>{h.changedBy.name}</Tr>
+                      </p>
+                    ) : null}
                   </li>
                 ))}
               </ul>
             )}
           </Card>
           {!retired && ctx.canOn("equipment.write", e) ? (
-            <Disclosure summary={<span className="text-red-700">Réformer l&apos;équipement</span>}>
+            <Disclosure
+              summary={
+                <span className="text-red-700">
+                  <T>Réformer l&apos;équipement</T>
+                </span>
+              }
+            >
               <ActionForm action={retireEquipmentAction.bind(null, e.id)} className="space-y-3">
                 <p className="text-sm text-slate-600">
-                  Impossible tant qu&apos;une intervention est ouverte. Les plans sont désactivés et la fiche passe en lecture seule.
+                  <T>Impossible tant qu&apos;une intervention est ouverte. Les plans sont désactivés et la fiche passe en lecture seule.</T>
                 </p>
                 <Field label="Motif" name="reason" required>
                   <Textarea id="reason" name="reason" required rows={2} />
@@ -189,7 +215,9 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
                 <Field label="Valeur de cession (€)" name="disposalValue">
                   <Input id="disposalValue" name="disposalValue" type="number" min={0} step="0.01" />
                 </Field>
-                <SubmitButton variant="danger">Réformer</SubmitButton>
+                <SubmitButton variant="danger">
+                  <T>Réformer</T>
+                </SubmitButton>
               </ActionForm>
             </Disclosure>
           ) : null}
@@ -228,25 +256,40 @@ function MetersCard({
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium text-slate-900">
-                    {m.label} {m.isPrimary ? <Badge tone="teal">Principal</Badge> : null}
+                    <Tr>{m.label}</Tr>{" "}
+                    {m.isPrimary ? (
+                      <Badge tone="teal">
+                        <T>Principal</T>
+                      </Badge>
+                    ) : null}
                   </p>
-                  <p className="text-xs text-slate-500">{METER_TYPE[m.type]}</p>
+                  <p className="text-xs text-slate-500">
+                    <Tr>{METER_TYPE[m.type]}</Tr>
+                  </p>
                 </div>
                 <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
                   <div>
-                    <dt className="text-xs text-slate-500">Valeur lue</dt>
+                    <dt className="text-xs text-slate-500">
+                      <T>Valeur lue</T>
+                    </dt>
                     <dd className="font-semibold tabular-nums">{formatNumber(m.lastValue, m.unit)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Cumulée</dt>
+                    <dt className="text-xs text-slate-500">
+                      <T>Cumulée</T>
+                    </dt>
                     <dd className="tabular-nums">{formatNumber(m.lastCumulativeValue, m.unit)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Usage moyen</dt>
+                    <dt className="text-xs text-slate-500">
+                      <T>Usage moyen</T>
+                    </dt>
                     <dd className="tabular-nums">{m.averageDailyUsage ? `${formatNumber(m.averageDailyUsage, m.unit)}/j` : "—"}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-slate-500">Dernier relevé</dt>
+                    <dt className="text-xs text-slate-500">
+                      <T>Dernier relevé</T>
+                    </dt>
                     <dd>{formatDateTime(m.lastReadAt)}</dd>
                   </div>
                 </dl>
@@ -255,7 +298,7 @@ function MetersCard({
               {canWrite ? (
                 <ActionForm action={recordReadingAction.bind(null, m.id)} resetOnSuccess className="rounded-md bg-slate-50 p-3">
                   <div className="flex flex-wrap items-end gap-3">
-                    <Field label={`Nouveau relevé (${m.unit})`} name="value" required className="w-40">
+                    <Field label={tpl`Nouveau relevé (${m.unit})`} name="value" required className="w-40">
                       <Input id={`value-${m.id}`} name="value" type="number" min={0} step="0.1" required />
                     </Field>
                     <Field label="Date et heure" name="readAt" className="w-52">
@@ -264,7 +307,9 @@ function MetersCard({
                     <Field label="Commentaire" name="comment" className="min-w-48 flex-1">
                       <Input id={`comment-${m.id}`} name="comment" maxLength={500} />
                     </Field>
-                    <SubmitButton size="md">Enregistrer</SubmitButton>
+                    <SubmitButton size="md">
+                      <T>Enregistrer</T>
+                    </SubmitButton>
                   </div>
                 </ActionForm>
               ) : null}
@@ -285,7 +330,9 @@ function MetersCard({
                       <Input id={`reason-${m.id}`} name="reason" required maxLength={500} />
                     </Field>
                     <div className="sm:col-span-2">
-                      <SubmitButton variant="secondary">Enregistrer le remplacement</SubmitButton>
+                      <SubmitButton variant="secondary">
+                        <T>Enregistrer le remplacement</T>
+                      </SubmitButton>
                     </div>
                   </ActionForm>
                 </Disclosure>
@@ -301,27 +348,48 @@ function MetersCard({
 }
 
 function ReadingsTable({ readings, unit, canReview }: { readings: Awaited<ReturnType<typeof listReadings>>; unit: string; canReview: boolean }) {
-  if (readings.length === 0) return <p className="text-sm text-slate-500">Aucun relevé.</p>;
+  if (readings.length === 0)
+    return (
+      <p className="text-sm text-slate-500">
+        <T>Aucun relevé.</T>
+      </p>
+    );
   return (
     <Table className="rounded-md border border-slate-100">
       <THead>
         <tr>
-          <TH>Date</TH>
-          <TH className="text-right">Relevé</TH>
-          <TH>Source</TH>
-          <TH>Statut</TH>
-          <TH className="w-full">Commentaire</TH>
+          <TH>
+            <T>Date</T>
+          </TH>
+          <TH className="text-end">
+            <T>Relevé</T>
+          </TH>
+          <TH>
+            <T>Source</T>
+          </TH>
+          <TH>
+            <T>Statut</T>
+          </TH>
+          <TH className="w-full">
+            <T>Commentaire</T>
+          </TH>
         </tr>
       </THead>
       <TBody>
         {readings.map((r) => (
           <TR key={r.id}>
             <TD className="whitespace-nowrap">{formatDateTime(r.readAt)}</TD>
-            <TD className="whitespace-nowrap text-right tabular-nums">
+            <TD className="whitespace-nowrap text-end tabular-nums">
               {formatNumber(r.value, unit)}
-              {r.cumulativeValue !== r.value ? <p className="text-xs text-slate-500">cumulé {formatNumber(r.cumulativeValue, unit)}</p> : null}
+              {r.cumulativeValue !== r.value ? (
+                <p className="text-xs text-slate-500">
+                  <T params={{ n: formatNumber(r.cumulativeValue, unit) }}>{"cumulé {n}"}</T>
+                </p>
+              ) : null}
             </TD>
-            <TD className="whitespace-nowrap">{READING_SOURCE[r.source] ?? r.source}</TD>
+            <TD className="whitespace-nowrap">
+              <Tr>{READING_SOURCE[r.source] ?? r.source}</Tr>
+            </TD>
             <TD>
               <ReadingStatusBadge status={r.status} />
             </TD>
@@ -332,15 +400,19 @@ function ReadingsTable({ readings, unit, canReview }: { readings: Awaited<Return
                   {r.statusReasons.join(" ")}
                 </p>
               ) : null}
-              {r.comment ? <p className="text-xs text-slate-500">{r.comment}</p> : null}
+              {r.comment ? (
+                <p className="text-xs text-slate-500">
+                  <Tr>{r.comment}</Tr>
+                </p>
+              ) : null}
               {r.status === "TO_CHECK" && canReview ? (
                 <ActionForm action={reviewReadingAction.bind(null, r.id)} className="mt-2 flex flex-wrap items-center gap-2" showMessage>
                   <Input name="comment" placeholder="Commentaire" className="h-8 w-40" aria-label="Commentaire de vérification" />
                   <SubmitButton size="sm" variant="secondary" name="decision" value="VALID">
-                    Valider
+                    <T>Valider</T>
                   </SubmitButton>
                   <SubmitButton size="sm" variant="ghost" name="decision" value="REJECTED">
-                    Rejeter
+                    <T>Rejeter</T>
                   </SubmitButton>
                 </ActionForm>
               ) : null}
@@ -365,7 +437,7 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
         description="Échéances ouvertes, au premier seuil atteint"
         actions={
           <Link href={`/preventif/echeances?equipmentId=${e.id}`} className="text-sm text-brand-700 hover:underline">
-            Voir dans le module
+            <T>Voir dans le module</T>
           </Link>
         }
       />
@@ -375,21 +447,33 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
         <Table>
           <THead>
             <tr>
-              <TH>Opération</TH>
-              <TH>Échéance</TH>
-              <TH>Prévision</TH>
-              <TH>Statut</TH>
-              <TH>Intervention</TH>
+              <TH>
+                <T>Opération</T>
+              </TH>
+              <TH>
+                <T>Échéance</T>
+              </TH>
+              <TH>
+                <T>Prévision</T>
+              </TH>
+              <TH>
+                <T>Statut</T>
+              </TH>
+              <TH>
+                <T>Intervention</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
             {e.dueItems.map((d) => (
               <TR key={d.id}>
                 <TD>
-                  <p className="text-slate-900">{d.operationName}</p>
+                  <p className="text-slate-900">
+                    <Tr>{d.operationName}</Tr>
+                  </p>
                   <p className="text-xs text-slate-500">
-                    {d.operationCode}
-                    {d.isRegulatory ? " · réglementaire" : ""}
+                    <Tr>{d.operationCode}</Tr>
+                    <Tr>{d.isRegulatory ? " · réglementaire" : ""}</Tr>
                   </p>
                 </TD>
                 <TD className="whitespace-nowrap">
@@ -404,10 +488,12 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
                 <TD>
                   {d.workOrderId ? (
                     <Link href={`/interventions/${d.workOrderId}`} className="text-brand-700 hover:underline">
-                      Voir l&apos;intervention
+                      <T>Voir l&apos;intervention</T>
                     </Link>
                   ) : (
-                    <span className="text-xs text-slate-400">Non généré</span>
+                    <span className="text-xs text-slate-400">
+                      <T>Non généré</T>
+                    </span>
                   )}
                 </TD>
               </TR>
@@ -431,11 +517,13 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
               <Field label="Dernière réalisation" name="lastDoneAt" hint="Reprise de l'historique">
                 <Input id="lastDoneAt" name="lastDoneAt" type="date" />
               </Field>
-              <Field label={`Compteur à la dernière réalisation${primary ? ` (${primary.unit})` : ""}`} name="lastDoneMeter">
+              <Field label={tpl`Compteur à la dernière réalisation${primary ? ` (${primary.unit})` : ""}`} name="lastDoneMeter">
                 <Input id="lastDoneMeter" name="lastDoneMeter" type="number" min={0} step="0.1" />
               </Field>
               <div className="flex items-end">
-                <SubmitButton variant="secondary">Appliquer</SubmitButton>
+                <SubmitButton variant="secondary">
+                  <T>Appliquer</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           </Disclosure>
@@ -457,7 +545,7 @@ function InterventionsCard({ e }: { e: Equipment }) {
         description="Demandes ouvertes et 15 dernières interventions"
         actions={
           <Link href={`/interventions?equipmentId=${e.id}&status=ALL`} className="text-sm text-brand-700 hover:underline">
-            Toutes les interventions
+            <T>Toutes les interventions</T>
           </Link>
         }
       />
@@ -467,9 +555,9 @@ function InterventionsCard({ e }: { e: Equipment }) {
             <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-2.5">
               <span>
                 <Link href={`/demandes/${r.id}`} className="font-medium text-brand-700 hover:underline">
-                  {r.number}
+                  <Tr>{r.number}</Tr>
                 </Link>{" "}
-                {r.symptom}
+                <Tr>{r.symptom}</Tr>
               </span>
               <span className="flex items-center gap-2 text-xs text-slate-500">
                 {formatDateTime(r.reportedAt)} <RequestStatusBadge status={r.status} />
@@ -484,11 +572,21 @@ function InterventionsCard({ e }: { e: Equipment }) {
         <Table>
           <THead>
             <tr>
-              <TH>Intervention</TH>
-              <TH>Type</TH>
-              <TH>Priorité</TH>
-              <TH>Statut</TH>
-              <TH>Créé le</TH>
+              <TH>
+                <T>Intervention</T>
+              </TH>
+              <TH>
+                <T>Type</T>
+              </TH>
+              <TH>
+                <T>Priorité</T>
+              </TH>
+              <TH>
+                <T>Statut</T>
+              </TH>
+              <TH>
+                <T>Créé le</T>
+              </TH>
             </tr>
           </THead>
           <TBody>
@@ -496,11 +594,15 @@ function InterventionsCard({ e }: { e: Equipment }) {
               <TR key={w.id}>
                 <TD>
                   <Link href={`/interventions/${w.id}`} className="font-medium text-brand-700 hover:underline">
-                    {w.number}
+                    <Tr>{w.number}</Tr>
                   </Link>
-                  <p className="max-w-72 truncate text-xs text-slate-500">{w.title}</p>
+                  <p className="max-w-72 truncate text-xs text-slate-500">
+                    <Tr>{w.title}</Tr>
+                  </p>
                 </TD>
-                <TD>{WORK_ORDER_TYPE[w.type] ?? w.type}</TD>
+                <TD>
+                  <Tr>{WORK_ORDER_TYPE[w.type] ?? w.type}</Tr>
+                </TD>
                 <TD>
                   <PriorityBadge value={w.priority} short />
                 </TD>
@@ -534,17 +636,20 @@ async function AssignmentCard({ e, ctx, retired }: { e: Equipment; ctx: AuthCont
           <div className="rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900">
             <p className="font-medium">{place(active)}</p>
             <p className="text-xs">
-              Depuis le {formatDate(active.startAt)}
-              {active.endAt ? ` jusqu'au ${formatDate(active.endAt)}` : ""}
+              <T params={{ date: formatDate(active.startAt), end: active.endAt ? formatDate(active.endAt) : "" }}>
+                {active.endAt ? "Depuis le {date} jusqu'au {end}" : "Depuis le {date}"}
+              </T>
             </p>
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Aucune affectation en cours.</p>
+          <p className="text-sm text-slate-500">
+            <T>Aucune affectation en cours.</T>
+          </p>
         )}
         {canAssign && active ? (
           <ActionForm action={endAssignmentAction.bind(null, e.id)}>
             <SubmitButton variant="secondary" size="sm">
-              Terminer l&apos;affectation
+              <T>Terminer l&apos;affectation</T>
             </SubmitButton>
           </ActionForm>
         ) : null}
@@ -566,7 +671,9 @@ async function AssignmentCard({ e, ctx, retired }: { e: Equipment; ctx: AuthCont
               <Field label="Fin prévue" name="endAt">
                 <Input id="endAt" name="endAt" type="datetime-local" />
               </Field>
-              <SubmitButton variant="secondary">Affecter</SubmitButton>
+              <SubmitButton variant="secondary">
+                <T>Affecter</T>
+              </SubmitButton>
             </ActionForm>
           </Disclosure>
         ) : null}
