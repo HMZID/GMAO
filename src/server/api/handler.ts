@@ -3,6 +3,7 @@ import { unstable_rethrow } from "next/navigation";
 import { connection } from "next/server";
 import type { AuthContext } from "@/server/authz/context";
 import { getApiContext } from "@/server/auth/session";
+import { flushEmailQueueAfterResponse } from "@/server/email/flush";
 import { AppError, ValidationError } from "@/server/errors";
 
 /**
@@ -20,6 +21,8 @@ export function apiRoute<RouteCtx = unknown>(
     try {
       const ctx = await getApiContext(request);
       const result = await handler(ctx, request, routeCtx);
+      // NOT-01 : une écriture a pu mettre des courriels en file (envoi sans attendre la tâche quotidienne).
+      if (request.method !== "GET" && request.method !== "HEAD") flushEmailQueueAfterResponse();
       if (result instanceof Response) return result;
       return Response.json({ data: result ?? null }, { status: options.status ?? 200 });
     } catch (error) {

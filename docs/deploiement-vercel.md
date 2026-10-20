@@ -84,7 +84,7 @@ Vercel exécute `npm run vercel-build` (`scripts/predeploy.ts`, puis `next build
 2. migrations SQL (`drizzle/`), par `DATABASE_URL_UNPOOLED` si elle existe, sinon `DATABASE_URL` ;
 3. données de démonstration si `SEED_DEMO_DATA=true` : chargées une seule fois, sur une base vide.
 
-`vercel.json` place les fonctions à Francfort (`fra1`, au plus près de Neon `eu-central-1`) et déclare la tâche planifiée des courriels (`/api/cron/notifications`, chaque jour à 5 h UTC, limite de l'offre gratuite).
+`vercel.json` place les fonctions à Francfort (`fra1`, au plus près de Neon `eu-central-1`) et déclare la tâche planifiée des courriels (`/api/cron/notifications`, chaque jour à 6 h UTC (7 h à Paris l'hiver, 8 h l'été, après l'heure des récapitulatifs), limite de l'offre gratuite ; les courriels des événements partent aussitôt après l'écriture (`src/server/email/flush.ts`)).
 
 ## Variables d'environnement (Vercel → Settings → Environment Variables)
 

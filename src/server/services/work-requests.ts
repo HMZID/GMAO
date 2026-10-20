@@ -2,7 +2,7 @@ import "server-only";
 import { and, count, desc, eq, ilike, inArray, ne, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { AuthContext } from "@/server/authz/context";
-import { db } from "@/server/db";
+import { db, type DbOrTx } from "@/server/db";
 import { equipment, notifications, sites, user, workOrders, workRequests } from "@/server/db/schema";
 import { OPEN_STATUSES } from "@/server/domain/work-order-status";
 import { BusinessRuleError, NotFoundError } from "@/server/errors";
@@ -210,11 +210,16 @@ export const qualifyInput = z.object({
   immobilize: bool.default(false),
 });
 
-async function loadForUpdate(ctx: AuthContext, id: string) {
-  const [row] = await db
+/**
+ * Demande lue avec verrou de ligne, dans la transaction de l'écriture : deux requêtes simultanées
+ * (double clic, mobile et web) ne traitent pas la même demande deux fois (une seule intervention créée).
+ */
+async function loadForUpdate(tx: DbOrTx, ctx: AuthContext, id: string) {
+  const [row] = await tx
     .select()
     .from(workRequests)
-    .where(and(eq(workRequests.id, id), eq(workRequests.tenantId, ctx.tenantId)));
+    .where(and(eq(workRequests.id, id), eq(workRequests.tenantId, ctx.tenantId)))
+    .for("update");
   if (!row) throw new NotFoundError("Demande d'intervention");
   return row;
 }
@@ -222,10 +227,10 @@ async function loadForUpdate(ctx: AuthContext, id: string) {
 /** Qualification (COR-03) : priorité, type, décision d'immobilisation. */
 export async function qualifyWorkRequest(ctx: AuthContext, id: string, raw: unknown) {
   const input = parseInput(qualifyInput, raw);
-  const current = await loadForUpdate(ctx, id);
-  assertCanOn(ctx, "request.qualify", current);
-  if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette demande n'est plus qualifiable."]);
   return db.transaction(async (tx) => {
+    const current = await loadForUpdate(tx, ctx, id);
+    assertCanOn(ctx, "request.qualify", current);
+    if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette demande n'est plus qualifiable."]);
     const [row] = await tx
       .update(workRequests)
       .set({ ...input, status: "QUALIFIED", qualifiedById: ctx.userId, qualifiedAt: new Date() })
@@ -254,10 +259,10 @@ export const rejectInput = z.object({ reason: text(500, "Le motif de rejet est o
 /** Rejet motivé ; le déclarant est notifié (COR-03). */
 export async function rejectWorkRequest(ctx: AuthContext, id: string, raw: unknown) {
   const input = parseInput(rejectInput, raw);
-  const current = await loadForUpdate(ctx, id);
-  assertCanOn(ctx, "request.qualify", current);
-  if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette demande ne peut plus être rejetée."]);
   return db.transaction(async (tx) => {
+    const current = await loadForUpdate(tx, ctx, id);
+    assertCanOn(ctx, "request.qualify", current);
+    if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette demande ne peut plus être rejetée."]);
     const [row] = await tx
       .update(workRequests)
       .set({ status: "REJECTED", rejectionReason: input.reason, qualifiedById: ctx.userId, qualifiedAt: new Date() })
@@ -308,18 +313,19 @@ const TYPE_TO_WO: Record<RequestType, "CORRECTIVE" | "ACCIDENT" | "IMPROVEMENT">
 
 /** Transformation d'une DI qualifiée en OT correctif (étape 4 du processus). */
 export async function convertToWorkOrder(ctx: AuthContext, id: string) {
-  const current = await loadForUpdate(ctx, id);
-  assertCanOn(ctx, "workorder.manage", current);
-  const errors: string[] = [];
-  if (current.status !== "QUALIFIED") errors.push("La demande doit être qualifiée avant d'être transformée en intervention à réaliser.");
-  const approval = await latestApproval(db, "WORK_REQUEST", id);
-  if (approval?.status === "PENDING")
-    errors.push(
-      "La demande est en attente de validation (" + (approval.steps.find((s) => s.position === approval.currentPosition)?.name ?? "circuit") + ").",
-    );
-  if (errors.length > 0) throw new BusinessRuleError(errors);
-  const type = current.type ?? "BREAKDOWN";
   return db.transaction(async (tx) => {
+    // Verrou de ligne : un second appel simultané attend, puis trouve la demande déjà transformée.
+    const current = await loadForUpdate(tx, ctx, id);
+    assertCanOn(ctx, "workorder.manage", current);
+    const errors: string[] = [];
+    if (current.status !== "QUALIFIED") errors.push("La demande doit être qualifiée avant d'être transformée en intervention à réaliser.");
+    const approval = await latestApproval(tx, "WORK_REQUEST", id);
+    if (approval?.status === "PENDING")
+      errors.push(
+        "La demande est en attente de validation (" + (approval.steps.find((s) => s.position === approval.currentPosition)?.name ?? "circuit") + ").",
+      );
+    if (errors.length > 0) throw new BusinessRuleError(errors);
+    const type = current.type ?? "BREAKDOWN";
     const wo = await insertWorkOrder(tx, ctx, {
       companyId: current.companyId,
       siteId: current.siteId,
@@ -342,16 +348,17 @@ export async function convertToWorkOrder(ctx: AuthContext, id: string) {
 
 /** Rattachement à un OT ouvert sur le même équipement (doublon, COR-02). */
 export async function mergeIntoWorkOrder(ctx: AuthContext, id: string, workOrderId: string) {
-  const current = await loadForUpdate(ctx, id);
-  assertCanOn(ctx, "request.qualify", current);
-  const [wo] = await db
-    .select({ id: workOrders.id, equipmentId: workOrders.equipmentId, status: workOrders.status })
-    .from(workOrders)
-    .where(and(eq(workOrders.id, workOrderId), eq(workOrders.tenantId, ctx.tenantId)));
-  if (!wo) throw new NotFoundError("Intervention");
-  if (wo.equipmentId !== current.equipmentId) throw new BusinessRuleError(["L'intervention doit porter sur le même équipement."]);
-  if (!(OPEN_STATUSES as readonly string[]).includes(wo.status)) throw new BusinessRuleError(["L'intervention de rattachement doit être ouverte."]);
   await db.transaction(async (tx) => {
+    const current = await loadForUpdate(tx, ctx, id);
+    assertCanOn(ctx, "request.qualify", current);
+    if (!["NEW", "QUALIFIED"].includes(current.status)) throw new BusinessRuleError(["Cette demande a déjà été traitée."]);
+    const [wo] = await tx
+      .select({ id: workOrders.id, equipmentId: workOrders.equipmentId, status: workOrders.status })
+      .from(workOrders)
+      .where(and(eq(workOrders.id, workOrderId), eq(workOrders.tenantId, ctx.tenantId)));
+    if (!wo) throw new NotFoundError("Intervention");
+    if (wo.equipmentId !== current.equipmentId) throw new BusinessRuleError(["L'intervention doit porter sur le même équipement."]);
+    if (!(OPEN_STATUSES as readonly string[]).includes(wo.status)) throw new BusinessRuleError(["L'intervention de rattachement doit être ouverte."]);
     await tx.update(workRequests).set({ status: "MERGED", workOrderId }).where(eq(workRequests.id, id));
     await cancelPendingApproval(tx, ctx, "WORK_REQUEST", id, "Demande rattachée à une intervention à réaliser");
     if (current.immobilize) {
