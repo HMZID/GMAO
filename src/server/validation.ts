@@ -1,4 +1,5 @@
 import { z } from "zod";
+import "./validation-messages";
 
 /**
  * Briques Zod partagées par les services (API JSON et formulaires).

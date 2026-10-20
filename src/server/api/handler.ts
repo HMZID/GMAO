@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import type { AuthContext } from "@/server/authz/context";
 import { getApiContext } from "@/server/auth/session";
 import { flushEmailQueueAfterResponse } from "@/server/email/flush";
+import { plainDeep, plainText } from "@/i18n/translate";
 import { AppError, ValidationError } from "@/server/errors";
 
 /**
@@ -34,7 +35,10 @@ export function apiRoute<RouteCtx = unknown>(
 
 export function errorResponse(error: unknown): Response {
   if (error instanceof AppError) {
-    return Response.json({ error: { code: error.code, message: error.message, details: error.details ?? null } }, { status: error.status });
+    return Response.json(
+      { error: { code: error.code, message: plainText(error.message), details: plainDeep(error.details ?? null) } },
+      { status: error.status },
+    );
   }
   console.error("[api] erreur inattendue", error);
   return Response.json({ error: { code: "internal", message: "Erreur interne." } }, { status: 500 });

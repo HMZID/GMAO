@@ -7,6 +7,7 @@ import type { Permission } from "@/server/authz/permissions";
 import type { DbOrTx } from "@/server/db";
 import { auditLogs } from "@/server/db/schema";
 import { ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
+import "@/server/validation-messages";
 
 /** Refuse l'action si le droit n'est détenu sur aucun périmètre. */
 export function assertCan(ctx: AuthContext, permission: Permission) {

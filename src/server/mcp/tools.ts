@@ -1,3 +1,4 @@
+import { plainText } from "@/i18n/translate";
 import "server-only";
 import { z } from "zod";
 import type { AuthContext } from "@/server/authz/context";
@@ -188,6 +189,11 @@ export const MCP_TOOLS: McpTool<AuthContext>[] = [
 
 /** Message d'une erreur prévue (droit, règle, validation, introuvable) ; null pour une erreur interne. */
 function describeError(error: unknown): string | null {
+  const text = describeErrorText(error);
+  return text === null ? null : plainText(text);
+}
+
+function describeErrorText(error: unknown): string | null {
   if (error instanceof ValidationError) {
     const fields = Object.entries(error.fieldErrors ?? {}).flatMap(([field, messages]) => (messages ?? []).map((m) => `${field} : ${m}`));
     return [error.message, ...fields].join("\n");
