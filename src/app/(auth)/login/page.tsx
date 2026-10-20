@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Skeleton } from "@/components/ui/primitives";
 import { captchaSiteKey } from "@/server/auth/captcha";
 import { LoginForm } from "./login-form";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
 import { T } from "@/i18n/client";
 
 export const metadata: Metadata = { title: "Connexion" };
@@ -34,6 +35,7 @@ export default function LoginPage(props: PageProps<"/login">) {
             <LoginFormWithNext searchParams={props.searchParams} />
           </Suspense>
         </div>
+        <LanguageSwitcher tone="dark" className="mt-4 flex justify-center" />
         <p className="mt-4 text-center text-xs text-slate-400">
           <T>Les comptes sont créés par l&apos;administrateur.</T>
         </p>

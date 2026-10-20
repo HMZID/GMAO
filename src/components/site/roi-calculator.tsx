@@ -16,10 +16,13 @@ function Slider({ label, value, min, max, step, unit, onChange }: SliderProps) {
     <div>
       <div className="flex items-baseline justify-between gap-4">
         <label htmlFor={id} className="text-sm font-semibold">
-          {label}
+          <Tr>{label}</Tr>
         </label>
         <output htmlFor={id} className="font-plate text-lg font-bold tabular-nums">
-          {decimal.format(value)} <span className="text-xs font-normal text-asphalt-500">{unit}</span>
+          {decimal.format(value)}{" "}
+          <span className="text-xs font-normal text-asphalt-500">
+            <Tr>{unit}</Tr>
+          </span>
         </output>
       </div>
       <input
@@ -110,12 +113,12 @@ export function RoiCalculator({ reductionPct, pricePerEquipment, currency }: { r
             <T
               params={{
                 v: decimal.format(reductionPct),
-                v2: withSubscription
-                  ? ` ; abonnement calculé à ${money(pricePerEquipment)} HT par équipement et par mois.`
-                  : ". L'abonnement fait l'objet d'un devis selon la taille de votre parc.",
+                price: money(pricePerEquipment),
               }}
             >
-              {"Estimation indicative fondée sur vos hypothèses et sur une réduction de {v} % des journées d'immobilisation{v2}"}
+              {withSubscription
+                ? "Estimation indicative fondée sur vos hypothèses et sur une réduction de {v} % des journées d'immobilisation ; abonnement calculé à {price} HT par équipement et par mois."
+                : "Estimation indicative fondée sur vos hypothèses et sur une réduction de {v} % des journées d'immobilisation. L'abonnement fait l'objet d'un devis selon la taille de votre parc."}
             </T>
           </p>
         </div>

@@ -22,6 +22,11 @@ for (const r of roots) for (const f of walk(r)) {
         if (/^[A-Z]/.test(tag) && !["Link", "ButtonLink", "Image"].includes(tag)) skip = true;
       }
       if (ts.isPropertyAssignment(p) && p.name === n) skip = true;
+      // Valeurs de propriétés de texte (libellés d'objets) : traduites par les composants qui les affichent.
+      if (ts.isPropertyAssignment(p) && p.initializer === n && TR_PROPS.has(p.name.getText())) skip = true;
+      if (ts.isJsxAttribute(p) && ["what", "label"].includes(p.name.getText())) skip = true;
+      // Messages renvoyés par les Server Actions : traduits à l'affichage (FormMessage) ; dictionnaire seulement.
+      if (/actions\.ts$/.test(f.split("\\").join("/"))) skip = true;
       if (ts.isCallExpression(p) && ts.isIdentifier(p.expression) && ["t", "msg", "cn", "require", "withParams", "redirect", "revalidatePath"].includes(p.expression.text)) skip = true;
       if (ts.isElementAccessExpression(p) && p.argumentExpression === n) skip = true;
       if (ts.isJsxExpression(p) && ts.isJsxElement(p.parent) && p.parent.openingElement.tagName.getText() === "T") skip = true;

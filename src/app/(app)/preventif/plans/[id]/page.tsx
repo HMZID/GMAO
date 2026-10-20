@@ -12,6 +12,7 @@ import { getPlan } from "@/server/services/preventive";
 import { addOperationAction } from "../../actions";
 import { OperationFields } from "../../operation-fields";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Plan d'entretien" };
 
@@ -69,7 +70,7 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                     <span className="font-mono text-sm text-slate-500">{op.code}</span> {op.name}
                   </span>
                 }
-                description={`Tous les ${op.triggers.map(triggerLabel).join(" ou ")} — au premier seuil atteint`}
+                description={tpl`Tous les ${op.triggers.map(triggerLabel).join(" ou ")} — au premier seuil atteint`}
                 actions={
                   <>
                     <Badge tone="blue">{OPERATION_MODE[op.mode]}</Badge>

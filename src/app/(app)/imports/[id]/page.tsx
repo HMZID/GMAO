@@ -12,6 +12,7 @@ import { loadOr404 } from "@/server/pages";
 import { getImportJob } from "@/server/services/imports";
 import { executeImportAction } from "../actions";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Import" };
 
@@ -53,10 +54,11 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
                 params={{
                   author: job.author,
                   date: formatDateTime(job.createdAt),
-                  v: job.executedAt ? ` · exécuté le ${formatDateTime(job.executedAt)} (${IMPORT_MODE[job.mode ?? ""] ?? ""})` : "",
+                  executed: job.executedAt ? formatDateTime(job.executedAt) : "",
+                  mode: IMPORT_MODE[job.mode ?? ""] ?? "",
                 }}
               >
-                {"{author} · simulé le {date}{v}"}
+                {job.executedAt ? "{author} · simulé le {date} · exécuté le {executed} ({mode})" : "{author} · simulé le {date}"}
               </T>
             </span>
           </>
@@ -111,7 +113,7 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
                 <p className="text-sm text-slate-600">
                   <Tr>
                     {job.executedAt
-                      ? `Exécuté le ${formatDateTime(job.executedAt)} (${IMPORT_MODE[job.mode ?? ""] ?? ""}) : ${s.imported} ligne(s) créée(s).`
+                      ? tpl`Exécuté le ${formatDateTime(job.executedAt)} (${IMPORT_MODE[job.mode ?? ""] ?? ""}) : ${s.imported} ligne(s) créée(s).`
                       : "Exécution en cours."}
                   </Tr>
                 </p>
@@ -146,7 +148,9 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
       <Card>
         <CardHeader
           title="Aperçu ligne par ligne"
-          description={rows.length > DISPLAY_LIMIT ? `${DISPLAY_LIMIT} premières lignes ; toutes les lignes sont dans le rapport Excel.` : undefined}
+          description={
+            rows.length > DISPLAY_LIMIT ? tpl`${DISPLAY_LIMIT} premières lignes ; toutes les lignes sont dans le rapport Excel.` : undefined
+          }
           actions={
             <Link href={onlyIssues ? `/imports/${job.id}` : `/imports/${job.id}?vue=anomalies`} className="text-sm text-brand-700 hover:underline">
               <Tr>{onlyIssues ? "Toutes les lignes" : "Lignes en erreur seulement"}</Tr>

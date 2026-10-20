@@ -12,6 +12,41 @@ export function interpolate(text: string, params?: Params): string {
   return text.replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name] ?? "") : match));
 }
 
+/** Séparateurs invisibles (Unicode) qui encadrent les valeurs d'un gabarit `tpl` : ils survivent dans une chaîne ordinaire. */
+const OPEN = "⁣";
+const CLOSE = "⁤";
+const MARKED = /⁣([^⁤]*)⁤/g;
+
+/**
+ * Gabarit traduisible : `tpl\`Réformé le ${date}\``. La chaîne obtenue porte ses valeurs entre séparateurs invisibles ;
+ * `translate` retrouve alors la phrase `Réformé le {1}` dans le dictionnaire et y replace les valeurs, dans l'ordre
+ * des mots de la langue cible. Sans traduction, le texte français d'origine s'affiche.
+ */
+export function tpl(strings: TemplateStringsArray, ...values: unknown[]): string {
+  let out = strings[0] ?? "";
+  values.forEach((value, i) => {
+    out += OPEN + String(value ?? "").replace(/[⁣⁤]/g, "") + CLOSE + (strings[i + 1] ?? "");
+  });
+  return out;
+}
+
+/** Phrase-clé d'un gabarit : valeurs remplacées par `{1}`, `{2}`… (dans l'ordre d'apparition). */
+export function templateKey(source: string): { key: string; args: string[] } {
+  const args: string[] = [];
+  const key = source.replace(MARKED, (_match, arg: string) => {
+    args.push(arg);
+    return `{${args.length}}`;
+  });
+  return { key, args };
+}
+
 export function translate(dictionary: Dictionary, source: string, params?: Params): string {
+  if (source.includes(OPEN)) {
+    const { key, args } = templateKey(source);
+    const text = dictionary[key];
+    // Pas de traduction : texte français d'origine, sans séparateurs.
+    if (text === undefined) return source.replace(/[⁣⁤]/g, "");
+    return text.replace(/\{(\d+)\}/g, (match, n: string) => args[Number(n) - 1] ?? match);
+  }
   return interpolate(dictionary[source] ?? source, params);
 }

@@ -9,6 +9,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { exportSummary } from "@/server/services/exports";
 import { listCompanies } from "@/server/services/organization";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Export des données" };
 
@@ -31,7 +32,7 @@ export default async function ExportPage(props: PageProps<"/administration/expor
         title="Export des données"
         description={
           company
-            ? `Données de la société ${company.name} : un classeur Excel complet, ou chaque jeu de données séparément.`
+            ? tpl`Données de la société ${company.name} : un classeur Excel complet, ou chaque jeu de données séparément.`
             : "Toutes les données de votre organisation, dans votre périmètre : un classeur Excel complet, ou chaque jeu de données séparément."
         }
         actions={
@@ -80,7 +81,7 @@ export default async function ExportPage(props: PageProps<"/administration/expor
                   <a
                     href={withCompany(`/api/v1/exports/${d.dataset}?format=xlsx`)}
                     className={buttonClass("secondary", "sm")}
-                    aria-label={`${d.label} : télécharger en Excel`}
+                    aria-label={tpl`${d.label} : télécharger en Excel`}
                   >
                     <Download className="h-4 w-4" aria-hidden />
                     <T>Excel</T>
@@ -88,7 +89,7 @@ export default async function ExportPage(props: PageProps<"/administration/expor
                   <a
                     href={withCompany(`/api/v1/exports/${d.dataset}?format=csv`)}
                     className={buttonClass("ghost", "sm")}
-                    aria-label={`${d.label} : télécharger en CSV`}
+                    aria-label={tpl`${d.label} : télécharger en CSV`}
                   >
                     CSV
                   </a>

@@ -7,7 +7,7 @@ import { SiteChrome, SiteFallback } from "@/components/site/site-chrome";
 import { loadSite } from "@/components/site/site-data";
 import { formatDate } from "@/lib/format";
 import { getPublicPage } from "@/server/services/site";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export async function generateMetadata(props: PageProps<"/infos/[slug]">): Promise<Metadata> {
   await connection();
@@ -42,8 +42,14 @@ async function Info({ params }: { params: PageProps<"/infos/[slug]">["params"] }
             <p className="site-label text-signal">
               <T>[ Informations ]</T>
             </p>
-            <h1 className="site-display mt-4 text-5xl sm:text-6xl">{page.title}</h1>
-            {page.summary ? <p className="mt-5 text-lg text-white/70">{page.summary}</p> : null}
+            <h1 className="site-display mt-4 text-5xl sm:text-6xl">
+              <Tr>{page.title}</Tr>
+            </h1>
+            {page.summary ? (
+              <p className="mt-5 text-lg text-white/70">
+                <Tr>{page.summary}</Tr>
+              </p>
+            ) : null}
             <p className="site-label mt-6 text-[11px] text-white/50">
               <T params={{ date: formatDate(page.updatedAt) }}>{"Mise à jour le {date}"}</T>
             </p>

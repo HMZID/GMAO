@@ -12,6 +12,7 @@ import { listWarehouses } from "@/server/services/organization";
 import { listPartOptions } from "@/server/services/stock";
 import { inventoryCountAction, inventoryDecisionAction } from "../actions";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Inventaire" };
 
@@ -35,7 +36,7 @@ export default async function InventoryPage() {
       <PageHeader
         back={{ href: "/stock", label: "Pièces et stocks" }}
         title="Inventaire"
-        description={`L'écart est calculé sur le stock théorique à l'heure du comptage : une sortie faite pendant l'inventaire reste enregistrée à part. Au-delà de ${formatCurrency(INVENTORY_VALIDATION_THRESHOLD)} d'écart, il attend la validation du responsable et ne modifie pas le stock.`}
+        description={tpl`L'écart est calculé sur le stock théorique à l'heure du comptage : une sortie faite pendant l'inventaire reste enregistrée à part. Au-delà de ${formatCurrency(INVENTORY_VALIDATION_THRESHOLD)} d'écart, il attend la validation du responsable et ne modifie pas le stock.`}
       />
 
       {canCount ? (
@@ -80,7 +81,7 @@ export default async function InventoryPage() {
 
       <Card className="mb-6">
         <CardHeader
-          title={`Écarts à valider (${pending.length})`}
+          title={tpl`Écarts à valider (${pending.length})`}
           description="Le stock ne change qu'à la validation ; la personne qui a compté ne valide pas son propre écart."
         />
         <ActionPanel action={inventoryDecisionAction} className="[&>[role]]:mx-5 [&>[role]]:mt-4">
@@ -110,13 +111,13 @@ export default async function InventoryPage() {
                     <p className="font-semibold tabular-nums text-slate-900">
                       <T
                         params={{
-                          v: c.difference > 0 ? "+" : "",
+                          sign: c.difference > 0 ? "+" : "",
                           n: formatNumber(c.difference),
                           unit: c.unit,
                           amount: formatCurrency(inventoryValue(c.difference, c.unitCost)),
                         }}
                       >
-                        {"Écart {v}{n} {unit} · {amount}"}
+                        {"Écart {sign}{n} {unit} · {amount}"}
                       </T>
                     </p>
                     {c.comment ? <p className="text-slate-500">{c.comment}</p> : null}

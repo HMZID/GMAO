@@ -23,7 +23,7 @@ function SelectInput({ options, ...props }: ComponentProps<"select"> & { options
       </option>
       {options.map((o) => (
         <option key={o.value} value={o.value}>
-          {o.label}
+          <Tr>{o.label}</Tr>
         </option>
       ))}
     </select>
@@ -98,7 +98,9 @@ export function DemoRequestForm({
       {emailNotice ? (
         <p className="flex items-start gap-3 border-2 border-asphalt bg-signal/20 px-4 py-3 text-sm sm:col-span-2">
           <Mail className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
-          <span>{emailNotice}</span>
+          <span>
+            <Tr>{emailNotice}</Tr>
+          </span>
         </p>
       ) : null}
       <div className="sm:col-span-2">
@@ -125,7 +127,7 @@ function Consent() {
       </label>
       {error ? (
         <p className="mt-1 text-xs text-red-700" role="alert">
-          {error}
+          <Tr>{error}</Tr>
         </p>
       ) : null}
     </div>

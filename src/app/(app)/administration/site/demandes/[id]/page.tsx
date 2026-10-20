@@ -15,6 +15,7 @@ import { isPlatformAdmin } from "@/server/services/platform";
 import { deleteDemoRequestAction, demoRequestDecisionAction } from "../../actions";
 import { SiteAdminNav } from "../../site-admin-nav";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Demande de démonstration" };
 
@@ -34,7 +35,7 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
       <PageHeader
         back={{ href: "/administration/site/demandes", label: "Demandes de démonstration" }}
         title={r.company}
-        description={`Demande reçue le ${formatDateTime(r.createdAt)}.`}
+        description={tpl`Demande reçue le ${formatDateTime(r.createdAt)}.`}
         actions={<Badge tone={status?.tone ?? "gray"}>{status?.label ?? r.status}</Badge>}
       />
       <SiteAdminNav active="demandes" />
@@ -146,7 +147,7 @@ export default async function DemoRequestPage(props: PageProps<"/administration/
                             label: "Accès",
                             value: tenant.access.allowed
                               ? tenant.access.demo
-                                ? `Démonstration jusqu'au ${formatDate(tenant.access.demo.endsAt)} (${tenant.access.demo.daysLeft} j)`
+                                ? tpl`Démonstration jusqu'au ${formatDate(tenant.access.demo.endsAt)} (${tenant.access.demo.daysLeft} j)`
                                 : "Abonnement actif"
                               : tenant.access.reason === "SUSPENDED"
                                 ? "Suspendue"

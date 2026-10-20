@@ -213,7 +213,9 @@ export function DescriptionList({ items, columns = 2 }: { items: { label: string
           <dt className="text-xs font-medium text-slate-500">
             <Tr>{item.label}</Tr>
           </dt>
-          <dd className="mt-0.5 text-slate-900">{item.value ?? "—"}</dd>
+          <dd className="mt-0.5 text-slate-900">
+            <Tr>{item.value ?? "—"}</Tr>
+          </dd>
         </div>
       ))}
     </dl>

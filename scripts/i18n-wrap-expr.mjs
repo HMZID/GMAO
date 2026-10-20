@@ -8,6 +8,8 @@ import { looksLikeUiText } from "./i18n-extract.mjs";
 
 const roots = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const dry = process.argv.includes("--dry");
+// --members : contenu venant de la base (site commercial) : {s["hero.title"]}, {item.title}… sont aussi enveloppés.
+const members = process.argv.includes("--members");
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
@@ -22,8 +24,9 @@ const SKIP_TAGS = new Set(["T", "Tr", "style", "script", "code", "pre", "title"]
 
 /** Une feuille de l'expression est-elle un texte d'interface littéral ? (branches de ?:, ??, ||, &&) */
 function hasUiLeaf(e) {
-  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return looksLikeUiText(e.text.trim());
+  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return looksLikeUiText(e.text.trim()) && !/gmk_|curl |mcp add|Authorization|^(GET|POST) /.test(e.text);
   if (ts.isParenthesizedExpression(e)) return hasUiLeaf(e.expression);
+  if (ts.isTaggedTemplateExpression(e)) return e.tag.getText() === "tpl";
   if (ts.isConditionalExpression(e)) return hasUiLeaf(e.whenTrue) || hasUiLeaf(e.whenFalse);
   if (ts.isBinaryExpression(e)) {
     const k = e.operatorToken.kind;
@@ -31,6 +34,12 @@ function hasUiLeaf(e) {
     if (k === ts.SyntaxKind.AmpersandAmpersandToken) return hasUiLeaf(e.right);
   }
   return false;
+}
+
+function isMemberRead(e) {
+  if (ts.isParenthesizedExpression(e)) return isMemberRead(e.expression);
+  if (ts.isNonNullExpression(e)) return isMemberRead(e.expression);
+  return ts.isPropertyAccessExpression(e) || ts.isElementAccessExpression(e) || ts.isIdentifier(e);
 }
 
 function containsJsx(node) {
@@ -54,7 +63,7 @@ for (const root of roots) {
         const name = ts.isJsxElement(node) ? node.openingElement.tagName.getText() : "";
         if (!SKIP_TAGS.has(name)) {
           for (const c of node.children) {
-            if (ts.isJsxExpression(c) && c.expression && hasUiLeaf(c.expression) && !containsJsx(c.expression)) {
+            if (ts.isJsxExpression(c) && c.expression && (hasUiLeaf(c.expression) || (members && isMemberRead(c.expression))) && !containsJsx(c.expression)) {
               edits.push({ start: c.getStart(), end: c.end });
             }
           }

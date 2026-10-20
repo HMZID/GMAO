@@ -10,7 +10,8 @@ import { getAuthContext } from "@/server/auth/session";
 import { listMyApprovalRequests, listMySubstitutes, listPendingForMe, listUserOptions, objectLink } from "@/server/services/approvals";
 import { countPendingInventoryCounts } from "@/server/services/inventory";
 import { addSubstituteAction, decideFromListAction, removeSubstituteAction } from "./actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Validations" };
 
@@ -45,7 +46,7 @@ export default async function ValidationsPage() {
       ) : null}
 
       <Card className="mb-6">
-        <CardHeader title={`À valider (${pending.length})`} description="Étapes dont vous êtes valideur, directement ou comme suppléant" />
+        <CardHeader title={tpl`À valider (${pending.length})`} description="Étapes dont vous êtes valideur, directement ou comme suppléant" />
         {/* Un seul panneau pour la liste : le message reste affiché quand la demande tranchée disparaît. */}
         <ActionPanel action={decideFromListAction} className="[&>[role]]:mx-5 [&>[role]]:mt-4">
           {pending.length === 0 ? (
@@ -125,7 +126,12 @@ export default async function ValidationsPage() {
                       </Link>
                       <p className="text-xs text-slate-500">
                         {APPROVAL_OBJECT[r.objectType]} · {formatDateTime(r.createdAt)}
-                        {r.status === "PENDING" ? ` · étape « ${r.steps.find((s) => s.position === r.currentPosition)?.name ?? ""} »` : ""}
+                        {r.status === "PENDING" ? (
+                          <>
+                            {" · "}
+                            <T params={{ step: r.steps.find((s) => s.position === r.currentPosition)?.name ?? "" }}>{"étape « {step} »"}</T>
+                          </>
+                        ) : null}
                       </p>
                     </TD>
                     <TD>
@@ -154,7 +160,7 @@ export default async function ValidationsPage() {
                     return (
                       <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                         <span>
-                          {s.given ? `${s.substituteName} vous remplace` : `Vous remplacez ${s.userName}`} du {formatDate(s.validFrom)} au{" "}
+                          <Tr>{s.given ? `${s.substituteName} vous remplace` : tpl`Vous remplacez ${s.userName}`}</Tr> du {formatDate(s.validFrom)} au{" "}
                           {formatDate(s.validTo)}
                           {active ? (
                             <Badge tone="green" className="ms-2">

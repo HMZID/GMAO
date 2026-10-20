@@ -11,6 +11,7 @@ import { demoRequestFilters, listDemoRequests } from "@/server/services/demo-req
 import { isPlatformAdmin } from "@/server/services/platform";
 import { SiteAdminNav } from "../site-admin-nav";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Demandes de démonstration" };
 
@@ -42,7 +43,7 @@ export default async function DemoRequestsPage(props: PageProps<"/administration
       <Card>
         <div className="flex items-center justify-between px-5 py-3 text-sm">
           <span className="text-slate-600">
-            <Tr>{params.status ? `Filtre : ${DEMO_REQUEST_STATUS[params.status]?.label}` : "Toutes les demandes"}</Tr>
+            <Tr>{params.status ? tpl`Filtre : ${DEMO_REQUEST_STATUS[params.status]?.label}` : "Toutes les demandes"}</Tr>
           </span>
           {params.status ? (
             <Link href={filter()} className="text-brand-700 hover:underline">

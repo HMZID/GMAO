@@ -5,13 +5,16 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Skeleton } from "@/components/ui/primitives";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { getT } from "@/i18n/server";
+import { formatDate } from "@/lib/format";
 import { ROLE } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { getBranding, logoUrl } from "@/server/services/branding";
 import { getOwnTenantAccess } from "@/server/services/platform";
 import { countUnread } from "@/server/services/notifications";
 import { signOutAction, stopImpersonationAction } from "../(auth)/actions";
-import { T, Tr } from "@/i18n/client";
+import { T } from "@/i18n/client";
 
 /**
  * Coquille de l'application : la structure est statique, les éléments qui dépendent de la session
@@ -107,11 +110,11 @@ async function ImpersonationBanner() {
   return (
     <div role="status" className="mb-4 flex flex-wrap items-center gap-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900">
       <p className="min-w-0 flex-1">
-        <strong>
-          <T params={{ name: ctx.name }}>{"Connecté en tant que {name}"}</T>
-        </strong>{" "}
-        ({ctx.email}) — organisation {branding.label}. Vous voyez et agissez comme cet utilisateur ; les actions sont tracées au nom de{" "}
-        {ctx.impersonator.name}.
+        <T params={{ name: ctx.name, email: ctx.email, organization: branding.label, admin: ctx.impersonator.name }}>
+          {
+            "Connecté en tant que {name} ({email}) — organisation {organization}. Vous voyez et agissez comme cet utilisateur ; les actions sont tracées au nom de {admin}."
+          }
+        </T>
       </p>
       <form action={stopImpersonationAction}>
         <button type="submit" className="rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-800">
@@ -132,11 +135,11 @@ async function DemoBanner() {
       role="status"
       className={`mb-4 rounded-md border px-3 py-2 text-sm ${daysLeft <= 3 ? "border-amber-300 bg-amber-50 text-amber-900" : "border-violet-200 bg-violet-50 text-violet-900"}`}
     >
-      <strong>
-        <T>Version de démonstration</T>
-      </strong>{" "}
-      : il reste {daysLeft} jour{daysLeft > 1 ? "s" : ""}, jusqu&apos;au {endsAt.toLocaleDateString("fr-FR", { timeZone: "Europe/Paris" })}. Vos
-      données sont conservées à la fin de la période.
+      <T params={{ days: daysLeft, date: formatDate(endsAt) }}>
+        {daysLeft > 1
+          ? "Version de démonstration : il reste {days} jours, jusqu'au {date}. Vos données sont conservées à la fin de la période."
+          : "Version de démonstration : il reste {days} jour, jusqu'au {date}. Vos données sont conservées à la fin de la période."}
+      </T>
     </p>
   );
 }
@@ -177,20 +180,23 @@ async function Navigation() {
 /** Téléphones et tablettes : panneau de menu et barre d'onglets du bas. */
 async function MobileNavigation() {
   const { ctx, items } = await allowedItems();
-  const roles = ctx.roles.map((r) => ROLE[r] ?? r).join(", ");
-  return <MobileNav items={items} user={{ name: ctx.name, roles: roles || "Aucun rôle" }} />;
+  const t = await getT();
+  const roles = ctx.roles.map((r) => t(ROLE[r] ?? r)).join(", ");
+  return <MobileNav items={items} user={{ name: ctx.name, roles: roles || t("Aucun rôle") }} />;
 }
 
 async function UserMenu() {
   const ctx = await getAuthContext();
   const unread = await countUnread(ctx);
-  const roles = ctx.roles.map((r) => ROLE[r] ?? r).join(", ");
+  const t = await getT();
+  const roles = ctx.roles.map((r) => t(ROLE[r] ?? r)).join(", ");
   return (
     <div className="flex items-center gap-3">
+      <LanguageSwitcher className="hidden sm:inline-flex" />
       <Link
         href="/notifications"
         className="relative flex h-11 w-11 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
-        aria-label={`Notifications (${unread} non lues)`}
+        aria-label={t("Notifications ({unread} non lues)", { unread })}
       >
         <Bell className="h-5 w-5" aria-hidden />
         {unread > 0 ? (
@@ -202,23 +208,21 @@ async function UserMenu() {
       <Link
         href="/compte/securite"
         className="flex h-11 w-11 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
-        aria-label="Sécurité du compte"
-        title="Sécurité du compte (double authentification)"
+        aria-label={t("Sécurité du compte")}
+        title={t("Sécurité du compte (double authentification)")}
       >
         <ShieldCheck className="h-5 w-5" aria-hidden />
       </Link>
       <div className="hidden text-end sm:block">
         <p className="text-sm font-medium text-slate-900">{ctx.name}</p>
-        <p className="max-w-64 truncate text-xs text-slate-500">
-          <Tr>{roles || "Aucun rôle"}</Tr>
-        </p>
+        <p className="max-w-64 truncate text-xs text-slate-500">{roles || t("Aucun rôle")}</p>
       </div>
       <form action={signOutAction}>
         <button
           type="submit"
           className="flex h-11 w-11 items-center justify-center rounded-md text-slate-600 hover:bg-slate-100"
-          aria-label="Se déconnecter"
-          title="Se déconnecter"
+          aria-label={t("Se déconnecter")}
+          title={t("Se déconnecter")}
         >
           <LogOut className="h-5 w-5" aria-hidden />
         </button>

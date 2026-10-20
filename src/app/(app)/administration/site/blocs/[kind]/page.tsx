@@ -14,6 +14,7 @@ import { listSiteItems } from "@/server/services/site";
 import { createSiteItemAction, deleteSiteItemAction, moveSiteItemAction, updateSiteItemAction } from "../../actions";
 import { KIND_SLUGS, SiteAdminNav, kindFromSlug } from "../../site-admin-nav";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Blocs du site" };
 
@@ -68,7 +69,7 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
       />
       <SiteAdminNav active={KIND_SLUGS[kind]} />
 
-      <Disclosure summary={`Ajouter : ${def.label.toLowerCase()}`} className="mb-6">
+      <Disclosure summary={tpl`Ajouter : ${def.label.toLowerCase()}`} className="mb-6">
         <ActionForm action={createSiteItemAction.bind(null, kind)} resetOnSuccess className="grid gap-4 md:grid-cols-2">
           <ItemFields kind={kind} />
           <div className="md:col-span-2">
@@ -81,7 +82,7 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
 
       {items.length === 0 ? (
         <Card>
-          <EmptyState title={`Aucun bloc « ${def.plural} »`} description="La rubrique est masquée sur le site tant qu'elle est vide." />
+          <EmptyState title={tpl`Aucun bloc « ${def.plural} »`} description="La rubrique est masquée sur le site tant qu'elle est vide." />
         </Card>
       ) : (
         <ol className="space-y-3">
@@ -112,7 +113,7 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                         type="submit"
                         disabled={i === 0}
                         className="rounded-md p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"
-                        aria-label={`Monter « ${item.title} »`}
+                        aria-label={tpl`Monter « ${item.title} »`}
                       >
                         <ArrowUp className="h-4 w-4" aria-hidden />
                       </button>
@@ -122,7 +123,7 @@ export default async function SiteItemsPage(props: PageProps<"/administration/si
                         type="submit"
                         disabled={i === items.length - 1}
                         className="rounded-md p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-30"
-                        aria-label={`Descendre « ${item.title} »`}
+                        aria-label={tpl`Descendre « ${item.title} »`}
                       >
                         <ArrowDown className="h-4 w-4" aria-hidden />
                       </button>

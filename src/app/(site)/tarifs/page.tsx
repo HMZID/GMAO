@@ -6,12 +6,13 @@ import { FaqList, FinalCta, SectionHeading } from "@/components/site/sections";
 import { SiteChrome, SiteFallback } from "@/components/site/site-chrome";
 import { loadSite } from "@/components/site/site-data";
 import { settingNumber } from "@/server/domain/site";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await loadSite();
   return {
-    title: { absolute: `Tarifs · ${settings["brand.name"]}` },
+    title: { absolute: tpl`Tarifs · ${settings["brand.name"]}` },
     description: settings["pricing.subtitle"],
     alternates: { canonical: "/tarifs" },
   };
@@ -68,7 +69,7 @@ async function Pricing() {
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-signal text-asphalt">
                   <Check className="h-4 w-4" aria-hidden />
                 </span>
-                {i}
+                <Tr>{i}</Tr>
               </li>
             ))}
           </ul>

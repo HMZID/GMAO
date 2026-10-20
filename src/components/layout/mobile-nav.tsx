@@ -8,7 +8,8 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./nav-items";
 import { NAV_ICONS, isActive } from "./sidebar-nav";
-import { T } from "@/i18n/client";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { T, Tr, useT } from "@/i18n/client";
 
 type Item = Pick<NavItem, "href" | "label" | "icon">;
 
@@ -36,6 +37,7 @@ const SHORT_LABEL: Record<string, string> = {
 const noop = () => () => {};
 export function MobileNav({ items, user }: { items: Item[]; user: { name: string; roles: string } }) {
   const pathname = usePathname();
+  const t = useT();
   const [open, setOpen] = useState(false);
   // Vrai côté navigateur seulement : le portail n'existe pas au rendu serveur.
   const mounted = useSyncExternalStore(
@@ -82,8 +84,8 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
 
       {mounted && open
         ? createPortal(
-            <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Menu" id="menu-mobile">
-              <button type="button" className="absolute inset-0 bg-slate-900/50" aria-label="Fermer le menu" onClick={() => setOpen(false)} />
+            <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={t("Menu")} id="menu-mobile">
+              <button type="button" className="absolute inset-0 bg-slate-900/50" aria-label={t("Fermer le menu")} onClick={() => setOpen(false)} />
               <div className="absolute inset-y-0 start-0 flex w-[min(20rem,85vw)] flex-col bg-ink-900 text-white shadow-xl">
                 <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
                   <span className="text-lg font-semibold">GMAO</span>
@@ -98,11 +100,12 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
                     </span>
                   </button>
                 </div>
+                <LanguageSwitcher tone="dark" className="border-b border-white/10 px-4 py-3" />
                 <div className="border-b border-white/10 px-4 py-3">
                   <p className="font-medium">{user.name}</p>
                   <p className="text-xs text-slate-300">{user.roles}</p>
                 </div>
-                <nav aria-label="Navigation principale" className="flex-1 space-y-1 overflow-y-auto p-3">
+                <nav aria-label={t("Navigation principale")} className="flex-1 space-y-1 overflow-y-auto p-3">
                   {items.map((item) => {
                     const Icon = NAV_ICONS[item.icon];
                     const active = isActive(pathname, item.href);
@@ -118,7 +121,7 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
                         )}
                       >
                         <Icon className="h-5 w-5 shrink-0" aria-hidden />
-                        {item.label}
+                        <Tr>{item.label}</Tr>
                       </Link>
                     );
                   })}
@@ -132,7 +135,7 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
       {mounted && bottom.length > 0
         ? createPortal(
             <nav
-              aria-label="Rubriques principales"
+              aria-label={t("Rubriques principales")}
               className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
             >
               <ul className="grid" style={{ gridTemplateColumns: `repeat(${bottom.length + 1}, minmax(0, 1fr))` }}>
@@ -150,7 +153,7 @@ export function MobileNav({ items, user }: { items: Item[]; user: { name: string
                         )}
                       >
                         <Icon className={cn("h-5 w-5", active && "stroke-[2.5]")} aria-hidden />
-                        {SHORT_LABEL[item.href] ?? item.label}
+                        <Tr>{SHORT_LABEL[item.href] ?? item.label}</Tr>
                       </Link>
                     </li>
                   );

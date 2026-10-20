@@ -11,6 +11,7 @@ import { loadOr404 } from "@/server/pages";
 import { getTenantDetail, isPlatformAdmin } from "@/server/services/platform";
 import { createTenantUserAction, startImpersonationAction } from "../../actions";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Organisation cliente" };
 
@@ -24,8 +25,8 @@ export default async function TenantPage(props: PageProps<"/administration/plate
   const access = tenant.access;
   const scopeOptions = [
     { value: "TENANT", label: "Tout le groupe" },
-    ...companies.map((c) => ({ value: `COMPANY:${c.id}`, label: `Société — ${c.name}` })),
-    ...companies.flatMap((c) => c.sites.map((s) => ({ value: `SITE:${s.id}`, label: `Site — ${s.name} (${c.name})` }))),
+    ...companies.map((c) => ({ value: `COMPANY:${c.id}`, label: tpl`Société — ${c.name}` })),
+    ...companies.flatMap((c) => c.sites.map((s) => ({ value: `SITE:${s.id}`, label: tpl`Site — ${s.name} (${c.name})` }))),
   ];
   const roleOptions = options(ROLE).filter((o) => o.value !== "ADMIN");
 
@@ -37,7 +38,7 @@ export default async function TenantPage(props: PageProps<"/administration/plate
         description={
           access.allowed
             ? access.demo
-              ? `Démonstration jusqu'au ${formatDate(access.demo.endsAt)} (${access.demo.daysLeft} jour(s)).`
+              ? tpl`Démonstration jusqu'au ${formatDate(access.demo.endsAt)} (${access.demo.daysLeft} jour(s)).`
               : "Abonnement actif."
             : access.reason === "SUSPENDED"
               ? "Organisation suspendue : ses utilisateurs n'ont plus accès."
@@ -46,7 +47,7 @@ export default async function TenantPage(props: PageProps<"/administration/plate
       />
 
       <Card className="mb-6">
-        <CardHeader title="Sociétés et sites" description={`${companies.length} société(s)`} />
+        <CardHeader title="Sociétés et sites" description={tpl`${companies.length} société(s)`} />
         <CardBody>
           {companies.length === 0 ? (
             <p className="text-sm text-slate-500">

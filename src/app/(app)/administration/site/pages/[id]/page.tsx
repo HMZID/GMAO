@@ -11,6 +11,7 @@ import { getSitePage } from "@/server/services/site";
 import { deleteSitePageAction, updateSitePageAction } from "../../actions";
 import { SiteAdminNav } from "../../site-admin-nav";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Page du site" };
 
@@ -47,7 +48,7 @@ export default async function SitePageEditor(props: PageProps<"/administration/s
               <Field label="Titre" name="title" required>
                 <Input name="title" required maxLength={120} defaultValue={page.title} />
               </Field>
-              <Field label="Adresse" name="slug" hint={`Servie sous /infos/${page.slug}`}>
+              <Field label="Adresse" name="slug" hint={tpl`Servie sous /infos/${page.slug}`}>
                 <Input name="slug" maxLength={80} defaultValue={page.slug} pattern="[a-z0-9]+(-[a-z0-9]+)*" />
               </Field>
               <Field label="Résumé" name="summary" hint="Chapeau de la page et description pour les moteurs de recherche" className="md:col-span-2">

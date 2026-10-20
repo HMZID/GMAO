@@ -51,7 +51,7 @@ export default async function WorkRequestPage(props: PageProps<"/demandes/[id]">
       <div className="mb-6 space-y-3">
         {sp.cree ? (
           <Alert tone="green" title="Signalement enregistré">
-            <T params={{ v: r.priority === "P1" ? " en urgence" : "" }}>{"Les gestionnaires du site sont notifiés{v}."}</T>
+            <T>{r.priority === "P1" ? "Les gestionnaires du site sont notifiés en urgence." : "Les gestionnaires du site sont notifiés."}</T>
           </Alert>
         ) : null}
         {open && duplicates > 0 ? (

@@ -1,4 +1,4 @@
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 /**
  * Illustration de l'accroche : un tableau de parc tel que l'atelier le voit (données fictives), construit en
  * HTML et CSS pour rester net à toutes les tailles et léger à charger.
@@ -49,7 +49,9 @@ export function HeroConsole() {
     <div className="relative" aria-hidden>
       <div className="border-2 border-white/15 bg-asphalt-800 shadow-[10px_10px_0_var(--color-signal)]">
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <p className="site-label text-[11px] text-white/60"><T>Parc · Site de Lyon</T></p>
+          <p className="site-label text-[11px] text-white/60">
+            <T>Parc · Site de Lyon</T>
+          </p>
           <p className="site-label flex items-center gap-2 text-[11px] text-ok">
             <span className="animate-site-blink motion-safe-only inline-block h-2 w-2 rounded-full bg-ok" />
             <T>En direct</T>
@@ -58,12 +60,20 @@ export function HeroConsole() {
         <ul className="divide-y divide-white/10">
           {ROWS.map((r, i) => (
             <li key={r.code} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3.5">
-              <span className="font-plate text-sm font-bold text-signal">{r.code}</span>
-              <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-white">{r.name}</span>
-                <span className="font-plate block text-xs text-white/50">{r.meter}</span>
+              <span className="font-plate text-sm font-bold text-signal">
+                <Tr>{r.code}</Tr>
               </span>
-              <span className={`site-label rounded-sm px-2 py-1 text-[10px] ring-1 ${TONES[r.tone]}`}>{r.status}</span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-semibold text-white">
+                  <Tr>{r.name}</Tr>
+                </span>
+                <span className="font-plate block text-xs text-white/50">
+                  <Tr>{r.meter}</Tr>
+                </span>
+              </span>
+              <span className={`site-label rounded-sm px-2 py-1 text-[10px] ring-1 ${TONES[r.tone]}`}>
+                <Tr>{r.status}</Tr>
+              </span>
               <span className="col-span-3 flex items-center gap-3">
                 <span className="h-1.5 flex-1 overflow-hidden bg-white/10">
                   <span
@@ -72,7 +82,10 @@ export function HeroConsole() {
                   />
                 </span>
                 <span className="w-44 shrink-0 truncate text-end text-[11px] text-white/60 sm:w-52">
-                  {r.next} · <span className="text-white/90">{r.left}</span>
+                  <Tr>{r.next}</Tr> ·{" "}
+                  <span className="text-white/90">
+                    <Tr>{r.left}</Tr>
+                  </span>
                 </span>
               </span>
             </li>
@@ -85,18 +98,30 @@ export function HeroConsole() {
             ["Préventifs échus", "0"],
           ].map(([label, value]) => (
             <div key={label} className="border-e border-white/10 px-2 py-3 last:border-e-0">
-              <p className="site-display text-2xl text-white">{value}</p>
-              <p className="site-label mt-1 text-[9px] text-white/50">{label}</p>
+              <p className="site-display text-2xl text-white">
+                <Tr>{value}</Tr>
+              </p>
+              <p className="site-label mt-1 text-[9px] text-white/50">
+                <Tr>{label}</Tr>
+              </p>
             </div>
           ))}
         </div>
       </div>
       {/* Bon de travail clôturé, posé de travers sur le tableau. */}
       <div className="absolute -bottom-10 -start-6 hidden w-56 rotate-[-4deg] border-2 border-asphalt bg-paper p-3 text-asphalt shadow-[6px_6px_0_var(--color-asphalt)] sm:block">
-        <p className="site-label text-[10px] text-asphalt-500"><T>Intervention à réaliser</T></p>
-        <p className="font-plate text-sm font-bold"><T>INT-2026-0142</T></p>
-        <p className="mt-1 text-xs"><T>Remplacement flexible hydraulique · PL-021</T></p>
-        <p className="site-label mt-2 inline-block bg-ok px-1.5 py-0.5 text-[10px] text-white"><T>Clôturé · 2 h 40</T></p>
+        <p className="site-label text-[10px] text-asphalt-500">
+          <T>Intervention à réaliser</T>
+        </p>
+        <p className="font-plate text-sm font-bold">
+          <T>INT-2026-0142</T>
+        </p>
+        <p className="mt-1 text-xs">
+          <T>Remplacement flexible hydraulique · PL-021</T>
+        </p>
+        <p className="site-label mt-2 inline-block bg-ok px-1.5 py-0.5 text-[10px] text-white">
+          <T>Clôturé · 2 h 40</T>
+        </p>
       </div>
     </div>
   );

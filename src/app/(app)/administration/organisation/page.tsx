@@ -22,6 +22,7 @@ import {
   uploadLogoAction,
 } from "../actions";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Organisation" };
 
@@ -81,7 +82,7 @@ export default async function OrganisationPage() {
             const companySites = sites.filter((s) => s.companyId === company.id);
             const companyJobsites = jobsites.filter((j) => j.companyId === company.id);
             return (
-              <Card key={company.id} aria-label={`Société ${company.name}`}>
+              <Card key={company.id} aria-label={tpl`Société ${company.name}`}>
                 <CardHeader
                   title={
                     <span className="flex flex-wrap items-center gap-2">
@@ -90,7 +91,7 @@ export default async function OrganisationPage() {
                       <span className="font-mono text-xs font-normal text-slate-500">{company.code}</span>
                     </span>
                   }
-                  description={`${companySites.length} site(s) · ${companyJobsites.length} chantier(s) · ${company.country} · ${company.currency}`}
+                  description={tpl`${companySites.length} site(s) · ${companyJobsites.length} chantier(s) · ${company.country} · ${company.currency}`}
                 />
                 <CardBody className="space-y-4">
                   {companySites.length === 0 ? (
@@ -103,7 +104,7 @@ export default async function OrganisationPage() {
                       const siteWorkshops = workshops.filter((w) => w.siteId === site.id);
                       const siteWarehouses = warehouses.filter((w) => w.siteId === site.id);
                       return (
-                        <section key={site.id} aria-label={`Site ${site.name}`} className="rounded-lg border border-slate-200 p-4">
+                        <section key={site.id} aria-label={tpl`Site ${site.name}`} className="rounded-lg border border-slate-200 p-4">
                           <h3 className="flex flex-wrap items-center gap-2 font-semibold text-slate-900">
                             <MapPin className="h-4 w-4 text-slate-500" aria-hidden />
                             {site.name}
@@ -288,7 +289,7 @@ function IdentityCard({ branding }: { branding: Awaited<ReturnType<typeof getBra
       <CardHeader title="Identité de l'organisation" description="Nom et logo affichés sous « GMAO » dans l'application et sur les états imprimés." />
       <CardBody className="grid gap-6 md:grid-cols-2">
         <ActionForm action={updateBrandingAction} className="space-y-3">
-          <Field label="Nom affiché" name="displayName" hint={`Par défaut : ${branding.name}`}>
+          <Field label="Nom affiché" name="displayName" hint={tpl`Par défaut : ${branding.name}`}>
             <Input name="displayName" defaultValue={branding.displayName ?? ""} maxLength={MAX_DISPLAY_NAME} placeholder={branding.name} />
           </Field>
           <SubmitButton variant="secondary">
@@ -308,7 +309,7 @@ function IdentityCard({ branding }: { branding: Awaited<ReturnType<typeof getBra
           </div>
           <div className="min-w-0 flex-1 space-y-3">
             <ActionForm action={uploadLogoAction} resetOnSuccess className="space-y-3">
-              <Field label="Logo" name="logo" required hint={`PNG, JPEG ou WebP ; ${formatSize(MAX_LOGO_BYTES)} au plus ; de préférence carré`}>
+              <Field label="Logo" name="logo" required hint={tpl`PNG, JPEG ou WebP ; ${formatSize(MAX_LOGO_BYTES)} au plus ; de préférence carré`}>
                 <Input type="file" name="logo" required accept={LOGO_ACCEPT} className="h-auto py-1.5" />
               </Field>
               <SubmitButton variant="secondary">

@@ -31,7 +31,8 @@ import {
   transitionAction,
   workOrderReadingAction,
 } from "../actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export type WorkOrder = Awaited<ReturnType<typeof getWorkOrder>>;
 type Opt = { id: string; label: string };
@@ -208,10 +209,18 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
                   </p>
                   <p className="text-xs text-slate-500">
                     {TASK_KIND[task.kind]}
-                    {task.kind === "MEASURE" && (task.minValue !== null || task.maxValue !== null)
-                      ? ` · attendu ${task.minValue ?? "−∞"} à ${task.maxValue ?? "+∞"} ${task.unit ?? ""}`
-                      : ""}
-                    {task.measuredValue !== null ? ` · mesuré ${formatNumber(task.measuredValue, task.unit ?? undefined)}` : ""}
+                    {task.kind === "MEASURE" && (task.minValue !== null || task.maxValue !== null) ? (
+                      <>
+                        {" "}
+                        {" · "} <Tr>{tpl`attendu ${task.minValue ?? "−∞"} à ${task.maxValue ?? "+∞"} ${task.unit ?? ""}`}</Tr>{" "}
+                      </>
+                    ) : null}{" "}
+                    {task.measuredValue !== null ? (
+                      <>
+                        {" "}
+                        {" · "} <Tr>{tpl`mesuré ${formatNumber(task.measuredValue, task.unit ?? undefined)}`}</Tr>{" "}
+                      </>
+                    ) : null}
                     {task.comment ? ` · ${task.comment}` : ""}
                   </p>
                 </div>
@@ -224,7 +233,7 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
                       name="measuredValue"
                       type="number"
                       step="any"
-                      placeholder={`Mesure${task.unit ? ` (${task.unit})` : ""}`}
+                      placeholder={tpl`Mesure${task.unit ? ` (${task.unit})` : ""}`}
                       className="h-8 w-36"
                       defaultValue={task.measuredValue ?? ""}
                       aria-label="Valeur mesurée"
@@ -290,7 +299,7 @@ export function TimeCard({
   const running = myTechnicianId ? wo.timeEntries.find((t) => !t.endedAt && t.technicianId === myTechnicianId) : undefined;
   return (
     <Card>
-      <CardHeader title="Temps passés" description={`Total : ${formatMinutes(wo.costs.minutes)} — ${formatCurrency(wo.costs.labor)}`} />
+      <CardHeader title="Temps passés" description={tpl`Total : ${formatMinutes(wo.costs.minutes)} — ${formatCurrency(wo.costs.labor)}`} />
       {canTimer && myTechnicianId ? (
         <CardBody className="border-b border-slate-100">
           <ActionForm action={timeAction.bind(null, wo.id)} className="flex flex-wrap items-center gap-3">
@@ -416,7 +425,7 @@ export function ReportCard({ wo, canReport, canRead }: { wo: WorkOrder; canRepor
             ) : null}
             {canRead ? (
               <ActionForm action={workOrderReadingAction.bind(null, wo.id, meter.id)} resetOnSuccess className="mt-3 flex flex-wrap items-end gap-2">
-                <Field label={`Relevé (${meter.unit})`} name="value" required className="w-40">
+                <Field label={tpl`Relevé (${meter.unit})`} name="value" required className="w-40">
                   <Input id="wo-reading" name="value" type="number" min={0} step="0.1" required />
                 </Field>
                 <SubmitButton variant="secondary">
@@ -498,7 +507,7 @@ export function PartsCard({
   ];
   return (
     <Card>
-      <CardHeader title="Pièces" description={`Coût des pièces consommées : ${formatCurrency(wo.costs.parts)}`} />
+      <CardHeader title="Pièces" description={tpl`Coût des pièces consommées : ${formatCurrency(wo.costs.parts)}`} />
       {wo.reservations.length > 0 ? (
         <Table>
           <THead>
@@ -629,7 +638,7 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
           {[
             ["Main-d'œuvre", c.labor],
             ["Pièces", c.parts],
-            [`Prestataire${wo.isExternal ? (wo.externalCostIsFinal ? " (facturé)" : " (provision)") : ""}`, c.external],
+            [wo.isExternal ? (wo.externalCostIsFinal ? "Prestataire (facturé)" : "Prestataire (provision)") : "Prestataire", c.external],
             ["Autres", c.other],
           ].map(([label, value]) => (
             <div key={label as string} className="flex justify-between">

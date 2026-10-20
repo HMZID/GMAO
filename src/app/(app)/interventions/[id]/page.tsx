@@ -18,6 +18,7 @@ import { getWorkOrder, listTechnicianOptions } from "@/server/services/work-orde
 import { recurrenceAction } from "../actions";
 import { ChecklistCard, CostsCard, HistoryCard, PartsCard, PlanningCard, ReportCard, TimeCard, TransitionsCard } from "./sections";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Intervention à réaliser" };
 
@@ -101,7 +102,7 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
 
       <div className="mb-6 space-y-3">
         {status === "ON_HOLD" ? (
-          <Alert tone="amber" title={`En attente${reasonOfHold ? ` : ${reasonOfHold}` : ""}`}>
+          <Alert tone="amber" title={tpl`En attente${reasonOfHold ? ` : ${reasonOfHold}` : ""}`}>
             <Tr>{wo.holdComment ?? "Reprendre l'intervention dès que la cause de l'attente est levée."}</Tr>
           </Alert>
         ) : null}
@@ -114,20 +115,26 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
           </Alert>
         ) : null}
         {status === "CANCELLED" ? (
-          <Alert tone="amber" title={`Annulé le ${formatDate(wo.cancelledAt)}`}>
+          <Alert tone="amber" title={tpl`Annulé le ${formatDate(wo.cancelledAt)}`}>
             {wo.cancelReason}
           </Alert>
         ) : null}
         {status === "TECH_CLOSED" || status === "CLOSED" ? (
-          <Alert tone="green" title={`Clôturé techniquement le ${formatDateTime(wo.techClosedAt)}`}>
+          <Alert tone="green" title={tpl`Clôturé techniquement le ${formatDateTime(wo.techClosedAt)}`}>
             <T
               params={{
-                v: wo.outcome ? WORK_ORDER_OUTCOME[wo.outcome] : "—",
-                v2: wo.releaseValidatedBy ? ` · remise en service validée par ${wo.releaseValidatedBy.name}` : "",
-                v3: wo.meterValueAtClose !== null ? ` · compteur à la clôture : ${formatNumber(wo.meterValueAtClose)}` : "",
+                outcome: wo.outcome ? WORK_ORDER_OUTCOME[wo.outcome] : "—",
+                by: wo.releaseValidatedBy?.name ?? "",
+                meter: wo.meterValueAtClose !== null ? formatNumber(wo.meterValueAtClose) : "",
               }}
             >
-              {"Résultat : {v}{v2}{v3}"}
+              {wo.releaseValidatedBy && wo.meterValueAtClose !== null
+                ? "Résultat : {outcome} · remise en service validée par {by} · compteur à la clôture : {meter}"
+                : wo.releaseValidatedBy
+                  ? "Résultat : {outcome} · remise en service validée par {by}"
+                  : wo.meterValueAtClose !== null
+                    ? "Résultat : {outcome} · compteur à la clôture : {meter}"
+                    : "Résultat : {outcome}"}
             </T>
           </Alert>
         ) : null}

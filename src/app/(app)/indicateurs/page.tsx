@@ -12,6 +12,7 @@ import { getEquipmentFormOptions } from "@/server/services/equipment";
 import { getIndicators, indicatorFilters } from "@/server/services/kpi";
 import { listSites } from "@/server/services/organization";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Indicateurs" };
 
@@ -42,7 +43,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
     <>
       <PageHeader
         title="Indicateurs de maintenance"
-        description={`Période du ${formatDate(k.from)} au ${formatDate(k.to)} — ${k.fleetSize} équipement(s). Les indicateurs calculés sur moins de 3 événements sont « non significatifs ».`}
+        description={tpl`Période du ${formatDate(k.from)} au ${formatDate(k.to)} — ${k.fleetSize} équipement(s). Les indicateurs calculés sur moins de 3 événements sont « non significatifs ».`}
         actions={
           <ButtonLink href="/indicateurs/personnalises" variant="secondary">
             <T>Indicateurs personnalisés</T>
@@ -89,13 +90,13 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               label="Disponibilité"
               value={formatPercent(k.availability)}
               tone="teal"
-              hint={`${formatNumber(k.downtimeHours)} h d'immobilisation sur la période`}
+              hint={tpl`${formatNumber(k.downtimeHours)} h d'immobilisation sur la période`}
             />
             <StatTile
               label="Temps moyen entre pannes (MTBF)"
               value={formatHours(k.mtbf)}
               tone="teal"
-              hint={`${k.failures} panne(s), ${formatNumber(k.operatingHours)} h de fonctionnement`}
+              hint={tpl`${k.failures} panne(s), ${formatNumber(k.operatingHours)} h de fonctionnement`}
             />
             <StatTile
               label="Durée moyenne de réparation (MTTR)"
@@ -108,7 +109,7 @@ export default async function IndicatorsPage(props: PageProps<"/indicateurs">) {
               label="Respect du préventif"
               value={formatPercent(k.preventive?.compliance)}
               tone="teal"
-              hint={k.preventive ? `${k.preventive.doneOnTime} réalisée(s) à temps sur ${k.preventive.dueInPeriod} échue(s)` : undefined}
+              hint={k.preventive ? tpl`${k.preventive.doneOnTime} réalisée(s) à temps sur ${k.preventive.dueInPeriod} échue(s)` : undefined}
             />
             <StatTile
               label="Coût total de maintenance"

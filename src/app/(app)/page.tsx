@@ -11,6 +11,7 @@ import { getDashboard } from "@/server/services/kpi";
 import { listDueItems } from "@/server/services/preventive";
 import { listWorkOrders } from "@/server/services/work-orders";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Tableau de bord" };
 
@@ -32,7 +33,7 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={`Bonjour ${ctx.name.split(" ")[0]}`}
+        title={tpl`Bonjour ${ctx.name.split(" ")[0]}`}
         description="Situation du parc et de la maintenance dans votre périmètre."
         actions={
           <>
@@ -66,14 +67,14 @@ export default async function DashboardPage() {
           value={Object.values(wo.byStatus).reduce((a, b) => a + b, 0)}
           tone="violet"
           href="/interventions"
-          hint={`${wo.byPriority.P1 ?? 0} urgence(s) P1 · ${wo.byStatus.ON_HOLD ?? 0} en attente`}
+          hint={tpl`${wo.byPriority.P1 ?? 0} urgence(s) P1 · ${wo.byStatus.ON_HOLD ?? 0} en attente`}
         />
         <StatTile
           label="Échéances en retard"
           value={due.OVERDUE ?? 0}
           tone="red"
           href="/preventif/echeances?status=OVERDUE"
-          hint={`${due.DUE ?? 0} échue(s), ${due.PRE_ALERT ?? 0} en pré-alerte`}
+          hint={tpl`${due.DUE ?? 0} échue(s), ${due.PRE_ALERT ?? 0} en pré-alerte`}
         />
         <StatTile label="Articles sous le seuil" value={dashboard.belowReorder} tone="amber" href="/stock?belowReorder=1" />
         <StatTile
@@ -83,7 +84,7 @@ export default async function DashboardPage() {
           href={ctx.can("kpi.read") ? "/indicateurs" : undefined}
           hint={
             dashboard.monthCosts
-              ? `Main-d'œuvre ${formatCurrency(dashboard.monthCosts.labor)} · pièces ${formatCurrency(dashboard.monthCosts.parts)}`
+              ? tpl`Main-d'œuvre ${formatCurrency(dashboard.monthCosts.labor)} · pièces ${formatCurrency(dashboard.monthCosts.parts)}`
               : undefined
           }
         />
@@ -92,13 +93,15 @@ export default async function DashboardPage() {
       {deadlines.overdue + deadlines.soon > 0 ? (
         <div className="mt-6">
           <Alert tone={deadlines.overdue > 0 ? "red" : "amber"} title="Assurances, visites techniques et vignettes">
-            {[
-              deadlines.overdue > 0 ? `${deadlines.overdue} échéance(s) dépassée(s)` : null,
-              deadlines.soon > 0 ? `${deadlines.soon} à renouveler dans les 30 jours` : null,
-            ]
-              .filter(Boolean)
-              .join(", ")}
-            .{" "}
+            {deadlines.overdue > 0 && deadlines.soon > 0 ? (
+              <T params={{ overdue: deadlines.overdue, soon: deadlines.soon }}>
+                {"{overdue} échéance(s) dépassée(s), {soon} à renouveler dans les 30 jours."}
+              </T>
+            ) : deadlines.overdue > 0 ? (
+              <T params={{ overdue: deadlines.overdue }}>{"{overdue} échéance(s) dépassée(s)."}</T>
+            ) : (
+              <T params={{ soon: deadlines.soon }}>{"{soon} à renouveler dans les 30 jours."}</T>
+            )}{" "}
             <Link href="/equipements/echeances?horizon=30" className="font-medium underline">
               <T>Voir les échéances du parc</T>
             </Link>

@@ -12,6 +12,7 @@ import { loadOr404 } from "@/server/pages";
 import { getPart } from "@/server/services/stock";
 import { stockLevelSettingsAction } from "../../actions";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Article" };
 
@@ -57,7 +58,7 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
           <Card>
             <CardHeader
               title="Stock par magasin"
-              description={`Total : ${formatNumber(total, part.unit)} — valeur ${formatCurrency(total * part.averageCost)}`}
+              description={tpl`Total : ${formatNumber(total, part.unit)} — valeur ${formatCurrency(total * part.averageCost)}`}
             />
             {part.levels.length === 0 ? (
               <EmptyState title="Aucun stock dans votre périmètre" />

@@ -5,12 +5,13 @@ import { DemoRequestForm } from "@/components/site/demo-request-form";
 import { SiteChrome, SiteFallback } from "@/components/site/site-chrome";
 import { loadSite } from "@/components/site/site-data";
 import { settingNumber } from "@/server/domain/site";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await loadSite();
   return {
-    title: { absolute: `Essai gratuit · ${settings["brand.name"]}` },
+    title: { absolute: tpl`Essai gratuit · ${settings["brand.name"]}` },
     description: settings["form.text"],
     alternates: { canonical: "/essai-gratuit" },
   };
@@ -46,15 +47,19 @@ async function Trial({ searchParams }: { searchParams: PageProps<"/essai-gratuit
             <p className="site-label text-asphalt-500">
               <T params={{ days: days }}>{"[ Essai gratuit · {days} jours ]"}</T>
             </p>
-            <h1 className="site-display mt-4 text-5xl sm:text-6xl">{s["form.title"]}</h1>
-            <p className="mt-6 text-lg text-asphalt-500">{s["form.text"]}</p>
+            <h1 className="site-display mt-4 text-5xl sm:text-6xl">
+              <Tr>{s["form.title"]}</Tr>
+            </h1>
+            <p className="mt-6 text-lg text-asphalt-500">
+              <Tr>{s["form.text"]}</Tr>
+            </p>
             <ul className="mt-8 space-y-3">
               {INCLUDED.map((i) => (
                 <li key={i} className="flex items-start gap-3 font-semibold">
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center border-2 border-asphalt bg-signal">
                     <Check className="h-3.5 w-3.5" aria-hidden />
                   </span>
-                  {i}
+                  <Tr>{i}</Tr>
                 </li>
               ))}
             </ul>
@@ -66,7 +71,7 @@ async function Trial({ searchParams }: { searchParams: PageProps<"/essai-gratuit
               ].map((step, i) => (
                 <li key={step} className="py-1.5">
                   <span className="font-plate me-2 font-bold">{String(i + 1).padStart(2, "0")}</span>
-                  {step}
+                  <Tr>{step}</Tr>
                 </li>
               ))}
             </ol>

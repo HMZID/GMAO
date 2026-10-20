@@ -47,8 +47,10 @@ async function AccountSecurity({ searchParams }: { searchParams: PageProps<"/com
   return (
     <div className="space-y-6">
       <p role="status" className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">
-        <T params={{ v: justEnabled ? "Double authentification activée. " : "Double authentification active : " }}>
-          {"{v}un code de votre application est demandé à chaque connexion."}
+        <T>
+          {justEnabled
+            ? "Double authentification activée. Un code de votre application est demandé à chaque connexion."
+            : "Double authentification active : un code de votre application est demandé à chaque connexion."}
         </T>
       </p>
       <section className="space-y-3">

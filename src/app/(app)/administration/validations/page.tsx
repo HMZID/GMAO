@@ -11,6 +11,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { listUserOptions, listWorkflows } from "@/server/services/approvals";
 import { listCompanies } from "@/server/services/organization";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Circuits de validation" };
 
@@ -105,7 +106,11 @@ export default async function ApprovalWorkflowsPage() {
                         <TR key={s.id}>
                           <TD className="tabular-nums">{s.position}</TD>
                           <TD className="font-medium text-slate-900">{s.name}</TD>
-                          <TD>{s.approverRole ? `${ROLE[s.approverRole] ?? s.approverRole} (périmètre de l'objet)` : (s.approverName ?? "—")}</TD>
+                          <TD>
+                            <Tr>
+                              {s.approverRole ? tpl`${ROLE[s.approverRole] ?? s.approverRole} (périmètre de l'objet)` : (s.approverName ?? "—")}
+                            </Tr>
+                          </TD>
                           <TD className="tabular-nums">
                             <Tr>{s.minAmount != null ? formatCurrency(s.minAmount) : "Toujours"}</Tr>
                           </TD>

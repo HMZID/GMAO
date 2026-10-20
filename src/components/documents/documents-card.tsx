@@ -10,6 +10,7 @@ import type { AuthContext } from "@/server/authz/context";
 import { ACCEPT_ATTRIBUTE, formatSize, type DocumentEntity } from "@/server/domain/documents";
 import { listDocuments } from "@/server/services/documents";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 /** Carte « Documents » des fiches équipement et OT (EQP-07) : liste, consultation, ajout et retrait. */
 export async function DocumentsCard({
@@ -127,7 +128,7 @@ export async function DocumentsCard({
                 label="Fichier"
                 name="file"
                 required
-                hint={`PDF, photo, vidéo courte, Word ou Excel ; ${formatSize(maxSizeBytes)} au plus`}
+                hint={tpl`PDF, photo, vidéo courte, Word ou Excel ; ${formatSize(maxSizeBytes)} au plus`}
                 className="sm:col-span-2"
               >
                 <Input type="file" name="file" required accept={ACCEPT_ATTRIBUTE} className="h-auto py-1.5" />

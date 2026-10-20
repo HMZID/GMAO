@@ -11,6 +11,7 @@ import { listCompanies, listSites } from "@/server/services/organization";
 import { listUsers } from "@/server/services/users";
 import { addRoleAction, createUserAction, removeRoleAction, setUserActiveAction, setUserPasswordAction, updateUserAction } from "../actions";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Utilisateurs et habilitations" };
 
@@ -20,8 +21,8 @@ export default async function UsersPage() {
   const [users, companies, sites] = await Promise.all([listUsers(ctx), listCompanies(ctx), listSites(ctx)]);
   const scopeOptions = [
     { value: "TENANT", label: "Tout le groupe" },
-    ...companies.map((c) => ({ value: `COMPANY:${c.id}`, label: `Société — ${c.name}` })),
-    ...sites.map((s) => ({ value: `SITE:${s.id}`, label: `Site — ${s.name}` })),
+    ...companies.map((c) => ({ value: `COMPANY:${c.id}`, label: tpl`Société — ${c.name}` })),
+    ...sites.map((s) => ({ value: `SITE:${s.id}`, label: tpl`Site — ${s.name}` })),
   ];
   const now = new Date();
   // Rôles d'une organisation : celui d'administrateur de la plateforme ne se donne pas ici.
@@ -33,7 +34,7 @@ export default async function UsersPage() {
       <PageHeader
         back={{ href: "/administration", label: "Administration" }}
         title="Utilisateurs et habilitations"
-        description={`${active} compte(s) actif(s), ${users.length - active} désactivé(s). Un utilisateur cumule des couples rôle × périmètre ; une délégation temporaire est un rôle borné dans le temps.`}
+        description={tpl`${active} compte(s) actif(s), ${users.length - active} désactivé(s). Un utilisateur cumule des couples rôle × périmètre ; une délégation temporaire est un rôle borné dans le temps.`}
       />
       <Disclosure summary="Nouveau compte" className="mb-6">
         <ActionForm action={createUserAction} resetOnSuccess className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -100,10 +101,12 @@ export default async function UsersPage() {
                           <span className="text-sm text-slate-700">{a.scopeLabel}</span>
                           {a.validFrom || a.validTo ? (
                             <Badge tone={expired ? "gray" : future ? "amber" : "violet"}>
-                              <T
-                                params={{ v: a.validFrom ? `du ${formatDate(a.validFrom)}` : "", v2: a.validTo ? `au ${formatDate(a.validTo)}` : "" }}
-                              >
-                                {"Délégation {v} {v2}"}
+                              <T params={{ from: a.validFrom ? formatDate(a.validFrom) : "", to: a.validTo ? formatDate(a.validTo) : "" }}>
+                                {a.validFrom && a.validTo
+                                  ? "Délégation du {from} au {to}"
+                                  : a.validFrom
+                                    ? "Délégation du {from}"
+                                    : "Délégation au {to}"}
                               </T>
                             </Badge>
                           ) : null}

@@ -54,12 +54,12 @@ export function PricingPlans({
                 onClick={() => setBilling(value)}
                 className={`px-5 py-2 text-sm font-bold ${billing === value ? "bg-asphalt text-white" : "hover:bg-paper-deep"}`}
               >
-                {label}
+                <Tr>{label}</Tr>
                 {value === "yearly" && annualLabel ? (
                   <span
                     className={`site-label ms-2 px-1.5 py-0.5 text-[10px] ${billing === value ? "bg-signal text-asphalt" : "bg-asphalt text-signal"}`}
                   >
-                    {annualLabel}
+                    <Tr>{annualLabel}</Tr>
                   </span>
                 ) : null}
               </button>
@@ -78,11 +78,17 @@ export function PricingPlans({
             >
               {plan.badge ? (
                 <p className="site-label absolute -top-3.5 start-6 border-2 border-asphalt bg-signal px-2 py-1 text-[10px] text-asphalt">
-                  {plan.badge}
+                  <Tr>{plan.badge}</Tr>
                 </p>
               ) : null}
-              <h3 className="site-display text-3xl">{plan.name}</h3>
-              {plan.tagline ? <p className={`mt-2 text-sm ${dark ? "text-white/70" : "text-asphalt-500"}`}>{plan.tagline}</p> : null}
+              <h3 className="site-display text-3xl">
+                <Tr>{plan.name}</Tr>
+              </h3>
+              {plan.tagline ? (
+                <p className={`mt-2 text-sm ${dark ? "text-white/70" : "text-asphalt-500"}`}>
+                  <Tr>{plan.tagline}</Tr>
+                </p>
+              ) : null}
               <div className="mt-6 min-h-24">
                 {amount === null ? (
                   <p className="site-display text-5xl">
@@ -92,35 +98,43 @@ export function PricingPlans({
                   <>
                     <p className="flex items-start gap-1">
                       <span className="site-display text-6xl">{price.format(amount)}</span>
-                      <span className="site-display mt-1 text-2xl">{currency}</span>
+                      <span className="site-display mt-1 text-2xl">
+                        <Tr>{currency}</Tr>
+                      </span>
                       {plan.priceMonthly !== null && amount < plan.priceMonthly ? (
                         <s className={`site-display ms-3 mt-1 text-2xl ${dark ? "text-white/40" : "text-asphalt-500/60"}`}>
                           <span className="sr-only">
                             <T>au lieu de</T>{" "}
                           </span>
-                          {price.format(plan.priceMonthly)} {currency}
+                          {price.format(plan.priceMonthly)} <Tr>{currency}</Tr>
                         </s>
                       ) : null}
                     </p>
                     <p className={`text-sm ${dark ? "text-white/70" : "text-asphalt-500"}`}>
-                      {plan.priceUnit}
+                      <Tr>{plan.priceUnit}</Tr>
                       <Tr>{billing === "yearly" && annualMonths < 12 ? " · facturé annuellement" : ""}</Tr>
                     </p>
                   </>
                 )}
-                {plan.priceNote ? <p className={`site-label mt-2 text-[10px] ${dark ? "text-signal" : "text-asphalt"}`}>{plan.priceNote}</p> : null}
+                {plan.priceNote ? (
+                  <p className={`site-label mt-2 text-[10px] ${dark ? "text-signal" : "text-asphalt"}`}>
+                    <Tr>{plan.priceNote}</Tr>
+                  </p>
+                ) : null}
               </div>
               <ul className="mt-6 flex-1 space-y-3 text-sm">
                 {planFeatures(plan.features).map((f) =>
                   // Ligne terminée par « : » (« Tout Atelier, plus : ») : intertitre, sans coche.
                   f.endsWith(":") ? (
                     <li key={f} className={`site-label pt-1 text-[11px] ${dark ? "text-signal" : "text-asphalt-500"}`}>
-                      {f}
+                      <Tr>{f}</Tr>
                     </li>
                   ) : (
                     <li key={f} className="flex gap-2.5">
                       <Check className={`mt-0.5 h-4 w-4 shrink-0 ${dark ? "text-signal" : "text-asphalt"}`} aria-hidden />
-                      <span>{f}</span>
+                      <span>
+                        <Tr>{f}</Tr>
+                      </span>
                     </li>
                   ),
                 )}

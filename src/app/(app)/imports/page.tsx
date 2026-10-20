@@ -13,6 +13,7 @@ import { IMPORT_DEFINITIONS, MAX_IMPORT_ROWS } from "@/server/domain/imports";
 import { importableKinds, listImportJobs } from "@/server/services/imports";
 import { simulateImportAction } from "./actions";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Imports" };
 
@@ -34,7 +35,7 @@ export default async function ImportsPage() {
     <>
       <PageHeader
         title="Imports Excel"
-        description={`Télécharger le modèle, le remplir, puis lancer la simulation : chaque ligne est contrôlée comme une saisie à l'écran avant tout import. ${MAX_IMPORT_ROWS} lignes et 10 Mo au plus par fichier.`}
+        description={tpl`Télécharger le modèle, le remplir, puis lancer la simulation : chaque ligne est contrôlée comme une saisie à l'écran avant tout import. ${MAX_IMPORT_ROWS} lignes et 10 Mo au plus par fichier.`}
       />
 
       <div className="mb-8 grid gap-6 lg:grid-cols-3">

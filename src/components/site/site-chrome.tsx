@@ -3,7 +3,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { settingEnabled, type SiteSettings } from "@/server/domain/site";
 import type { SiteData } from "./site-data";
-import { T } from "@/i18n/client";
+import { LanguageSwitcher } from "@/components/i18n/language-switcher";
+import { T, Tr } from "@/i18n/client";
+import { getT } from "@/i18n/server";
 
 const NAV = [
   { href: "/decouvrir#fonctionnalites", label: "Fonctionnalités" },
@@ -15,11 +17,17 @@ const NAV = [
 /** Marque du site : pastille jaune et nom du produit en capitales condensées. */
 export function SiteBrand({ name, className = "" }: { name: string; className?: string }) {
   return (
-    <Link href="/" className={`flex items-center gap-2.5 ${className}`} aria-label={`${name} — accueil`}>
+    <Link href="/" className={`flex items-center gap-2.5 ${className}`}>
       <span className="flex h-9 w-9 -rotate-6 items-center justify-center border-2 border-asphalt bg-signal text-asphalt">
         <Wrench className="h-5 w-5 rotate-6" aria-hidden />
       </span>
-      <span className="site-display text-2xl leading-none">{name}</span>
+      <span className="site-display text-2xl leading-none">
+        <Tr>{name}</Tr>
+      </span>
+      <span className="sr-only">
+        {" — "}
+        <T>accueil</T>
+      </span>
     </Link>
   );
 }
@@ -33,10 +41,12 @@ function Announcement({ settings }: { settings: SiteSettings }) {
         <span className="site-label rounded-sm bg-asphalt px-1.5 py-0.5 text-[10px] text-signal">
           <T>Offre</T>
         </span>
-        <span>{settings["announcement.text"]}</span>
+        <span>
+          <Tr>{settings["announcement.text"]}</Tr>
+        </span>
         {href && settings["announcement.linkLabel"] ? (
           <Link href={href} className="inline-flex items-center gap-1 underline decoration-2 underline-offset-4 hover:no-underline">
-            {settings["announcement.linkLabel"]}
+            <Tr>{settings["announcement.linkLabel"]}</Tr>
             <ArrowRight className="rtl-flip h-4 w-4" aria-hidden />
           </Link>
         ) : null}
@@ -45,19 +55,21 @@ function Announcement({ settings }: { settings: SiteSettings }) {
   );
 }
 
-function Header({ settings }: { settings: SiteSettings }) {
+async function Header({ settings }: { settings: SiteSettings }) {
+  const t = await getT();
   return (
     <header className="sticky top-0 z-40 border-b-2 border-asphalt bg-paper/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <SiteBrand name={settings["brand.name"]} />
-        <nav aria-label="Navigation du site" className="hidden items-center gap-7 text-sm font-semibold lg:flex">
+        <nav aria-label={t("Navigation du site")} className="hidden items-center gap-7 text-sm font-semibold lg:flex">
           {NAV.map((n) => (
             <Link key={n.href} href={n.href} className="hover:underline hover:decoration-signal hover:decoration-4 hover:underline-offset-8">
-              {n.label}
+              <Tr>{n.label}</Tr>
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          <LanguageSwitcher className="hidden sm:inline-flex" />
           <Link href="/login" className="hidden items-center gap-1.5 px-3 py-2 text-sm font-semibold hover:underline sm:inline-flex">
             <LogIn className="h-4 w-4" aria-hidden />
             <T>Se connecter</T>
@@ -74,14 +86,15 @@ function Header({ settings }: { settings: SiteSettings }) {
               </span>
             </summary>
             <nav
-              aria-label="Navigation du site (mobile)"
+              aria-label={t("Navigation du site (mobile)")}
               className="absolute end-0 top-12 w-64 border-2 border-asphalt bg-paper p-2 shadow-[6px_6px_0_var(--color-asphalt)]"
             >
               {[...NAV, { href: "/login", label: "Se connecter" }].map((n) => (
                 <Link key={n.href} href={n.href} className="block px-3 py-3 font-semibold hover:bg-paper-deep">
-                  {n.label}
+                  <Tr>{n.label}</Tr>
                 </Link>
               ))}
+              <LanguageSwitcher className="px-3 py-3 sm:hidden" />
             </nav>
           </details>
         </div>
@@ -99,9 +112,11 @@ function Footer({ site }: { site: SiteData }) {
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <SiteBrand name={settings["brand.name"]} className="[&_span:last-child]:text-white" />
-            <p className="mt-4 max-w-md text-white/70">{settings["brand.baseline"]}</p>
+            <p className="mt-4 max-w-md text-white/70">
+              <Tr>{settings["brand.baseline"]}</Tr>
+            </p>
             <Link href="/essai-gratuit" className="site-btn site-btn-signal mt-6">
-              {settings["hero.ctaPrimary"]}
+              <Tr>{settings["hero.ctaPrimary"]}</Tr>
               <ArrowRight className="rtl-flip h-4 w-4" aria-hidden />
             </Link>
           </div>
@@ -113,7 +128,7 @@ function Footer({ site }: { site: SiteData }) {
               {NAV.map((n) => (
                 <li key={n.href}>
                   <Link href={n.href} className="hover:text-signal">
-                    {n.label}
+                    <Tr>{n.label}</Tr>
                   </Link>
                 </li>
               ))}
@@ -133,7 +148,7 @@ function Footer({ site }: { site: SiteData }) {
                 <li>
                   <a href={`mailto:${settings["contact.email"]}`} className="inline-flex items-center gap-2 break-all hover:text-signal">
                     <Mail className="h-4 w-4 shrink-0" aria-hidden />
-                    {settings["contact.email"]}
+                    <Tr>{settings["contact.email"]}</Tr>
                   </a>
                 </li>
               ) : null}
@@ -141,14 +156,14 @@ function Footer({ site }: { site: SiteData }) {
                 <li>
                   <a href={`tel:${settings["contact.phone"].replace(/\s/g, "")}`} className="inline-flex items-center gap-2 hover:text-signal">
                     <Phone className="h-4 w-4" aria-hidden />
-                    {settings["contact.phone"]}
+                    <Tr>{settings["contact.phone"]}</Tr>
                   </a>
                 </li>
               ) : null}
               {footerPages.map((p) => (
                 <li key={p.slug}>
                   <Link href={`/infos/${p.slug}`} className="hover:text-signal">
-                    {p.title}
+                    <Tr>{p.title}</Tr>
                   </Link>
                 </li>
               ))}
@@ -169,7 +184,9 @@ export function SiteChrome({ site, children }: { site: SiteData; children: React
     <>
       <Announcement settings={site.settings} />
       <Header settings={site.settings} />
-      <main id="contenu">{children}</main>
+      <main id="contenu">
+        <Tr>{children}</Tr>
+      </main>
       <Footer site={site} />
     </>
   );

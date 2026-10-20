@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/action-state";
 import { act, runAction } from "@/server/actions";
 import { getAuthContext } from "@/server/auth/session";
+import { getT } from "@/i18n/server";
 import { recordReading } from "@/server/services/meters";
 import {
   addOtherCost,
@@ -32,7 +33,11 @@ export async function createWorkOrderAction(_: ActionState, formData: FormData):
 
 export async function transitionAction(id: string, _: ActionState, formData: FormData): Promise<ActionState> {
   const to = String(formData.get("to") ?? "");
-  return act((ctx) => transitionWorkOrder(ctx, id, formToObject(formData)), `${TRANSITION_ACTION[to] ?? "Transition"} : effectué.`);
+  const t = await getT();
+  return act(
+    (ctx) => transitionWorkOrder(ctx, id, formToObject(formData)),
+    t("{action} : effectué.", { action: t(TRANSITION_ACTION[to] ?? "Transition") }),
+  );
 }
 
 /**

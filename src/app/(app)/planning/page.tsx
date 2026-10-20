@@ -16,6 +16,7 @@ import { listSites } from "@/server/services/organization";
 import { EMERGENCY_RESERVE, getWeekPlanning, weekInput } from "@/server/services/planning";
 import { PlanningDayView, type DayViewDay, type DayViewRow } from "./day-view";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Planning" };
 
@@ -81,7 +82,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
     <>
       <PageHeader
         title="Planning de la semaine"
-        description={`Semaine du ${formatDay(plan.weekStart)} au ${formatDay(lastDay)}. Capacité nette : heures de travail des jours sans absence, moins ${EMERGENCY_RESERVE * 100} % gardés pour les urgences.`}
+        description={tpl`Semaine du ${formatDay(plan.weekStart)} au ${formatDay(lastDay)}. Capacité nette : heures de travail des jours sans absence, moins ${EMERGENCY_RESERVE * 100} % gardés pour les urgences.`}
         actions={
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <ButtonLink href={withParams("/planning", { week: prev, siteId: params.siteId })} variant="secondary" aria-label="Semaine précédente">
@@ -231,7 +232,7 @@ export default async function PlanningPage(props: PageProps<"/planning">) {
       <Card>
         <CardHeader
           title="À planifier"
-          description={`Interventions créées ou en attente, par priorité — ${formatNumber(plan.backlogHours)} h estimées`}
+          description={tpl`Interventions créées ou en attente, par priorité — ${formatNumber(plan.backlogHours)} h estimées`}
         />
         {plan.backlog.length === 0 ? (
           <EmptyState title="Rien à planifier" />

@@ -11,6 +11,7 @@ import { cleanFilters, queryParams } from "@/server/pages";
 import { listOutbox, outboxFilters } from "@/server/services/email";
 import { emailActionAction, runEmailJobsAction } from "./actions";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Courriels" };
 
@@ -46,7 +47,7 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
       <Card>
         <div className="flex items-center justify-between px-5 py-3 text-sm">
           <span className="text-slate-600">
-            <Tr>{params.status ? `Filtre : ${EMAIL_STATUS[params.status]?.label}` : "200 derniers courriels"}</Tr>
+            <Tr>{params.status ? tpl`Filtre : ${EMAIL_STATUS[params.status]?.label}` : "200 derniers courriels"}</Tr>
           </span>
           {params.status ? (
             <Link href={filter()} className="text-brand-700 hover:underline">
@@ -88,12 +89,14 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                           params={{
                             label: EMAIL_EVENT_DEFINITIONS[m.event].label,
                             date: formatDateTime(m.createdAt),
-                            v: m.sentAt
-                              ? ` · envoyé le ${formatDateTime(m.sentAt)}${m.transport === "log" ? " (journal, sans envoi réel)" : ""}`
-                              : "",
+                            sent: m.sentAt ? formatDateTime(m.sentAt) : "",
                           }}
                         >
-                          {"{label} · créé le {date}{v}"}
+                          {!m.sentAt
+                            ? "{label} · créé le {date}"
+                            : m.transport === "log"
+                              ? "{label} · créé le {date} · envoyé le {sent} (journal, sans envoi réel)"
+                              : "{label} · créé le {date} · envoyé le {sent}"}
                         </T>
                       </p>
                       {m.lastError ? (

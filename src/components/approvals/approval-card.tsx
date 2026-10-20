@@ -36,8 +36,8 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Badge tone={APPROVAL_STATUS[a.status]?.tone}>{APPROVAL_STATUS[a.status]?.label ?? a.status}</Badge>
         <span className="text-slate-600">
-          <T params={{ date: formatDateTime(a.createdAt), v: a.requesterName ?? "—", v2: a.amount != null ? ` · ${formatCurrency(a.amount)}` : "" }}>
-            {"Soumise le {date} par {v}{v2}"}
+          <T params={{ date: formatDateTime(a.createdAt), by: a.requesterName ?? "—", amount: a.amount != null ? formatCurrency(a.amount) : "" }}>
+            {a.amount != null ? "Soumise le {date} par {by} · {amount}" : "Soumise le {date} par {by}"}
           </T>
         </span>
       </div>
@@ -67,8 +67,15 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
                 </p>
                 {d ? (
                   <p className="text-slate-600">
-                    <Tr>{d.decision === "APPROVED" ? "Validée" : "Refusée"}</Tr> par {d.decidedBy}
-                    {d.onBehalfOf ? ` (suppléant de ${d.onBehalfOf})` : ""} le {formatDateTime(d.createdAt)}
+                    <T params={{ by: d.decidedBy, date: formatDateTime(d.createdAt), onBehalfOf: d.onBehalfOf ?? "" }}>
+                      {d.decision === "APPROVED"
+                        ? d.onBehalfOf
+                          ? "Validée par {by} (suppléant de {onBehalfOf}) le {date}"
+                          : "Validée par {by} le {date}"
+                        : d.onBehalfOf
+                          ? "Refusée par {by} (suppléant de {onBehalfOf}) le {date}"
+                          : "Refusée par {by} le {date}"}
+                    </T>
                     {d.comment ? <span className="block italic text-slate-700">« {d.comment} »</span> : null}
                   </p>
                 ) : null}

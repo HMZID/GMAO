@@ -35,6 +35,7 @@ import {
   reviewReadingAction,
 } from "../actions";
 import { T, Tr } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Fiche équipement" };
 
@@ -104,7 +105,7 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
       ) : null}
       {retired ? (
         <div className="mb-6">
-          <Alert tone="amber" title={`Réformé le ${formatDate(e.retiredAt)}`}>
+          <Alert tone="amber" title={tpl`Réformé le ${formatDate(e.retiredAt)}`}>
             <T params={{ retirementReason: e.retirementReason }}>{"{retirementReason} — fiche en lecture seule, historique conservé."}</T>
           </Alert>
         </div>
@@ -279,7 +280,7 @@ function MetersCard({
               {canWrite ? (
                 <ActionForm action={recordReadingAction.bind(null, m.id)} resetOnSuccess className="rounded-md bg-slate-50 p-3">
                   <div className="flex flex-wrap items-end gap-3">
-                    <Field label={`Nouveau relevé (${m.unit})`} name="value" required className="w-40">
+                    <Field label={tpl`Nouveau relevé (${m.unit})`} name="value" required className="w-40">
                       <Input id={`value-${m.id}`} name="value" type="number" min={0} step="0.1" required />
                     </Field>
                     <Field label="Date et heure" name="readAt" className="w-52">
@@ -490,7 +491,7 @@ function DueItemsCard({ e, ctx, retired }: { e: Equipment; ctx: AuthContext; ret
               <Field label="Dernière réalisation" name="lastDoneAt" hint="Reprise de l'historique">
                 <Input id="lastDoneAt" name="lastDoneAt" type="date" />
               </Field>
-              <Field label={`Compteur à la dernière réalisation${primary ? ` (${primary.unit})` : ""}`} name="lastDoneMeter">
+              <Field label={tpl`Compteur à la dernière réalisation${primary ? ` (${primary.unit})` : ""}`} name="lastDoneMeter">
                 <Input id="lastDoneMeter" name="lastDoneMeter" type="number" min={0} step="0.1" />
               </Field>
               <div className="flex items-end">
@@ -605,8 +606,8 @@ async function AssignmentCard({ e, ctx, retired }: { e: Equipment; ctx: AuthCont
           <div className="rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900">
             <p className="font-medium">{place(active)}</p>
             <p className="text-xs">
-              <T params={{ date: formatDate(active.startAt), v: active.endAt ? ` jusqu'au ${formatDate(active.endAt)}` : "" }}>
-                {"Depuis le {date}{v}"}
+              <T params={{ date: formatDate(active.startAt), end: active.endAt ? formatDate(active.endAt) : "" }}>
+                {active.endAt ? "Depuis le {date} jusqu'au {end}" : "Depuis le {date}"}
               </T>
             </p>
           </div>

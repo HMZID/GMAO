@@ -8,6 +8,19 @@ const ENTITIES = { "&apos;": "'", "&amp;": "&", "&nbsp;": "\u00a0", "&laquo;": "
 const decode = (s) => s.replace(/&[a-z]+;/g, (m) => ENTITIES[m] ?? m);
 const TEXT_PROPS = new Set(["title", "label", "description", "hint", "placeholder", "aria-label", "alt", "emptyText", "pendingLabel", "short", "text", "name"]);
 
+/** Textes littéraux d'une expression (branches de ?:, ??, ||, parenthèses, gabarits tpl). */
+export function stringLeaves(e) {
+  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return [e.text];
+  if (ts.isParenthesizedExpression(e)) return stringLeaves(e.expression);
+  if (ts.isConditionalExpression(e)) return [...stringLeaves(e.whenTrue), ...stringLeaves(e.whenFalse)];
+  if (ts.isBinaryExpression(e)) return [...stringLeaves(e.left), ...stringLeaves(e.right)];
+  if (ts.isTaggedTemplateExpression(e) && e.tag.getText() === "tpl") {
+    const t = e.template;
+    return [ts.isNoSubstitutionTemplateLiteral(t) ? t.text : t.head.text + t.templateSpans.map((s, i) => `{${i + 1}}` + s.literal.text).join("")];
+  }
+  return [];
+}
+
 export function jsxTextKey(raw) {
   return decode(
     raw
@@ -24,6 +37,9 @@ export function looksLikeUiText(s) {
   if (!/[A-Za-zÀ-ÿ]/.test(s)) return false;
   if (/^[a-z0-9_\-:./\[\]#%@!?,=&+*()|^~$ ]+$/.test(s) && !/\s[a-zà-ÿ]{2,}\s/.test(s) && !/[à-ÿ]/.test(s)) return false; // classes, chemins, identifiants
   if (/^[A-Z0-9_]+$/.test(s)) return false;
+  // Listes de classes CSS (Tailwind) : jetons en minuscules avec tirets, deux-points ou crochets.
+  const tokens = s.split(/\s+/);
+  if (tokens.length >= 1 && tokens.every((t) => /^[a-z0-9:\[\]\-_/.%()!#,'"=&@*]+$/.test(t)) && tokens.some((t) => /[-:\[\]]/.test(t)) && !/[àâçéèêëîïôùûü]/.test(s)) return false;
   if (/^(https?:|\/|#|\.|@)/.test(s)) return false;
   if (/^[a-z]+[A-Z]\w*$/.test(s)) return false; // camelCase
   return /[A-ZÀ-Ý]/.test(s[0]) || /\s/.test(s) || /[à-ÿ]/.test(s);
@@ -54,11 +70,21 @@ export function extract(roots) {
       const sf = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true, file.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
       const isLabels = /lib[\\/]labels\.ts$|domain[\\/](site-defaults|email)\.ts$|nav-items\.ts$|site[\\/]site-data|components[\\/]site/.test(file);
       const visit = (n) => {
-        // <T>texte</T>
+                // <T>texte</T>, <T>{"texte"}</T>, <T>{cond ? "a" : "b"}</T>
         if (ts.isJsxElement(n) && n.openingElement.tagName.getText() === "T") {
           const kids = n.children;
           if (kids.length === 1 && ts.isJsxText(kids[0])) add(jsxTextKey(kids[0].text), "T", file);
-          else if (kids.length === 1 && ts.isJsxExpression(kids[0]) && kids[0].expression && ts.isStringLiteralLike(kids[0].expression)) add(kids[0].expression.text, "T", file);
+          else if (kids.length === 1 && ts.isJsxExpression(kids[0]) && kids[0].expression) for (const s of stringLeaves(kids[0].expression)) add(s, "T", file);
+        }
+        // <Tr>{cond ? "a" : "b"}</Tr>
+        if (ts.isJsxElement(n) && n.openingElement.tagName.getText() === "Tr") {
+          for (const k of n.children) if (ts.isJsxExpression(k) && k.expression) for (const s of stringLeaves(k.expression)) add(s, "Tr", file);
+        }
+        // tpl`texte ${valeur}` → « texte {1} »
+        if (ts.isTaggedTemplateExpression(n) && n.tag.getText() === "tpl") {
+          const t = n.template;
+          if (ts.isNoSubstitutionTemplateLiteral(t)) add(t.text, "tpl", file);
+          else add(t.head.text + t.templateSpans.map((s, i) => `{${i + 1}}` + s.literal.text).join(""), "tpl", file);
         }
         // t("…") / msg("…")
         if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && ["t", "msg"].includes(n.expression.text) && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0])) {
