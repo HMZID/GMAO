@@ -25,7 +25,7 @@ export function apiRoute<RouteCtx = unknown>(
       // NOT-01 : une écriture a pu mettre des courriels en file (envoi sans attendre la tâche quotidienne).
       if (request.method !== "GET" && request.method !== "HEAD") flushEmailQueueAfterResponse();
       if (result instanceof Response) return result;
-      return Response.json({ data: result ?? null }, { status: options.status ?? 200 });
+      return Response.json({ data: plainDeep(result ?? null) }, { status: options.status ?? 200 });
     } catch (error) {
       unstable_rethrow(error);
       return errorResponse(error);

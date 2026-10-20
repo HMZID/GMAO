@@ -1,3 +1,4 @@
+import { tpl } from "@/i18n/translate";
 import "server-only";
 import { aliasedTable, and, count, desc, eq, gt } from "drizzle-orm";
 import { z } from "zod";
@@ -126,7 +127,7 @@ async function applyCount(tx: DbOrTx, ctx: AuthContext, row: InventoryCount, now
   if (row.difference !== 0) {
     const level = await lockLevel(tx, ctx, row.partId, row.warehouseId);
     if (level.onHand + row.difference < 0) {
-      throw new BusinessRuleError([`Le stock physique ne peut pas devenir négatif (stock actuel ${level.onHand}, écart ${row.difference}).`]);
+      throw new BusinessRuleError([tpl`Le stock physique ne peut pas devenir négatif (stock actuel ${level.onHand}, écart ${row.difference}).`]);
     }
     const [part] = await tx.select({ averageCost: parts.averageCost }).from(parts).where(eq(parts.id, row.partId));
     await tx

@@ -1,3 +1,4 @@
+import { tpl } from "@/i18n/translate";
 import "server-only";
 import { assertPasswordNotBreached } from "@/server/auth/breached-password";
 import { randomUUID } from "node:crypto";
@@ -366,7 +367,7 @@ export async function checkTechnicianCreation(ctx: AuthContext, raw: unknown) {
       .select({ id: technicians.id })
       .from(technicians)
       .where(and(eq(technicians.tenantId, ctx.tenantId), eq(technicians.employeeNumber, input.employeeNumber)));
-    if (same) throw new ConflictError(`Le matricule ${input.employeeNumber} est déjà attribué.`, { existingId: same.id });
+    if (same) throw new ConflictError(tpl`Le matricule ${input.employeeNumber} est déjà attribué.`, { existingId: same.id });
   }
   // Compte lié : de l'organisation (sinon le technicien serait rattaché à l'utilisateur d'un autre client).
   await assertSameTenant(db, ctx, user, input.userId, "Utilisateur");

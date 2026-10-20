@@ -18,6 +18,7 @@ const CLOSE = "\u2064";
 /** Préfixe d'une valeur de gabarit qui est elle-même un texte à traduire (`tx`) : un libellé, pas une donnée saisie. */
 const TRANSLATABLE = "\u2060";
 const MARKERS = /[\u2063\u2064\u2060]/g;
+const MARKER_TEST = /[\u2060-\u2064]/;
 const SEGMENT = "\u2061";
 const MARKED = /\u2063([^\u2064]*)\u2064/g;
 
@@ -49,11 +50,18 @@ export function plainText(text: string): string {
   return text.replace(MARKERS, "").replace(/\u2061/g, " · ");
 }
 
-/** `plainText` appliqué à toutes les chaînes d'une valeur JSON (détails d'une erreur de l'API). */
+/**
+ * `plainText` appliqué à toutes les chaînes d'une valeur JSON (réponses de l'API) : tableaux et objets simples
+ * parcourus, dates et autres objets laissés tels quels. Sans séparateur, la valeur est rendue sans copie.
+ */
 export function plainDeep<T>(value: T): T {
-  if (typeof value === "string") return plainText(value) as T;
+  if (typeof value === "string") return (MARKER_TEST.test(value) ? plainText(value) : value) as T;
   if (Array.isArray(value)) return value.map((v) => plainDeep(v)) as T;
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, plainDeep(v)])) as T;
+  if (value && typeof value === "object") {
+    const proto = Object.getPrototypeOf(value);
+    if (proto !== Object.prototype && proto !== null) return value;
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, plainDeep(v)])) as T;
+  }
   return value;
 }
 

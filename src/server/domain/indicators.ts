@@ -4,6 +4,7 @@
  * validée ici, puis traduite en SQL par le service avec des colonnes connues et le périmètre de l'utilisateur.
  * Module pur, testé dans `__tests__/indicators.test.ts`.
  */
+import { tpl } from "@/i18n/translate";
 import {
   CRITICALITY,
   EQUIPMENT_STATUS,
@@ -150,14 +151,14 @@ export function validateIndicator(def: IndicatorDefinition): string[] {
   if (def.aggregate === "count") {
     if (def.field) errors.push("Un comptage ne porte pas sur un champ.");
   } else if (!def.field) {
-    errors.push(`Choisir le champ à ${def.aggregate === "sum" ? "additionner" : "moyenner"}.`);
+    errors.push(def.aggregate === "sum" ? "Choisir le champ à additionner." : "Choisir le champ à moyenner.");
   } else if (!source.fields.some((f) => f.key === def.field)) {
-    errors.push(`Champ « ${def.field} » indisponible pour ${source.label.toLowerCase()}.`);
+    errors.push(tpl`Champ « ${def.field} » indisponible pour ${source.label.toLowerCase()}.`);
   }
-  if (def.groupBy && !source.dimensions.some((d) => d.key === def.groupBy)) errors.push(`Regroupement « ${def.groupBy} » indisponible.`);
+  if (def.groupBy && !source.dimensions.some((d) => d.key === def.groupBy)) errors.push(tpl`Regroupement « ${def.groupBy} » indisponible.`);
   if (def.filterKey) {
     const dimension = source.dimensions.find((d) => d.key === def.filterKey);
-    if (!dimension?.choices) errors.push(`Filtre « ${def.filterKey} » indisponible.`);
+    if (!dimension?.choices) errors.push(tpl`Filtre « ${def.filterKey} » indisponible.`);
     else if (!def.filterValue || !(def.filterValue in dimension.choices)) errors.push("Choisir la valeur du filtre.");
   }
   if (def.periodDays != null && !(INDICATOR_PERIODS as readonly number[]).includes(def.periodDays)) errors.push("Période inconnue.");

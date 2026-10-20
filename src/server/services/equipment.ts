@@ -1,3 +1,4 @@
+import { tpl } from "@/i18n/translate";
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { and, asc, count, desc, eq, gt, ilike, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
@@ -247,7 +248,7 @@ async function assertNoDuplicate(ctx: AuthContext, input: { manufacturer: string
           exceptId ? ne(equipment.id, exceptId) : undefined,
         ),
       );
-    if (dup) throw new ConflictError(`Doublon : ${dup.code} a déjà cette marque et ce numéro de série.`, { existingId: dup.id });
+    if (dup) throw new ConflictError(tpl`Doublon : ${dup.code} a déjà cette marque et ce numéro de série.`, { existingId: dup.id });
   }
   if (input.registration) {
     const [dup] = await db
@@ -261,7 +262,7 @@ async function assertNoDuplicate(ctx: AuthContext, input: { manufacturer: string
           exceptId ? ne(equipment.id, exceptId) : undefined,
         ),
       );
-    if (dup) throw new ConflictError(`Doublon : l'immatriculation est déjà portée par ${dup.code}.`, { existingId: dup.id });
+    if (dup) throw new ConflictError(tpl`Doublon : l'immatriculation est déjà portée par ${dup.code}.`, { existingId: dup.id });
   }
 }
 
@@ -286,7 +287,7 @@ export async function checkEquipmentCreation(ctx: AuthContext, raw: unknown) {
     .select({ id: equipment.id })
     .from(equipment)
     .where(and(eq(equipment.tenantId, ctx.tenantId), eq(equipment.code, input.code)));
-  if (sameCode) throw new ConflictError(`Le code parc ${input.code} existe déjà.`, { existingId: sameCode.id });
+  if (sameCode) throw new ConflictError(tpl`Le code parc ${input.code} existe déjà.`, { existingId: sameCode.id });
   await assertNoDuplicate(ctx, input);
 
   const [category] = await db
@@ -449,7 +450,7 @@ export async function retireEquipment(ctx: AuthContext, id: string, raw: unknown
     .select({ open: count() })
     .from(workOrders)
     .where(and(eq(workOrders.equipmentId, id), inArray(workOrders.status, [...OPEN_STATUSES])));
-  if (open > 0) throw new BusinessRuleError([`Réforme impossible : ${open} intervention(s) ouverte(s) sur cet équipement.`]);
+  if (open > 0) throw new BusinessRuleError([tpl`Réforme impossible : ${open} intervention(s) ouverte(s) sur cet équipement.`]);
   return db.transaction(async (tx) => {
     await setEquipmentStatus(tx, ctx, id, "RETIRED", { reason: input.reason });
     await tx

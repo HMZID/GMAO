@@ -1,3 +1,4 @@
+import { tpl } from "@/i18n/translate";
 import "server-only";
 import { and, asc, count, desc, eq, ilike, inArray, isNotNull, lte, or, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -146,13 +147,13 @@ export async function checkPartCreation(ctx: AuthContext, raw: unknown) {
     .select({ id: parts.id })
     .from(parts)
     .where(and(eq(parts.tenantId, ctx.tenantId), eq(parts.sku, input.sku)));
-  if (sameSku) throw new ConflictError(`La référence interne ${input.sku} existe déjà.`, { existingId: sameSku.id });
+  if (sameSku) throw new ConflictError(tpl`La référence interne ${input.sku} existe déjà.`, { existingId: sameSku.id });
   if (input.manufacturer && input.manufacturerRef) {
     const [dup] = await db
       .select({ id: parts.id, sku: parts.sku })
       .from(parts)
       .where(and(eq(parts.tenantId, ctx.tenantId), eq(parts.manufacturer, input.manufacturer), eq(parts.manufacturerRef, input.manufacturerRef)));
-    if (dup) throw new ConflictError(`Doublon : l'article ${dup.sku} a déjà cette référence fabricant.`, { existingId: dup.id });
+    if (dup) throw new ConflictError(tpl`Doublon : l'article ${dup.sku} a déjà cette référence fabricant.`, { existingId: dup.id });
   }
   return input;
 }
@@ -424,7 +425,7 @@ async function writeMovement(ctx: AuthContext, raw: unknown) {
 
     // SCRAP et TRANSFER retirent du stock disponible
     const free = level.onHand - level.reserved;
-    if (input.quantity > free) throw new BusinessRuleError([`Seulement ${free} disponible(s) dans ${wh.name}.`]);
+    if (input.quantity > free) throw new BusinessRuleError([tpl`Seulement ${free} disponible(s) dans ${wh.name}.`]);
     await tx
       .update(stockLevels)
       .set({ onHand: sql`${stockLevels.onHand} - ${input.quantity}` })
@@ -641,7 +642,7 @@ export async function returnFromWorkOrder(
       ),
     );
   if (!(input.quantity > 0) || input.quantity > (net?.issued ?? 0)) {
-    throw new BusinessRuleError([`Retour impossible : ${net?.issued ?? 0} sortie(s) nette(s) sur cette intervention.`]);
+    throw new BusinessRuleError([tpl`Retour impossible : ${net?.issued ?? 0} sortie(s) nette(s) sur cette intervention.`]);
   }
   const level = await lockLevel(tx, ctx, input.partId, input.warehouseId);
   await tx
@@ -705,7 +706,7 @@ export async function checkSupplierCreation(ctx: AuthContext, raw: unknown) {
       .select({ id: suppliers.id, name: suppliers.name })
       .from(suppliers)
       .where(and(eq(suppliers.tenantId, ctx.tenantId), eq(suppliers.taxId, input.taxId)));
-    if (same) throw new ConflictError(`Le fournisseur « ${same.name} » porte déjà cet identifiant fiscal.`, { existingId: same.id });
+    if (same) throw new ConflictError(tpl`Le fournisseur « ${same.name} » porte déjà cet identifiant fiscal.`, { existingId: same.id });
   }
   return input;
 }
