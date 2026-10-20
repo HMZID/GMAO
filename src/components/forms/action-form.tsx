@@ -187,12 +187,23 @@ export function Field({
     : children;
   return (
     <div className={cn("space-y-1", className)}>
-      {/* Le libellé englobe le champ : l'association ne dépend d'aucun identifiant (jamais de doublon d'identifiant
-          entre deux formulaires de la page, même après un rafraîchissement). */}
-      <label className="block space-y-1">
-        <span className="block text-sm font-medium text-slate-700">{labelContent}</span>
-        {control}
-      </label>
+      {child ? (
+        <>
+          <label htmlFor={controlId} className="block text-sm font-medium text-slate-700">
+            <Tr>{labelContent}</Tr>
+          </label>
+          <Tr>{control}</Tr>
+        </>
+      ) : (
+        // Champ reçu sous une forme qui ne peut pas recevoir d'identifiant (élément différé du flux serveur) :
+        // le libellé l'englobe, ce qui garde l'association.
+        <label className="block space-y-1">
+          <span className="block text-sm font-medium text-slate-700">
+            <Tr>{labelContent}</Tr>
+          </span>
+          <Tr>{control}</Tr>
+        </label>
+      )}
       {error ? (
         <p id={messageId} className="text-xs text-red-700" role="alert">
           <Tr>{error}</Tr>
