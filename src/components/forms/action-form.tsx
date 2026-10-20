@@ -190,18 +190,16 @@ export function Field({
       {child ? (
         <>
           <label htmlFor={controlId} className="block text-sm font-medium text-slate-700">
-            <Tr>{labelContent}</Tr>
+            {labelContent}
           </label>
-          <Tr>{control}</Tr>
+          {control}
         </>
       ) : (
         // Champ reçu sous une forme qui ne peut pas recevoir d'identifiant (élément différé du flux serveur) :
         // le libellé l'englobe, ce qui garde l'association.
         <label className="block space-y-1">
-          <span className="block text-sm font-medium text-slate-700">
-            <Tr>{labelContent}</Tr>
-          </span>
-          <Tr>{control}</Tr>
+          <span className="block text-sm font-medium text-slate-700">{labelContent}</span>
+          {control}
         </label>
       )}
       {error ? (

@@ -21,9 +21,7 @@ export function Disclosure({
         <Tr>{summary}</Tr>
         <ChevronDown className="h-4 w-4 text-slate-400 transition-transform group-open:rotate-180" aria-hidden />
       </summary>
-      <div className="border-t border-slate-100 px-4 py-4">
-        <Tr>{children}</Tr>
-      </div>
+      <div className="border-t border-slate-100 px-4 py-4">{children}</div>
     </details>
   );
 }
