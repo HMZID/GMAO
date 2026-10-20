@@ -46,6 +46,7 @@ export default function LoginScreen() {
         {error ? <Message>{error}</Message> : null}
         <Field
           label="Courriel"
+          required
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -55,6 +56,7 @@ export default function LoginScreen() {
         />
         <Field
           label="Mot de passe"
+          required
           value={password}
           onChangeText={setPassword}
           secureTextEntry

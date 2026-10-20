@@ -44,6 +44,19 @@ export function tplParts(parts: string[]): string {
   return parts.join(SEGMENT);
 }
 
+/** Texte sans séparateurs de gabarit (réponses de l'API, journaux) : le français d'origine. */
+export function plainText(text: string): string {
+  return text.replace(MARKERS, "").replace(/\u2061/g, " · ");
+}
+
+/** `plainText` appliqué à toutes les chaînes d'une valeur JSON (détails d'une erreur de l'API). */
+export function plainDeep<T>(value: T): T {
+  if (typeof value === "string") return plainText(value) as T;
+  if (Array.isArray(value)) return value.map((v) => plainDeep(v)) as T;
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, plainDeep(v)])) as T;
+  return value;
+}
+
 /** Phrase-clé d'un gabarit : valeurs remplacées par `{1}`, `{2}`… (dans l'ordre d'apparition). */
 export function templateKey(source: string): { key: string; args: string[] } {
   const args: string[] = [];

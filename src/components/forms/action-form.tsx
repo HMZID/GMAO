@@ -7,23 +7,61 @@ import {
   startTransition,
   use,
   useActionState,
+  useCallback,
   useEffect,
   useId,
   useRef,
+  useState,
   type ReactElement,
   type ReactNode,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { Input, Select, Textarea } from "@/components/ui/inputs";
 import { initialActionState, type ActionState } from "@/lib/action-state";
 import { cn } from "@/lib/utils";
-import { T, Tr } from "@/i18n/client";
+import { T, Tr, useT } from "@/i18n/client";
 
-type FormContext = { state: ActionState; pending: boolean };
+type FormContext = {
+  state: ActionState;
+  pending: boolean;
+  /** Champs affichés (nom → libellé) : leurs erreurs sont sous le champ, les autres dans le message du formulaire. */
+  fields?: Readonly<Record<string, string>>;
+  register?: (name: string, label: string) => () => void;
+};
 
 const FormStateContext = createContext<FormContext>({ state: initialActionState, pending: false });
 
 export function useActionFormState() {
   return use(FormStateContext);
+}
+
+/** Registre des champs d'un formulaire (ou d'un panneau de formulaires). */
+function useFieldRegistry() {
+  const [fields, setFields] = useState<Record<string, string>>({});
+  const register = useCallback((name: string, label: string) => {
+    setFields((current) => (current[name] === label ? current : { ...current, [name]: label }));
+    return () =>
+      setFields((current) => {
+        if (!(name in current)) return current;
+        const next = { ...current };
+        delete next[name];
+        return next;
+      });
+  }, []);
+  return { fields, register };
+}
+
+/** Déclare un champ affiché hors de `Field` (case à cocher d'accord…) : son erreur n'est pas répétée en tête. */
+export function useRegisterField(name: string, label: string) {
+  const { register } = useActionFormState();
+  useEffect(() => register?.(name, label), [register, name, label]);
+}
+
+/** Après un refus, le premier champ en erreur prend le focus (et devient visible). */
+function focusFirstInvalid(root: HTMLElement | null, state: ActionState) {
+  if (state.status !== "error" || !state.fieldErrors || !root) return;
+  const invalid = root.querySelector<HTMLElement>('[aria-invalid="true"]');
+  invalid?.focus({ preventScroll: false });
 }
 
 type Action = (state: ActionState, formData: FormData) => Promise<ActionState>;
@@ -52,8 +90,10 @@ export function ActionForm({
 }) {
   const [state, formAction, pending] = useActionState(action, initialActionState);
   const formRef = useRef<HTMLFormElement>(null);
+  const { fields, register } = useFieldRegistry();
 
   useEffect(() => {
+    focusFirstInvalid(formRef.current, state);
     if (state.status === "success") {
       if (resetOnSuccess) formRef.current?.reset();
       onSuccess?.(state);
@@ -62,7 +102,7 @@ export function ActionForm({
   }, [state]);
 
   return (
-    <FormStateContext value={{ state, pending }}>
+    <FormStateContext value={{ state, pending, fields, register }}>
       <form
         ref={formRef}
         action={formAction}
@@ -83,8 +123,14 @@ export function ActionForm({
 }
 
 export function FormMessage({ className }: { className?: string }) {
-  const { state } = useActionFormState();
+  const { state, fields = {} } = useActionFormState();
+  const t = useT();
   if (state.status === "idle") return null;
+  // Erreurs par champ : celles d'un champ affiché sont sous le champ (rappel de son libellé ici), les autres
+  // (champ absent ou nommé autrement) sont listées pour qu'aucune ne reste invisible.
+  const fieldErrors = Object.entries(state.fieldErrors ?? {}).filter(([, messages]) => messages?.length);
+  const shownLabels = [...new Set(fieldErrors.filter(([name]) => name in fields).map(([name]) => t(fields[name])))];
+  const unshown = fieldErrors.filter(([name]) => !(name in fields)).flatMap(([, messages]) => messages ?? []);
   if (state.status === "success" && !state.message && !state.warnings?.length) return null;
   const isError = state.status === "error";
   return (
@@ -118,6 +164,20 @@ export function FormMessage({ className }: { className?: string }) {
           </button>
         </div>
       ) : null}
+      {shownLabels.length ? (
+        <p className="mt-1">
+          {t("Champs à corriger :")} {shownLabels.join(", ")}
+        </p>
+      ) : null}
+      {unshown.length ? (
+        <ul className="mt-1 list-disc space-y-0.5 ps-5">
+          {[...new Set(unshown)].map((e) => (
+            <li key={e}>
+              <Tr>{e}</Tr>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       {state.errors?.length ? (
         <ul className="mt-1 list-disc space-y-0.5 ps-5">
           {state.errors.map((e) => (
@@ -140,6 +200,13 @@ export function FormMessage({ className }: { className?: string }) {
   );
 }
 
+/** Contrôles qui transmettent `required` à l'élément natif (champ, liste, zone de texte). */
+function acceptsRequired(element: ReactElement) {
+  const type = element.type as unknown;
+  if (typeof type === "string") return ["input", "select", "textarea"].includes(type);
+  return type === Input || type === Select || type === Textarea;
+}
+
 /**
  * Champ de formulaire : libellé relié au contrôle (identifiant du contrôle enfant, sinon `name`),
  * aide ou erreur de validation du champ, signalée aux technologies d'assistance.
@@ -159,18 +226,21 @@ export function Field({
   children: ReactNode;
   className?: string;
 }) {
-  const { state } = useActionFormState();
+  const { state, register } = useActionFormState();
   const error = state.fieldErrors?.[name]?.[0];
+  useEffect(() => register?.(name, label), [register, name, label]);
   // Identifiant unique dans le document : les pages précédentes restent montées (masquées) par le
   // routeur, un identifiant fixe pourrait relier le libellé au champ d'une autre page.
   const uid = useId();
-  const child = isValidElement<{ id?: string }>(children) ? children : null;
+  const child = isValidElement<{ id?: string; required?: boolean }>(children) ? children : null;
+  // Obligatoire si le champ ou son contrôle le dit : astérisque, contrôle natif du navigateur et annonce d'accessibilité.
+  const isRequired = !!required || !!child?.props.required;
   const controlId = child ? `${child.props.id ?? name}${uid}` : name;
   const messageId = `${controlId}-message`;
   const labelContent = (
     <>
       <Tr>{label}</Tr>
-      {required ? (
+      {isRequired ? (
         <span className="text-red-600" aria-hidden>
           {" "}
           *
@@ -181,6 +251,7 @@ export function Field({
   const control = child
     ? cloneElement(child as ReactElement<Record<string, unknown>>, {
         id: controlId,
+        ...(isRequired && acceptsRequired(child) ? { required: true } : {}),
         "aria-invalid": error ? true : undefined,
         "aria-describedby": error || hint ? messageId : undefined,
       })
@@ -254,10 +325,13 @@ const PanelContext = createContext<((formData: FormData) => void) | null>(null);
  */
 export function ActionPanel({ action, children, className }: { action: Action; children: ReactNode; className?: string }) {
   const [state, formAction, pending] = useActionState(action, initialActionState);
+  const { fields, register } = useFieldRegistry();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => focusFirstInvalid(panelRef.current, state), [state]);
   return (
-    <FormStateContext value={{ state, pending }}>
+    <FormStateContext value={{ state, pending, fields, register }}>
       <PanelContext value={formAction}>
-        <div className={className}>
+        <div ref={panelRef} className={className}>
           <FormMessage />
           {children}
         </div>

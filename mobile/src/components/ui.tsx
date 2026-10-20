@@ -103,11 +103,14 @@ export function Button({
   );
 }
 
-export function Field({ label, hint, placeholder, ...props }: TextInputProps & { label: string; hint?: string }) {
+export function Field({ label, hint, placeholder, required, ...props }: TextInputProps & { label: string; hint?: string; required?: boolean }) {
   const t = useT();
   return (
     <View style={{ gap: 4 }}>
-      <Text style={styles.label}>{t(label)}</Text>
+      <Text style={styles.label}>
+        {t(label)}
+        {required ? <Text style={{ color: colors.danger }}> *</Text> : null}
+      </Text>
       <TextInput
         accessibilityLabel={t(label)}
         placeholder={placeholder ? t(placeholder) : undefined}

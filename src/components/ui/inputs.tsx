@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 /** Champs de saisie stylés, utilisables dans les composants serveur et client. */
 
 const field =
-  "block w-full rounded-md border-0 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-600 disabled:bg-slate-50 disabled:text-slate-500";
+  "block w-full rounded-md border-0 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-600 disabled:bg-slate-50 disabled:text-slate-500 aria-[invalid=true]:bg-red-50/40 aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-red-500 user-invalid:ring-2 user-invalid:ring-red-500";
 
 export function Input({ className, placeholder, ...props }: ComponentProps<"input">) {
   const t = useT();

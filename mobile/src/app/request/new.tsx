@@ -28,7 +28,15 @@ export default function NewRequest() {
     <Screen>
       <Card title={code ? t("Panne sur {code}", { code }) : t("Panne sur l'équipement")}>
         {!online ? <Message tone="amber">{t("Hors connexion : la demande sera envoyée au retour du réseau.")}</Message> : null}
-        <Field label="Symptôme" value={symptom} onChangeText={setSymptom} placeholder="Ex. fuite hydraulique sur le bras" maxLength={200} />
+        <Field
+          label="Symptôme"
+          required
+          hint="3 caractères au minimum"
+          value={symptom}
+          onChangeText={setSymptom}
+          placeholder="Ex. fuite hydraulique sur le bras"
+          maxLength={200}
+        />
         <Field label="Précisions" value={description} onChangeText={setDescription} multiline maxLength={2000} />
         <Toggle label="La machine est arrêtée" value={isStopped} onChange={setStopped} />
         <Toggle label="Risque pour la sécurité" value={isSafetyRisk} onChange={setSafety} />
