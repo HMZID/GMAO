@@ -59,8 +59,16 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
         meta={
           <>
             <WorkOrderStatusBadge status={wo.status} />
-            {wo.validationStatus === "PENDING" && isOpen ? <Badge tone="amber">En attente de validation</Badge> : null}
-            {wo.validationStatus === "REJECTED" ? <Badge tone="red">Validation refusée</Badge> : null}
+            {wo.validationStatus === "PENDING" && isOpen ? (
+              <Badge tone="amber">
+                <T>En attente de validation</T>
+              </Badge>
+            ) : null}
+            {wo.validationStatus === "REJECTED" ? (
+              <Badge tone="red">
+                <T>Validation refusée</T>
+              </Badge>
+            ) : null}
             <PriorityBadge value={wo.priority} />
             <Badge>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Badge>
             {wo.isImmobilizing ? (
@@ -105,8 +113,11 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
       <div className="mb-6 space-y-3">
         {wo.validationStatus === "PENDING" && isOpen ? (
           <Alert tone="amber" title="Intervention en attente de validation">
-            Elle ne peut être ni planifiée ni démarrée avant la décision du valideur
-            {wo.estimatedCost != null ? ` (coût estimé : ${formatCurrency(wo.estimatedCost)})` : ""}.
+            <T params={{ cost: wo.estimatedCost != null ? formatCurrency(wo.estimatedCost) : "" }}>
+              {wo.estimatedCost != null
+                ? "Elle ne peut être ni planifiée ni démarrée avant la décision du valideur (coût estimé : {cost})."
+                : "Elle ne peut être ni planifiée ni démarrée avant la décision du valideur."}
+            </T>
           </Alert>
         ) : null}
         {status === "ON_HOLD" ? (

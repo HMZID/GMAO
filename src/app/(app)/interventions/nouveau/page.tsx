@@ -15,6 +15,7 @@ import { listSupplierOptions } from "@/server/services/stock";
 import { listTechnicianOptions } from "@/server/services/work-orders";
 import { createWorkOrderAction } from "../actions";
 import { T } from "@/i18n/client";
+import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Nouvelle intervention à réaliser" };
 
@@ -36,7 +37,7 @@ export default async function NewWorkOrderPage(props: PageProps<"/interventions/
     : executive
       ? "Créée par la direction : aucune validation."
       : validation.threshold !== null
-        ? `Validée par le responsable maintenance sous ${formatCurrency(validation.threshold)}, par la direction à partir de ce montant.`
+        ? tpl`Validée par le responsable maintenance sous ${formatCurrency(validation.threshold)}, par la direction à partir de ce montant.`
         : "Validée par le responsable maintenance.";
 
   return (

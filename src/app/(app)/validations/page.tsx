@@ -36,7 +36,7 @@ export default async function ValidationsPage() {
       {inventoryPending > 0 ? (
         <div className="mb-6">
           <Alert tone="amber">
-            {inventoryPending} écart(s) d&apos;inventaire à valider :{" "}
+            <T params={{ n: inventoryPending }}>{"{n} écart(s) d'inventaire à valider :"}</T>{" "}
             <Link href="/stock/inventaire" className="font-medium underline">
               <T>ouvrir l&apos;inventaire</T>
             </Link>

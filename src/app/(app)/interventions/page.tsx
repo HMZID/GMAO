@@ -152,7 +152,9 @@ export default async function WorkOrdersPage(props: PageProps<"/interventions">)
                   <TD>
                     <WorkOrderStatusBadge status={w.status} />
                     {w.validationStatus === "PENDING" && !["CANCELLED", "CLOSED", "TECH_CLOSED"].includes(w.status) ? (
-                      <p className="mt-1 text-xs font-medium text-amber-700">En attente de validation</p>
+                      <p className="mt-1 text-xs font-medium text-amber-700">
+                        <T>En attente de validation</T>
+                      </p>
                     ) : null}
                     {w.status === "ON_HOLD" && w.holdReason ? <p className="mt-1 text-xs text-amber-700">{HOLD_REASON[w.holdReason]}</p> : null}
                     <p className="mt-1 text-xs text-slate-400">

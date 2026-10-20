@@ -45,7 +45,11 @@ export default async function ApprovalWorkflowsPage() {
         <CardHeader
           title="Validation des interventions"
           description="Le responsable maintenance valide toutes les interventions dont le coût estimé est inférieur au seuil ; à partir du seuil, la direction valide. La direction crée sans validation et peut tout valider."
-          actions={<Badge tone={setting.enabled ? "green" : "gray"}>{setting.enabled ? "Actif" : "Inactif"}</Badge>}
+          actions={
+            <Badge tone={setting.enabled ? "green" : "gray"}>
+              <Tr>{setting.enabled ? "Actif" : "Inactif"}</Tr>
+            </Badge>
+          }
         />
         <CardBody>
           {canSetThreshold ? (
@@ -57,17 +61,20 @@ export default async function ApprovalWorkflowsPage() {
                 <Input name="threshold" type="number" min="0" step="0.01" defaultValue={setting.threshold ?? ""} />
               </Field>
               <div className="flex items-end">
-                <SubmitButton>Enregistrer</SubmitButton>
+                <SubmitButton>
+                  <T>Enregistrer</T>
+                </SubmitButton>
               </div>
             </ActionForm>
           ) : (
             <p className="text-sm text-slate-700">
-              {setting.enabled
-                ? setting.threshold !== null
-                  ? `Interventions validées par le responsable maintenance sous ${formatCurrency(setting.threshold)}, par la direction à partir de ce montant.`
-                  : "Interventions validées par le responsable maintenance, sans seuil."
-                : "Les interventions ne sont pas soumises à validation."}{" "}
-              Le seuil est fixé par la direction.
+              <T params={{ threshold: setting.threshold !== null ? formatCurrency(setting.threshold) : "" }}>
+                {setting.enabled
+                  ? setting.threshold !== null
+                    ? "Interventions validées par le responsable maintenance sous {threshold}, par la direction à partir de ce montant. Le seuil est fixé par la direction."
+                    : "Interventions validées par le responsable maintenance, sans seuil. Le seuil est fixé par la direction."
+                  : "Les interventions ne sont pas soumises à validation. Le seuil est fixé par la direction."}
+              </T>
             </p>
           )}
         </CardBody>
@@ -125,12 +132,24 @@ export default async function ApprovalWorkflowsPage() {
                   <Table>
                     <THead>
                       <tr>
-                        <TH>Ordre</TH>
-                        <TH>Étape</TH>
-                        <TH>Valideur</TH>
-                        <TH>Montant</TH>
-                        <TH>Priorités</TH>
-                        <TH className="sr-only">Actions</TH>
+                        <TH>
+                          <T>Ordre</T>
+                        </TH>
+                        <TH>
+                          <T>Étape</T>
+                        </TH>
+                        <TH>
+                          <T>Valideur</T>
+                        </TH>
+                        <TH>
+                          <T>Montant</T>
+                        </TH>
+                        <TH>
+                          <T>Priorités</T>
+                        </TH>
+                        <TH className="sr-only">
+                          <T>Actions</T>
+                        </TH>
                       </tr>
                     </THead>
                     <TBody>
