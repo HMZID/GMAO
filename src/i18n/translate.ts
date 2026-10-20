@@ -13,9 +13,9 @@ export function interpolate(text: string, params?: Params): string {
 }
 
 /** Séparateurs invisibles (Unicode) qui encadrent les valeurs d'un gabarit `tpl` : ils survivent dans une chaîne ordinaire. */
-const OPEN = "⁣";
-const CLOSE = "⁤";
-const MARKED = /⁣([^⁤]*)⁤/g;
+const OPEN = "\u2063";
+const CLOSE = "\u2064";
+const MARKED = /\u2063([^\u2064]*)\u2064/g;
 
 /**
  * Gabarit traduisible : `tpl\`Réformé le ${date}\``. La chaîne obtenue porte ses valeurs entre séparateurs invisibles ;
@@ -25,7 +25,7 @@ const MARKED = /⁣([^⁤]*)⁤/g;
 export function tpl(strings: TemplateStringsArray, ...values: unknown[]): string {
   let out = strings[0] ?? "";
   values.forEach((value, i) => {
-    out += OPEN + String(value ?? "").replace(/[⁣⁤]/g, "") + CLOSE + (strings[i + 1] ?? "");
+    out += OPEN + String(value ?? "").replace(/[\u2063\u2064]/g, "") + CLOSE + (strings[i + 1] ?? "");
   });
   return out;
 }
@@ -45,7 +45,7 @@ export function translate(dictionary: Dictionary, source: string, params?: Param
     const { key, args } = templateKey(source);
     const text = dictionary[key];
     // Pas de traduction : texte français d'origine, sans séparateurs.
-    if (text === undefined) return source.replace(/[⁣⁤]/g, "");
+    if (text === undefined) return source.replace(/[\u2063\u2064]/g, "");
     return text.replace(/\{(\d+)\}/g, (match, n: string) => args[Number(n) - 1] ?? match);
   }
   const direct = dictionary[source];
