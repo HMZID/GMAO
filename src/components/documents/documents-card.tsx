@@ -79,7 +79,9 @@ export async function DocumentsCard({
                       {d.description ? <p className="mt-0.5 text-xs text-slate-600">{d.description}</p> : null}
                     </TD>
                     <TD>
-                      <Badge tone={DOCUMENT_KIND[d.kind]?.tone}>{DOCUMENT_KIND[d.kind]?.label ?? d.kind}</Badge>
+                      <Badge tone={DOCUMENT_KIND[d.kind]?.tone}>
+                        <Tr>{DOCUMENT_KIND[d.kind]?.label ?? d.kind}</Tr>
+                      </Badge>
                     </TD>
                     <TD>
                       {d.expiresAt ? (

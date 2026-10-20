@@ -95,7 +95,9 @@ export default async function DemoRequestsPage(props: PageProps<"/administration
                   <TD className="text-sm">{r.fleetSize ? FLEET[r.fleetSize] : "—"}</TD>
                   <TD className="text-xs">{formatDateTime(r.createdAt)}</TD>
                   <TD>
-                    <Badge tone={DEMO_REQUEST_STATUS[r.status]?.tone ?? "gray"}>{DEMO_REQUEST_STATUS[r.status]?.label ?? r.status}</Badge>
+                    <Badge tone={DEMO_REQUEST_STATUS[r.status]?.tone ?? "gray"}>
+                      <Tr>{DEMO_REQUEST_STATUS[r.status]?.label ?? r.status}</Tr>
+                    </Badge>
                   </TD>
                 </TR>
               ))}

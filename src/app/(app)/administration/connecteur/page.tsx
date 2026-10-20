@@ -112,7 +112,9 @@ export default async function ConnectorPage() {
                     <p className="font-medium text-slate-900">{k.name}</p>
                     <p className="font-mono text-xs text-slate-500">{k.prefix}…</p>
                   </TD>
-                  <TD>{API_KEY_ACCESS_LABEL[k.access as ApiKeyAccess] ?? k.access}</TD>
+                  <TD>
+                    <Tr>{API_KEY_ACCESS_LABEL[k.access as ApiKeyAccess] ?? k.access}</Tr>
+                  </TD>
                   <TD className="text-xs">
                     <T params={{ date: formatDate(k.createdAt), createdBy: k.createdBy }}>{"{date} par {createdBy}"}</T>
                   </TD>
@@ -123,7 +125,9 @@ export default async function ConnectorPage() {
                     <Tr>{k.expiresAt ? formatDate(k.expiresAt) : "Aucune"}</Tr>
                   </TD>
                   <TD>
-                    <Badge tone={STATE[k.state].tone}>{STATE[k.state].label}</Badge>
+                    <Badge tone={STATE[k.state].tone}>
+                      <Tr>{STATE[k.state].label}</Tr>
+                    </Badge>
                   </TD>
                   <TD>
                     {k.state === "ACTIVE" ? (

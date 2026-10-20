@@ -13,7 +13,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listSites } from "@/server/services/organization";
 import { listWorkOrders, workOrderFilters } from "@/server/services/work-orders";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Interventions à réaliser" };
 
@@ -122,7 +122,7 @@ export default async function WorkOrdersPage(props: PageProps<"/interventions">)
                     <p className="text-xs text-slate-500">{w.siteName}</p>
                   </TD>
                   <TD>
-                    {WORK_ORDER_TYPE[w.type] ?? w.type}
+                    <Tr>{WORK_ORDER_TYPE[w.type] ?? w.type}</Tr>
                     <div className="mt-1 flex gap-1">
                       {w.isImmobilizing ? (
                         <Badge tone="red">
@@ -156,7 +156,11 @@ export default async function WorkOrdersPage(props: PageProps<"/interventions">)
                         <T>En attente de validation</T>
                       </p>
                     ) : null}
-                    {w.status === "ON_HOLD" && w.holdReason ? <p className="mt-1 text-xs text-amber-700">{HOLD_REASON[w.holdReason]}</p> : null}
+                    {w.status === "ON_HOLD" && w.holdReason ? (
+                      <p className="mt-1 text-xs text-amber-700">
+                        <Tr>{HOLD_REASON[w.holdReason]}</Tr>
+                      </p>
+                    ) : null}
                     <p className="mt-1 text-xs text-slate-400">
                       <T params={{ date: formatDate(w.createdAt) }}>{"créé le {date}"}</T>
                     </p>

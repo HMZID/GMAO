@@ -34,7 +34,9 @@ function ApprovalBlock({ approval: a }: { approval: Timeline[number] }) {
     <div className="space-y-3">
       <p className="text-sm font-medium text-slate-900">{a.label}</p>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <Badge tone={APPROVAL_STATUS[a.status]?.tone}>{APPROVAL_STATUS[a.status]?.label ?? a.status}</Badge>
+        <Badge tone={APPROVAL_STATUS[a.status]?.tone}>
+          <Tr>{APPROVAL_STATUS[a.status]?.label ?? a.status}</Tr>
+        </Badge>
         <span className="text-slate-600">
           <T params={{ date: formatDateTime(a.createdAt), by: a.requesterName ?? "—", amount: a.amount != null ? formatCurrency(a.amount) : "" }}>
             {a.amount != null ? "Soumise le {date} par {by} · {amount}" : "Soumise le {date} par {by}"}

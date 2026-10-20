@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
 import { setLocaleAction } from "@/i18n/actions";
-import { useLocale, useT } from "@/i18n/client";
+import { useLocale, useT, Tr } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 
 /**
@@ -44,7 +44,7 @@ export function LanguageSwitcher({ tone = "light", className }: { tone?: "light"
                 : "text-slate-600 hover:bg-slate-100",
           )}
         >
-          {LOCALE_NAMES[locale]}
+          <Tr>{LOCALE_NAMES[locale]}</Tr>
         </button>
       ))}
     </div>

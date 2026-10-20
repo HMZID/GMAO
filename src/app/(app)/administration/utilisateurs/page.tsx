@@ -97,7 +97,9 @@ export default async function UsersPage() {
                       const future = a.validFrom && a.validFrom > now;
                       return (
                         <li key={a.id} className="flex flex-wrap items-center gap-2">
-                          <Badge tone={a.role === "ADMIN" ? "red" : "blue"}>{ROLE[a.role] ?? a.role}</Badge>
+                          <Badge tone={a.role === "ADMIN" ? "red" : "blue"}>
+                            <Tr>{ROLE[a.role] ?? a.role}</Tr>
+                          </Badge>
                           <span className="text-sm text-slate-700">{a.scopeLabel}</span>
                           {a.validFrom || a.validTo ? (
                             <Badge tone={expired ? "gray" : future ? "amber" : "violet"}>

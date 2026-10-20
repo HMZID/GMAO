@@ -11,7 +11,7 @@ import { listInventoryCounts } from "@/server/services/inventory";
 import { listWarehouses } from "@/server/services/organization";
 import { listPartOptions } from "@/server/services/stock";
 import { inventoryCountAction, inventoryDecisionAction } from "../actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Inventaire" };
@@ -199,7 +199,9 @@ export default async function InventoryPage() {
                     {formatNumber(c.difference)}
                   </TD>
                   <TD>
-                    <Badge tone={INVENTORY_COUNT_STATUS[c.status]?.tone}>{INVENTORY_COUNT_STATUS[c.status]?.label ?? c.status}</Badge>
+                    <Badge tone={INVENTORY_COUNT_STATUS[c.status]?.tone}>
+                      <Tr>{INVENTORY_COUNT_STATUS[c.status]?.label ?? c.status}</Tr>
+                    </Badge>
                     {c.decidedByName && c.status !== "PENDING" ? <p className="text-xs text-slate-500">{c.decidedByName}</p> : null}
                     {c.decisionComment ? <p className="text-xs text-slate-500">{c.decisionComment}</p> : null}
                   </TD>

@@ -70,9 +70,15 @@ export default async function WorkOrderPrintPage(props: PageProps<"/impression/i
             <Item label="Intitulé" wide>
               {wo.title}
             </Item>
-            <Item label="Type">{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Item>
-            <Item label="Priorité">{PRIORITY[wo.priority]?.label ?? wo.priority}</Item>
-            <Item label="Statut">{WORK_ORDER_STATUS[wo.status]?.label ?? wo.status}</Item>
+            <Item label="Type">
+              <Tr>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Tr>
+            </Item>
+            <Item label="Priorité">
+              <Tr>{PRIORITY[wo.priority]?.label ?? wo.priority}</Tr>
+            </Item>
+            <Item label="Statut">
+              <Tr>{WORK_ORDER_STATUS[wo.status]?.label ?? wo.status}</Tr>
+            </Item>
             <Item label="Immobilisant">
               <Tr>{wo.isImmobilizing ? "Oui" : "Non"}</Tr>
             </Item>

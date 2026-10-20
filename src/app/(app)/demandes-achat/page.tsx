@@ -11,7 +11,7 @@ import { PURCHASE_REQUEST_STATUS } from "@/lib/labels";
 import { getAuthContext } from "@/server/auth/session";
 import { cleanFilters, queryParams } from "@/server/pages";
 import { listPurchaseRequests, purchaseRequestFilters } from "@/server/services/purchase-requests";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Demandes d'achat" };
 
@@ -94,7 +94,9 @@ export default async function PurchaseRequestsPage(props: PageProps<"/demandes-a
                   <TD className="text-end tabular-nums">{formatCurrency(r.amount)}</TD>
                   <TD className="whitespace-nowrap">{r.neededBy ? formatDate(r.neededBy) : "—"}</TD>
                   <TD>
-                    <Badge tone={PURCHASE_REQUEST_STATUS[r.status]?.tone}>{PURCHASE_REQUEST_STATUS[r.status]?.label}</Badge>
+                    <Badge tone={PURCHASE_REQUEST_STATUS[r.status]?.tone}>
+                      <Tr>{PURCHASE_REQUEST_STATUS[r.status]?.label}</Tr>
+                    </Badge>
                   </TD>
                 </TR>
               ))}

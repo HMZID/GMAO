@@ -169,7 +169,11 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
                   <li key={h.id} className="px-5 py-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-1.5">
-                        {h.fromStatus ? <span className="text-slate-500">{EQUIPMENT_STATUS[h.fromStatus]?.label} →</span> : null}
+                        {h.fromStatus ? (
+                          <span className="text-slate-500">
+                            <Tr>{EQUIPMENT_STATUS[h.fromStatus]?.label}</Tr> →
+                          </span>
+                        ) : null}
                         <EquipmentStatusBadge status={h.toStatus} />
                       </span>
                       <span className="text-xs text-slate-500">{formatDateTime(h.changedAt)}</span>
@@ -247,7 +251,9 @@ function MetersCard({
                       </Badge>
                     ) : null}
                   </p>
-                  <p className="text-xs text-slate-500">{METER_TYPE[m.type]}</p>
+                  <p className="text-xs text-slate-500">
+                    <Tr>{METER_TYPE[m.type]}</Tr>
+                  </p>
                 </div>
                 <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
                   <div>
@@ -369,7 +375,9 @@ function ReadingsTable({ readings, unit, canReview }: { readings: Awaited<Return
                 </p>
               ) : null}
             </TD>
-            <TD className="whitespace-nowrap">{READING_SOURCE[r.source] ?? r.source}</TD>
+            <TD className="whitespace-nowrap">
+              <Tr>{READING_SOURCE[r.source] ?? r.source}</Tr>
+            </TD>
             <TD>
               <ReadingStatusBadge status={r.status} />
             </TD>
@@ -572,7 +580,9 @@ function InterventionsCard({ e }: { e: Equipment }) {
                   </Link>
                   <p className="max-w-72 truncate text-xs text-slate-500">{w.title}</p>
                 </TD>
-                <TD>{WORK_ORDER_TYPE[w.type] ?? w.type}</TD>
+                <TD>
+                  <Tr>{WORK_ORDER_TYPE[w.type] ?? w.type}</Tr>
+                </TD>
                 <TD>
                   <PriorityBadge value={w.priority} short />
                 </TD>

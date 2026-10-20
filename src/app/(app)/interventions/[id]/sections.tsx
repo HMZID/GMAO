@@ -208,7 +208,7 @@ export function ChecklistCard({ wo, canFill, canAdd }: { wo: WorkOrder; canFill:
                     ) : null}
                   </p>
                   <p className="text-xs text-slate-500">
-                    {TASK_KIND[task.kind]}
+                    <Tr>{TASK_KIND[task.kind]}</Tr>
                     {task.kind === "MEASURE" && (task.minValue !== null || task.maxValue !== null) ? (
                       <>
                         {" "}
@@ -537,7 +537,9 @@ export function PartsCard({
                   {formatNumber(r.consumedQuantity)} / {formatNumber(r.quantity)}
                 </TD>
                 <TD>
-                  <Badge tone={RESERVATION_STATUS[r.status]?.tone}>{RESERVATION_STATUS[r.status]?.label ?? r.status}</Badge>
+                  <Badge tone={RESERVATION_STATUS[r.status]?.tone}>
+                    <Tr>{RESERVATION_STATUS[r.status]?.label ?? r.status}</Tr>
+                  </Badge>
                 </TD>
               </TR>
             ))}
@@ -569,7 +571,7 @@ export function PartsCard({
             {wo.partLines.map((l) => (
               <TR key={l.id}>
                 <TD className="whitespace-nowrap">
-                  {MOVEMENT_TYPE[l.type]?.label ?? l.type}
+                  <Tr>{MOVEMENT_TYPE[l.type]?.label ?? l.type}</Tr>
                   <p className="text-xs text-slate-400">{formatDateTime(l.createdAt)}</p>
                 </TD>
                 <TD>
@@ -659,7 +661,9 @@ export function CostsCard({ wo, canEdit, suppliers }: { wo: WorkOrder; canEdit: 
               <li key={x.id} className="flex flex-wrap items-center gap-1.5">
                 {x.label} : {formatCurrency(x.amount)}
                 {x.approvalStatus !== "APPROVED" ? (
-                  <Badge tone={EXPENSE_APPROVAL[x.approvalStatus]?.tone}>{EXPENSE_APPROVAL[x.approvalStatus]?.label}</Badge>
+                  <Badge tone={EXPENSE_APPROVAL[x.approvalStatus]?.tone}>
+                    <Tr>{EXPENSE_APPROVAL[x.approvalStatus]?.label}</Tr>
+                  </Badge>
                 ) : null}
               </li>
             ))}
@@ -720,12 +724,20 @@ export function HistoryCard({ wo }: { wo: WorkOrder }) {
           <li key={h.id} className="px-5 py-2.5">
             <div className="flex items-center justify-between gap-2">
               <span className="flex items-center gap-1.5">
-                {h.fromStatus ? <span className="text-xs text-slate-500">{WORK_ORDER_STATUS[h.fromStatus]?.label} →</span> : null}
+                {h.fromStatus ? (
+                  <span className="text-xs text-slate-500">
+                    <Tr>{WORK_ORDER_STATUS[h.fromStatus]?.label}</Tr> →
+                  </span>
+                ) : null}
                 <WorkOrderStatusBadge status={h.toStatus} />
               </span>
               <span className="text-xs text-slate-500">{formatDateTime(h.changedAt)}</span>
             </div>
-            {h.reason ? <p className="mt-1 text-xs text-slate-600">{HOLD_REASON[h.reason] ?? h.reason}</p> : null}
+            {h.reason ? (
+              <p className="mt-1 text-xs text-slate-600">
+                <Tr>{HOLD_REASON[h.reason] ?? h.reason}</Tr>
+              </p>
+            ) : null}
             {h.changedBy ? <p className="text-xs text-slate-400">{h.changedBy.name}</p> : null}
           </li>
         ))}

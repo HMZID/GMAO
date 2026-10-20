@@ -12,7 +12,7 @@ import { isUuid, queryParams } from "@/server/pages";
 import { listWarehouses } from "@/server/services/organization";
 import { listMovements, listPartOptions, listSupplierOptions } from "@/server/services/stock";
 import { MovementForm } from "../movement-form";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Mouvements de stock" };
 
@@ -109,7 +109,9 @@ export default async function MovementsPage(props: PageProps<"/stock/mouvements"
               {movements.map((m) => (
                 <TR key={m.id}>
                   <TD className="whitespace-nowrap">{formatDateTime(m.createdAt)}</TD>
-                  <TD>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</TD>
+                  <TD>
+                    <Tr>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</Tr>
+                  </TD>
                   <TD>
                     <Link href={`/stock/articles/${m.partId}`} className="text-brand-700 hover:underline">
                       {m.sku}

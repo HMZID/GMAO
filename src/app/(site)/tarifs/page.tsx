@@ -7,12 +7,11 @@ import { SiteChrome, SiteFallback } from "@/components/site/site-chrome";
 import { loadSite } from "@/components/site/site-data";
 import { settingNumber } from "@/server/domain/site";
 import { T, Tr } from "@/i18n/client";
-import { tpl } from "@/i18n/translate";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await loadSite();
   return {
-    title: { absolute: tpl`Tarifs · ${settings["brand.name"]}` },
+    title: { absolute: `Tarifs · ${settings["brand.name"]}` },
     description: settings["pricing.subtitle"],
     alternates: { canonical: "/tarifs" },
   };

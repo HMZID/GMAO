@@ -6,12 +6,11 @@ import { SiteChrome, SiteFallback } from "@/components/site/site-chrome";
 import { loadSite } from "@/components/site/site-data";
 import { settingNumber } from "@/server/domain/site";
 import { T, Tr } from "@/i18n/client";
-import { tpl } from "@/i18n/translate";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { settings } = await loadSite();
   return {
-    title: { absolute: tpl`Essai gratuit · ${settings["brand.name"]}` },
+    title: { absolute: `Essai gratuit · ${settings["brand.name"]}` },
     description: settings["form.text"],
     alternates: { canonical: "/essai-gratuit" },
   };

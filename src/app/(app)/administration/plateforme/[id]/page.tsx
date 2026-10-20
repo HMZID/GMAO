@@ -129,7 +129,9 @@ export default async function TenantPage(props: PageProps<"/administration/plate
                     <ul className="space-y-1">
                       {u.roles.map((r, i) => (
                         <li key={i} className="flex flex-wrap items-center gap-2 text-sm">
-                          <Badge tone={r.role === "ADMIN" ? "red" : "blue"}>{ROLE[r.role] ?? r.role}</Badge>
+                          <Badge tone={r.role === "ADMIN" ? "red" : "blue"}>
+                            <Tr>{ROLE[r.role] ?? r.role}</Tr>
+                          </Badge>
                           {r.scope}
                         </li>
                       ))}

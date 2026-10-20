@@ -57,7 +57,9 @@ export default async function ValidationsPage() {
                 <li key={p.id} className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_22rem]">
                   <div className="space-y-1 text-sm">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Badge tone="violet">{APPROVAL_OBJECT[p.objectType]}</Badge>
+                      <Badge tone="violet">
+                        <Tr>{APPROVAL_OBJECT[p.objectType]}</Tr>
+                      </Badge>
                       {p.amount != null ? <span className="font-semibold tabular-nums text-slate-900">{formatCurrency(p.amount)}</span> : null}
                     </div>
                     <Link href={p.link} className="block font-medium text-brand-700 hover:underline">
@@ -125,7 +127,7 @@ export default async function ValidationsPage() {
                         {r.label}
                       </Link>
                       <p className="text-xs text-slate-500">
-                        {APPROVAL_OBJECT[r.objectType]} · {formatDateTime(r.createdAt)}
+                        <Tr>{APPROVAL_OBJECT[r.objectType]}</Tr> · {formatDateTime(r.createdAt)}
                         {r.status === "PENDING" ? (
                           <>
                             {" · "}
@@ -135,7 +137,9 @@ export default async function ValidationsPage() {
                       </p>
                     </TD>
                     <TD>
-                      <Badge tone={APPROVAL_STATUS[r.status]?.tone}>{APPROVAL_STATUS[r.status]?.label}</Badge>
+                      <Badge tone={APPROVAL_STATUS[r.status]?.tone}>
+                        <Tr>{APPROVAL_STATUS[r.status]?.label}</Tr>
+                      </Badge>
                     </TD>
                     <TD className="text-end tabular-nums">{r.amount != null ? formatCurrency(r.amount) : "—"}</TD>
                   </TR>

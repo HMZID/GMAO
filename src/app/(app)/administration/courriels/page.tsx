@@ -107,7 +107,9 @@ export default async function EmailsPage(props: PageProps<"/administration/courr
                     </TD>
                     <TD>{m.toAddress}</TD>
                     <TD>
-                      <Badge tone={EMAIL_STATUS[m.status]?.tone}>{EMAIL_STATUS[m.status]?.label}</Badge>
+                      <Badge tone={EMAIL_STATUS[m.status]?.tone}>
+                        <Tr>{EMAIL_STATUS[m.status]?.label}</Tr>
+                      </Badge>
                       {m.status === "PENDING" && m.attempts > 0 ? (
                         <p className="mt-1 text-xs text-slate-500">
                           <T params={{ date: formatDateTime(m.nextAttemptAt) }}>{"Nouvel essai le {date}"}</T>

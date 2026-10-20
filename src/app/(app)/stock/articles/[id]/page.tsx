@@ -11,7 +11,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getPart } from "@/server/services/stock";
 import { stockLevelSettingsAction } from "../../actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Article" };
@@ -186,7 +186,9 @@ export default async function PartPage(props: PageProps<"/stock/articles/[id]">)
                   {part.movements.map((m) => (
                     <TR key={m.id}>
                       <TD className="whitespace-nowrap">{formatDateTime(m.createdAt)}</TD>
-                      <TD>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</TD>
+                      <TD>
+                        <Tr>{MOVEMENT_TYPE[m.type]?.label ?? m.type}</Tr>
+                      </TD>
                       <TD>{m.warehouseName}</TD>
                       <TD className="text-end tabular-nums">{signed(m.type, m.quantity)}</TD>
                       <TD className="text-xs text-slate-600">

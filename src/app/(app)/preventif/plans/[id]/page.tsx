@@ -11,7 +11,7 @@ import { loadOr404 } from "@/server/pages";
 import { getPlan } from "@/server/services/preventive";
 import { addOperationAction } from "../../actions";
 import { OperationFields } from "../../operation-fields";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Plan d'entretien" };
@@ -73,7 +73,9 @@ export default async function PlanPage(props: PageProps<"/preventif/plans/[id]">
                 description={tpl`Tous les ${op.triggers.map(triggerLabel).join(" ou ")} — au premier seuil atteint`}
                 actions={
                   <>
-                    <Badge tone="blue">{OPERATION_MODE[op.mode]}</Badge>
+                    <Badge tone="blue">
+                      <Tr>{OPERATION_MODE[op.mode]}</Tr>
+                    </Badge>
                     {op.isRegulatory ? (
                       <Badge tone="violet">
                         <T>Réglementaire</T>

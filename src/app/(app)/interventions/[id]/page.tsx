@@ -70,7 +70,9 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
               </Badge>
             ) : null}
             <PriorityBadge value={wo.priority} />
-            <Badge>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Badge>
+            <Badge>
+              <Tr>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Tr>
+            </Badge>
             {wo.isImmobilizing ? (
               <Badge tone="red">
                 <T>Immobilisant</T>
@@ -207,7 +209,9 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
                         </Link>
                         <span className="text-slate-700">{p.description}</span>
                         <span className="tabular-nums text-slate-500">{formatCurrency(p.amount)}</span>
-                        <Badge tone={PURCHASE_REQUEST_STATUS[p.status]?.tone}>{PURCHASE_REQUEST_STATUS[p.status]?.label}</Badge>
+                        <Badge tone={PURCHASE_REQUEST_STATUS[p.status]?.tone}>
+                          <Tr>{PURCHASE_REQUEST_STATUS[p.status]?.label}</Tr>
+                        </Badge>
                       </li>
                     ))}
                   </ul>

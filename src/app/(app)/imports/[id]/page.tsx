@@ -47,8 +47,12 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
         title={job.fileName}
         meta={
           <>
-            <Badge tone={IMPORT_STATUS[job.status]?.tone}>{IMPORT_STATUS[job.status]?.label ?? job.status}</Badge>
-            <Badge>{IMPORT_KIND[job.kind]}</Badge>
+            <Badge tone={IMPORT_STATUS[job.status]?.tone}>
+              <Tr>{IMPORT_STATUS[job.status]?.label ?? job.status}</Tr>
+            </Badge>
+            <Badge>
+              <Tr>{IMPORT_KIND[job.kind]}</Tr>
+            </Badge>
             <span className="text-sm text-slate-500">
               <T
                 params={{
@@ -182,7 +186,9 @@ export default async function ImportPage(props: PageProps<"/imports/[id]">) {
                 <TR key={r.line}>
                   <TD className="tabular-nums">{r.line}</TD>
                   <TD>
-                    <Badge tone={IMPORT_ROW_STATUS[r.status]?.tone}>{IMPORT_ROW_STATUS[r.status]?.label ?? r.status}</Badge>
+                    <Badge tone={IMPORT_ROW_STATUS[r.status]?.tone}>
+                      <Tr>{IMPORT_ROW_STATUS[r.status]?.label ?? r.status}</Tr>
+                    </Badge>
                   </TD>
                   {preview.map((c) => (
                     <TD key={c.key} className="whitespace-nowrap">

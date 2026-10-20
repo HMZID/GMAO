@@ -90,9 +90,11 @@ export default async function AuditPage(props: PageProps<"/administration/journa
                       </p>
                     ) : null}
                   </TD>
-                  <TD>{AUDIT_CHANNEL[r.channel] ?? r.channel}</TD>
                   <TD>
-                    {ENTITY_TYPE[r.entityType] ?? r.entityType}
+                    <Tr>{AUDIT_CHANNEL[r.channel] ?? r.channel}</Tr>
+                  </TD>
+                  <TD>
+                    <Tr>{ENTITY_TYPE[r.entityType] ?? r.entityType}</Tr>
                     <p>
                       <Link
                         href={withParams("/administration/journal", { entityId: r.entityId })}

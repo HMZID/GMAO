@@ -194,5 +194,9 @@ function AccessBadge({
       </div>
     );
   }
-  return <Badge tone="green">{TENANT_STATUS_LABEL[status] ?? status}</Badge>;
+  return (
+    <Badge tone="green">
+      <Tr>{TENANT_STATUS_LABEL[status] ?? status}</Tr>
+    </Badge>
+  );
 }

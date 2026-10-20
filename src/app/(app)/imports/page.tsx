@@ -12,7 +12,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { IMPORT_DEFINITIONS, MAX_IMPORT_ROWS } from "@/server/domain/imports";
 import { importableKinds, listImportJobs } from "@/server/services/imports";
 import { simulateImportAction } from "./actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 import { tpl } from "@/i18n/translate";
 
 export const metadata = { title: "Imports" };
@@ -101,10 +101,18 @@ export default async function ImportsPage() {
                     </Link>
                     <p className="text-xs text-slate-500">{formatDateTime(j.executedAt ?? j.createdAt)}</p>
                   </TD>
-                  <TD>{IMPORT_KIND[j.kind] ?? j.kind}</TD>
                   <TD>
-                    <Badge tone={IMPORT_STATUS[j.status]?.tone}>{IMPORT_STATUS[j.status]?.label ?? j.status}</Badge>
-                    {j.mode ? <p className="mt-0.5 text-xs text-slate-500">{IMPORT_MODE[j.mode]}</p> : null}
+                    <Tr>{IMPORT_KIND[j.kind] ?? j.kind}</Tr>
+                  </TD>
+                  <TD>
+                    <Badge tone={IMPORT_STATUS[j.status]?.tone}>
+                      <Tr>{IMPORT_STATUS[j.status]?.label ?? j.status}</Tr>
+                    </Badge>
+                    {j.mode ? (
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        <Tr>{IMPORT_MODE[j.mode]}</Tr>
+                      </p>
+                    ) : null}
                   </TD>
                   <TD className="text-end tabular-nums">{j.totalRows}</TD>
                   <TD className="text-end tabular-nums">{j.status === "DONE" ? j.importedRows : "—"}</TD>

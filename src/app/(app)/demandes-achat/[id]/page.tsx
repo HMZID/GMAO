@@ -11,7 +11,7 @@ import { getAuthContext } from "@/server/auth/session";
 import { loadOr404 } from "@/server/pages";
 import { getPurchaseRequest } from "@/server/services/purchase-requests";
 import { cancelPurchaseRequestAction } from "../actions";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 export const metadata = { title: "Demande d'achat" };
 
@@ -32,7 +32,9 @@ export default async function PurchaseRequestPage(props: PageProps<"/demandes-ac
         }
         meta={
           <>
-            <Badge tone={PURCHASE_REQUEST_STATUS[pr.status]?.tone}>{PURCHASE_REQUEST_STATUS[pr.status]?.label}</Badge>
+            <Badge tone={PURCHASE_REQUEST_STATUS[pr.status]?.tone}>
+              <Tr>{PURCHASE_REQUEST_STATUS[pr.status]?.label}</Tr>
+            </Badge>
             <span className="text-sm text-slate-500">
               {pr.requester} · {formatDateTime(pr.createdAt)} · {pr.siteName} ({pr.companyName})
             </span>

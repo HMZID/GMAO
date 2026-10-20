@@ -10,6 +10,8 @@ const roots = process.argv.slice(2).filter((a) => !a.startsWith("--"));
 const dry = process.argv.includes("--dry");
 // --members : contenu venant de la base (site commercial) : {s["hero.title"]}, {item.title}… sont aussi enveloppés.
 const members = process.argv.includes("--members");
+// --labels : libellés lus dans les tables de libellés (src/lib/labels.ts : ROLE[x], WORK_ORDER_STATUS[x]?.label…).
+const labels = process.argv.includes("--labels");
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
@@ -42,6 +44,21 @@ function isMemberRead(e) {
   return ts.isPropertyAccessExpression(e) || ts.isElementAccessExpression(e) || ts.isIdentifier(e);
 }
 
+function rootIdentifier(e) {
+  if (ts.isParenthesizedExpression(e) || ts.isNonNullExpression(e)) return rootIdentifier(e.expression);
+  if (ts.isElementAccessExpression(e) || ts.isPropertyAccessExpression(e)) return rootIdentifier(e.expression);
+  if (ts.isBinaryExpression(e) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(e.operatorToken.kind)) return rootIdentifier(e.left);
+  if (ts.isIdentifier(e)) return e.text;
+  return null;
+}
+
+/** Lecture d'une table de libellés : identifiant en capitales (ROLE, WORK_ORDER_TYPE…) puis accès à un élément. */
+function isLabelRead(e) {
+  if (!(ts.isElementAccessExpression(e) || ts.isPropertyAccessExpression(e) || ts.isBinaryExpression(e) || ts.isParenthesizedExpression(e))) return false;
+  const root = rootIdentifier(e);
+  return !!root && /^[A-Z][A-Z0-9_]{2,}$/.test(root);
+}
+
 function containsJsx(node) {
   let found = false;
   (function w(n) {
@@ -63,7 +80,7 @@ for (const root of roots) {
         const name = ts.isJsxElement(node) ? node.openingElement.tagName.getText() : "";
         if (!SKIP_TAGS.has(name)) {
           for (const c of node.children) {
-            if (ts.isJsxExpression(c) && c.expression && (hasUiLeaf(c.expression) || (members && isMemberRead(c.expression))) && !containsJsx(c.expression)) {
+            if (ts.isJsxExpression(c) && c.expression && (hasUiLeaf(c.expression) || (members && isMemberRead(c.expression)) || (labels && isLabelRead(c.expression))) && !containsJsx(c.expression)) {
               edits.push({ start: c.getStart(), end: c.end });
             }
           }

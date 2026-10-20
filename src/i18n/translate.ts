@@ -48,5 +48,18 @@ export function translate(dictionary: Dictionary, source: string, params?: Param
     if (text === undefined) return source.replace(/[⁣⁤]/g, "");
     return text.replace(/\{(\d+)\}/g, (match, n: string) => args[Number(n) - 1] ?? match);
   }
-  return interpolate(dictionary[source] ?? source, params);
+  const direct = dictionary[source];
+  if (direct !== undefined) return interpolate(direct, params);
+  // Texte à espaces superflus (début, fin, retours à la ligne) : retrouvé sous sa forme nettoyée,
+  // en gardant les espaces d'origine autour de la traduction.
+  const clean = source.replace(/\s+/g, " ").trim();
+  if (clean && clean !== source) {
+    const hit = dictionary[clean];
+    if (hit !== undefined) {
+      const lead = source.length - source.trimStart().length;
+      const trail = source.length - source.trimEnd().length;
+      return source.slice(0, lead) + interpolate(hit, params) + source.slice(source.length - trail);
+    }
+  }
+  return interpolate(source, params);
 }

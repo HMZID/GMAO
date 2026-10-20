@@ -9,7 +9,7 @@ import { DEADLINE_KIND, DEADLINE_STATE, DEADLINE_STATUS } from "@/lib/labels";
 import type { AuthContext } from "@/server/authz/context";
 import { daysUntil, deadlineState } from "@/server/domain/fleet-deadlines";
 import type { listDeadlines } from "@/server/services/fleet-deadlines";
-import { T } from "@/i18n/client";
+import { T, Tr } from "@/i18n/client";
 
 type Deadline = Awaited<ReturnType<typeof listDeadlines>>[number];
 
@@ -85,7 +85,9 @@ export function DeadlinesTable({
                     </TD>
                   ) : null}
                   <TD>
-                    <Badge tone={DEADLINE_KIND[d.kind]?.tone}>{DEADLINE_KIND[d.kind]?.label ?? d.kind}</Badge>
+                    <Badge tone={DEADLINE_KIND[d.kind]?.tone}>
+                      <Tr>{DEADLINE_KIND[d.kind]?.label ?? d.kind}</Tr>
+                    </Badge>
                     {d.label ? <p className="mt-1 text-sm text-slate-900">{d.label}</p> : null}
                     {d.reference ? (
                       <p className="text-xs text-slate-500">
@@ -99,9 +101,13 @@ export function DeadlinesTable({
                   </TD>
                   <TD>
                     {open ? (
-                      <Badge tone={DEADLINE_STATE[state].tone}>{DEADLINE_STATE[state].label}</Badge>
+                      <Badge tone={DEADLINE_STATE[state].tone}>
+                        <Tr>{DEADLINE_STATE[state].label}</Tr>
+                      </Badge>
                     ) : (
-                      <Badge tone={DEADLINE_STATUS[d.status]?.tone}>{DEADLINE_STATUS[d.status]?.label ?? d.status}</Badge>
+                      <Badge tone={DEADLINE_STATUS[d.status]?.tone}>
+                        <Tr>{DEADLINE_STATUS[d.status]?.label ?? d.status}</Tr>
+                      </Badge>
                     )}
                   </TD>
                   <TD>
