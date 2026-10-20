@@ -1,3 +1,4 @@
+import { tpl, tx } from "@/i18n/translate";
 import "server-only";
 import { and, asc, eq, ne } from "drizzle-orm";
 import { z } from "zod";
@@ -126,10 +127,10 @@ export async function updateSiteSettings(ctx: AuthContext, raw: Record<string, u
     let value = typeof input === "string" ? input.trim() : "";
     if (def.type === "boolean") value = input === "on" || input === "true" ? "true" : "false";
     if (value === "") value = def.default;
-    if (def.type === "number" && !Number.isFinite(Number(value.replace(",", ".")))) errors.push(`${def.label} : nombre attendu.`);
+    if (def.type === "number" && !Number.isFinite(Number(value.replace(",", ".")))) errors.push(tpl`${tx(def.label)} : nombre attendu.`);
     if (def.type === "number") value = value.replace(",", ".");
-    if (def.type === "email" && value && !z.email().safeParse(value).success) errors.push(`${def.label} : courriel invalide.`);
-    if (value.length > (def.type === "textarea" ? 2000 : 300)) errors.push(`${def.label} : texte trop long.`);
+    if (def.type === "email" && value && !z.email().safeParse(value).success) errors.push(tpl`${tx(def.label)} : courriel invalide.`);
+    if (value.length > (def.type === "textarea" ? 2000 : 300)) errors.push(tpl`${tx(def.label)} : texte trop long.`);
     values.push({ key: def.key, value });
   }
   if (errors.length) throw new BusinessRuleError(errors);
@@ -360,7 +361,7 @@ async function assertFreeSlug(tx: DbOrTx, slug: string, exceptId?: string) {
     .select({ id: sitePages.id })
     .from(sitePages)
     .where(and(eq(sitePages.slug, slug), exceptId ? ne(sitePages.id, exceptId) : undefined));
-  if (taken) throw new ConflictError(`L'adresse « ${slug} » est déjà utilisée par une autre page.`);
+  if (taken) throw new ConflictError(tpl`L'adresse « ${slug} » est déjà utilisée par une autre page.`);
 }
 
 export async function createSitePage(ctx: AuthContext, raw: unknown) {

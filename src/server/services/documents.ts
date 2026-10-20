@@ -1,3 +1,4 @@
+import { tpl } from "@/i18n/translate";
 import "server-only";
 import { createHash } from "node:crypto";
 import { and, desc, eq, isNull } from "drizzle-orm";
@@ -250,7 +251,7 @@ export async function uploadDocument(ctx: AuthContext, raw: unknown, file: Uploa
         isNull(documents.deletedAt),
       ),
     );
-  if (duplicate) throw new ConflictError(`Ce fichier est déjà joint (« ${duplicate.title} »).`);
+  if (duplicate) throw new ConflictError(tpl`Ce fichier est déjà joint (« ${duplicate.title} »).`);
 
   const documentId = crypto.randomUUID();
   const key = storageKey(ctx.tenantId, input.entityType, input.entityId, documentId);

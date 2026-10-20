@@ -1,3 +1,4 @@
+import { tpl } from "@/i18n/translate";
 import "server-only";
 import { createHash } from "node:crypto";
 import { and, desc, eq, inArray, ne, or } from "drizzle-orm";
@@ -138,7 +139,7 @@ async function readWorkbook(kind: ImportKind, file: ImportFile): Promise<ReadRes
     return { fileErrors: ["Le classeur Excel n'a pas pu être lu (fichier endommagé ou protégé par mot de passe)."], rows: [] };
   }
   const sheet = workbook.getWorksheet(definition.sheet) ?? workbook.worksheets.find((w) => !["Aide", "Listes"].includes(w.name));
-  if (!sheet) return { fileErrors: [`Onglet « ${definition.sheet} » introuvable.`], rows: [] };
+  if (!sheet) return { fileErrors: [tpl`Onglet « ${definition.sheet} » introuvable.`], rows: [] };
 
   const headerRow = sheet.getRow(1);
   const headers: string[] = [];
@@ -156,7 +157,7 @@ async function readWorkbook(kind: ImportKind, file: ImportFile): Promise<ReadRes
     for (let c = 1; c <= width; c++) cells.push(simplifyCell(row.getCell(c).value));
     const parsed = parseRow(cells, definition.columns, map.indexByKey);
     if (parsed.empty) continue;
-    if (rows.length >= MAX_IMPORT_ROWS) return { fileErrors: [`Fichier limité à ${MAX_IMPORT_ROWS} lignes : le découper.`], rows: [] };
+    if (rows.length >= MAX_IMPORT_ROWS) return { fileErrors: [tpl`Fichier limité à ${MAX_IMPORT_ROWS} lignes : le découper.`], rows: [] };
     rows.push({ line: r, values: parsed.values, errors: parsed.errors });
   }
   if (rows.length === 0) fileErrors.push("Aucune ligne de données sous la ligne d'en-tête.");
@@ -198,13 +199,14 @@ function resolveEquipment(values: Record<string, unknown>, refs: References) {
   const company = refs.companies.get(upper(values.companyCode));
   const site = refs.sites.get(upper(values.siteCode));
   const category = refs.categories.get(upper(values.categoryCode));
-  if (values.companyCode && !company) errors.push(`Société « ${values.companyCode} » inconnue.`);
-  if (values.siteCode && !site) errors.push(`Site « ${values.siteCode} » inconnu.`);
-  if (values.categoryCode && !category) errors.push(`Catégorie « ${values.categoryCode} » inconnue.`);
+  if (values.companyCode && !company) errors.push(tpl`Société « ${values.companyCode} » inconnue.`);
+  if (values.siteCode && !site) errors.push(tpl`Site « ${values.siteCode} » inconnu.`);
+  if (values.categoryCode && !category) errors.push(tpl`Catégorie « ${values.categoryCode} » inconnue.`);
   let modelId: string | undefined;
   if (values.modelName) {
     const model = refs.models.get(`${upper(values.manufacturer)}|${upper(values.modelName)}`);
-    if (!model) errors.push(`Modèle « ${values.modelName} » inconnu pour la marque ${values.manufacturer ?? "?"} (le déclarer dans le référentiel).`);
+    if (!model)
+      errors.push(tpl`Modèle « ${values.modelName} » inconnu pour la marque ${values.manufacturer ?? "?"} (le déclarer dans le référentiel).`);
     modelId = model?.id;
   }
   const { companyCode: _c, siteCode: _s, categoryCode: _k, modelName: _m, ...rest } = values;
@@ -215,7 +217,7 @@ function resolveEquipment(values: Record<string, unknown>, refs: References) {
 function resolveTechnician(values: Record<string, unknown>, refs: References) {
   const errors: string[] = [];
   const site = refs.sites.get(upper(values.siteCode));
-  if (values.siteCode && !site) errors.push(`Site « ${values.siteCode} » inconnu.`);
+  if (values.siteCode && !site) errors.push(tpl`Site « ${values.siteCode} » inconnu.`);
   const { siteCode: _s, ...rest } = values;
   return { errors, input: { ...rest, siteId: site?.id } };
 }
@@ -224,9 +226,9 @@ function resolveStock(ctx: AuthContext, values: Record<string, unknown>, refs: R
   const errors: string[] = [];
   const part = partsBySku.get(upper(values.sku));
   const warehouse = refs.warehouses.get(upper(values.warehouseCode));
-  if (values.sku && !part) errors.push(`Article « ${values.sku} » inconnu : importer d'abord les articles.`);
-  if (values.warehouseCode && !warehouse) errors.push(`Magasin « ${values.warehouseCode} » inconnu ou inactif.`);
-  if (warehouse && !ctx.canOn("stock.move", warehouse)) errors.push(`Magasin « ${values.warehouseCode} » hors de votre périmètre.`);
+  if (values.sku && !part) errors.push(tpl`Article « ${values.sku} » inconnu : importer d'abord les articles.`);
+  if (values.warehouseCode && !warehouse) errors.push(tpl`Magasin « ${values.warehouseCode} » inconnu ou inactif.`);
+  if (warehouse && !ctx.canOn("stock.move", warehouse)) errors.push(tpl`Magasin « ${values.warehouseCode} » hors de votre périmètre.`);
   const thresholds = { minQty: values.minQty, reorderPoint: values.reorderPoint, maxQty: values.maxQty };
   const hasThresholds = Object.values(thresholds).some((v) => v !== undefined);
   if (hasThresholds && warehouse && !ctx.canOn("part.write", warehouse))

@@ -2,6 +2,7 @@
  * Machine à états des ordres de travail (CDC §5.4, COR-06, DON-08, DON-10, DON-11).
  * Module pur : aucune dépendance à la base, testé dans `__tests__/work-order-status.test.ts`.
  */
+import { tpl } from "@/i18n/translate";
 
 export const WORK_ORDER_STATUSES = ["CREATED", "PLANNED", "ON_HOLD", "IN_PROGRESS", "WORK_DONE", "TECH_CLOSED", "CLOSED", "CANCELLED"] as const;
 
@@ -92,7 +93,7 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
   const errors: string[] = [];
 
   if (!ALLOWED_TRANSITIONS[wo.status].includes(to)) {
-    return { ok: false, errors: [`Transition interdite : ${wo.status} → ${to}.`] };
+    return { ok: false, errors: [tpl`Transition interdite : ${wo.status} → ${to}.`] };
   }
 
   const reason = input.reason?.trim();
@@ -122,7 +123,7 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
         if (!reason) errors.push("Le motif de réouverture est obligatoire.");
         if (!actor.canManage) errors.push("Seul un gestionnaire d'interventions peut rouvrir.");
         if (wo.techClosedAt && daysBetween(wo.techClosedAt, now) > REOPEN_DELAY_DAYS) {
-          errors.push(`Réouverture impossible au-delà de ${REOPEN_DELAY_DAYS} jours : créer une intervention de récidive liée.`);
+          errors.push(tpl`Réouverture impossible au-delà de ${REOPEN_DELAY_DAYS} jours : créer une intervention de récidive liée.`);
         }
       }
       break;
@@ -130,7 +131,7 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
     case "WORK_DONE": {
       if (!wo.hasWorkDescription) errors.push("Au moins une ligne de travaux ou un compte rendu est obligatoire.");
       if (wo.requiredTasksIncomplete > 0) {
-        errors.push(`${wo.requiredTasksIncomplete} point(s) obligatoire(s) de checklist à renseigner.`);
+        errors.push(tpl`${wo.requiredTasksIncomplete} point(s) obligatoire(s) de checklist à renseigner.`);
       }
       if (wo.equipmentHasMeter && !wo.hasMeterReadingSinceStart) {
         errors.push("Le relevé du compteur est obligatoire.");
@@ -167,7 +168,7 @@ export function checkTransition(wo: WorkOrderSnapshot, input: TransitionInput, n
         errors.push("Le coût du prestataire (facture ou provision) doit être renseigné.");
       }
       if ((wo.pendingExpenses ?? 0) > 0) {
-        errors.push(`${wo.pendingExpenses} dépense(s) en attente de validation : attendre la décision du valideur.`);
+        errors.push(tpl`${wo.pendingExpenses} dépense(s) en attente de validation : attendre la décision du valideur.`);
       }
       break;
     }

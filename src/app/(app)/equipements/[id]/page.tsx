@@ -397,7 +397,13 @@ function ReadingsTable({ readings, unit, canReview }: { readings: Awaited<Return
               {r.statusReasons?.length ? (
                 <p className="flex items-start gap-1 text-xs text-amber-800">
                   <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
-                  {r.statusReasons.join(" ")}
+                  <span>
+                    {r.statusReasons.map((reason) => (
+                      <span key={reason}>
+                        <Tr>{reason}</Tr>{" "}
+                      </span>
+                    ))}
+                  </span>
                 </p>
               ) : null}
               {r.comment ? (

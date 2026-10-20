@@ -2,6 +2,7 @@
  * Identité de l'organisation : nom affiché sous « GMAO » et logo (en-tête de l'application, états imprimés).
  * Module pur, testé dans `__tests__/branding.test.ts`.
  */
+import { tpl } from "@/i18n/translate";
 import { extensionOf, FILE_FORMATS, formatSize } from "./documents";
 
 /** Formats de logo : images matricielles affichables partout (SVG exclu : il peut contenir du script). */
@@ -24,11 +25,11 @@ export function checkLogo(file: { name: string; size: number; head: Uint8Array }
   const ext = extensionOf(file.name);
   const format = LOGO_FORMATS.find((f) => f.extensions.includes(ext));
   if (file.size === 0) errors.push("Le fichier est vide.");
-  if (file.size > MAX_LOGO_BYTES) errors.push(`Le logo dépasse ${formatSize(MAX_LOGO_BYTES)} (${formatSize(file.size)}).`);
+  if (file.size > MAX_LOGO_BYTES) errors.push(tpl`Le logo dépasse ${formatSize(MAX_LOGO_BYTES)} (${formatSize(file.size)}).`);
   if (!format) {
-    errors.push(`Format non accepté (.${ext || "?"}). Formats acceptés : ${LOGO_FORMATS.map((f) => f.label).join(", ")}.`);
+    errors.push(tpl`Format non accepté (.${ext || "?"}). Formats acceptés : ${LOGO_FORMATS.map((f) => f.label).join(", ")}.`);
   } else if (file.size > 0 && !format.matches(file.head)) {
-    errors.push(`Le contenu du fichier ne correspond pas à son extension .${ext}.`);
+    errors.push(tpl`Le contenu du fichier ne correspond pas à son extension .${ext}.`);
   }
   return errors.length > 0 || !format ? { ok: false, errors } : { ok: true, contentType: format.contentType };
 }
