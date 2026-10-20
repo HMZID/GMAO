@@ -57,6 +57,8 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
         meta={
           <>
             <WorkOrderStatusBadge status={wo.status} />
+            {wo.validationStatus === "PENDING" && isOpen ? <Badge tone="amber">En attente de validation</Badge> : null}
+            {wo.validationStatus === "REJECTED" ? <Badge tone="red">Validation refusée</Badge> : null}
             <PriorityBadge value={wo.priority} />
             <Badge>{WORK_ORDER_TYPE[wo.type] ?? wo.type}</Badge>
             {wo.isImmobilizing ? <Badge tone="red">Immobilisant</Badge> : null}
@@ -81,6 +83,12 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
       />
 
       <div className="mb-6 space-y-3">
+        {wo.validationStatus === "PENDING" && isOpen ? (
+          <Alert tone="amber" title="Intervention en attente de validation">
+            Elle ne peut être ni planifiée ni démarrée avant la décision du valideur
+            {wo.estimatedCost != null ? ` (coût estimé : ${formatCurrency(wo.estimatedCost)})` : ""}.
+          </Alert>
+        ) : null}
         {status === "ON_HOLD" ? (
           <Alert tone="amber" title={`En attente${reasonOfHold ? ` : ${reasonOfHold}` : ""}`}>
             {wo.holdComment ?? "Reprendre l'intervention dès que la cause de l'attente est levée."}
@@ -129,6 +137,7 @@ export default async function WorkOrderPage(props: PageProps<"/interventions/[id
             canReport={wo.canExecute && ["IN_PROGRESS", "WORK_DONE", "ON_HOLD"].includes(status)}
             canRead={executing && ctx.can("meter.write")}
           />
+          <ApprovalCard approvals={wo.validationApprovals} title="Validation de l'intervention" />
           <ApprovalCard approvals={wo.expenseApprovals} title="Validation des dépenses" />
           {wo.purchaseRequests.length > 0 || ctx.canOn("purchase.create", wo) ? (
             <Card>

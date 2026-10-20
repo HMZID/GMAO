@@ -75,10 +75,19 @@ describe("Rôles : plateforme et organisation", () => {
   });
 
   it("la direction et le responsable maintenance ont tous les droits de l'organisation, pas ceux de la plateforme", () => {
+    // Le seuil de validation des interventions est réservé à la direction (HAB-04).
+    const executiveOnly = ["approval.threshold"];
     for (const role of ["EXECUTIVE", "MAINTENANCE_MANAGER"] as const) {
-      for (const permission of PERMISSIONS.filter((p) => p !== "platform.manage"))
+      for (const permission of PERMISSIONS.filter((p) => p !== "platform.manage" && !executiveOnly.includes(p)))
         expect(roleHas(role, permission), `${role} ${permission}`).toBe(true);
       expect(roleHas(role, "platform.manage")).toBe(false);
+    }
+  });
+
+  it("seule la direction fixe le seuil de validation des interventions", () => {
+    expect(roleHas("EXECUTIVE", "approval.threshold")).toBe(true);
+    for (const role of ["MAINTENANCE_MANAGER", "WORKSHOP_MANAGER", "TECHNICIAN", "FLEET_MANAGER", "ADMIN"] as const) {
+      expect(roleHas(role, "approval.threshold"), role).toBe(false);
     }
   });
 

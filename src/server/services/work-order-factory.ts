@@ -26,6 +26,8 @@ export type NewWorkOrder = {
   plannedStart?: Date | null;
   plannedEnd?: Date | null;
   estimatedMinutes?: number | null;
+  /** Coût estimé : il décide de l'étape de validation de l'intervention (HAB-04). */
+  estimatedCost?: number | null;
   dueItemId?: string | null;
   taskListId?: string | null;
   parentWorkOrderId?: string | null;
@@ -70,6 +72,7 @@ export async function insertWorkOrder(tx: DbOrTx, ctx: AuthContext, input: NewWo
         input.plannedEnd ??
         (input.plannedStart && input.estimatedMinutes ? new Date(input.plannedStart.getTime() + input.estimatedMinutes * 60_000) : null),
       estimatedMinutes: input.estimatedMinutes ?? null,
+      estimatedCost: input.estimatedCost ?? null,
       dueItemId: input.dueItemId ?? null,
       taskListId: input.taskListId ?? null,
       parentWorkOrderId: input.parentWorkOrderId ?? null,

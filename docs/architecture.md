@@ -39,7 +39,7 @@ flowchart LR
   - `ctx.canOn(droit, { companyId, siteId })` : sur cette cible ?
   - `scopeWhere(ctx.scope(droit), colonneSociété, colonneSite)` : condition SQL appliquée à toutes les listes, recherches et API (HAB-02).
 - Un objet hors périmètre répond « introuvable » (404) : son existence n'est pas révélée.
-- La matrice rôle → droits est dans `src/server/authz/permissions.ts` (31 droits, 10 rôles).
+- La matrice rôle → droits est dans `src/server/authz/permissions.ts` (35 droits, 10 rôles ; `approval.threshold`, le seuil de validation des interventions, est réservé à la direction).
 
 | Rôle | Principaux droits |
 | --- | --- |
@@ -146,6 +146,8 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 - **Rapport** : à l'écran (filtre sur les erreurs) et en Excel (`/api/v1/imports/{id}/report`), avec le statut et les anomalies de chaque ligne.
 
 ### Circuits de validation (HAB-04, CDC §2.4)
+
+- **Validation des interventions** (objet `WORK_ORDER`, désactivée par défaut) : à la création manuelle d'une intervention, son **coût estimé** (`work_orders.estimated_cost`) décide du valideur. Sous le **seuil fixé par la direction**, le responsable maintenance valide ; à partir du seuil, la direction (étapes à plafond `max_amount` et seuil `min_amount`, `applicableSteps`). La **direction a les droits du responsable maintenance** (`roleCovers`) : elle valide tout. Les étapes que le créateur peut trancher lui-même sont retirées (`stepsLeftForCreator`) : la direction crée **sans validation**, le responsable maintenance crée sans validation sous le seuil et passe par la direction au-delà. Une intervention en attente (`validation_status = PENDING`) n'est ni planifiable ni démarrable (`checkTransition`) ; refusée, elle est annulée, ses réservations libérées et l'équipement remis en service s'il n'est plus retenu. Le seuil se règle dans Administration › Circuits de validation, et par `PUT /api/v1/work-order-validation`, par la direction seule (`setWorkOrderValidation`) ; le circuit `WORK_ORDER` n'est modifiable que par elle, même par le paramétrage général. Exemptés : interventions préventives générées, transformation d'une DI (qui a son propre circuit), récidive.
 
 - **Paramétrage** (`/administration/validations`, droit `settings.manage`) : un circuit par type d'objet (`WORK_REQUEST`, `PURCHASE_REQUEST`, `MAINTENANCE_EXPENSE`), pour une société ou pour le groupe (le circuit de la société l'emporte). Chaque étape a un valideur, rôle détenu sur la société ou le site de l'objet ou personne nommée, un seuil (« à partir de ») et, pour les DI, des priorités.
 - **Soumission** (`startApproval`) : les étapes applicables (`applicableSteps`, domaine pur) sont **figées** dans la demande ; sans étape applicable, pas de validation. Les valideurs de la première étape et leurs suppléants sont notifiés.

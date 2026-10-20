@@ -59,6 +59,7 @@ export const PERMISSIONS = [
   "kpi.read",
   "data.export",
   "indicator.manage",
+  "approval.threshold",
   "platform.manage",
 ] as const;
 
@@ -108,9 +109,14 @@ const GRANTS: Record<Permission, readonly Role[]> = {
   "data.export": ["ADMIN", "EXECUTIVE"],
   // KPI-11 : indicateurs personnalisés de l'organisation (lecture : kpi.read).
   "indicator.manage": ["ADMIN", "MAINTENANCE_MANAGER", "EXECUTIVE"],
+  // HAB-04 : seuil au-delà duquel une intervention ne se valide plus par le responsable maintenance (direction seule).
+  "approval.threshold": ["EXECUTIVE"],
   // Organisations clientes, démonstrations : administrateur de la plateforme uniquement.
   "platform.manage": ["ADMIN"],
 };
+
+/** Droits réservés à la direction : le responsable maintenance, qui a pourtant tous les autres droits, ne les reçoit pas. */
+const EXECUTIVE_ONLY: readonly Permission[] = ["approval.threshold"];
 
 /**
  * Droits effectifs : l'administrateur de la plateforme ne garde que `platform.manage` ; la direction et le
@@ -119,7 +125,11 @@ const GRANTS: Record<Permission, readonly Role[]> = {
 const EFFECTIVE_GRANTS = Object.fromEntries(
   PERMISSIONS.map((p) => [
     p,
-    p === "platform.manage" ? (["ADMIN"] as Role[]) : [...new Set([...GRANTS[p].filter((r) => r !== "ADMIN"), ...ORGANIZATION_MANAGERS])],
+    p === "platform.manage"
+      ? (["ADMIN"] as Role[])
+      : EXECUTIVE_ONLY.includes(p)
+        ? (["EXECUTIVE"] as Role[])
+        : [...new Set([...GRANTS[p].filter((r) => r !== "ADMIN"), ...ORGANIZATION_MANAGERS])],
   ]),
 ) as unknown as Record<Permission, readonly Role[]>;
 

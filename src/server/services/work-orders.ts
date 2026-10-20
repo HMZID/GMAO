@@ -45,7 +45,7 @@ import { openDowntime, releaseEquipmentIfFree, setEquipmentStatus } from "./equi
 import { notifyAssignedTechnicians, notifyByPermission } from "./notifications";
 import { completeDueItem } from "./preventive";
 import { issueToWorkOrder, releaseReservations, reserveForWorkOrder, returnFromWorkOrder } from "./stock";
-import { approvalTimeline, startApproval } from "./approvals";
+import { approvalTimeline, cancelPendingApproval, startApproval, submitWorkOrderForValidation } from "./approvals";
 import { listPurchaseRequestsForWorkOrder } from "./purchase-requests";
 import { insertWorkOrder } from "./work-order-factory";
 
@@ -95,6 +95,7 @@ export async function listWorkOrders(ctx: AuthContext, raw: unknown = {}) {
         status: workOrders.status,
         priority: workOrders.priority,
         holdReason: workOrders.holdReason,
+        validationStatus: workOrders.validationStatus,
         isImmobilizing: workOrders.isImmobilizing,
         isExternal: workOrders.isExternal,
         plannedStart: workOrders.plannedStart,
@@ -247,6 +248,7 @@ async function buildSnapshot(tx: DbOrTx, wo: WorkOrderRow): Promise<WorkOrderSna
     isRegulatory: wo.type === "REGULATORY",
     hasReportDocument: (reportRows[0]?.n ?? 0) > 0,
     pendingExpenses: pendingExpenseRows[0]?.n ?? 0,
+    pendingValidation: wo.validationStatus === "PENDING",
   };
 }
 
@@ -323,12 +325,13 @@ export async function getWorkOrder(ctx: AuthContext, id: string) {
       .where(eq(workRequests.workOrderId, id)),
   ]);
 
-  const [expenseApprovals, purchaseRequestRows] = await Promise.all([
+  const [expenseApprovals, validationApprovals, purchaseRequestRows] = await Promise.all([
     approvalTimeline(
       ctx,
       "MAINTENANCE_EXPENSE",
       wo.costs.map((c) => c.id),
     ),
+    approvalTimeline(ctx, "WORK_ORDER", [wo.id]),
     listPurchaseRequestsForWorkOrder(ctx, wo.id, wo),
   ]);
 
@@ -347,6 +350,8 @@ export async function getWorkOrder(ctx: AuthContext, id: string) {
     costRows: wo.costs,
     /** Validations des dépenses (HAB-04) et demandes d'achat rattachées (ACH-01). */
     expenseApprovals,
+    /** Validation de l'intervention elle-même : responsable maintenance sous le seuil, direction au-delà (HAB-04). */
+    validationApprovals,
     purchaseRequests: purchaseRequestRows,
     meters: meterRows,
     costs,
@@ -377,6 +382,8 @@ export const workOrderInput = z.object({
   plannedStart: optionalDate,
   plannedEnd: optionalDate,
   estimatedMinutes: optionalNumber,
+  /** Coût estimé (€) : à partir du seuil fixé par la direction, l'intervention est validée par la direction (HAB-04). */
+  estimatedCost: optionalNumber.refine((v) => v === undefined || v >= 0, "Montant positif attendu"),
   assigneeIds: z.array(z.uuid()).default([]),
 });
 
@@ -433,13 +440,21 @@ export async function createWorkOrder(ctx: AuthContext, raw: unknown) {
   await assertWorkOrderReferences(ctx, "workorder.create", input);
 
   return db.transaction(async (tx) => {
-    const wo = await insertWorkOrder(tx, ctx, {
+    const created = await insertWorkOrder(tx, ctx, {
       ...input,
       companyId: eqRow.companyId,
       siteId: eqRow.siteId,
       assigneeTechnicianIds: input.assigneeIds,
     });
-    await notifyAssignedTechnicians(tx, ctx.tenantId, wo, [...new Set(input.assigneeIds ?? [])], { excludeUserId: ctx.userId });
+    // HAB-04 : la direction crée sans validation ; le responsable maintenance valide sous le seuil fixé par la direction,
+    // la direction au-delà. Une intervention en attente de validation n'est ni planifiable ni démarrable.
+    const approval = await submitWorkOrderForValidation(tx, ctx, created);
+    const wo = approval
+      ? (await tx.update(workOrders).set({ validationStatus: "PENDING" }).where(eq(workOrders.id, created.id)).returning())[0]
+      : created;
+    if (!approval) {
+      await notifyAssignedTechnicians(tx, ctx.tenantId, wo, [...new Set(input.assigneeIds ?? [])], { excludeUserId: ctx.userId });
+    }
     if (input.isImmobilizing && input.type !== "PREVENTIVE" && input.type !== "REGULATORY") {
       await setEquipmentStatus(tx, ctx, eqRow.id, "IMMOBILIZED", { reason: `Intervention ${wo.number}`, workOrderId: wo.id });
       await openDowntime(tx, ctx, { equipmentId: eqRow.id, reason: input.isSafetyRelated ? "SAFETY" : "BREAKDOWN", workOrderId: wo.id });
@@ -668,6 +683,7 @@ async function applyEquipmentEffects(tx: DbOrTx, ctx: AuthContext, wo: WorkOrder
   }
 
   if (to === "CANCELLED") {
+    await cancelPendingApproval(tx, ctx, "WORK_ORDER", wo.id, "Intervention annulée");
     await releaseReservations(tx, wo.id);
     if (wo.dueItemId) await tx.update(dueItems).set({ workOrderId: null }).where(eq(dueItems.id, wo.dueItemId));
   }
