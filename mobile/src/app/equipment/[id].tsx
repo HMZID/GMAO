@@ -25,6 +25,12 @@ type EquipmentDetail = {
   recentWorkOrders: { id: string; number: string; title: string; status: string }[];
 };
 
+type FuelProduct = "DIESEL" | "GASOLINE" | "ADBLUE";
+
+/** Produits proposés à la pompe ; un appui passe au suivant. */
+const FUEL_PRODUCT: Record<FuelProduct, string> = { DIESEL: "Produit : gasoil", GASOLINE: "Produit : essence", ADBLUE: "Produit : AdBlue" };
+const nextProduct = (p: FuelProduct): FuelProduct => (p === "DIESEL" ? "GASOLINE" : p === "GASOLINE" ? "ADBLUE" : "DIESEL");
+
 /** Fiche équipement (§10.2) : état, compteurs, prochaines échéances, dernières interventions, signalement. */
 export default function EquipmentScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,8 +40,14 @@ export default function EquipmentScreen() {
   const { data: e, loading, error, stale, reload } = useApiData<EquipmentDetail>(`/api/v1/equipment/${id}`);
   const [reading, setReading] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const [litres, setLitres] = useState("");
+  const [fuelMeter, setFuelMeter] = useState("");
+  const [fluid, setFluid] = useState<FuelProduct>("DIESEL");
+  const [fullTank, setFullTank] = useState(true);
+  const [fuelNotice, setFuelNotice] = useState<string | null>(null);
   const primary = e?.meters.find((m) => m.isPrimary) ?? e?.meters[0];
   const pendingReadings = operations.filter((o) => o.kind === "reading" && o.meterId === primary?.id);
+  const pendingFuel = operations.filter((o) => o.kind === "fuel" && o.equipmentId === id);
 
   async function saveReading() {
     if (!primary) return;
@@ -50,6 +62,19 @@ export default function EquipmentScreen() {
     await enqueue({ kind: "reading", meterId: primary.id, value });
     setReading("");
     setNotice(t("Relevé enregistré : il sera contrôlé par le serveur à l'envoi."));
+  }
+
+  /** Plein saisi au pied de la pompe, même sans réseau : la consommation et les anomalies sont calculées par le serveur. */
+  async function saveFuel() {
+    if (!e) return;
+    const quantity = Number(litres.replace(",", "."));
+    if (!Number.isFinite(quantity) || quantity <= 0) return setFuelNotice(t("Quantité invalide."));
+    const meterValue = fuelMeter ? Number(fuelMeter.replace(",", ".")) : undefined;
+    if (meterValue !== undefined && (!Number.isFinite(meterValue) || meterValue < 0)) return setFuelNotice(t("Valeur invalide."));
+    await enqueue({ kind: "fuel", equipmentId: e.id, fluid, quantity, meterValue, fullTank, label: e.code });
+    setLitres("");
+    setFuelMeter("");
+    setFuelNotice(t("Plein enregistré : il sera envoyé et contrôlé par le serveur."));
   }
 
   if (loading && !e) return <Loading />;
@@ -101,6 +126,25 @@ export default function EquipmentScreen() {
               <Button title="Enregistrer le relevé" onPress={() => void saveReading()} disabled={!reading} />
             </>
           ) : null}
+        </Card>
+      ) : null}
+
+      {can("fuel.write") && e.status !== "RETIRED" ? (
+        <Card title="Carburant">
+          {pendingFuel.length > 0 ? <Message tone="blue">{t("{count} plein(s) en attente d'envoi.", { count: pendingFuel.length })}</Message> : null}
+          <Button title={FUEL_PRODUCT[fluid]} variant="secondary" onPress={() => setFluid(nextProduct(fluid))} />
+          <Field label="Quantité (L)" value={litres} onChangeText={setLitres} keyboardType="decimal-pad" />
+          {primary ? (
+            <Field
+              label={t("Compteur au plein ({unit})", { unit: primary.unit })}
+              value={fuelMeter}
+              onChangeText={setFuelMeter}
+              keyboardType="decimal-pad"
+            />
+          ) : null}
+          <Button title={fullTank ? "Plein complet" : "Appoint (réservoir non rempli)"} variant="secondary" onPress={() => setFullTank((v) => !v)} />
+          {fuelNotice ? <Message tone="amber">{fuelNotice}</Message> : null}
+          <Button title="Enregistrer le plein" onPress={() => void saveFuel()} disabled={!litres} />
         </Card>
       ) : null}
 

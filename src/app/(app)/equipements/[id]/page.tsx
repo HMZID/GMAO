@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ActionForm, Field, SubmitButton } from "@/components/forms/action-form";
 import { DocumentsCard } from "@/components/documents/documents-card";
 import { DeadlinesCard } from "@/components/fleet/deadlines-card";
+import { EquipmentFuelCard } from "@/components/fuel/equipment-fuel-card";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   CriticalityBadge,
@@ -120,6 +121,7 @@ export default async function EquipmentPage(props: PageProps<"/equipements/[id]"
           <MetersCard e={e} readings={readings} ctx={ctx} retired={retired} />
           <DueItemsCard e={e} ctx={ctx} retired={retired} />
           <DeadlinesCard ctx={ctx} equipment={e} retired={retired} now={new Date()} />
+          <EquipmentFuelCard ctx={ctx} equipmentId={e.id} now={new Date()} />
           <InterventionsCard e={e} />
           <DocumentsCard ctx={ctx} entityType="EQUIPMENT" entityId={e.id} now={new Date()} />
         </div>

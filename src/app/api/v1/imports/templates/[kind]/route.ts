@@ -4,5 +4,5 @@ import { importTemplate } from "@/server/services/imports";
 
 type Ctx = RouteContext<"/api/v1/imports/templates/[kind]">;
 
-/** Modèle Excel : EQUIPMENT, PARTS, INITIAL_STOCK, SUPPLIERS ou TECHNICIANS (codes de l'organisation limités au périmètre). */
+/** Modèle Excel : EQUIPMENT, PARTS, INITIAL_STOCK, SUPPLIERS, TECHNICIANS ou FUEL (codes de l'organisation limités au périmètre). */
 export const GET = apiRoute<Ctx>(async (ctx, _request, { params }) => xlsxResponse(await importTemplate(ctx, (await params).kind.toUpperCase())));

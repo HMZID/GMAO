@@ -69,6 +69,31 @@ export const IMPORT_KIND: Record<string, string> = {
   INITIAL_STOCK: "Stocks initiaux",
   SUPPLIERS: "Fournisseurs",
   TECHNICIANS: "Ouvriers et techniciens",
+  FUEL: "Relevés de cartes carburant",
+};
+
+/** Carburant et fluides. */
+export const FLUID_KIND: Record<string, string> = {
+  DIESEL: "Gasoil",
+  GASOLINE: "Essence",
+  ADBLUE: "AdBlue",
+  ENGINE_OIL: "Huile moteur",
+  HYDRAULIC_OIL: "Huile hydraulique",
+  COOLANT: "Liquide de refroidissement",
+  OTHER: "Autre",
+};
+
+export const FUEL_SOURCE: Record<string, string> = {
+  MANUAL: "Saisie",
+  MOBILE: "Mobile",
+  CARD_IMPORT: "Relevé de carte",
+  API: "API",
+};
+
+export const FUEL_REVIEW: Record<string, { label: string; tone: Tone }> = {
+  NONE: { label: "Conforme", tone: "green" },
+  TO_REVIEW: { label: "À examiner", tone: "amber" },
+  JUSTIFIED: { label: "Justifié", tone: "blue" },
 };
 
 export const IMPORT_STATUS: Record<string, { label: string; tone: Tone }> = {

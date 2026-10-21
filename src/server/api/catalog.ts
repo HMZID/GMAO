@@ -3,6 +3,15 @@ import { z } from "zod";
 import type { Permission } from "@/server/authz/permissions";
 import { documentDeleteInput, documentInput, documentListInput } from "@/server/services/documents";
 import { cancelInput as deadlineCancelInput, deadlineFilters, deadlineInput, renewalInput } from "@/server/services/fleet-deadlines";
+import {
+  consumptionFilters,
+  fuelCardInput,
+  fuelCardUpdateInput,
+  fuelEntryFilters,
+  fuelEntryInput,
+  fuelReviewInput,
+  fuelSettingsInput,
+} from "@/server/services/fuel";
 import { assignmentInput, equipmentFilters, equipmentInput, equipmentUpdateInput, retireInput } from "@/server/services/equipment";
 import { decisionInput, workOrderValidationInput } from "@/server/services/approvals";
 import { preferencesInput } from "@/server/services/email";
@@ -250,6 +259,56 @@ export const ENDPOINTS: Endpoint[] = [
   },
   { method: "GET", path: "/api/v1/maintenance-plans/{id}", summary: "Plan, opérations, déclencheurs et checklists", permission: "plan.read" },
   { method: "GET", path: "/api/v1/due-items", summary: "Échéances préventives ouvertes", permission: "plan.read", query: dueFilters },
+  {
+    method: "GET",
+    path: "/api/v1/fuel-entries",
+    summary: "Pleins et appoints (carburant, AdBlue, huiles) du périmètre, avec leurs anomalies",
+    permission: "fuel.read",
+    query: fuelEntryFilters,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/fuel-entries",
+    summary: "Saisie d'un plein : consommation et anomalies calculées, idempotente par clientId",
+    permission: "fuel.write",
+    body: fuelEntryInput,
+  },
+  {
+    method: "POST",
+    path: "/api/v1/fuel-entries/{id}/review",
+    summary: "Examen d'un plein : anomalie justifiée ou plein annulé (commentaire obligatoire)",
+    permission: "fuel.manage",
+    body: fuelReviewInput,
+  },
+  {
+    method: "GET",
+    path: "/api/v1/fuel-consumption",
+    summary: "Consommation par équipement (L/h ou L/100 km, plein à plein), référence, écart, pleins à examiner",
+    permission: "fuel.read",
+    query: consumptionFilters,
+  },
+  { method: "GET", path: "/api/v1/fuel-cards", summary: "Cartes carburant (4 derniers chiffres seulement)", permission: "fuel.read" },
+  { method: "POST", path: "/api/v1/fuel-cards", summary: "Nouvelle carte carburant", permission: "fuel.manage", body: fuelCardInput },
+  {
+    method: "PATCH",
+    path: "/api/v1/fuel-cards/{id}",
+    summary: "Affectation, plafond mensuel, désactivation d'une carte carburant",
+    permission: "fuel.manage",
+    body: fuelCardUpdateInput,
+  },
+  {
+    method: "GET",
+    path: "/api/v1/equipment/{id}/fuel",
+    summary: "Carburant d'un équipement : réglages, consommation, derniers pleins",
+    permission: "fuel.read",
+  },
+  {
+    method: "PUT",
+    path: "/api/v1/equipment/{id}/fuel",
+    summary: "Réglages carburant d'un équipement : carburant, réservoir, consommation de référence",
+    permission: "fuel.manage",
+    body: fuelSettingsInput,
+  },
   {
     method: "GET",
     path: "/api/v1/equipment-deadlines",

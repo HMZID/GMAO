@@ -19,7 +19,17 @@ export type OperationPayload =
   | { kind: "transition"; workOrderId: string; to: "IN_PROGRESS" | "WORK_DONE" | "ON_HOLD"; reason?: string; holdReason?: string }
   | { kind: "photo"; entityType: "WORK_ORDER" | "EQUIPMENT"; entityId: string; uri: string; fileName: string; title?: string }
   | { kind: "reading"; meterId: string; value: number; workOrderId?: string }
-  | { kind: "request"; equipmentId: string; symptom: string; description?: string; isStopped: boolean; isSafetyRisk: boolean };
+  | { kind: "request"; equipmentId: string; symptom: string; description?: string; isStopped: boolean; isSafetyRisk: boolean }
+  | {
+      kind: "fuel";
+      equipmentId: string;
+      fluid: "DIESEL" | "GASOLINE" | "ADBLUE";
+      quantity: number;
+      meterValue?: number;
+      fullTank: boolean;
+      /** Code parc, pour l'affichage dans la file d'attente. */
+      label: string;
+    };
 
 export type Operation = OperationPayload & {
   clientId: string;
@@ -47,6 +57,7 @@ export const OPERATION_LABEL: Record<OperationPayload["kind"], string> = {
   photo: "Photo",
   reading: "Relevé de compteur",
   request: "Demande d'intervention",
+  fuel: "Plein de carburant",
 };
 
 /** Libellé d'une saisie dans la file d'attente ; `t` : traducteur de l'affichage (français sans lui). */
@@ -63,6 +74,8 @@ export function describeOperation(op: OperationPayload, t: (text: string) => str
       return `${label} : ${op.value}`;
     case "request":
       return `${label} : ${op.symptom}`;
+    case "fuel":
+      return `${label} : ${op.quantity} L · ${op.label}`;
     default:
       return label;
   }
@@ -128,6 +141,17 @@ async function send(api: ApiClient, op: Operation, readFile: (uri: string, name:
         workOrderId: op.workOrderId,
         source: op.workOrderId ? "WORK_ORDER" : "MANUAL",
         readAt: op.createdAt,
+        clientId: op.clientId,
+      });
+    case "fuel":
+      // Heure du plein : celle du terminal à la saisie, envoyée telle quelle (consommation exacte après coup).
+      return api.post("/api/v1/fuel-entries", {
+        equipmentId: op.equipmentId,
+        fluid: op.fluid,
+        quantity: op.quantity,
+        meterValue: op.meterValue,
+        fullTank: op.fullTank,
+        filledAt: op.createdAt,
         clientId: op.clientId,
       });
     case "request":

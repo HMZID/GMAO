@@ -23,6 +23,7 @@ const DESCRIPTIONS: Record<string, string> = {
   INITIAL_STOCK: "Quantités comptées par magasin et seuils de réapprovisionnement. Importer les articles d'abord.",
   SUPPLIERS: "Fournisseurs et prestataires : raison sociale, identifiant fiscal, contacts ; « Prestataire » pour la sous-traitance.",
   TECHNICIANS: "Ouvriers et techniciens : matricule, site, qualification, heures par jour et taux horaire (planning et coûts).",
+  FUEL: "Relevés de cartes carburant (Agil, Total, Shell, Star…) : une ligne par transaction, équipement retrouvé par le code parc, l'immatriculation ou la carte affectée. Consommation et anomalies calculées ; réimportation sans doublon.",
 };
 
 export default async function ImportsPage() {

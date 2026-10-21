@@ -3,6 +3,7 @@ import type { Permission } from "@/server/authz/permissions";
 export type NavIcon =
   | "dashboard"
   | "equipment"
+  | "fuel"
   | "requests"
   | "workorders"
   | "preventive"
@@ -22,6 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   // Membres d'une organisation ; l'administrateur de la plateforme ne voit que l'administration.
   { href: "/", label: "Tableau de bord", icon: "dashboard", permission: "equipment.read" },
   { href: "/equipements", label: "Équipements", icon: "equipment", permission: "equipment.read" },
+  { href: "/carburant", label: "Carburant", icon: "fuel", permission: "fuel.read" },
   { href: "/demandes", label: "Demandes d'intervention", icon: "requests", permission: "request.read" },
   { href: "/interventions", label: "Interventions à réaliser", icon: "workorders", permission: "workorder.read" },
   { href: "/preventif", label: "Préventif", icon: "preventive", permission: "plan.read" },
@@ -32,6 +34,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/indicateurs", label: "Indicateurs", icon: "kpi", permission: "kpi.read" },
   // HAB-04 : tout utilisateur peut être valideur (rôle dans un circuit, personne nommée ou suppléant).
   { href: "/validations", label: "Validations", icon: "approvals", permission: "equipment.read" },
-  { href: "/imports", label: "Imports", icon: "imports", anyOf: ["equipment.write", "part.write", "stock.move"] },
+  { href: "/imports", label: "Imports", icon: "imports", anyOf: ["equipment.write", "part.write", "stock.move", "fuel.manage"] },
   { href: "/administration", label: "Administration", icon: "admin", anyOf: ["settings.manage", "users.manage", "audit.read", "platform.manage"] },
 ];

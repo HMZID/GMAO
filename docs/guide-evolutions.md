@@ -120,3 +120,13 @@ Circuits de la démonstration (CDC §2.4) :
   - un même événement n'envoie qu'un courriel par destinataire ;
   - une erreur passagère est retentée après 1, 5, 15, 60 puis 240 minutes ;
   - une adresse refusée ou une authentification impossible met le courriel en échec tout de suite.
+
+## 7. Carburant et fluides
+
+Menu **Carburant** (profils qui consultent ou saisissent les pleins ; examen et cartes : responsable du parc, responsable maintenance, direction).
+
+- **Réglages d'un équipement** (fiche équipement › Carburant et fluides › Réglages carburant) : carburant attendu, capacité du réservoir, consommation de référence (L/h ou L/100 km selon le compteur principal). Sans référence, la médiane des pleins précédents sert de repère dès 3 tronçons.
+- **Saisie d'un plein** : page Carburant, fiche équipement ou application mobile (même sans réseau). Indiquer le **compteur** et si le réservoir est rempli (**plein complet**) : la consommation se calcule entre deux pleins complets relevés. Un appoint compte dans les litres mais ne ferme pas de tronçon.
+- **Cartes carburant** (Carburant › Cartes) : fournisseur et numéro (seuls les 4 derniers chiffres sont gardés), équipement affecté (sinon carte de pool), plafond mensuel en litres.
+- **Relevés de cartes** : menu **Imports** › « Relevés de cartes carburant » : une ligne par transaction ; l'équipement est retrouvé par le code parc, l'immatriculation ou la carte affectée. Réimporter le même relevé ne crée aucun doublon (référence de transaction).
+- **Anomalies** : signalées au responsable du parc (notification) et listées dans « Pleins à examiner » : **Anomalie justifiée** (le plein reste dans les calculs) ou **Plein erroné** (annulé, il sort des calculs mais reste dans l'historique). Commentaire obligatoire.

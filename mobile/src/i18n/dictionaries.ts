@@ -183,6 +183,19 @@ const en: Dictionary = {
   "Changement de statut": "Status change",
   OK: "OK",
   "3 caractères au minimum": "3 characters minimum",
+  Carburant: "Fuel",
+  "Compteur au plein ({unit})": "Meter at fill-up ({unit})",
+  "Enregistrer le plein": "Save the fill-up",
+  "Plein de carburant": "Fuel fill-up",
+  "Plein enregistré : il sera envoyé et contrôlé par le serveur.": "Fill-up saved: it will be sent and checked by the server.",
+  "Produit : AdBlue": "Product: AdBlue",
+  "Produit : essence": "Product: petrol",
+  "Produit : gasoil": "Product: diesel",
+  "Quantité (L)": "Quantity (L)",
+  "Quantité invalide.": "Invalid quantity.",
+  "{count} plein(s) en attente d'envoi.": "{count} fill-up(s) waiting to be sent.",
+  "Plein complet": "Full tank",
+  "Appoint (réservoir non rempli)": "Top-up (tank not filled)",
 };
 
 const ar: Dictionary = {
@@ -362,6 +375,19 @@ const ar: Dictionary = {
   "Changement de statut": "تغيير الحالة",
   OK: "موافق",
   "3 caractères au minimum": "3 أحرف على الأقل",
+  Carburant: "الوقود",
+  "Compteur au plein ({unit})": "العداد عند التعبئة ({unit})",
+  "Enregistrer le plein": "حفظ التعبئة",
+  "Plein de carburant": "تعبئة وقود",
+  "Plein enregistré : il sera envoyé et contrôlé par le serveur.": "تم حفظ التعبئة: سيتم إرسالها والتحقق منها من قبل الخادم.",
+  "Produit : AdBlue": "المنتج: AdBlue",
+  "Produit : essence": "المنتج: بنزين",
+  "Produit : gasoil": "المنتج: ديزل",
+  "Quantité (L)": "الكمية (لتر)",
+  "Quantité invalide.": "كمية غير صالحة.",
+  "{count} plein(s) en attente d'envoi.": "{count} تعبئة في انتظار الإرسال.",
+  "Plein complet": "تعبئة كاملة",
+  "Appoint (réservoir non rempli)": "تعبئة جزئية (الخزان غير ممتلئ)",
 };
 
 const EMPTY: Dictionary = {};
