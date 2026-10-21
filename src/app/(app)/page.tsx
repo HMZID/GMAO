@@ -7,6 +7,7 @@ import { Alert, Card, CardHeader, EmptyState, StatTile, Table, TBody, TD, TH, TH
 import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import { getAuthContext } from "@/server/auth/session";
 import { countDeadlineAlerts } from "@/server/services/fleet-deadlines";
+import { countFuelEntriesToReview } from "@/server/services/fuel";
 import { getDashboard } from "@/server/services/kpi";
 import { listDueItems } from "@/server/services/preventive";
 import { listWorkOrders } from "@/server/services/work-orders";
@@ -19,11 +20,12 @@ export default async function DashboardPage() {
   const ctx = await getAuthContext();
   // Administrateur de la plateforme : pas de maintenance, il arrive sur les organisations clientes.
   if (!ctx.can("equipment.read")) redirect(ctx.can("platform.manage") ? "/administration/plateforme" : "/notifications");
-  const [dashboard, urgent, dues, deadlines] = await Promise.all([
+  const [dashboard, urgent, dues, deadlines, fuelToReview] = await Promise.all([
     getDashboard(ctx),
     ctx.can("workorder.read") ? listWorkOrders(ctx, { status: "OPEN", pageSize: 8 }) : null,
     ctx.can("plan.read") ? listDueItems(ctx, { status: "OPEN" }) : null,
     countDeadlineAlerts(ctx),
+    countFuelEntriesToReview(ctx),
   ]);
   const eq = dashboard.equipmentByStatus;
   const wo = dashboard.workOrders;
@@ -104,6 +106,17 @@ export default async function DashboardPage() {
             )}{" "}
             <Link href="/equipements/echeances?horizon=30" className="font-medium underline">
               <T>Voir les échéances du parc</T>
+            </Link>
+          </Alert>
+        </div>
+      ) : null}
+
+      {fuelToReview > 0 ? (
+        <div className="mt-6">
+          <Alert tone="amber" title="Carburant">
+            <T params={{ n: fuelToReview }}>{"{n} plein(s) à examiner : surconsommation, compteur, réservoir ou carte."}</T>{" "}
+            <Link href="/carburant" className="font-medium underline">
+              <T>Voir le suivi du carburant</T>
             </Link>
           </Alert>
         </div>

@@ -32,6 +32,7 @@ import {
   updateTask,
 } from "@/server/services/work-orders";
 import { createDeadline, renewDeadline } from "@/server/services/fleet-deadlines";
+import { createFuelCard, recordFuelEntry, setEquipmentFuelSettings } from "@/server/services/fuel";
 import { createIndicator } from "@/server/services/indicators";
 import { submitDemoRequest } from "@/server/services/demo-requests";
 import { ensureSiteContent } from "@/server/services/site";
@@ -2043,6 +2044,79 @@ async function main() {
     { role: "EXECUTIVE", scopeType: "TENANT", scopeId: null },
   ]);
   await setWorkOrderValidation(executiveCtx, { enabled: false, threshold: 3000 });
+
+  /* ---------------------------------------------------------------- */
+  /* Carburant et fluides : réglages, cartes, deux mois de pleins       */
+  /* ---------------------------------------------------------------- */
+  // Pleins réguliers cohérents avec l'usage moyen de chaque engin ; le dernier plein de PE-007 est en
+  // surconsommation (+40 %) : il apparaît « à examiner » sur le tableau de bord et la page Carburant.
+  await setEquipmentFuelSettings(ctx, eqIds["PE-007"], { fuelType: "DIESEL", tankCapacity: 400, referenceConsumption: 15 });
+  await setEquipmentFuelSettings(ctx, eqIds["CH-012"], { fuelType: "DIESEL", tankCapacity: 380 });
+  await setEquipmentFuelSettings(ctx, eqIds["CA-101"], { fuelType: "DIESEL", tankCapacity: 400, referenceConsumption: 34 });
+  await createFuelCard(ctx, {
+    companyId: sbtp.id,
+    provider: "Agil",
+    cardNumber: "7089 1234 5678 4521",
+    label: "Camion CA-101",
+    equipmentId: eqIds["CA-101"],
+    monthlyLimitLitres: 2500,
+  });
+  const poolCard = await createFuelCard(ctx, {
+    companyId: sbtp.id,
+    provider: "Total",
+    cardNumber: "7015 0000 0000 8810",
+    label: "Pool dépôt Lyon",
+    monthlyLimitLitres: 6000,
+  });
+  const [agilCard] = await db
+    .select({ id: s.fuelCards.id })
+    .from(s.fuelCards)
+    .where(and(eq(s.fuelCards.tenantId, T), eq(s.fuelCards.last4, "4521")));
+  const noise = [1.02, 0.97, 1.04, 0.99, 0.96, 1.03, 1.0, 0.98, 1.05, 0.97, 1.01, 0.99, 1.03, 0.96, 1.02, 1.0];
+  const fuelPlan = [
+    { code: "PE-007", current: 5942, perDay: 6.1, rate: 15, every: 3, card: poolCard.id, price: 2.205 },
+    { code: "CH-012", current: 4350, perDay: 4.6, rate: 13, every: 5, card: poolCard.id, price: 2.205 },
+    { code: "CA-101", current: 169800, perDay: 180, rate: 0.34, every: 3, card: agilCard.id, price: 2.205 },
+  ];
+  for (const plan of fuelPlan) {
+    const days = Array.from({ length: Math.floor(60 / plan.every) }, (_, i) => 60 - i * plan.every).filter((d) => d >= 2);
+    for (const [i, d] of days.entries()) {
+      const last = i === days.length - 1;
+      const meter = Math.round((plan.current - plan.perDay * d) * 10) / 10;
+      const used = plan.perDay * plan.every;
+      const factor = plan.code === "PE-007" && last ? 1.4 : noise[i % noise.length];
+      const quantity = i === 0 ? Math.round(plan.rate * used * 0.6) : Math.round(plan.rate * used * factor);
+      await recordFuelEntry(
+        ctx,
+        {
+          equipmentId: eqIds[plan.code],
+          fluid: "DIESEL",
+          quantity,
+          unitPrice: plan.price,
+          meterValue: meter,
+          fullTank: true,
+          fuelCardId: plan.card,
+          station: plan.code === "CA-101" ? "Agil Ben Arous" : "Cuve dépôt Lyon",
+          filledAt: new Date(daysAgo(d).getTime() - 2 * 3_600_000),
+          clientId: `seed-fuel-${plan.code}-${d}`,
+        },
+        now,
+      );
+    }
+  }
+  await recordFuelEntry(
+    ctx,
+    {
+      equipmentId: eqIds["CA-101"],
+      fluid: "ADBLUE",
+      quantity: 20,
+      unitPrice: 1.9,
+      fullTank: false,
+      filledAt: daysAgo(10),
+      clientId: "seed-adblue-CA-101",
+    },
+    now,
+  );
 
   const chefLyonCtx = buildAuthContext({ id: users["chef.lyon@demo.gmao"], tenantId: T, name: "Marc Lefèvre", email: "chef.lyon@demo.gmao" }, [
     { role: "WORKSHOP_MANAGER", scopeType: "SITE", scopeId: lyo.id },

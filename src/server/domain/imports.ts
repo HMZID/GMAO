@@ -4,7 +4,7 @@
  * Les contrôles métier (références, droits, doublons en base) sont ceux des services de saisie.
  */
 
-export const IMPORT_KINDS = ["EQUIPMENT", "PARTS", "INITIAL_STOCK", "SUPPLIERS", "TECHNICIANS"] as const;
+export const IMPORT_KINDS = ["EQUIPMENT", "PARTS", "INITIAL_STOCK", "SUPPLIERS", "TECHNICIANS", "FUEL"] as const;
 export type ImportKind = (typeof IMPORT_KINDS)[number];
 
 export type ColumnType = "text" | "number" | "integer" | "date" | "enum" | "boolean";
@@ -26,7 +26,91 @@ export type ImportColumn = {
 
 const CRITICALITY = { A: "A", B: "B", C: "C" };
 
+/** Produits des relevés de cartes carburant (libellés usuels des stations). */
+export const FUEL_PRODUCTS: Record<string, string> = {
+  Gasoil: "DIESEL",
+  "Gasoil sans soufre": "DIESEL",
+  "Gasoil 50": "DIESEL",
+  Essence: "GASOLINE",
+  "Sans plomb": "GASOLINE",
+  AdBlue: "ADBLUE",
+  "Huile moteur": "ENGINE_OIL",
+  "Huile hydraulique": "HYDRAULIC_OIL",
+  "Liquide de refroidissement": "COOLANT",
+  Autre: "OTHER",
+};
+
+/**
+ * Relevés de cartes carburant (Agil, Total, Shell, Star…) : une ligne par transaction. L'équipement est retrouvé par
+ * son code parc, son immatriculation ou la carte qui lui est affectée. Réimportation sans doublon : référence de la
+ * transaction, sinon date + heure + équipement (ou carte) + quantité.
+ */
+const FUEL_DEFINITION = {
+  label: "Relevés de cartes carburant",
+  sheet: "Carburant",
+  key: "reference",
+  columns: [
+    { key: "date", label: "Date", required: true, type: "date", help: "Date de la transaction (JJ/MM/AAAA)", example: "14/10/2026" },
+    {
+      key: "time",
+      label: "Heure",
+      type: "text",
+      max: 5,
+      help: "Heure de la transaction (HH:MM), pour ordonner les pleins d'une journée",
+      example: "07:42",
+    },
+    {
+      key: "equipmentCode",
+      label: "Code parc",
+      type: "text",
+      max: 40,
+      help: "Code parc de l'équipement (ou immatriculation, ou carte affectée)",
+      example: "PE-007",
+    },
+    {
+      key: "registration",
+      label: "Immatriculation",
+      type: "text",
+      max: 30,
+      help: "Immatriculation du véhicule si le code parc est absent",
+      example: "214 TU 5678",
+    },
+    {
+      key: "cardNumber",
+      label: "N° de carte",
+      type: "text",
+      max: 40,
+      help: "Numéro de la carte (seuls les 4 derniers chiffres sont conservés)",
+      example: "7089 1234 5678 4521",
+    },
+    {
+      key: "provider",
+      label: "Fournisseur de la carte",
+      type: "text",
+      max: 60,
+      help: "Agil, Total, Shell, Star… (avec le numéro, retrouve la carte)",
+      example: "Agil",
+    },
+    { key: "fluid", label: "Produit", type: "enum", choices: FUEL_PRODUCTS, help: "Gasoil par défaut", example: "Gasoil" },
+    { key: "quantity", label: "Quantité (L)", required: true, type: "number", min: 0, help: "Litres délivrés", example: "212.5" },
+    { key: "unitPrice", label: "Prix au litre", type: "number", min: 0, help: "Prix unitaire (3 décimales possibles)", example: "2.205" },
+    { key: "amount", label: "Montant", type: "number", min: 0, help: "Montant de la transaction ; sinon quantité × prix", example: "468.56" },
+    { key: "meterValue", label: "Compteur", type: "number", min: 0, help: "Heures ou kilomètres relevés au plein (consommation)", example: "6912" },
+    { key: "fullTank", label: "Plein complet", type: "boolean", help: "Oui par défaut ; Non pour un appoint", example: "Oui" },
+    { key: "station", label: "Station", type: "text", max: 120, help: "Station-service ou cuve", example: "Agil Ben Arous" },
+    {
+      key: "reference",
+      label: "Référence transaction",
+      type: "text",
+      max: 80,
+      help: "Numéro de transaction du relevé ; clé de réimportation",
+      example: "TX-2026-104523",
+    },
+  ] as ImportColumn[],
+};
+
 export const IMPORT_DEFINITIONS: Record<ImportKind, { label: string; sheet: string; key: string; columns: ImportColumn[] }> = {
+  FUEL: FUEL_DEFINITION,
   EQUIPMENT: {
     label: "Équipements",
     sheet: "Équipements",
@@ -413,13 +497,33 @@ export function parseRow(cells: CellValue[], columns: ImportColumn[], indexByKey
   return { values, errors, empty: false };
 }
 
+/**
+ * Jour (AAAA-MM-JJ) d'une cellule de date : objet Date à la lecture du fichier, chaîne ISO une fois la simulation
+ * enregistrée (l'exécution relit les lignes depuis la base) ; même jour dans les deux cas.
+ */
+export function importDay(value: unknown): string | null {
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+  return null;
+}
+
 /** Clé de dédoublonnage d'une ligne (comparaison sans casse ni espaces superflus). */
 export function rowKey(kind: ImportKind, values: Record<string, unknown>) {
   const norm = (v: unknown) =>
     String(v ?? "")
       .trim()
       .toUpperCase();
-  return kind === "INITIAL_STOCK" ? `${norm(values.sku)}|${norm(values.warehouseCode)}` : norm(values[IMPORT_DEFINITIONS[kind].key]);
+  if (kind === "INITIAL_STOCK") return `${norm(values.sku)}|${norm(values.warehouseCode)}`;
+  if (kind === "FUEL") {
+    if (values.reference) return norm(values.reference);
+    return [
+      importDay(values.date) ?? norm(values.date),
+      norm(values.time),
+      norm(values.equipmentCode || values.registration || values.cardNumber),
+      norm(values.quantity),
+    ].join("|");
+  }
+  return norm(values[IMPORT_DEFINITIONS[kind].key]);
 }
 
 /**

@@ -12,6 +12,8 @@ import {
   equipment,
   equipmentCategories,
   equipmentModels,
+  fuelCards,
+  fuelEntries,
   importJobs,
   parts,
   sites,
@@ -29,6 +31,7 @@ import {
   MAX_IMPORT_ROWS,
   canExecute,
   duplicateLines,
+  importDay,
   mapHeaders,
   parseRow,
   rowKey,
@@ -40,6 +43,8 @@ import {
   type ImportKind,
   type ImportRow,
 } from "@/server/domain/imports";
+import { cardLast4 } from "@/server/domain/fuel";
+import { parseLocalDateTime } from "@/server/validation";
 import { AppError, BusinessRuleError, ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/server/errors";
 import { assertCan, audit, parseInput } from "./_shared";
 import { checkEquipmentCreation, createEquipment } from "./equipment";
@@ -53,6 +58,7 @@ import {
   updateStockLevelSettings,
 } from "./stock";
 import { checkTechnicianCreation, createTechnician } from "./users";
+import { fuelEntryInput, recordFuelEntry } from "./fuel";
 
 /* ------------------------------------------------------------------ */
 /* Droits                                                               */
@@ -65,6 +71,7 @@ export const IMPORT_PERMISSION: Record<ImportKind, Permission> = {
   INITIAL_STOCK: "stock.move",
   SUPPLIERS: "supplier.write",
   TECHNICIANS: "users.manage",
+  FUEL: "fuel.manage",
 };
 
 export function importableKinds(ctx: AuthContext) {
@@ -249,6 +256,82 @@ function resolveStock(ctx: AuthContext, values: Record<string, unknown>, refs: R
   };
 }
 
+type FuelReferences = {
+  byCode: Map<string, { id: string; companyId: string; siteId: string }>;
+  byRegistration: Map<string, { id: string; companyId: string; siteId: string }>;
+  cards: { id: string; provider: string; last4: string; equipmentId: string | null }[];
+};
+
+const compact = (v: unknown) => upper(v).replace(/[\s-]/g, "");
+
+async function loadFuelReferences(ctx: AuthContext): Promise<FuelReferences> {
+  const rows = await db
+    .select({
+      id: equipment.id,
+      code: equipment.code,
+      registration: equipment.registration,
+      companyId: equipment.companyId,
+      siteId: equipment.siteId,
+    })
+    .from(equipment)
+    .where(and(eq(equipment.tenantId, ctx.tenantId), ne(equipment.status, "RETIRED")));
+  const cards = await db
+    .select({ id: fuelCards.id, provider: fuelCards.provider, last4: fuelCards.last4, equipmentId: fuelCards.equipmentId })
+    .from(fuelCards)
+    .where(and(eq(fuelCards.tenantId, ctx.tenantId), eq(fuelCards.active, true)));
+  return {
+    byCode: new Map(rows.map((r) => [upper(r.code), r])),
+    byRegistration: new Map(rows.filter((r) => r.registration).map((r) => [compact(r.registration), r])),
+    cards,
+  };
+}
+
+/**
+ * Ligne d'un relevé de carte carburant : équipement retrouvé par le code parc, l'immatriculation ou la carte qui
+ * lui est affectée ; date et heure du relevé lues dans le fuseau d'exploitation ; clé d'idempotence de la ligne.
+ */
+function resolveFuel(ctx: AuthContext, values: Record<string, unknown>, refs: FuelReferences, key: string) {
+  const errors: string[] = [];
+  let card: FuelReferences["cards"][number] | undefined;
+  if (values.cardNumber) {
+    const last4 = cardLast4(String(values.cardNumber));
+    const candidates = refs.cards.filter((c) => c.last4 === last4 && (!values.provider || upper(c.provider) === upper(values.provider)));
+    if (!last4 || candidates.length === 0)
+      errors.push(tpl`Carte « …${last4 ?? String(values.cardNumber)} » inconnue ou désactivée : la déclarer dans Carburant › Cartes.`);
+    else if (candidates.length > 1) errors.push(tpl`Carte « …${last4} » ambiguë : préciser le fournisseur de la carte.`);
+    else card = candidates[0];
+  }
+  const byCode = values.equipmentCode ? refs.byCode.get(upper(values.equipmentCode)) : undefined;
+  const byRegistration = values.registration ? refs.byRegistration.get(compact(values.registration)) : undefined;
+  if (values.equipmentCode && !byCode) errors.push(tpl`Code parc « ${values.equipmentCode} » inconnu.`);
+  if (values.registration && !byRegistration) errors.push(tpl`Immatriculation « ${values.registration} » inconnue.`);
+  const target = byCode ?? byRegistration ?? (card?.equipmentId ? { id: card.equipmentId } : undefined);
+  if (!target && !values.equipmentCode && !values.registration)
+    errors.push("Équipement introuvable : code parc, immatriculation ou carte affectée à un équipement attendus.");
+  const located = target && "companyId" in target ? target : undefined;
+  if (located && !ctx.canOn("fuel.write", located)) errors.push("Équipement hors de votre périmètre.");
+  const time = typeof values.time === "string" && /^\d{1,2}:\d{2}$/.test(values.time.trim()) ? values.time.trim().padStart(5, "0") : "12:00";
+  if (values.time && time === "12:00" && values.time !== "12:00") errors.push("Heure : format HH:MM attendu.");
+  const day = importDay(values.date);
+  return {
+    errors,
+    input: {
+      equipmentId: target?.id,
+      fluid: values.fluid ?? "DIESEL",
+      quantity: values.quantity,
+      unitPrice: values.unitPrice,
+      amount: values.amount,
+      meterValue: values.meterValue,
+      fullTank: values.fullTank ?? true,
+      station: values.station,
+      reference: values.reference,
+      fuelCardId: card?.id,
+      filledAt: day ? parseLocalDateTime(`${day}T${time}`) : undefined,
+      clientId: `import-fuel-${key}`.slice(0, 160),
+    },
+  };
+}
+
 /** Lignes déjà présentes en base (réimportation) : ignorées, jamais recréées. */
 async function existingKeys(ctx: AuthContext, kind: ImportKind, rows: { values: Record<string, unknown>; input?: Record<string, unknown> }[]) {
   if (kind === "EQUIPMENT") {
@@ -273,6 +356,15 @@ async function existingKeys(ctx: AuthContext, kind: ImportKind, rows: { values: 
     const found = await db.select({ name: suppliers.name }).from(suppliers).where(eq(suppliers.tenantId, ctx.tenantId));
     return new Set(found.map((f) => upper(f.name)));
   }
+  if (kind === "FUEL") {
+    const clientIds = rows.map((r) => r.input?.clientId as string | undefined).filter((v): v is string => !!v);
+    if (clientIds.length === 0) return new Set<string>();
+    const found = await db
+      .select({ clientId: fuelEntries.clientId })
+      .from(fuelEntries)
+      .where(and(eq(fuelEntries.tenantId, ctx.tenantId), inArray(fuelEntries.clientId, clientIds)));
+    return new Set(found.map((f) => f.clientId ?? ""));
+  }
   if (kind === "TECHNICIANS") {
     const numbers = [...new Set(rows.map((r) => upper(r.values.employeeNumber)).filter(Boolean))];
     if (numbers.length === 0) return new Set<string>();
@@ -296,7 +388,12 @@ async function existingKeys(ctx: AuthContext, kind: ImportKind, rows: { values: 
 async function checkRows(ctx: AuthContext, kind: ImportKind, read: ReadResult["rows"]): Promise<ImportRow[]> {
   const definition = IMPORT_DEFINITIONS[kind];
   const refs = await loadReferences(ctx);
-  const keyLabel = kind === "INITIAL_STOCK" ? "Article et magasin" : (definition.columns.find((c) => c.key === definition.key)?.label ?? "Clé");
+  const keyLabel =
+    kind === "INITIAL_STOCK"
+      ? "Article et magasin"
+      : kind === "FUEL"
+        ? "Transaction"
+        : (definition.columns.find((c) => c.key === definition.key)?.label ?? "Clé");
   const keyed = read.map((r) => ({ line: r.line, values: r.values, readErrors: r.errors, key: rowKey(kind, r.values) }));
   const dupByLine = duplicateLines(keyed, keyLabel);
   const secondary =
@@ -320,7 +417,9 @@ async function checkRows(ctx: AuthContext, kind: ImportKind, read: ReadResult["r
     }
   }
 
+  const fuelRefs = kind === "FUEL" ? await loadFuelReferences(ctx) : null;
   const resolved = keyed.map((r) => {
+    if (kind === "FUEL") return { ...r, ...(resolveFuel(ctx, r.values, fuelRefs!, r.key) as { errors: string[]; input: Record<string, unknown> }) };
     if (kind === "EQUIPMENT") return { ...r, ...(resolveEquipment(r.values, refs) as { errors: string[]; input: Record<string, unknown> }) };
     if (kind === "INITIAL_STOCK")
       return { ...r, ...(resolveStock(ctx, r.values, refs, partsBySku) as { errors: string[]; input: Record<string, unknown> }) };
@@ -340,7 +439,12 @@ async function checkRows(ctx: AuthContext, kind: ImportKind, read: ReadResult["r
       result.push({ ...base, status: "ERROR", messages });
       continue;
     }
-    const existsKey = kind === "INITIAL_STOCK" ? `${r.input.partId}|${r.input.warehouseId}` : upper(r.values[definition.key]);
+    const existsKey =
+      kind === "INITIAL_STOCK"
+        ? `${r.input.partId}|${r.input.warehouseId}`
+        : kind === "FUEL"
+          ? String(r.input.clientId)
+          : upper(r.values[definition.key]);
     if (existing.has(existsKey)) {
       result.push({
         ...base,
@@ -363,6 +467,7 @@ async function checkRow(ctx: AuthContext, kind: ImportKind, input: Record<string
     else if (kind === "PARTS") await checkPartCreation(ctx, input);
     else if (kind === "SUPPLIERS") await checkSupplierCreation(ctx, input);
     else if (kind === "TECHNICIANS") await checkTechnicianCreation(ctx, input);
+    else if (kind === "FUEL") parseInput(fuelEntryInput, input);
     else {
       const quantity = Number(input.quantity);
       if (!(quantity > 0)) throw new BusinessRuleError(["Quantité : supérieure à 0 attendue."]);
@@ -380,6 +485,7 @@ async function importRow(ctx: AuthContext, kind: ImportKind, input: Record<strin
   if (kind === "PARTS") return (await createPart(ctx, input)).id;
   if (kind === "SUPPLIERS") return (await createSupplier(ctx, input)).id;
   if (kind === "TECHNICIANS") return (await createTechnician(ctx, input)).id;
+  if (kind === "FUEL") return (await recordFuelEntry(ctx, input)).entry.id;
   const movement = await createInitialStockReceipt(ctx, {
     type: "RECEIPT",
     partId: input.partId,

@@ -1,5 +1,5 @@
 {
-  "id": "7bb2dae8-6a22-4280-bd8d-32f5a164b201",
+  "id": "43e36614-cab5-4492-9339-f191ec8c3221",
   "prevId": "e2ff43b1-9d4d-44b1-a2a2-829ce7cc69f7",
   "version": "7",
   "dialect": "postgresql",
@@ -12126,7 +12126,8 @@
         "PARTS",
         "INITIAL_STOCK",
         "SUPPLIERS",
-        "TECHNICIANS"
+        "TECHNICIANS",
+        "FUEL"
       ]
     },
     "public.import_mode": {

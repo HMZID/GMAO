@@ -3,6 +3,7 @@ import {
   IMPORT_DEFINITIONS,
   canExecute,
   duplicateLines,
+  importDay,
   mapHeaders,
   parseCell,
   parseRow,
@@ -136,5 +137,16 @@ describe("Imports : exécution (§11.2)", () => {
 
   it("refuse un import sans ligne à créer (fichier déjà importé)", () => {
     expect(canExecute("VALID_ONLY", summarize([{ status: "EXISTS" }])).ok).toBe(false);
+  });
+});
+
+describe("Relevés de cartes carburant", () => {
+  it("même clé et même jour, que la date vienne du fichier ou de la simulation enregistrée", () => {
+    const fromFile = { date: new Date(Date.UTC(2026, 9, 20)), time: "06:45", equipmentCode: "ch-012", quantity: 120 };
+    const fromJob = { ...fromFile, date: "2026-10-20T00:00:00.000Z" };
+    expect(importDay(fromFile.date)).toBe("2026-10-20");
+    expect(importDay(fromJob.date)).toBe("2026-10-20");
+    expect(rowKey("FUEL", fromFile)).toBe(rowKey("FUEL", fromJob));
+    expect(rowKey("FUEL", { ...fromFile, reference: "tx-1" })).toBe("TX-1");
   });
 });

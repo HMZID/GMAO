@@ -2,6 +2,7 @@ CREATE TYPE "public"."fluid_kind" AS ENUM('DIESEL', 'GASOLINE', 'ADBLUE', 'ENGIN
 CREATE TYPE "public"."fuel_entry_status" AS ENUM('VALID', 'CANCELLED');--> statement-breakpoint
 CREATE TYPE "public"."fuel_review" AS ENUM('NONE', 'TO_REVIEW', 'JUSTIFIED');--> statement-breakpoint
 CREATE TYPE "public"."fuel_source" AS ENUM('MANUAL', 'MOBILE', 'CARD_IMPORT', 'API');--> statement-breakpoint
+ALTER TYPE "public"."import_kind" ADD VALUE 'FUEL';--> statement-breakpoint
 CREATE TABLE "equipment_fuel_settings" (
 	"equipment_id" uuid PRIMARY KEY NOT NULL,
 	"tenant_id" uuid NOT NULL,

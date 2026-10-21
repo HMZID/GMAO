@@ -39,7 +39,7 @@ flowchart LR
   - `ctx.canOn(droit, { companyId, siteId })` : sur cette cible ?
   - `scopeWhere(ctx.scope(droit), colonneSociété, colonneSite)` : condition SQL appliquée à toutes les listes, recherches et API (HAB-02).
 - Un objet hors périmètre répond « introuvable » (404) : son existence n'est pas révélée.
-- La matrice rôle → droits est dans `src/server/authz/permissions.ts` (35 droits, 10 rôles ; `approval.threshold`, le seuil de validation des interventions, est réservé à la direction).
+- La matrice rôle → droits est dans `src/server/authz/permissions.ts` (38 droits, 10 rôles ; carburant : `fuel.read`, `fuel.write` (conducteurs compris), `fuel.manage` (responsable du parc) ; `approval.threshold`, le seuil de validation des interventions, est réservé à la direction).
 
 | Rôle | Principaux droits |
 | --- | --- |
@@ -144,6 +144,13 @@ Chaque mouvement verrouille la ligne de stock (`select … for update`), refuse 
 - **Exécution** : « tout ou rien » (refusé s'il reste une erreur) ou « lignes valides seulement ». Les lignes prêtes sont recontrôlées puis créées une à une par les services de saisie (`createEquipment`, `createPart`, `createMovement`), avec l'audit sur le canal `IMPORT`. Un verrou sur le statut empêche une double exécution. Chaque création a sa propre transaction : en « tout ou rien », une erreur apparue entre le contrôle et la création (modification concurrente) laisse les lignes déjà créées, signalées dans le rapport.
 - **Réimportation sans doublon** : une ligne dont la clé existe déjà (code parc, référence interne, article déjà mouvementé dans le magasin) est « déjà présente » et ignorée. Le stock initial est en plus idempotent par `clientId`. Un fichier déjà exécuté (même empreinte) est signalé.
 - **Rapport** : à l'écran (filtre sur les erreurs) et en Excel (`/api/v1/imports/{id}/report`), avec le statut et les anomalies de chaque ligne.
+
+### Carburant et fluides (fonction ajoutée hors CDC)
+
+- **Données** (`src/server/db/schema/fuel.ts`, migration `0023`) : pleins et appoints (`fuel_entries` : produit, quantité, prix au litre en 3 décimales, montant, compteur lu et cumulé, plein complet ou appoint, carte, source, anomalies, examen), cartes carburant (`fuel_cards` : **4 derniers chiffres seulement**, équipement affecté, plafond mensuel) et réglages par équipement (`equipment_fuel_settings` : carburant, réservoir, consommation de référence).
+- **Consommation** (`src/server/domain/fuel.ts`, testé) : méthode « plein à plein » (litres versés après un plein complet jusqu'au plein complet suivant, divisés par l'usage cumulé, DON-04), en L/h pour un compteur d'heures et en L/100 km pour un kilométrage ; seuls gasoil et essence comptent. Référence : celle de l'équipement, sinon la médiane d'au moins 3 tronçons précédents.
+- **Anomalies** (toutes listées, DON-11) : réservoir dépassé, compteur qui recule, carburant différent, carte d'un autre équipement ou désactivée, plafond mensuel dépassé, plein rapproché sans usage, surconsommation ou sous-consommation au-delà de 25 % [AC]. Un plein anormal est enregistré « à examiner » (jamais refusé) et signalé au responsable du parc, qui le justifie ou l'annule (commentaire obligatoire, plein conservé, DON-06).
+- **Canaux** : écran Carburant et fiche équipement, API `/api/v1/fuel-*`, mobile hors connexion (saisie idempotente par `clientId`), import Excel des relevés de cartes (`FUEL` : équipement retrouvé par code parc, immatriculation ou carte affectée ; réimportation sans doublon par référence de transaction).
 
 ### Circuits de validation (HAB-04, CDC §2.4)
 
