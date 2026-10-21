@@ -113,7 +113,16 @@ const GRANTS: Record<Permission, readonly Role[]> = {
   // KPI-11 : indicateurs personnalisés de l'organisation (lecture : kpi.read).
   "indicator.manage": ["ADMIN", "MAINTENANCE_MANAGER", "EXECUTIVE"],
   // Carburant et fluides : consultation, saisie des pleins (conducteurs compris), cartes, examen des anomalies, import.
-  "fuel.read": ["MAINTENANCE_MANAGER", "FLEET_MANAGER", "WORKSHOP_MANAGER", "TECHNICIAN", "OPERATOR", "STOREKEEPER", "PURCHASING_MANAGER", "EXECUTIVE"],
+  "fuel.read": [
+    "MAINTENANCE_MANAGER",
+    "FLEET_MANAGER",
+    "WORKSHOP_MANAGER",
+    "TECHNICIAN",
+    "OPERATOR",
+    "STOREKEEPER",
+    "PURCHASING_MANAGER",
+    "EXECUTIVE",
+  ],
   "fuel.write": ["MAINTENANCE_MANAGER", "FLEET_MANAGER", "WORKSHOP_MANAGER", "TECHNICIAN", "OPERATOR", "STOREKEEPER"],
   "fuel.manage": ["MAINTENANCE_MANAGER", "FLEET_MANAGER"],
   // HAB-04 : seuil au-delà duquel une intervention ne se valide plus par le responsable maintenance (direction seule).

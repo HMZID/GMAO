@@ -150,7 +150,9 @@ export function detectAnomalies(input: AnomalyInput): Anomaly[] {
     anomalies.push({ code: "FUEL_MISMATCH", message: "Carburant différent de celui de l'équipement." });
   }
 
-  const previous = [...history].filter((h) => h.meter !== null && h.filledAt <= fill.filledAt).sort((a, b) => b.filledAt.getTime() - a.filledAt.getTime())[0];
+  const previous = [...history]
+    .filter((h) => h.meter !== null && h.filledAt <= fill.filledAt)
+    .sort((a, b) => b.filledAt.getTime() - a.filledAt.getTime())[0];
   if (fill.meter !== null && previous && previous.meter !== null && fill.meter < previous.meter) {
     anomalies.push({
       code: "METER_BACKWARD",
@@ -159,7 +161,9 @@ export function detectAnomalies(input: AnomalyInput): Anomaly[] {
   }
 
   if (fuel) {
-    const lastFuel = [...history].filter((h) => isFuel(h.fluid) && h.filledAt <= fill.filledAt).sort((a, b) => b.filledAt.getTime() - a.filledAt.getTime())[0];
+    const lastFuel = [...history]
+      .filter((h) => isFuel(h.fluid) && h.filledAt <= fill.filledAt)
+      .sort((a, b) => b.filledAt.getTime() - a.filledAt.getTime())[0];
     const hours = lastFuel ? (fill.filledAt.getTime() - lastFuel.filledAt.getTime()) / 3_600_000 : null;
     const noUsage = !lastFuel || lastFuel.meter === null || fill.meter === null || fill.meter - lastFuel.meter <= 0;
     const bigQuantity = equipment.tankCapacity ? fill.quantity > equipment.tankCapacity * 0.25 : false;

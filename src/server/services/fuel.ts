@@ -30,7 +30,10 @@ import { isUniqueViolation } from "./organization";
 /* ------------------------------------------------------------------ */
 
 /** Plein complet par défaut (champ absent de l'API ou du mobile) ; « false » explicite pour un appoint. */
-const fullTankFlag = z.preprocess((v) => (v === undefined || v === null || v === "" ? true : v === true || v === "true" || v === "on" || v === "1"), z.boolean());
+const fullTankFlag = z.preprocess(
+  (v) => (v === undefined || v === null || v === "" ? true : v === true || v === "true" || v === "on" || v === "1"),
+  z.boolean(),
+);
 
 const positiveOrEmpty = (message: string) => optionalNumber.refine((v) => v === undefined || v >= 0, message);
 
@@ -62,7 +65,14 @@ function sourceOf(ctx: AuthContext) {
 
 async function loadEquipment(tx: DbOrTx, ctx: AuthContext, equipmentId: string) {
   const [row] = await tx
-    .select({ id: equipment.id, code: equipment.code, name: equipment.name, companyId: equipment.companyId, siteId: equipment.siteId, status: equipment.status })
+    .select({
+      id: equipment.id,
+      code: equipment.code,
+      name: equipment.name,
+      companyId: equipment.companyId,
+      siteId: equipment.siteId,
+      status: equipment.status,
+    })
     .from(equipment)
     .where(and(eq(equipment.id, equipmentId), eq(equipment.tenantId, ctx.tenantId)));
   if (!row) throw new NotFoundError("Équipement");
@@ -80,7 +90,11 @@ async function primaryMeter(tx: DbOrTx, equipmentId: string) {
 
 async function fuelSettings(tx: DbOrTx, equipmentId: string) {
   const [row] = await tx.select().from(equipmentFuelSettings).where(eq(equipmentFuelSettings.equipmentId, equipmentId));
-  return { fuelType: (row?.fuelType ?? null) as FluidKind | null, tankCapacity: row?.tankCapacity ?? null, referenceConsumption: row?.referenceConsumption ?? null };
+  return {
+    fuelType: (row?.fuelType ?? null) as FluidKind | null,
+    tankCapacity: row?.tankCapacity ?? null,
+    referenceConsumption: row?.referenceConsumption ?? null,
+  };
 }
 
 /** Pleins valides d'un équipement, sous la forme attendue par le domaine. */
@@ -150,7 +164,14 @@ export async function recordFuelEntry(ctx: AuthContext, raw: unknown, now: Date 
       const [sum] = await tx
         .select({ litres: sql<number>`coalesce(sum(${fuelEntries.quantity}), 0)`.mapWith(Number) })
         .from(fuelEntries)
-        .where(and(eq(fuelEntries.fuelCardId, card.id), eq(fuelEntries.status, "VALID"), gte(fuelEntries.filledAt, monthStart), lt(fuelEntries.filledAt, filledAt)));
+        .where(
+          and(
+            eq(fuelEntries.fuelCardId, card.id),
+            eq(fuelEntries.status, "VALID"),
+            gte(fuelEntries.filledAt, monthStart),
+            lt(fuelEntries.filledAt, filledAt),
+          ),
+        );
       monthLitres = sum?.litres ?? 0;
     }
 
@@ -421,7 +442,14 @@ export async function fuelConsumption(ctx: AuthContext, raw: unknown = {}, now: 
     const own = rows.filter((r) => r.equipmentId === e.id);
     const meterType = (meterRows.find((m) => m.equipmentId === e.id)?.type ?? null) as MeterType | null;
     const settings = settingRows.find((s) => s.equipmentId === e.id);
-    const points: FillPoint[] = own.map((r) => ({ id: r.id, filledAt: r.filledAt, fluid: r.fluid, quantity: r.quantity, meter: r.meter, fullTank: r.fullTank }));
+    const points: FillPoint[] = own.map((r) => ({
+      id: r.id,
+      filledAt: r.filledAt,
+      fluid: r.fluid,
+      quantity: r.quantity,
+      meter: r.meter,
+      fullTank: r.fullTank,
+    }));
     const segments = fullToFullSegments(points, meterType);
     const closingInPeriod = new Set(own.filter((r) => inPeriod(r.filledAt)).map((r) => r.id));
     const periodSegments = segments.filter((s) => closingInPeriod.has(s.toId));
@@ -653,6 +681,12 @@ export async function listFuelEquipmentOptions(ctx: AuthContext) {
   return db
     .select({ id: equipment.id, code: equipment.code, name: equipment.name })
     .from(equipment)
-    .where(and(eq(equipment.tenantId, ctx.tenantId), ne(equipment.status, "RETIRED"), scopeWhere(ctx.scope("fuel.write"), equipment.companyId, equipment.siteId)))
+    .where(
+      and(
+        eq(equipment.tenantId, ctx.tenantId),
+        ne(equipment.status, "RETIRED"),
+        scopeWhere(ctx.scope("fuel.write"), equipment.companyId, equipment.siteId),
+      ),
+    )
     .orderBy(asc(equipment.code));
 }

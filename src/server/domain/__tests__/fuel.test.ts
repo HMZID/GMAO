@@ -113,7 +113,9 @@ describe("Anomalies d'un plein", () => {
   it("carte : affectée à un autre équipement, désactivée, plafond mensuel dépassé", () => {
     const card = { equipmentId: "eq-2", active: false, monthlyLimitLitres: 500, monthLitres: 400 };
     expect(codes(base(fill("b", 2, 150, 1010), { card }))).toEqual(["CARD_INACTIVE", "CARD_OTHER_EQUIPMENT", "CARD_LIMIT"]);
-    expect(codes(base(fill("b", 2, 150, 1010), { card: { equipmentId: "eq-1", active: true, monthlyLimitLitres: 1000, monthLitres: 0 } }))).toEqual([]);
+    expect(codes(base(fill("b", 2, 150, 1010), { card: { equipmentId: "eq-1", active: true, monthlyLimitLitres: 1000, monthLitres: 0 } }))).toEqual(
+      [],
+    );
   });
 
   it("toutes les anomalies sont listées en une fois (DON-11)", () => {

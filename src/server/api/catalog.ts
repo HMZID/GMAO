@@ -296,7 +296,12 @@ export const ENDPOINTS: Endpoint[] = [
     permission: "fuel.manage",
     body: fuelCardUpdateInput,
   },
-  { method: "GET", path: "/api/v1/equipment/{id}/fuel", summary: "Carburant d'un équipement : réglages, consommation, derniers pleins", permission: "fuel.read" },
+  {
+    method: "GET",
+    path: "/api/v1/equipment/{id}/fuel",
+    summary: "Carburant d'un équipement : réglages, consommation, derniers pleins",
+    permission: "fuel.read",
+  },
   {
     method: "PUT",
     path: "/api/v1/equipment/{id}/fuel",
