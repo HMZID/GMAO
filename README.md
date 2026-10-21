@@ -16,6 +16,7 @@ Ce dépôt contient le **squelette complet du MVP** : modèle de données, règl
 | Planification | Semaine par technicien, absences bloquantes, chevauchements signalés, capacité nette avec réserve pour les urgences, carnet à planifier. |
 | Stock | Catalogue, stock par magasin, réservations, sorties et retours sur intervention, réceptions, transferts, ajustements, rebuts, seuils, coût moyen pondéré, intégrité (verrous, idempotence, pas de stock négatif). |
 | Indicateurs | Disponibilité, MTBF, MTTR, MDT, respect du préventif, coûts complets par intervention et par équipement, consommation de pièces, tableau de bord filtré par droits. |
+| Carburant et fluides | Pleins et appoints (web, mobile hors connexion, import des relevés de cartes carburant), cartes, consommation plein à plein (L/h, L/100 km), anomalies à examiner par le responsable du parc. |
 | API REST v1 | Mêmes services, mêmes règles et mêmes droits que les écrans. Catalogue public avec schémas JSON générés depuis la validation : `GET /api/v1`. |
 | Site commercial | Vitrine publique sur `/` pour les visiteurs non connectés (fonctionnalités, calculateur du coût des pannes, tarifs, questions), demande d'essai, acceptation par l'administrateur de la plateforme avec envoi du lien, de l'identifiant et d'un mot de passe provisoire, contenu modifiable dans Administration → Site commercial. Voir `docs/site-commercial.md`. |
 

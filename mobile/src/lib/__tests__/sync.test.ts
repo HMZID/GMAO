@@ -116,4 +116,24 @@ describe("Synchronisation hors connexion (MOB-07, MOB-08)", () => {
     await Promise.all([q.flush(api), q.flush(api)]);
     expect(calls).toHaveLength(1);
   });
+
+  it("envoie un plein de carburant saisi hors connexion, avec son heure et son identifiant", async () => {
+    const { q } = queue();
+    const op = await q.enqueue({
+      kind: "fuel",
+      equipmentId: "eq1",
+      fluid: "DIESEL",
+      quantity: 180,
+      meterValue: 6912,
+      fullTank: true,
+      label: "PE-007",
+    });
+    const { api, calls } = fakeApi();
+    await q.flush(api);
+    expect(calls[0]).toMatchObject({
+      method: "POST",
+      path: "/api/v1/fuel-entries",
+      body: { equipmentId: "eq1", fluid: "DIESEL", quantity: 180, meterValue: 6912, fullTank: true, filledAt: op.createdAt, clientId: op.clientId },
+    });
+  });
 });

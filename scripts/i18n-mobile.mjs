@@ -34,6 +34,12 @@ const EXTRA_KEYS = [
   "mise en attente",
   "Redémarrage nécessaire",
   "Fermez puis rouvrez l'application pour appliquer le sens d'écriture.",
+  "Plein de carburant",
+  "Produit : gasoil",
+  "Produit : essence",
+  "Produit : AdBlue",
+  "Plein complet",
+  "Appoint (réservoir non rempli)",
 ];
 
 function walk(dir, out = []) {

@@ -7,6 +7,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   FileSpreadsheet,
+  Fuel,
   ClipboardList,
   LayoutDashboard,
   ReceiptText,
@@ -25,6 +26,7 @@ import type { NavIcon, NavItem } from "./nav-items";
 export const NAV_ICONS: Record<NavIcon, LucideIcon> = {
   dashboard: LayoutDashboard,
   equipment: Truck,
+  fuel: Fuel,
   requests: Siren,
   workorders: ClipboardList,
   preventive: CalendarClock,
