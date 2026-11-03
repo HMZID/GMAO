@@ -41,6 +41,7 @@ Avant de rendre la main : `npm run format`, `npm run lint`, `npm run typecheck`,
 - Dates-heures saisies sans fuseau : interprétées en Europe/Paris par `optionalDate` / `date()` ; affichage par `src/lib/format.ts`. Valeurs `datetime-local` produites par `toDateTimeInput`.
 - Montants et compteurs : colonnes `numeric` lues comme `number` ; arrondis dans le domaine.
 - Langues (fr, en, ar) : tout texte affiché passe par `<T>`, `<Tr>`, `useT` / `getT` ou `tpl` ; chaque nouveau texte est traduit dans `src/i18n/dictionaries/` (le test de couverture l'exige) ; mobile : `mobile/src/i18n`. Voir `docs/langues.md`.
+- Design : toute tâche qui change l'apparence ou l'ergonomie (refonte comprise) passe par l'agent `designer` (`.claude/agents/designer.md`), qui utilise la compétence `ui-ux-pro-max`. Voir `docs/design.md`.
 
 ## Next.js 16 : points d'attention
 
